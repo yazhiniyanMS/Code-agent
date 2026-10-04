@@ -27,6 +27,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("task", nargs="*", help="Run a single task non-interactively, then exit.")
     parser.add_argument("-p", "--prompt", help="Same as passing a task: run it and exit.")
     parser.add_argument("-m", "--model", help="Model ID (overrides YCODE_MODEL and config files).")
+    parser.add_argument("--provider", choices=("anthropic", "local"),
+                        help="LLM provider: Claude API (default) or your own local model.")
+    parser.add_argument("--local", nargs="?", const="", default=None, metavar="MODEL_DIR",
+                        help="Use your own trained model (no API key). Optional path; "
+                             "default ~/.ycode/models/ycode-lm.")
     parser.add_argument("--max-steps", type=int, help="Maximum agent steps per task.")
     parser.add_argument("--approval-mode", choices=APPROVAL_MODES, help="How risky actions are approved.")
     parser.add_argument("--yes", action="store_true",
@@ -58,6 +63,8 @@ def main(argv: list[str] | None = None) -> int:
             workspace,
             cli_overrides={
                 "model": args.model,
+                "provider": "local" if args.local is not None else args.provider,
+                "local_model": args.local or None,
                 "max_steps": args.max_steps,
                 "approval_mode": "auto" if args.yes else args.approval_mode,
             },
@@ -100,6 +107,10 @@ def run(config: Config, workspace: Path, ui: ConsoleUI, *, task: str | None, sho
     app = YCodeApp(config=config, workspace=workspace, provider=provider, ui=ui, context=context)
     if show_banner:
         ui.print_banner(app.banner_info())
+    if not provider.supports_tools:
+        ui.on_notice("Local model: answer-only mode. It answers questions and writes code in its reply, "
+                     "but cannot read, edit or run files in your project.", "warning")
+        ui.console.print()
 
     if task is not None:
         result = app.run_task(task)

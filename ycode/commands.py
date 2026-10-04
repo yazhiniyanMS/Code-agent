@@ -106,6 +106,10 @@ def _files(app: "YCodeApp", arg: str) -> None:
 
 def _model(app: "YCodeApp", arg: str) -> None:
     name = arg.strip()
+    if app.provider.name == "local":
+        app.ui.info(f"Model: {app.provider.display_name}")
+        app.ui.info("Start YCode with `--local <model dir>` to use a different local model.")
+        return
     if not name:
         app.ui.info(f"Model: {app.provider.display_name}")
         app.ui.info("Switch with /model <model-id>, e.g. /model claude-sonnet-5-5")

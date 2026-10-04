@@ -19,9 +19,12 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
+# Train and run your own from-scratch model (ycode-lm, --local)
+local = ["torch>=2.1", "numpy>=1.24"]
 
 [project.scripts]
 ycode = "ycode.cli:main"
+ycode-lm = "ycode.lm.cli:main"
 
 [tool.setuptools.dynamic]
 version = { attr = "ycode.__version__" }

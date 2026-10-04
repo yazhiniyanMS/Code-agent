@@ -108,6 +108,8 @@ class LLMProvider(abc.ABC):
     """A chat model that supports tool calling."""
 
     name: str = "provider"
+    # False for models that can only answer in text (no tool calling).
+    supports_tools: bool = True
 
     def __init__(self, model: str) -> None:
         self.model = model
