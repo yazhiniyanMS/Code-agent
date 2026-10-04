@@ -60,8 +60,10 @@ class LocalProvider(LLMProvider):
     @property
     def display_name(self) -> str:
         params = getattr(self.lm, "num_params", 0)
+        version = getattr(self.lm, "version", None)
         size = f"{params / 1e6:.1f}M params, " if params else ""
-        return f"YCode-LM ({size}local, {self.model_dir})"
+        name = f"YCode-LM v{version}" if isinstance(version, int) else "YCode-LM"
+        return f"{name} ({size}local, {self.model_dir})"
 
     @staticmethod
     def _turns(messages: list[Message]) -> list[tuple[str, str]]:

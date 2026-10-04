@@ -167,43 +167,73 @@ YCode-LM is a programming language model you train from scratch on your own mach
 
 **What it is:**
 - **Tokenizer:** byte-level BPE (`ycode/lm/tokenizer.py`) trained on your corpus. A code-aware pre-tokenizer turns indentation runs, identifiers and operators into compact tokens.
-- **Model:** a decoder-only transformer (`ycode/lm/model.py`) with rotary position embeddings, RMSNorm, SwiGLU MLPs, tied embeddings and a KV cache for fast sampling.
+- **Model:** a decoder-only transformer (`ycode/lm/model.py`) with rotary position embeddings, RMSNorm, SwiGLU MLPs, tied embeddings and a KV cache for fast sampling. **Version 2** (the default) adds grouped-query attention, which shares key/value heads for a 4× smaller KV cache and faster generation, and QK-norm, which keeps attention stable at higher learning rates. v1 checkpoints still load.
 - **Training data:** any code directories you point it at. With no `--source`, it uses the Python standard library, which every Python install has.
 - **Two training stages:**
   1. *Pretraining:* next-token prediction on code.
-  2. *Instruction tuning (SFT):* teaches the model to answer. The data is generated automatically from documented functions in your corpus, in both directions: "Write a function `f(x)` that …" is answered with code, and "What does this code do?" with an explanation. You can add your own pairs as JSONL (`{"prompt": ..., "response": ...}`) with `--sft-data`.
+  2. *Instruction tuning (SFT):* teaches the model to answer. The data is generated automatically from the real code in your corpus, so every answer is real code:
+     - write a function from its description
+     - explain a function
+     - complete a function from its signature and docstring
+     - write a docstring
+     - explain a class
+     - **find and fix a bug**: YCode-LM injects realistic one-token bugs (`<` vs `<=`, `+` vs `-`, off-by-one, `and`/`or`, `True`/`False`). The original code is the fix, so these examples are correct by construction.
+
+     You can add your own pairs as JSONL (`{"prompt": ..., "response": ...}`) with `--sft-data`.
+
+**What v2 improves:**
+
+| | v1 | v2 |
+| --- | --- | --- |
+| Attention | multi-head | grouped-query (smaller cache) + QK-norm |
+| LR schedule | cosine over steps; cut short by `--minutes` | warmup-stable-decay. Progress is the larger of steps done and time used, so a time-limited run always finishes its decay |
+| End of pretraining | code only | anneals with 20% instruction data during the decay phase, so the model already knows the chat format before SFT |
+| SFT batches | one example per row, padded | several examples packed per row, so no compute is wasted on padding |
+| Data | write/explain pairs | + bug fixing, completion, docstrings, classes; de-duplicated prompts; licence headers stripped |
+| Data prep | single process | tokenization on all CPU cores |
+| Measurement | loss only | `ycode-lm eval`: bits per byte on held-out code + pass@k on 30 executed coding problems |
 
 **Set up and train:**
 
 ```bash
 pip install -e ".[local]"          # adds PyTorch + NumPy
 
-# 1. Build the dataset: collect code, train the tokenizer, create instruction pairs
-ycode-lm prepare --out data/ --source ~/my-projects --source /usr/lib/python3.11 --vocab-size 8192
+# 1. Build the dataset: collect code, train the tokenizer, create instruction pairs.
+#    --exclude keeps code out of training so you can evaluate on it later.
+ycode-lm prepare --out data/ --source ~/my-projects --source /usr/lib/python3.11 --exclude '*/holdout/*'
 
 # 2. Pretrain on code (bf16 on CPUs with AMX/AVX512-BF16, CUDA or Apple MPS when available)
-ycode-lm train --data data/ --out models/base --preset small --layers 6 --context 512 --minutes 120
+ycode-lm train --data data/ --out models/base --preset v2-small --minutes 180
 
 # 3. Instruction-tune it so it answers requests
-ycode-lm sft --data data/ --init-from models/base --out ~/.ycode/models/ycode-lm --minutes 30
+ycode-lm sft --data data/ --init-from models/base --out ~/.ycode/models/ycode-lm --minutes 40
 
-# 4. Use it
+# 4. Measure it (compare several models by repeating --model)
+ycode-lm eval --model ~/.ycode/models/ycode-lm --heldout path/to/unseen/code --samples 5
+
+# 5. Use it
 ycode-lm chat                                   # quick Q&A in the terminal
 ycode --local                                   # inside YCode (default model dir ~/.ycode/models/ycode-lm)
 ycode --local models/chat                       # or point to any trained model
 ```
 
-Other commands: `ycode-lm sample --model models/base --prompt "def quicksort("` (raw code completion), `ycode-lm info`, and `ycode-lm train --resume` (continue an interrupted run). Ctrl+C during training keeps the last checkpoint.
+Other commands: `ycode-lm sample --model models/base --prompt "def quicksort("` (raw code completion), `ycode-lm info`, and `ycode-lm train --resume` (continue an interrupted run). Ctrl+C during training keeps the last checkpoint. Training options include `--schedule wsd|cosine`, `--anneal-mix`, `--no-pack`, `--compile` (torch.compile) and `--grad-accum`.
+
+**Evaluation.** `ycode-lm eval` reports two numbers:
+- **Bits per byte** on code the model never saw. Lower is better. It is comparable across tokenizers, so v1 vs v2 is a fair comparison.
+- **pass@1 / pass@k** on 30 small programming problems. YCode-LM writes each solution, and it is *executed* against unit tests in an isolated subprocess with a timeout. Only evaluate models you trained yourself, because generated code is run.
 
 **Model sizes** (`--preset`; parameter counts are for an 8k vocabulary):
 
-| Preset | Layers × width | Context | Params | Where to train |
-| --- | --- | --- | --- | --- |
-| `tiny` | 2 × 64 | 128 | ~0.6M | tests / smoke runs |
-| `small` | 4 × 256 | 256 | ~5M | laptop CPU, ~1–2 h |
-| `base` | 6 × 384 | 512 | ~14M | fast CPU or any GPU |
-| `medium` | 8 × 512 | 1024 | ~30M | GPU |
-| `large` | 12 × 768 | 1024 | ~92M | GPU, many hours |
+| Preset | Layers × width | Heads (KV) | Context | Params | Where to train |
+| --- | --- | --- | --- | --- | --- |
+| `v2-tiny` | 2 × 64 | 4 (2) | 128 | ~0.6M | tests / smoke runs |
+| **`v2-small`** (default) | 8 × 256 | 8 (2) | 512 | ~7.7M | laptop CPU, 2–4 h |
+| `v2-base` | 12 × 512 | 8 (2) | 1024 | ~38M | GPU |
+| `v2-medium` | 16 × 768 | 12 (4) | 1024 | ~107M | GPU, many hours |
+| `v2-large` | 24 × 1024 | 16 (4) | 2048 | ~274M | multi-hour GPU runs |
+
+The v1 presets (`tiny`, `small`, `base`, `medium`, `large`) are still available.
 
 Use `--layers/--heads/--embd/--context` to customize a preset.
 

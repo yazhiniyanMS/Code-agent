@@ -23,6 +23,10 @@ class LocalLM:
         self.path = Path(model_dir)
 
     @property
+    def version(self) -> int:
+        return int(self.payload.get("config", {}).get("arch_version", 1))
+
+    @property
     def stage(self) -> str:
         return str(self.payload.get("stage", "pretrain"))
 
