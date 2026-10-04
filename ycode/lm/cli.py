@@ -31,6 +31,8 @@ def _train_args(p: argparse.ArgumentParser, *, sft: bool) -> None:
     p.add_argument("--out", type=Path, default=None, help="Where to write the model.")
     if sft:
         p.add_argument("--init-from", required=True, type=Path, help="Pretrained model directory.")
+        p.add_argument("--resume", action="store_true",
+                       help="Continue an interrupted SFT run in --out (falls back to --init-from).")
     else:
         p.add_argument("--preset", default="v2-small",
                        help="Model size: v3-40m, v2-tiny, v2-small (default), v2-base, v2-medium, v2-large, or v1 presets.")

@@ -265,9 +265,11 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
 
     start_step = 0
     if cfg.init_from or cfg.resume:
-        source = Path(cfg.init_from) if cfg.init_from else out_dir
+        # Resuming continues the run in out_dir; otherwise start from init_from.
+        resumable = cfg.resume and (out_dir / CHECKPOINT_NAME).is_file()
+        source = out_dir if (resumable or not cfg.init_from) else Path(cfg.init_from)
         model, tok, payload = load_checkpoint(source, device)
-        if cfg.resume:
+        if cfg.resume and source == out_dir:
             start_step = int(payload.get("step", 0))
         log(f"Loaded {source} (step {payload.get('step')}, stage {payload.get('stage')})")
     else:

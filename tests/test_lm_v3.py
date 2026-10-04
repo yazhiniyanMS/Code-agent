@@ -112,3 +112,13 @@ def test_segmented_training_matches_schedule(data_dir, tmp_path):
     assert second["steps"] == 12
     cfg = _cfg(max_steps=12)
     assert lr_at(5, cfg) == pytest.approx(cfg.lr)  # segment 1 ended mid-run at full LR, not decayed
+
+
+def test_sft_resume_continues_in_out_dir(data_dir, tmp_path):
+    train(data_dir, tmp_path / "base", _cfg(max_steps=4), log=lambda *_: None)
+    sft = dict(stage="sft", init_from=str(tmp_path / "base"), optimizer="adamw")
+    train(data_dir, tmp_path / "chat", _cfg(max_steps=8, until_step=3, **sft), log=lambda *_: None)
+    logs = []
+    summary = train(data_dir, tmp_path / "chat", _cfg(max_steps=8, resume=True, **sft), log=logs.append)
+    assert summary["steps"] == 8
+    assert any("chat" in line and "step 3" in line for line in logs)  # resumed the SFT run, not the base
