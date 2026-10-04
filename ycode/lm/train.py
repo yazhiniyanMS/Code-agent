@@ -15,7 +15,7 @@ from typing import Callable
 import numpy as np
 import torch
 
-from ycode.lm.model import GPT, PRESETS, GPTConfig
+from ycode.lm.model import DEFAULT_PRESET, GPT, PRESETS, GPTConfig
 from ycode.lm.tokenizer import BPETokenizer
 
 Log = Callable[[str], None]
@@ -54,7 +54,7 @@ def pick_precision(requested: str, device: str) -> str:
 @dataclass
 class TrainConfig:
     stage: str = "pretrain"  # pretrain | sft
-    preset: str = "small"
+    preset: str = DEFAULT_PRESET
     model_overrides: dict = field(default_factory=dict)
     batch_size: int = 16
     grad_accum: int = 1
@@ -73,6 +73,12 @@ class TrainConfig:
     seed: int = 1337
     init_from: str | None = None  # checkpoint dir to start from (required for sft)
     resume: bool = False
+    # v2 efficiency / quality options
+    schedule: str = "wsd"  # wsd (warmup-stable-decay) | cosine
+    decay_frac: float = 0.2  # wsd: final fraction of training spent decaying the LR
+    anneal_mix: float = 0.2  # pretrain: share of instruction data mixed in during the decay phase
+    pack: bool = True  # sft: pack several examples per sequence instead of padding
+    compile: bool = False  # torch.compile the model for training
 
 
 # ------------------------------------------------------------- checkpoints
@@ -83,7 +89,7 @@ def save_checkpoint(out_dir: Path, model: GPT, tok: BPETokenizer, *, step: int, 
     out_dir.mkdir(parents=True, exist_ok=True)
     payload = {
         "format": "ycode-lm",
-        "version": 1,
+        "version": model.cfg.arch_version,
         "config": model.cfg.to_dict(),
         "model": {k: v.detach().cpu() for k, v in model.state_dict().items()},
         "tokenizer": tok.to_dict(),
@@ -124,24 +130,43 @@ def load_checkpoint(path: Path, device: str = "cpu") -> tuple[GPT, BPETokenizer,
 
 
 class PretrainData:
+    """Random windows from the token stream. During the LR decay phase a share
+    of each batch can come from instruction data ("annealing"), so the base
+    model already knows the chat format before SFT."""
+
     def __init__(self, data_dir: Path, block_size: int, batch_size: int, device: str) -> None:
         self.splits = {s: np.memmap(data_dir / f"{s}.bin", dtype=np.uint16, mode="r") for s in ("train", "val")}
         for split, arr in self.splits.items():
             if len(arr) <= block_size + 1:
                 raise ValueError(f"{split}.bin has only {len(arr)} tokens; need more than block_size={block_size}")
+        sft_path = data_dir / "sft_tokens.bin"
+        self.sft = np.memmap(sft_path, dtype=np.uint16, mode="r") if sft_path.is_file() else None
+        if self.sft is not None and len(self.sft) <= block_size + 1:
+            self.sft = None
+        self.offsets = np.arange(block_size + 1)
         self.block_size, self.batch_size, self.device = block_size, batch_size, device
 
-    def batch(self, split: str, gen: torch.Generator):
-        data = self.splits[split]
-        ix = torch.randint(len(data) - self.block_size - 1, (self.batch_size,), generator=gen)
-        x = torch.stack([torch.from_numpy(data[i: i + self.block_size].astype(np.int64)) for i in ix.tolist()])
-        y = torch.stack([torch.from_numpy(data[i + 1: i + 1 + self.block_size].astype(np.int64)) for i in ix.tolist()])
-        return x.to(self.device), y.to(self.device), None
+    def _windows(self, data, n: int, gen: torch.Generator) -> np.ndarray:
+        starts = torch.randint(len(data) - self.block_size - 1, (n,), generator=gen).numpy()
+        return np.asarray(data[starts[:, None] + self.offsets], dtype=np.int64)  # one vectorised gather
+
+    def batch(self, split: str, gen: torch.Generator, mix: float = 0.0):
+        n_mix = int(round(self.batch_size * mix)) if (self.sft is not None and split == "train") else 0
+        rows = self._windows(self.splits[split], self.batch_size - n_mix, gen)
+        if n_mix:
+            rows = np.concatenate([rows, self._windows(self.sft, n_mix, gen)])
+        t = torch.from_numpy(rows)
+        return t[:, :-1].to(self.device), t[:, 1:].to(self.device), None
 
 
 class SFTData:
+    """Instruction examples with an answer-only loss mask.
+
+    With packing (default), each row is filled with several whole examples
+    back to back, so no compute is wasted on padding."""
+
     def __init__(self, data_dir: Path, block_size: int, batch_size: int, device: str, pad_id: int,
-                 val_fraction: float = 0.05) -> None:
+                 val_fraction: float = 0.05, pack: bool = True) -> None:
         self.tokens = np.memmap(data_dir / "sft_tokens.bin", dtype=np.uint16, mode="r")
         self.mask = np.memmap(data_dir / "sft_mask.bin", dtype=np.uint8, mode="r")
         index = np.load(data_dir / "sft_index.npy")
@@ -150,16 +175,28 @@ class SFTData:
         n_val = max(1, int(len(index) * val_fraction))
         self.index = {"val": index[:n_val], "train": index[n_val:]}
         self.block_size, self.batch_size, self.device, self.pad_id = block_size, batch_size, device, pad_id
+        self.pack = pack
 
-    def batch(self, split: str, gen: torch.Generator):
-        index = self.index[split]
-        picks = torch.randint(len(index), (self.batch_size,), generator=gen).tolist()
-        seqs = []
-        for p in picks:
-            start, length = index[p]
-            length = min(int(length), self.block_size + 1)
-            seqs.append((self.tokens[start: start + length].astype(np.int64),
-                         self.mask[start: start + length].astype(np.int64)))
+    def _example(self, index, gen: torch.Generator):
+        start, length = index[int(torch.randint(len(index), (1,), generator=gen))]
+        return (self.tokens[start: start + length].astype(np.int64),
+                self.mask[start: start + length].astype(np.int64))
+
+    def _row(self, index, gen: torch.Generator):
+        need = self.block_size + 1
+        if not self.pack:
+            t, m = self._example(index, gen)
+            return t[:need], m[:need]
+        toks, masks, size = [], [], 0
+        while size < need:
+            t, m = self._example(index, gen)
+            toks.append(t)
+            masks.append(m)
+            size += len(t)
+        return np.concatenate(toks)[:need], np.concatenate(masks)[:need]
+
+    def batch(self, split: str, gen: torch.Generator, mix: float = 0.0):
+        seqs = [self._row(self.index[split], gen) for _ in range(self.batch_size)]
         width = max(len(t) for t, _ in seqs) - 1
         x = torch.full((len(seqs), width), self.pad_id, dtype=torch.long)
         y = torch.full((len(seqs), width), self.pad_id, dtype=torch.long)
@@ -175,11 +212,31 @@ class SFTData:
 # --------------------------------------------------------------- training
 
 
-def lr_at(step: int, cfg: TrainConfig) -> float:
+def lr_at(step: int, cfg: TrainConfig, progress: float | None = None) -> float:
+    """Learning rate for this step.
+
+    ``progress`` (0..1) is the larger of step- and time-based progress, so a
+    run stopped by ``max_minutes`` still completes its LR decay instead of
+    ending at a high learning rate.
+    """
     if step < cfg.warmup_steps:
         return cfg.lr * (step + 1) / cfg.warmup_steps
-    progress = min(1.0, (step - cfg.warmup_steps) / max(1, cfg.max_steps - cfg.warmup_steps))
-    return cfg.min_lr + 0.5 * (cfg.lr - cfg.min_lr) * (1 + math.cos(math.pi * progress))
+    if progress is None:
+        progress = step / max(1, cfg.max_steps)
+    progress = min(1.0, max(0.0, progress))
+    if cfg.schedule == "cosine":
+        warm = cfg.warmup_steps / max(1, cfg.max_steps)
+        p = min(1.0, max(0.0, (progress - warm) / max(1e-9, 1 - warm)))
+        return cfg.min_lr + 0.5 * (cfg.lr - cfg.min_lr) * (1 + math.cos(math.pi * p))
+    decay_start = 1.0 - cfg.decay_frac
+    if progress < decay_start:
+        return cfg.lr
+    p = (progress - decay_start) / max(1e-9, cfg.decay_frac)
+    return cfg.min_lr + 0.5 * (cfg.lr - cfg.min_lr) * (1 + math.cos(math.pi * p))
+
+
+def in_decay_phase(cfg: TrainConfig, progress: float) -> bool:
+    return cfg.schedule == "wsd" and progress >= 1.0 - cfg.decay_frac
 
 
 @torch.no_grad()
@@ -220,7 +277,7 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
 
     block = model.cfg.block_size
     if cfg.stage == "sft":
-        data = SFTData(data_dir, block, cfg.batch_size, device, pad_id=tok.eot_id)
+        data = SFTData(data_dir, block, cfg.batch_size, device, pad_id=tok.eot_id, pack=cfg.pack)
     else:
         data = PretrainData(data_dir, block, cfg.batch_size, device)
 
@@ -240,26 +297,42 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
     gen = torch.Generator().manual_seed(cfg.seed + start_step)
     eval_gen = torch.Generator().manual_seed(cfg.seed + 999)
 
-    log(f"Model: {model.num_params() / 1e6:.2f}M parameters, context {block}, device {device}, "
-        f"precision {precision}, stage {cfg.stage}")
+    train_model = model
+    if cfg.compile:
+        try:
+            train_model = torch.compile(model)
+        except Exception as exc:  # noqa: BLE001 - compilation is an optional speed-up
+            log(f"torch.compile unavailable ({exc}); continuing without it.")
+
+    log(f"Model: YCode-LM v{model.cfg.arch_version}, {model.num_params() / 1e6:.2f}M parameters, "
+        f"context {block}, device {device}, precision {precision}, stage {cfg.stage}"
+        f"{', compiled' if train_model is not model else ''}")
     t0 = time.time()
     tokens_seen = 0
     best_val = None
     history = []
     step = start_step
     model.train()
+    annealing_logged = False
     while step < cfg.max_steps:
-        if cfg.max_minutes is not None and (time.time() - t0) / 60 >= cfg.max_minutes:
-            log(f"Time limit of {cfg.max_minutes} minutes reached.")
-            break
-        lr = lr_at(step, cfg)
+        progress = step / max(1, cfg.max_steps)
+        if cfg.max_minutes is not None:
+            progress = max(progress, (time.time() - t0) / 60 / cfg.max_minutes)
+            if progress >= 1.0:
+                log(f"Time limit of {cfg.max_minutes} minutes reached.")
+                break
+        lr = lr_at(step, cfg, progress)
         for group in optimizer.param_groups:
             group["lr"] = lr
+        mix = cfg.anneal_mix if (cfg.stage == "pretrain" and in_decay_phase(cfg, progress)) else 0.0
+        if mix and not annealing_logged:
+            log(f"Decay phase: annealing with {mix:.0%} instruction data.")
+            annealing_logged = True
         loss_total = 0.0
         for _ in range(cfg.grad_accum):
-            x, y, m = data.batch("train", gen)
+            x, y, m = data.batch("train", gen, mix=mix)
             with autocast:
-                _, loss = model(x, y, loss_mask=m)
+                _, loss = train_model(x, y, loss_mask=m)
             (loss / cfg.grad_accum).backward()
             loss_total += loss.item() / cfg.grad_accum
             tokens_seen += x.numel()

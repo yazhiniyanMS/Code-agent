@@ -3,6 +3,11 @@
 Architecture: token embeddings -> N x [RMSNorm -> causal self-attention
 (rotary position embeddings) -> RMSNorm -> SwiGLU MLP] -> RMSNorm -> LM
 head (weights tied to the embeddings). Generation uses a KV cache.
+
+Version 2 adds grouped-query attention (fewer key/value heads: a smaller KV
+cache and faster generation) and QK-norm (normalised queries/keys, which keeps
+attention logits bounded and allows higher learning rates). Version-1
+checkpoints load unchanged: the new fields default to v1 behaviour.
 """
 
 from __future__ import annotations
@@ -23,19 +28,36 @@ class GPTConfig:
     n_head: int = 6
     n_embd: int = 384
     dropout: float = 0.0
+    n_kv_head: int | None = None  # v2: grouped-query attention (None = one KV head per query head)
+    qk_norm: bool = False  # v2: RMSNorm on queries and keys
+    arch_version: int = 1
+
+    @property
+    def kv_heads(self) -> int:
+        return self.n_kv_head or self.n_head
 
     def to_dict(self) -> dict:
         return asdict(self)
 
 
-# Named sizes. Parameter counts assume vocab_size=4096.
+_V2 = dict(qk_norm=True, arch_version=2)
+
+# Named sizes. Parameter counts are for an 8k vocabulary.
 PRESETS: dict[str, dict] = {
-    "tiny": dict(n_layer=2, n_head=2, n_embd=64, block_size=128),       # ~0.4M, for tests
-    "small": dict(n_layer=4, n_head=4, n_embd=256, block_size=256),     # ~4M, CPU-friendly
-    "base": dict(n_layer=6, n_head=6, n_embd=384, block_size=512),      # ~12M
-    "medium": dict(n_layer=8, n_head=8, n_embd=512, block_size=1024),   # ~27M, wants a GPU
-    "large": dict(n_layer=12, n_head=12, n_embd=768, block_size=1024),  # ~88M, GPU
+    # version 1
+    "tiny": dict(n_layer=2, n_head=2, n_embd=64, block_size=128),       # ~0.6M, for tests
+    "small": dict(n_layer=4, n_head=4, n_embd=256, block_size=256),     # ~5M, CPU-friendly
+    "base": dict(n_layer=6, n_head=6, n_embd=384, block_size=512),      # ~14M
+    "medium": dict(n_layer=8, n_head=8, n_embd=512, block_size=1024),   # ~30M, wants a GPU
+    "large": dict(n_layer=12, n_head=12, n_embd=768, block_size=1024),  # ~92M, GPU
+    # version 2 (GQA + QK-norm)
+    "v2-tiny": dict(n_layer=2, n_head=4, n_kv_head=2, n_embd=64, block_size=128, **_V2),
+    "v2-small": dict(n_layer=8, n_head=8, n_kv_head=2, n_embd=256, block_size=512, **_V2),
+    "v2-base": dict(n_layer=12, n_head=8, n_kv_head=2, n_embd=512, block_size=1024, **_V2),
+    "v2-medium": dict(n_layer=16, n_head=12, n_kv_head=4, n_embd=768, block_size=1024, **_V2),
+    "v2-large": dict(n_layer=24, n_head=16, n_kv_head=4, n_embd=1024, block_size=2048, **_V2),
 }
+DEFAULT_PRESET = "v2-small"
 
 
 class RMSNorm(nn.Module):
@@ -68,36 +90,53 @@ class Attention(nn.Module):
     def __init__(self, cfg: GPTConfig) -> None:
         super().__init__()
         assert cfg.n_embd % cfg.n_head == 0, "n_embd must be divisible by n_head"
+        assert cfg.n_head % cfg.kv_heads == 0, "n_head must be a multiple of n_kv_head"
         self.n_head = cfg.n_head
+        self.n_kv = cfg.kv_heads
         self.head_dim = cfg.n_embd // cfg.n_head
-        self.qkv = nn.Linear(cfg.n_embd, 3 * cfg.n_embd, bias=False)
+        assert self.head_dim % 2 == 0, "head dimension must be even for rotary embeddings"
+        self.kv_dim = self.n_kv * self.head_dim
+        # One fused projection; with n_kv == n_head this is exactly the v1 layout.
+        self.qkv = nn.Linear(cfg.n_embd, cfg.n_embd + 2 * self.kv_dim, bias=False)
         self.proj = nn.Linear(cfg.n_embd, cfg.n_embd, bias=False)
+        if cfg.qk_norm:
+            self.q_norm = RMSNorm(self.head_dim)
+            self.k_norm = RMSNorm(self.head_dim)
+        else:
+            self.q_norm = self.k_norm = None
         self.dropout = cfg.dropout
+
+    def _sdpa(self, q, k, v, **kwargs):
+        if self.n_kv != self.n_head:
+            repeat = self.n_head // self.n_kv
+            k = k.repeat_interleave(repeat, dim=1)
+            v = v.repeat_interleave(repeat, dim=1)
+        return F.scaled_dot_product_attention(q, k, v, **kwargs)
 
     def forward(self, x, cos, sin, cache=None):
         B, T, C = x.shape
-        q, k, v = self.qkv(x).split(C, dim=2)
+        q, k, v = self.qkv(x).split([C, self.kv_dim, self.kv_dim], dim=2)
         q = q.view(B, T, self.n_head, self.head_dim).transpose(1, 2)
-        k = k.view(B, T, self.n_head, self.head_dim).transpose(1, 2)
-        v = v.view(B, T, self.n_head, self.head_dim).transpose(1, 2)
+        k = k.view(B, T, self.n_kv, self.head_dim).transpose(1, 2)
+        v = v.view(B, T, self.n_kv, self.head_dim).transpose(1, 2)
+        if self.q_norm is not None:
+            q, k = self.q_norm(q), self.k_norm(k)
         q, k = apply_rope(q, cos, sin), apply_rope(k, cos, sin)
         if cache is not None:
             if cache.get("k") is not None:
                 k = torch.cat([cache["k"], k], dim=2)
                 v = torch.cat([cache["v"], v], dim=2)
-            cache["k"], cache["v"] = k, v
+            cache["k"], cache["v"] = k, v  # cached at n_kv heads: GQA keeps the cache small
         # Causal masking: with a cache, the T new queries see all past keys.
         if cache is not None and k.size(2) != T:
             if T == 1:
-                y = F.scaled_dot_product_attention(q, k, v)
+                y = self._sdpa(q, k, v)
             else:
                 past = k.size(2) - T
                 mask = torch.ones(T, k.size(2), dtype=torch.bool, device=x.device).tril(diagonal=past)
-                y = F.scaled_dot_product_attention(q, k, v, attn_mask=mask)
+                y = self._sdpa(q, k, v, attn_mask=mask)
         else:
-            y = F.scaled_dot_product_attention(
-                q, k, v, is_causal=True, dropout_p=self.dropout if self.training else 0.0
-            )
+            y = self._sdpa(q, k, v, is_causal=True, dropout_p=self.dropout if self.training else 0.0)
         y = y.transpose(1, 2).contiguous().view(B, T, C)
         return self.proj(y)
 
