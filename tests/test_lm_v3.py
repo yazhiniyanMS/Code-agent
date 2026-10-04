@@ -100,3 +100,15 @@ def test_cli_defaults_to_muon_for_v3(data_dir, tmp_path, capsys):
     assert cli.main(["train", "--data", str(data_dir), "--out", str(tmp_path / "m"), "--preset", "v3-tiny",
                      "--context", "32", "--steps", "2", "--batch-size", "2", "--device", "cpu"]) == 0
     assert "optimizer muon" in capsys.readouterr().out
+
+
+def test_segmented_training_matches_schedule(data_dir, tmp_path):
+    from ycode.lm.train import lr_at
+
+    logs = []
+    first = train(data_dir, tmp_path / "m", _cfg(max_steps=12, until_step=5), log=logs.append)
+    assert first["steps"] == 5
+    second = train(data_dir, tmp_path / "m", _cfg(max_steps=12, resume=True), log=logs.append)
+    assert second["steps"] == 12
+    cfg = _cfg(max_steps=12)
+    assert lr_at(5, cfg) == pytest.approx(cfg.lr)  # segment 1 ended mid-run at full LR, not decayed

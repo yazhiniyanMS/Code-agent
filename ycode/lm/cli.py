@@ -39,7 +39,9 @@ def _train_args(p: argparse.ArgumentParser, *, sft: bool) -> None:
         p.add_argument("--embd", type=int, help="Override embedding width.")
         p.add_argument("--context", type=int, help="Override context length (tokens).")
         p.add_argument("--resume", action="store_true", help="Continue training the model in --out.")
-    p.add_argument("--steps", type=int, default=None, help="Optimizer steps.")
+    p.add_argument("--steps", type=int, default=None, help="Optimizer steps (the LR schedule spans all of them).")
+    p.add_argument("--until-step", type=int, default=None,
+                   help="Stop at this step and save; continue later with --resume (segmented training).")
     p.add_argument("--minutes", type=float, default=None, help="Stop after this many minutes.")
     p.add_argument("--batch-size", type=int, default=16)
     p.add_argument("--grad-accum", type=int, default=1)
@@ -153,6 +155,7 @@ def main(argv: list[str] | None = None) -> int:
             seed=args.seed,
             init_from=str(args.init_from) if sft else None,
             resume=getattr(args, "resume", False),
+            until_step=args.until_step,
         )
         out = args.out or default_model_dir()
         try:

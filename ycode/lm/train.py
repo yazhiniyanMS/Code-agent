@@ -80,6 +80,7 @@ class TrainConfig:
     anneal_mix: float = 0.2  # pretrain: share of instruction data mixed in during the decay phase
     pack: bool = True  # sft: pack several examples per sequence instead of padding
     compile: bool = False  # torch.compile the model for training
+    until_step: int | None = None  # stop early at this step (segmented runs); schedule still spans max_steps
     optimizer: str = "adamw"  # adamw | muon (Muon for hidden matrices + AdamW for the rest)
     muon_lr: float = 0.02
 
@@ -316,7 +317,8 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
     step = start_step
     model.train()
     annealing_logged = False
-    while step < cfg.max_steps:
+    stop_at = min(cfg.max_steps, cfg.until_step) if cfg.until_step else cfg.max_steps
+    while step < stop_at:
         progress = step / max(1, cfg.max_steps)
         if cfg.max_minutes is not None:
             progress = max(progress, (time.time() - t0) / 60 / cfg.max_minutes)
