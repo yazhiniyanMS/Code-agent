@@ -33,7 +33,7 @@ def _train_args(p: argparse.ArgumentParser, *, sft: bool) -> None:
         p.add_argument("--init-from", required=True, type=Path, help="Pretrained model directory.")
     else:
         p.add_argument("--preset", default="v2-small",
-                       help="Model size: v2-tiny, v2-small (default), v2-base, v2-medium, v2-large, or v1 presets.")
+                       help="Model size: v3-40m, v2-tiny, v2-small (default), v2-base, v2-medium, v2-large, or v1 presets.")
         p.add_argument("--layers", type=int, help="Override number of layers.")
         p.add_argument("--heads", type=int, help="Override number of attention heads.")
         p.add_argument("--embd", type=int, help="Override embedding width.")
@@ -50,6 +50,10 @@ def _train_args(p: argparse.ArgumentParser, *, sft: bool) -> None:
     p.add_argument("--schedule", default="wsd", choices=("wsd", "cosine"),
                    help="LR schedule: warmup-stable-decay (default) or cosine.")
     p.add_argument("--compile", action="store_true", help="Use torch.compile (faster on many machines).")
+    p.add_argument("--optimizer", default=None, choices=("adamw", "muon"),
+                   help="adamw, or muon (Muon for hidden matrices + AdamW for the rest). "
+                        "Default: muon for v3 presets, adamw otherwise.")
+    p.add_argument("--muon-lr", type=float, default=0.02)
     if sft:
         p.add_argument("--no-pack", action="store_true", help="One example per row instead of packing.")
     else:
@@ -142,6 +146,8 @@ def main(argv: list[str] | None = None) -> int:
             precision=args.precision,
             schedule=args.schedule,
             compile=args.compile,
+            optimizer=args.optimizer or ("muon" if str(getattr(args, "preset", "")).startswith("v3") else "adamw"),
+            muon_lr=args.muon_lr,
             pack=not getattr(args, "no_pack", False),
             anneal_mix=getattr(args, "anneal_mix", 0.0),
             seed=args.seed,

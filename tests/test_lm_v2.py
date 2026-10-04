@@ -13,7 +13,6 @@ from ycode.lm.data import (  # noqa: E402
     extract_python_examples,
     inject_bug,
     parallel_encode,
-    prepare_dataset,
     strip_license_header,
 )
 from ycode.lm.model import GPT, PRESETS, GPTConfig  # noqa: E402
@@ -151,18 +150,6 @@ def test_parallel_encode_matches_serial():
     tok = BPETokenizer.train([CODE * 5], vocab_size=300)
     texts = [CODE.replace("add", f"add{i}") for i in range(12)]
     assert parallel_encode(tok, texts, workers=2) == [tok.encode(t, allow_special=False) for t in texts]
-
-
-@pytest.fixture(scope="module")
-def data_dir(tmp_path_factory):
-    src = tmp_path_factory.mktemp("src")
-    for i in range(6):
-        (src / f"m{i}.py").write_text(CODE.replace("add", f"add{i}") * 3)
-    (src / "skip_me.py").write_text("def secret():\n    return 1\n" * 50)
-    out = tmp_path_factory.mktemp("data")
-    meta = prepare_dataset([src], out, vocab_size=400, exclude=["*skip_me*"], workers=1, log=lambda *_: None)
-    assert meta["files"] == 6
-    return out
 
 
 def test_sft_packing_fills_rows(data_dir):

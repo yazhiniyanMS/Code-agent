@@ -109,6 +109,8 @@ ycode/
 │   ├── model.py         # GPT transformer: RoPE, RMSNorm, SwiGLU, KV-cache sampling
 │   ├── data.py          # corpus collection, instruction-pair extraction, encoding
 │   ├── train.py         # pretraining + instruction tuning, checkpoints, resume
+│   ├── optim.py         # Muon optimizer (v3) + AdamW wiring
+│   ├── evaluate.py      # bits/byte on held-out code, pass@k on executed problems
 │   ├── generate.py      # inference (chat + completion, streaming)
 │   └── cli.py           # the `ycode-lm` command
 ├── tools/
@@ -219,6 +221,15 @@ ycode --local models/chat                       # or point to any trained model
 
 Other commands: `ycode-lm sample --model models/base --prompt "def quicksort("` (raw code completion), `ycode-lm info`, and `ycode-lm train --resume` (continue an interrupted run). Ctrl+C during training keeps the last checkpoint. Training options include `--schedule wsd|cosine`, `--anneal-mix`, `--no-pack`, `--compile` (torch.compile) and `--grad-accum`.
 
+**Version 3: the 40M-parameter model.** `--preset v3-40m` uses the v2 architecture scaled to 40.8M parameters with a 1024-token context. It trains with the **Muon optimizer** by default: transformer weight matrices are updated with orthogonalized momentum (Newton–Schulz iterations), while embeddings and norms stay on AdamW. On small transformers, Muon reaches a given loss with fewer tokens, which matters most when compute is the bottleneck. Use `--optimizer adamw` to switch back.
+
+```bash
+ycode-lm train --data data/ --out models/v3-base --preset v3-40m --compile --minutes 480
+ycode-lm sft   --data data/ --init-from models/v3-base --out ~/.ycode/models/ycode-lm --compile --minutes 60
+```
+
+A 40M model wants far more data and compute than a CPU can supply. The compute-optimal budget is about 800M training tokens, while 8 hours on a 4-core CPU covers about 50M. On a single consumer GPU, the same run takes hours instead of days.
+
 **Evaluation.** `ycode-lm eval` reports two numbers:
 - **Bits per byte** on code the model never saw. Lower is better. It is comparable across tokenizers, so v1 vs v2 is a fair comparison.
 - **pass@1 / pass@k** on 30 small programming problems. YCode-LM writes each solution, and it is *executed* against unit tests in an isolated subprocess with a timeout. Only evaluate models you trained yourself, because generated code is run.
@@ -227,6 +238,8 @@ Other commands: `ycode-lm sample --model models/base --prompt "def quicksort("` 
 
 | Preset | Layers × width | Heads (KV) | Context | Params | Where to train |
 | --- | --- | --- | --- | --- | --- |
+| **`v3-40m`** | 13 × 512 | 8 (2) | 1024 | **40.8M** | GPU ideal; CPU works but slowly (~1.5–2k tok/s on 4 cores) |
+| `v3-tiny` | 3 × 64 | 4 (2) | 128 | ~0.7M | tests |
 | `v2-tiny` | 2 × 64 | 4 (2) | 128 | ~0.6M | tests / smoke runs |
 | **`v2-small`** (default) | 8 × 256 | 8 (2) | 512 | ~7.7M | laptop CPU, 2–4 h |
 | `v2-base` | 12 × 512 | 8 (2) | 1024 | ~38M | GPU |

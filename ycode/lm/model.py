@@ -57,6 +57,12 @@ PRESETS: dict[str, dict] = {
     "v2-medium": dict(n_layer=16, n_head=12, n_kv_head=4, n_embd=768, block_size=1024, **_V2),
     "v2-large": dict(n_layer=24, n_head=16, n_kv_head=4, n_embd=1024, block_size=2048, **_V2),
 }
+# version 3: the ~40M-parameter model (v2 architecture, scaled up, trained with Muon)
+_V3 = dict(qk_norm=True, arch_version=3)
+PRESETS.update({
+    "v3-tiny": dict(n_layer=3, n_head=4, n_kv_head=2, n_embd=64, block_size=128, **_V3),
+    "v3-40m": dict(n_layer=13, n_head=8, n_kv_head=2, n_embd=512, block_size=1024, **_V3),
+})
 DEFAULT_PRESET = "v2-small"
 
 

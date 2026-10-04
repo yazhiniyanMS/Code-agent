@@ -16,6 +16,7 @@ import numpy as np
 import torch
 
 from ycode.lm.model import DEFAULT_PRESET, GPT, PRESETS, GPTConfig
+from ycode.lm.optim import build_optimizer
 from ycode.lm.tokenizer import BPETokenizer
 
 Log = Callable[[str], None]
@@ -79,13 +80,15 @@ class TrainConfig:
     anneal_mix: float = 0.2  # pretrain: share of instruction data mixed in during the decay phase
     pack: bool = True  # sft: pack several examples per sequence instead of padding
     compile: bool = False  # torch.compile the model for training
+    optimizer: str = "adamw"  # adamw | muon (Muon for hidden matrices + AdamW for the rest)
+    muon_lr: float = 0.02
 
 
 # ------------------------------------------------------------- checkpoints
 
 
 def save_checkpoint(out_dir: Path, model: GPT, tok: BPETokenizer, *, step: int, stage: str,
-                    val_loss: float | None, optimizer: torch.optim.Optimizer | None = None) -> Path:
+                    val_loss: float | None, optimizer=None) -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
     payload = {
         "format": "ycode-lm",
@@ -281,15 +284,14 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
     else:
         data = PretrainData(data_dir, block, cfg.batch_size, device)
 
-    decay = [p for n, p in model.named_parameters() if p.dim() >= 2]
-    no_decay = [p for n, p in model.named_parameters() if p.dim() < 2]
-    optimizer = torch.optim.AdamW(
-        [{"params": decay, "weight_decay": cfg.weight_decay}, {"params": no_decay, "weight_decay": 0.0}],
-        lr=cfg.lr, betas=(0.9, 0.95), fused=(device == "cuda"),
-    )
+    optimizer = build_optimizer(model, kind=cfg.optimizer, lr=cfg.lr, muon_lr=cfg.muon_lr,
+                                weight_decay=cfg.weight_decay, fused=(device == "cuda"))
     if cfg.resume and (out_dir / "optim.pt").is_file():
-        state = torch.load(out_dir / "optim.pt", map_location=device, weights_only=True)
-        optimizer.load_state_dict(state["optimizer"])
+        state = torch.load(out_dir / "optim.pt", map_location=device, weights_only=True)["optimizer"]
+        try:
+            optimizer.load_state_dict(state if "optimizers" in state else {"optimizers": [state]})
+        except (ValueError, KeyError, IndexError):
+            log("Optimizer state does not match (different --optimizer?); starting it fresh.")
 
     precision = pick_precision(cfg.precision, device)
     autocast = torch.autocast(device_type="cuda" if device == "cuda" else "cpu", dtype=torch.bfloat16,
@@ -305,7 +307,7 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
             log(f"torch.compile unavailable ({exc}); continuing without it.")
 
     log(f"Model: YCode-LM v{model.cfg.arch_version}, {model.num_params() / 1e6:.2f}M parameters, "
-        f"context {block}, device {device}, precision {precision}, stage {cfg.stage}"
+        f"context {block}, device {device}, precision {precision}, optimizer {cfg.optimizer}, stage {cfg.stage}"
         f"{', compiled' if train_model is not model else ''}")
     t0 = time.time()
     tokens_seen = 0
@@ -322,8 +324,7 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
                 log(f"Time limit of {cfg.max_minutes} minutes reached.")
                 break
         lr = lr_at(step, cfg, progress)
-        for group in optimizer.param_groups:
-            group["lr"] = lr
+        optimizer.set_lr_scale(lr / cfg.lr)
         mix = cfg.anneal_mix if (cfg.stage == "pretrain" and in_decay_phase(cfg, progress)) else 0.0
         if mix and not annealing_logged:
             log(f"Decay phase: annealing with {mix:.0%} instruction data.")
