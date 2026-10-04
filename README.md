@@ -13,6 +13,8 @@ YCode is an AI coding agent that runs in your terminal. Start it inside a projec
 
 It uses the Anthropic Claude API to do the reasoning. Everything else runs locally: the tool system, the permission checks and the terminal UI. The model sits behind a small provider interface, so you can add other LLM providers without rewriting the agent.
 
+YCode also includes **YCode-LM**, a coding language model you train yourself from scratch: its own tokenizer, its own transformer, and training code, with no pretrained weights and no API key (see [Your own LLM](#your-own-llm-ycode-lm-no-api-key)).
+
 ```text
 ycode> Fix the failing add() test
 
@@ -57,7 +59,8 @@ ycode> Fix the failing add() test
 - **Diff awareness.** After each task YCode summarizes the changed files and the commands it ran. `/diff` shows the full diff.
 - **Project instructions.** A `YCODE.md` file in the repository is loaded into the agent's instructions.
 - **Layered configuration:** global and per-project TOML files, environment variables and CLI flags.
-- **Model-agnostic core.** The agent depends only on `LLMProvider`. Claude is the first implementation.
+- **Model-agnostic core.** The agent depends only on `LLMProvider`. There are two implementations: Claude, and your own local model.
+- **Your own LLM.** `ycode-lm` builds a byte-level BPE tokenizer and a GPT-style transformer from scratch, pretrains it on code, instruction-tunes it to answer programming questions, and serves it to YCode with `ycode --local`. Everything runs offline.
 
 ## Architecture
 
@@ -99,7 +102,15 @@ ycode/
 │   └── prompts.py       # system prompt
 ├── llm/
 │   ├── base.py          # provider-neutral messages, ToolSpec, LLMProvider
-│   └── anthropic.py     # Claude via the official anthropic SDK (streaming)
+│   ├── anthropic.py     # Claude via the official anthropic SDK (streaming)
+│   └── local.py         # your own YCode-LM model (answer-only, no API key)
+├── lm/                  # YCode-LM: the from-scratch model (needs the [local] extra)
+│   ├── tokenizer.py     # byte-level BPE tokenizer for code
+│   ├── model.py         # GPT transformer: RoPE, RMSNorm, SwiGLU, KV-cache sampling
+│   ├── data.py          # corpus collection, instruction-pair extraction, encoding
+│   ├── train.py         # pretraining + instruction tuning, checkpoints, resume
+│   ├── generate.py      # inference (chat + completion, streaming)
+│   └── cli.py           # the `ycode-lm` command
 ├── tools/
 │   ├── base.py          # Tool, ToolRegistry (validation + dispatch), ToolResult
 │   ├── filesystem.py    # read/write/edit/list
@@ -149,6 +160,59 @@ YCode reads `ANTHROPIC_API_KEY`. In order of precedence, the places it looks are
 Values that are already set are never overridden. Any of these work too: `ANTHROPIC_AUTH_TOKEN`, an `ant auth login` profile, or workload identity federation. If YCode finds no credentials, it shows the banner, prints a clear error and exits with status 1.
 
 YCode never prints your key. It also removes `ANTHROPIC_API_KEY` and `ANTHROPIC_AUTH_TOKEN` from the environment of commands it runs, so a stray `env` can't leak the key to the model. **Never commit `.env`.** The included `.gitignore` excludes it.
+
+## Your own LLM (YCode-LM, no API key)
+
+YCode-LM is a programming language model you train from scratch on your own machine. Nothing is downloaded: the tokenizer, the model architecture and the training loop are all in this repository (`ycode/lm/`), and the data is code you already have.
+
+**What it is:**
+- **Tokenizer:** byte-level BPE (`ycode/lm/tokenizer.py`) trained on your corpus. A code-aware pre-tokenizer turns indentation runs, identifiers and operators into compact tokens.
+- **Model:** a decoder-only transformer (`ycode/lm/model.py`) with rotary position embeddings, RMSNorm, SwiGLU MLPs, tied embeddings and a KV cache for fast sampling.
+- **Training data:** any code directories you point it at. With no `--source`, it uses the Python standard library, which every Python install has.
+- **Two training stages:**
+  1. *Pretraining:* next-token prediction on code.
+  2. *Instruction tuning (SFT):* teaches the model to answer. The data is generated automatically from documented functions in your corpus, in both directions: "Write a function `f(x)` that …" is answered with code, and "What does this code do?" with an explanation. You can add your own pairs as JSONL (`{"prompt": ..., "response": ...}`) with `--sft-data`.
+
+**Set up and train:**
+
+```bash
+pip install -e ".[local]"          # adds PyTorch + NumPy
+
+# 1. Build the dataset: collect code, train the tokenizer, create instruction pairs
+ycode-lm prepare --out data/ --source ~/my-projects --source /usr/lib/python3.11 --vocab-size 8192
+
+# 2. Pretrain on code (bf16 on CPUs with AMX/AVX512-BF16, CUDA or Apple MPS when available)
+ycode-lm train --data data/ --out models/base --preset small --layers 6 --context 512 --minutes 120
+
+# 3. Instruction-tune it so it answers requests
+ycode-lm sft --data data/ --init-from models/base --out ~/.ycode/models/ycode-lm --minutes 30
+
+# 4. Use it
+ycode-lm chat                                   # quick Q&A in the terminal
+ycode --local                                   # inside YCode (default model dir ~/.ycode/models/ycode-lm)
+ycode --local models/chat                       # or point to any trained model
+```
+
+Other commands: `ycode-lm sample --model models/base --prompt "def quicksort("` (raw code completion), `ycode-lm info`, and `ycode-lm train --resume` (continue an interrupted run). Ctrl+C during training keeps the last checkpoint.
+
+**Model sizes** (`--preset`; parameter counts are for an 8k vocabulary):
+
+| Preset | Layers × width | Context | Params | Where to train |
+| --- | --- | --- | --- | --- |
+| `tiny` | 2 × 64 | 128 | ~0.6M | tests / smoke runs |
+| `small` | 4 × 256 | 256 | ~5M | laptop CPU, ~1–2 h |
+| `base` | 6 × 384 | 512 | ~14M | fast CPU or any GPU |
+| `medium` | 8 × 512 | 1024 | ~30M | GPU |
+| `large` | 12 × 768 | 1024 | ~92M | GPU, many hours |
+
+Use `--layers/--heads/--embd/--context` to customize a preset.
+
+**Using it in YCode.** `ycode --local`, `YCODE_PROVIDER=local`, or `provider = "local"` in `config.toml` switches YCode to your model. Related settings: `local_model` (path), `local_max_tokens` and `local_temperature`. Nothing is sent over the network.
+
+**Be realistic about quality.** Frontier coding models are trained on trillions of tokens with thousands of GPUs. A few-million-parameter model trained for an hour or two on a CPU learns real Python syntax, idioms and naming conventions, and can write small functions and short explanations. It will also often be wrong, repetitive or confused. Two consequences:
+
+- **Answer-only mode.** In YCode, the local model runs in answer-only mode. It hasn't learned the tool-calling protocol, so it cannot read, edit or run files in your project. YCode shows a notice when it starts. Use Claude (the default provider) for autonomous coding tasks.
+- **How to make it better:** more and better data (your own repositories), a bigger preset, a GPU and longer training. The loss figures in `train_log.json` show whether it is still improving.
 
 ## Usage
 
@@ -289,6 +353,8 @@ The test suite needs no API key and makes no network calls:
 
 - `tests/test_anthropic_provider.py` mocks the Anthropic client: request shape, stream parsing, error mapping and missing credentials.
 - `tests/test_anthropic_wire.py` runs the real `anthropic` SDK against a mock HTTP transport that returns canned server-sent events. It checks the exact JSON YCode sends across a full tool-use round trip.
+- `tests/test_lm.py` covers YCode-LM: tokenizer round-trips (including Unicode), special tokens, a KV-cache check against full recomputation, answer-only loss masking, dataset preparation, pretraining that measurably lowers loss, SFT, resume, checkpoint round trips and the `ycode-lm` CLI end to end. These tests are skipped if PyTorch isn't installed.
+- `tests/test_local_provider.py` checks the local provider: no API key, no tools sent, `--local` from the CLI.
 - `tests/test_agent_loop.py` drives the agent with a scripted fake provider: multi-step tasks, parallel tool calls, the step limit, interruption, truncated tool calls and refusals.
 - The other test files cover configuration, the banner, file tools, path security, command classification and approvals, command execution (timeouts, exit codes, secret stripping), git, project detection and YCODE.md, slash commands, and the CLI and REPL.
 
@@ -298,6 +364,8 @@ python -m pytest -q
 
 ## Roadmap
 
+- YCode-LM: tool-calling training data, so the local model can drive the agent
+- YCode-LM: multi-GPU / distributed training, larger presets
 - More providers: OpenAI-compatible, local models through Ollama
 - Session persistence and resume (`ycode --continue`)
 - Context compaction for very long sessions

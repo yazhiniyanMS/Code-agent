@@ -28,3 +28,9 @@ env/
 
 # Local YCode state
 .ycode/history
+
+# YCode-LM datasets and trained models (large binaries)
+/data/
+/models/
+*.bin
+*.pt

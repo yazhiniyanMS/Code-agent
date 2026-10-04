@@ -65,9 +65,16 @@ _STRICTNESS = {"strict": 0, "normal": 1, "auto": 2}
 
 
 def ycode_home() -> Path:
-    """Directory for global YCode state (config, history, .env)."""
+    """Directory for global YCode state (config, history, .env, models)."""
     override = os.environ.get("YCODE_HOME")
     return Path(override).expanduser() if override else Path.home() / ".ycode"
+
+
+def default_local_model_dir() -> Path:
+    return ycode_home() / "models" / "ycode-lm"
+
+
+PROVIDERS = ("anthropic", "local")
 
 
 @dataclass(frozen=True)
@@ -84,6 +91,10 @@ class Config:
     ignore_dirs: tuple[str, ...] = DEFAULT_IGNORE_DIRS
     allow_outside_workspace: bool = False
     refusal_fallback: bool = True
+    # Local from-scratch model (provider = "local")
+    local_model: str = ""
+    local_max_tokens: int = 400
+    local_temperature: float = 0.7
     # Where each value came from, for /status and debugging.
     sources: tuple[str, ...] = field(default=(), compare=False)
 
@@ -101,7 +112,17 @@ def _coerce(key: str, value: Any, origin: str) -> Any:
     def bad(expected: str) -> ConfigError:
         return ConfigError(f"{origin}: `{key}` must be {expected}, got {value!r}")
 
-    if key in ("max_steps", "max_tokens", "command_timeout", "max_output_chars"):
+    if key == "local_temperature":
+        if isinstance(value, bool):
+            raise bad("a number")
+        try:
+            number = float(value)
+        except (TypeError, ValueError):
+            raise bad("a number") from None
+        if not 0 <= number <= 2:
+            raise bad("between 0 and 2")
+        return number
+    if key in ("max_steps", "max_tokens", "command_timeout", "max_output_chars", "local_max_tokens"):
         if isinstance(value, bool):
             raise bad("an integer")
         try:
@@ -145,6 +166,8 @@ def _validate(config: Config) -> Config:
         raise ConfigError(f"theme must be one of {', '.join(THEMES)}; got {config.theme!r}")
     if not config.model:
         raise ConfigError("model must not be empty")
+    if config.provider not in PROVIDERS:
+        raise ConfigError(f"provider must be one of {', '.join(PROVIDERS)}; got {config.provider!r}")
     return config
 
 
@@ -192,6 +215,8 @@ _ENV_MAP = {
     "YCODE_THEME": "theme",
     "YCODE_COMMAND_TIMEOUT": "command_timeout",
     "YCODE_IGNORE_DIRS": "ignore_dirs",
+    "YCODE_PROVIDER": "provider",
+    "YCODE_LOCAL_MODEL": "local_model",
 }
 
 

@@ -133,7 +133,7 @@ class Agent:
         return result
 
     def _loop(self) -> TaskResult:
-        tools = self.tool_specs()
+        tools = self.tool_specs() if self.provider.supports_tools else []
         callbacks = StreamCallbacks(on_text=self.events.on_text, on_tool_call_start=self.events.on_tool_call_streaming)
         steps = 0
         final_text = ""

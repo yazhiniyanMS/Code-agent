@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from ycode.config import Config
+from pathlib import Path
+
+from ycode.config import PROVIDERS, Config, default_local_model_dir
 from ycode.errors import ConfigError, MissingCredentialsError
 from ycode.llm.base import LLMProvider
 
-PROVIDERS = ("anthropic",)
+__all__ = ["PROVIDERS", "create_provider", "LLMProvider"]
 
 
 def create_provider(config: Config, *, check_credentials: bool = True) -> LLMProvider:
@@ -22,4 +24,10 @@ def create_provider(config: Config, *, check_credentials: bool = True) -> LLMPro
             effort=config.effort,
             refusal_fallback=config.refusal_fallback,
         )
+    if config.provider == "local":
+        from ycode.llm.local import LocalProvider
+
+        model_dir = Path(config.local_model).expanduser() if config.local_model else default_local_model_dir()
+        return LocalProvider(model_dir, max_new_tokens=config.local_max_tokens,
+                             temperature=config.local_temperature)
     raise ConfigError(f"Unknown provider {config.provider!r}. Available: {', '.join(PROVIDERS)}")
