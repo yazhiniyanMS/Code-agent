@@ -103,6 +103,62 @@ PROBLEMS: tuple[Problem, ...] = (
        "assert digit_sum(1234) == 10\nassert digit_sum(0) == 0"),
 )
 
+def _bug(name: str, doc: str, buggy_body: str) -> tuple[str, str]:
+    return name, f'def {name}:\n    """{doc}"""\n{buggy_body}'
+
+
+# One realistic bug each (operator swap, off-by-one, flipped comparison, wrong constant).
+# The fixed code must pass the matching problem's tests.
+BUGGY: tuple[tuple[str, str], ...] = (
+    _bug("add(a, b)", "Return the sum of a and b.", "    return a - b"),
+    _bug("subtract(a, b)", "Return a minus b.", "    return a + b"),
+    _bug("is_even(n)", "Return True if n is even, otherwise False.", "    return n % 2 == 1"),
+    _bug("square(x)", "Return x squared.", "    return x * 2"),
+    _bug("total(numbers)", "Return the sum of a list of numbers.",
+         "    result = 1\n    for x in numbers:\n        result += x\n    return result"),
+    _bug("factorial(n)", "Return the factorial of n.",
+         "    result = 1\n    for i in range(1, n):\n        result *= i\n    return result"),
+    _bug("maximum(items)", "Return the largest item in a list.",
+         "    best = items[0]\n    for x in items:\n        if x < best:\n            best = x\n    return best"),
+    _bug("minimum(items)", "Return the smallest item in a list.",
+         "    best = items[0]\n    for x in items:\n        if x > best:\n            best = x\n    return best"),
+    _bug("count_vowels(s)", "Return the number of vowels in the string s.",
+         "    count = 0\n    for c in s:\n        if c not in 'aeiou':\n            count += 1\n    return count"),
+    _bug("filter_even(numbers)", "Return a list of the even numbers in numbers.",
+         "    return [n for n in numbers if n % 2 == 1]"),
+    _bug("is_sorted(items)", "Return True if the list is sorted in ascending order.",
+         "    for i in range(len(items) - 1):\n        if items[i] < items[i + 1]:\n            return False\n"
+         "    return True"),
+    _bug("celsius_to_fahrenheit(c)", "Convert a temperature from Celsius to Fahrenheit.",
+         "    return c * 9 / 5 - 32"),
+    _bug("char_count(s, ch)", "Return how many times the character ch occurs in s.",
+         "    count = 0\n    for c in s:\n        if c != ch:\n            count += 1\n    return count"),
+    _bug("clamp(x, low, high)", "Return x limited to the range from low to high.",
+         "    if x < low:\n        return high\n    if x > high:\n        return high\n    return x"),
+    _bug("is_palindrome(s)", "Return True if the string s reads the same forwards and backwards.",
+         "    return s != s[::-1]"),
+)
+
+_ALL_TESTS = {p.name: p.tests for p in PROBLEMS}
+
+BUGFIX_PROMPT = "This function has a bug. Find and fix it:\n```python\n{code}\n```"
+
+
+def bugfix_eval(lm, *, max_new_tokens: int = 200, log: Log | None = None) -> tuple[float, list[str]]:
+    """fix@1: share of buggy functions whose greedy "fixed" version passes the tests."""
+    tests = _ALL_TESTS
+    fixed: list[str] = []
+    for signature, code in BUGGY:
+        name = signature.split("(")[0]
+        answer = lm.chat([("user", BUGFIX_PROMPT.format(code=code))], max_new_tokens=max_new_tokens, temperature=0)
+        ok = run_tests(extract_code(answer), tests[name])
+        if ok:
+            fixed.append(name)
+        if log:
+            log(f"  {'FIXED' if ok else 'fail '}  {name}")
+    return len(fixed) / len(BUGGY), fixed
+
+
 _CODE_BLOCK = re.compile(r"```(?:python|py)?\s*\n(.*?)(?:```|$)", re.DOTALL)
 
 

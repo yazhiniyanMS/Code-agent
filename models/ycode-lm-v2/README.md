@@ -1,5 +1,7 @@
 # YCode-LM v2 (7.7M parameters)
 
+See also the larger [YCode-LM v3 (40.8M)](../ycode-lm-v3/README.md).
+
 A small programming language model trained **from scratch** with this repository's `ycode-lm`
 pipeline: its own BPE tokenizer, its own transformer and training loop, no pretrained weights.
 It is published here so `ycode --local` works right after cloning, with no API key and no training.
@@ -24,6 +26,7 @@ markdown_it, starlette, uvicorn, h11, attr, pluggy, filelock, idna):
 | --- | --- | --- |
 | Bits per byte on held-out code (lower is better) | 1.095 | **0.966** |
 | pass@1 on 30 executed coding problems | 0 / 30 | 0 / 30 |
+| fix@1 on 15 buggy functions (fixes executed against tests) | 0 / 15 | 5 / 15 |
 
 It writes fluent, well-formed Python and follows the instruction formats, but its code is usually
 wrong. It is a learning/research model, not a coding assistant. In YCode it runs in answer-only

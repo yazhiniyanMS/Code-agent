@@ -1,0 +1,19 @@
+{
+  "step": 1400,
+  "stage": "sft",
+  "val_loss": 0.5056432619690895,
+  "version": 3,
+  "params": 40844416,
+  "dtype": "bf16",
+  "config": {
+    "vocab_size": 8192,
+    "block_size": 1024,
+    "n_layer": 13,
+    "n_head": 8,
+    "n_embd": 512,
+    "dropout": 0.0,
+    "n_kv_head": 2,
+    "qk_norm": true,
+    "arch_version": 3
+  }
+}

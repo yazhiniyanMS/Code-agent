@@ -263,7 +263,7 @@ def main(argv: list[str] | None = None) -> int:
 def _eval(args) -> int:  # noqa: ANN001
     import json
 
-    from ycode.lm.evaluate import PROBLEMS, bits_per_byte, functional_eval, load_heldout_texts
+    from ycode.lm.evaluate import BUGGY, PROBLEMS, bits_per_byte, bugfix_eval, functional_eval, load_heldout_texts
     from ycode.lm.generate import LocalLM
 
     models = args.model or [default_model_dir()]
@@ -288,15 +288,19 @@ def _eval(args) -> int:  # noqa: ANN001
             if res.pass_at_k is not None:
                 row[f"pass@{res.k}"] = round(res.pass_at_k, 4)
             row["solved"] = res.solved
+            fix_rate, fixed = bugfix_eval(lm, log=print if args.verbose else None)
+            row["fix@1"] = round(fix_rate, 4)
+            row["fixed"] = fixed
         rows.append(row)
     print()
     header = ["model", "version", "params_m", "bits_per_byte", "pass@1"] + sorted(
-        {k for r in rows for k in r if k.startswith("pass@") and k != "pass@1"})
+        {k for r in rows for k in r if k.startswith("pass@") and k != "pass@1"}) + ["fix@1"]
     print(" | ".join(h for h in header))
     for r in rows:
         print(" | ".join(str(r.get(h, "-")) for h in header))
     if not args.no_functional:
-        print(f"\n({len(PROBLEMS)} problems; bits/byte: lower is better; pass@k: higher is better)")
+        print(f"\n({len(PROBLEMS)} problems, {len(BUGGY)} bug fixes; bits/byte: lower is better; "
+              "pass@k / fix@1: higher is better)")
     for r in rows:
         if r.get("solved"):
             print(f"{r['model']} solved: {', '.join(r['solved'])}")
