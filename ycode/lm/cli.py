@@ -87,6 +87,11 @@ def build_parser() -> argparse.ArgumentParser:
     _train_args(sub.add_parser("sft", help="Instruction-tune a pretrained model so it answers requests."),
                 sft=True)
 
+    p = sub.add_parser("export", help="Write a slim inference-only copy of a model (no optimizer state).")
+    p.add_argument("--model", required=True, type=Path, help="Trained model directory.")
+    p.add_argument("--out", required=True, type=Path, help="Output directory.")
+    p.add_argument("--dtype", default="bf16", choices=("bf16", "fp32"), help="bf16 halves the size (default).")
+
     p = sub.add_parser("eval", help="Score models: bits/byte on held-out code + pass rate on coding problems.")
     p.add_argument("--model", action="append", type=Path, default=[],
                    help="Model directory (repeat to compare several, e.g. v1 and v2).")
@@ -172,6 +177,17 @@ def main(argv: list[str] | None = None) -> int:
             print("\nInterrupted. The last checkpoint is in", out)
             return 130
         print(f"Saved model to {out} (val loss {summary['final']['val']:.3f})")
+        return 0
+
+    if args.command == "export":
+        from ycode.lm.train import export_checkpoint
+
+        try:
+            path = export_checkpoint(args.model, args.out, dtype=args.dtype)
+        except (FileNotFoundError, ValueError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        print(f"Exported {args.model} -> {path} ({path.stat().st_size / 1e6:.1f} MB, {args.dtype})")
         return 0
 
     from ycode.lm.generate import LocalLM

@@ -131,6 +131,40 @@ def load_checkpoint(path: Path, device: str = "cpu") -> tuple[GPT, BPETokenizer,
     return model, tok, payload
 
 
+def export_checkpoint(src: Path, dst: Path, *, dtype: str = "bf16") -> Path:
+    """Write a slim, inference-only copy of a checkpoint (no optimizer state).
+
+    bf16 halves the file size; weights are converted back to float32 on load."""
+    src = Path(src)
+    path = src / CHECKPOINT_NAME if src.is_dir() else src
+    if not path.is_file():
+        raise FileNotFoundError(f"No model checkpoint at {path}")
+    payload = torch.load(path, map_location="cpu", weights_only=True)
+    if payload.get("format") != "ycode-lm":
+        raise ValueError(f"{path} is not a YCode model checkpoint")
+    if dtype not in ("bf16", "fp32"):
+        raise ValueError("dtype must be bf16 or fp32")
+    target = torch.bfloat16 if dtype == "bf16" else torch.float32
+    converted: dict[int, torch.Tensor] = {}  # keep tied weights (embedding/head) stored once
+    model_state = {}
+    for key, tensor in payload["model"].items():
+        ptr = tensor.data_ptr()
+        if ptr not in converted:
+            converted[ptr] = tensor.to(target) if tensor.is_floating_point() else tensor
+        model_state[key] = converted[ptr]
+    payload["model"] = model_state
+    payload["exported_dtype"] = dtype
+    dst = Path(dst)
+    dst.mkdir(parents=True, exist_ok=True)
+    torch.save(payload, dst / CHECKPOINT_NAME)
+    params = sum(v.numel() for v in converted.values())
+    (dst / "info.json").write_text(json.dumps({
+        "step": payload.get("step"), "stage": payload.get("stage"), "val_loss": payload.get("val_loss"),
+        "version": payload.get("version"), "params": params, "dtype": dtype, "config": payload["config"],
+    }, indent=2))
+    return dst / CHECKPOINT_NAME
+
+
 # ------------------------------------------------------------------ data
 
 

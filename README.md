@@ -195,6 +195,13 @@ YCode-LM is a programming language model you train from scratch on your own mach
 | Data prep | single process | tokenization on all CPU cores |
 | Measurement | loss only | `ycode-lm eval`: bits per byte on held-out code + pass@k on 30 executed coding problems |
 
+**Try the included model (no training needed).** The repository ships a trained YCode-LM v2 (7.7M parameters, 15.6 MB, see [`models/ycode-lm-v2`](models/ycode-lm-v2/README.md)):
+
+```bash
+pip install -e ".[local]"
+ycode --local models/ycode-lm-v2          # or: ycode-lm chat --model models/ycode-lm-v2
+```
+
 **Set up and train:**
 
 ```bash
@@ -219,7 +226,7 @@ ycode --local                                   # inside YCode (default model di
 ycode --local models/chat                       # or point to any trained model
 ```
 
-Other commands: `ycode-lm sample --model models/base --prompt "def quicksort("` (raw code completion), `ycode-lm info`, and `ycode-lm train --resume` (continue an interrupted run). Ctrl+C during training keeps the last checkpoint. Training options include `--schedule wsd|cosine`, `--anneal-mix`, `--no-pack`, `--compile` (torch.compile) and `--grad-accum`.
+Other commands: `ycode-lm sample --model models/base --prompt "def quicksort("` (raw code completion), `ycode-lm info`, `ycode-lm export --model DIR --out DIR` (slim bf16 copy for sharing, about 4× smaller than a training checkpoint), and `ycode-lm train --resume` (continue an interrupted run). Ctrl+C during training keeps the last checkpoint. Training options include `--schedule wsd|cosine`, `--anneal-mix`, `--no-pack`, `--compile` (torch.compile) and `--grad-accum`.
 
 **Version 3: the 40M-parameter model.** `--preset v3-40m` uses the v2 architecture scaled to 40.8M parameters with a 1024-token context. It trains with the **Muon optimizer** by default: transformer weight matrices are updated with orthogonalized momentum (Newton–Schulz iterations), while embeddings and norms stay on AdamW. On small transformers, Muon reaches a given loss with fewer tokens, which matters most when compute is the bottleneck. Use `--optimizer adamw` to switch back.
 

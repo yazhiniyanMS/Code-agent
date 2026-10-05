@@ -139,3 +139,25 @@ def test_resume_without_checkpoint_starts_fresh(data_dir, tmp_path):
     logs = []
     summary = train(data_dir, tmp_path / "new", _cfg(max_steps=3, resume=True), log=logs.append)
     assert summary["steps"] == 3 and any("starting a new run" in line for line in logs)
+
+
+def test_export_bf16_is_smaller_and_loads(data_dir, tmp_path):
+    from ycode.lm import cli
+    from ycode.lm.generate import LocalLM
+
+    train(data_dir, tmp_path / "m", _cfg(max_steps=3), log=lambda *_: None)
+    assert cli.main(["export", "--model", str(tmp_path / "m"), "--out", str(tmp_path / "slim")]) == 0
+    full, slim = tmp_path / "m" / "model.pt", tmp_path / "slim" / "model.pt"
+    assert slim.stat().st_size < full.stat().st_size * 0.6
+    original, _, _ = load_checkpoint(tmp_path / "m")
+    exported, _, payload = load_checkpoint(tmp_path / "slim")
+    assert payload["exported_dtype"] == "bf16"
+    state = payload["model"]
+    assert state["embed.weight"].data_ptr() == state["head.weight"].data_ptr()  # tied weights stored once
+    import json
+    assert json.loads((tmp_path / "slim" / "info.json").read_text())["params"] == original.num_params()
+    assert next(exported.parameters()).dtype == torch.float32  # converted back on load
+    x = torch.randint(0, original.cfg.vocab_size, (1, 8))
+    assert torch.allclose(original(x, x)[0], exported(x, x)[0], atol=0.1)
+    assert isinstance(LocalLM(tmp_path / "slim", device="cpu").chat([("user", "hi")], max_new_tokens=3), str)
+    assert cli.main(["export", "--model", str(tmp_path / "nope"), "--out", str(tmp_path / "x")]) == 1
