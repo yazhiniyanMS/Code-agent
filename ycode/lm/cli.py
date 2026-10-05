@@ -41,6 +41,9 @@ def _train_args(p: argparse.ArgumentParser, *, sft: bool) -> None:
         p.add_argument("--embd", type=int, help="Override embedding width.")
         p.add_argument("--context", type=int, help="Override context length (tokens).")
         p.add_argument("--resume", action="store_true", help="Continue training the model in --out.")
+        p.add_argument("--init-from", type=Path, default=None,
+                       help="Start from this trained/grown model instead of random weights "
+                            "(continued pretraining, e.g. after `ycode-lm grow`).")
     p.add_argument("--steps", type=int, default=None, help="Optimizer steps (the LR schedule spans all of them).")
     p.add_argument("--until-step", type=int, default=None,
                    help="Stop at this step and save; continue later with --resume (segmented training).")
@@ -90,10 +93,18 @@ def build_parser() -> argparse.ArgumentParser:
     _train_args(sub.add_parser("sft", help="Instruction-tune a pretrained model so it answers requests."),
                 sft=True)
 
+    p = sub.add_parser("grow", help="Deepen a trained model; the grown model starts out computing the same function.")
+    p.add_argument("--model", required=True, type=Path, help="Trained model directory.")
+    p.add_argument("--out", required=True, type=Path, help="Output directory (use as --init-from for train).")
+    p.add_argument("--layers", type=int, required=True, help="New number of layers.")
+    p.add_argument("--version", type=int, default=None, help="Architecture version to record (e.g. 4).")
+
     p = sub.add_parser("export", help="Write a slim inference-only copy of a model (no optimizer state).")
     p.add_argument("--model", required=True, type=Path, help="Trained model directory.")
     p.add_argument("--out", required=True, type=Path, help="Output directory.")
     p.add_argument("--dtype", default="bf16", choices=("bf16", "fp32"), help="bf16 halves the size (default).")
+    p.add_argument("--max-shard-mb", type=float, default=None,
+                   help="Split weights into files of at most this size (e.g. 45 to stay under GitHub's limits).")
 
     p = sub.add_parser("eval", help="Score models: bits/byte on held-out code + pass rate on coding problems.")
     p.add_argument("--model", action="append", type=Path, default=[],
@@ -178,7 +189,7 @@ def main(argv: list[str] | None = None) -> int:
             pack=not getattr(args, "no_pack", False),
             anneal_mix=getattr(args, "anneal_mix", 0.0),
             seed=args.seed,
-            init_from=str(args.init_from) if sft else None,
+            init_from=str(args.init_from) if args.init_from else None,
             resume=getattr(args, "resume", False),
             until_step=args.until_step,
             save_interval=args.save_interval,
@@ -195,15 +206,32 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Saved model to {out} (val loss {summary['final']['val']:.3f})")
         return 0
 
+    if args.command == "grow":
+        from ycode.lm.grow import grow_depth
+        from ycode.lm.train import load_checkpoint, save_checkpoint
+
+        try:
+            model, tok, payload = load_checkpoint(args.model)
+            grown = grow_depth(model, args.layers, arch_version=args.version)
+        except (FileNotFoundError, ValueError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        save_checkpoint(args.out, grown, tok, step=0, stage="grown", val_loss=None)
+        print(f"Grew {model.cfg.n_layer} -> {args.layers} layers: {model.num_params() / 1e6:.2f}M -> "
+              f"{grown.num_params() / 1e6:.2f}M parameters, saved to {args.out}")
+        return 0
+
     if args.command == "export":
         from ycode.lm.train import export_checkpoint
 
         try:
-            path = export_checkpoint(args.model, args.out, dtype=args.dtype)
+            export_checkpoint(args.model, args.out, dtype=args.dtype, max_shard_mb=args.max_shard_mb)
         except (FileNotFoundError, ValueError) as exc:
             print(f"error: {exc}", file=sys.stderr)
             return 1
-        print(f"Exported {args.model} -> {path} ({path.stat().st_size / 1e6:.1f} MB, {args.dtype})")
+        files = sorted(args.out.glob("model*.pt"))
+        total = sum(f.stat().st_size for f in files) / 1e6
+        print(f"Exported {args.model} -> {args.out} ({len(files)} file(s), {total:.1f} MB, {args.dtype})")
         return 0
 
     from ycode.lm.generate import LocalLM

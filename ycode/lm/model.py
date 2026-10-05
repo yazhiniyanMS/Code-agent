@@ -63,6 +63,13 @@ PRESETS.update({
     "v3-tiny": dict(n_layer=3, n_head=4, n_kv_head=2, n_embd=64, block_size=128, **_V3),
     "v3-40m": dict(n_layer=13, n_head=8, n_kv_head=2, n_embd=512, block_size=1024, **_V3),
 })
+# version 4: ~100M parameters. Deep and narrow (34 x 512), which suits small models and lets
+# v4 be grown from a trained v3 (13 x 512) without changing its width.
+_V4 = dict(qk_norm=True, arch_version=4)
+PRESETS.update({
+    "v4-tiny": dict(n_layer=5, n_head=4, n_kv_head=2, n_embd=64, block_size=128, **_V4),
+    "v4-100m": dict(n_layer=34, n_head=8, n_kv_head=2, n_embd=512, block_size=1024, **_V4),
+})
 DEFAULT_PRESET = "v2-small"
 
 
