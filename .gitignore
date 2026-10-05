@@ -31,6 +31,9 @@ env/
 
 # YCode-LM datasets and trained models (large binaries)
 /data/
-/models/
+/models/*
 *.bin
 *.pt
+# ...except the published, exported YCode-LM models
+!/models/ycode-lm-*/
+!/models/ycode-lm-*/model.pt

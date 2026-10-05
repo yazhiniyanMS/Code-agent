@@ -13,7 +13,6 @@ from ycode.lm.data import (  # noqa: E402
     extract_python_examples,
     inject_bug,
     parallel_encode,
-    prepare_dataset,
     strip_license_header,
 )
 from ycode.lm.model import GPT, PRESETS, GPTConfig  # noqa: E402
@@ -153,18 +152,6 @@ def test_parallel_encode_matches_serial():
     assert parallel_encode(tok, texts, workers=2) == [tok.encode(t, allow_special=False) for t in texts]
 
 
-@pytest.fixture(scope="module")
-def data_dir(tmp_path_factory):
-    src = tmp_path_factory.mktemp("src")
-    for i in range(6):
-        (src / f"m{i}.py").write_text(CODE.replace("add", f"add{i}") * 3)
-    (src / "skip_me.py").write_text("def secret():\n    return 1\n" * 50)
-    out = tmp_path_factory.mktemp("data")
-    meta = prepare_dataset([src], out, vocab_size=400, exclude=["*skip_me*"], workers=1, log=lambda *_: None)
-    assert meta["files"] == 6
-    return out
-
-
 def test_sft_packing_fills_rows(data_dir):
     packed = SFTData(data_dir, 64, 4, "cpu", pad_id=0, pack=True)
     x, y, m = packed.batch("train", torch.Generator().manual_seed(0))
@@ -298,3 +285,25 @@ def test_eval_cli_compares_models(data_dir, tmp_path, capsys):
         evaluate.PROBLEMS = original
     out = capsys.readouterr().out
     assert "bits_per_byte" in out and "pass@1" in out
+
+
+def test_every_buggy_function_fails_and_its_fix_passes():
+    tests = {p.name: p.tests for p in evaluate.PROBLEMS}
+    for signature, code in evaluate.BUGGY:
+        name = signature.split("(")[0]
+        assert not evaluate.run_tests(code, tests[name]), f"{name}: the bug must make the tests fail"
+        assert evaluate.run_tests(REFERENCE[name], tests[name])
+
+
+def test_bugfix_eval_with_oracle_and_with_echo():
+    class Oracle:
+        def chat(self, turns, *, max_new_tokens, temperature, on_text=None):
+            name = turns[-1][1].split("def ")[1].split("(")[0]
+            return f"The bug is fixed.\n```python\n{REFERENCE[name]}\n```"
+
+    class Echo:  # returns the buggy code unchanged
+        def chat(self, turns, *, max_new_tokens, temperature, on_text=None):
+            return turns[-1][1].split("\n", 1)[1]
+
+    assert evaluate.bugfix_eval(Oracle())[0] == 1.0
+    assert evaluate.bugfix_eval(Echo())[0] == 0.0

@@ -125,3 +125,24 @@ class FakeProvider(LLMProvider):
         if callbacks and item.message.text:
             callbacks.text(item.message.text)
         return item
+
+
+# ------------------------------------------------------------- YCode-LM data
+
+
+@pytest.fixture(scope="session")
+def data_dir(tmp_path_factory):
+    """A small prepared YCode-LM dataset (skipped when torch/numpy are missing)."""
+    pytest.importorskip("torch")
+    pytest.importorskip("numpy")
+    from tests.test_lm import CODE
+    from ycode.lm.data import prepare_dataset
+
+    src = tmp_path_factory.mktemp("src")
+    for i in range(6):
+        (src / f"m{i}.py").write_text(CODE.replace("add", f"add{i}") * 3)
+    (src / "skip_me.py").write_text("def secret():\n    return 1\n" * 50)
+    out = tmp_path_factory.mktemp("data")
+    meta = prepare_dataset([src], out, vocab_size=400, exclude=["*skip_me*"], workers=1, log=lambda *_: None)
+    assert meta["files"] == 6
+    return out

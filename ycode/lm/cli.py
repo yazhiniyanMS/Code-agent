@@ -31,25 +31,35 @@ def _train_args(p: argparse.ArgumentParser, *, sft: bool) -> None:
     p.add_argument("--out", type=Path, default=None, help="Where to write the model.")
     if sft:
         p.add_argument("--init-from", required=True, type=Path, help="Pretrained model directory.")
+        p.add_argument("--resume", action="store_true",
+                       help="Continue an interrupted SFT run in --out (falls back to --init-from).")
     else:
         p.add_argument("--preset", default="v2-small",
-                       help="Model size: v2-tiny, v2-small (default), v2-base, v2-medium, v2-large, or v1 presets.")
+                       help="Model size: v3-40m, v2-tiny, v2-small (default), v2-base, v2-medium, v2-large, or v1 presets.")
         p.add_argument("--layers", type=int, help="Override number of layers.")
         p.add_argument("--heads", type=int, help="Override number of attention heads.")
         p.add_argument("--embd", type=int, help="Override embedding width.")
         p.add_argument("--context", type=int, help="Override context length (tokens).")
         p.add_argument("--resume", action="store_true", help="Continue training the model in --out.")
-    p.add_argument("--steps", type=int, default=None, help="Optimizer steps.")
+    p.add_argument("--steps", type=int, default=None, help="Optimizer steps (the LR schedule spans all of them).")
+    p.add_argument("--until-step", type=int, default=None,
+                   help="Stop at this step and save; continue later with --resume (segmented training).")
     p.add_argument("--minutes", type=float, default=None, help="Stop after this many minutes.")
     p.add_argument("--batch-size", type=int, default=16)
     p.add_argument("--grad-accum", type=int, default=1)
     p.add_argument("--lr", type=float, default=None)
     p.add_argument("--eval-interval", type=int, default=100)
+    p.add_argument("--save-interval", type=int, default=None,
+                   help="Also checkpoint every N steps without evaluating (cheap protection against crashes).")
     p.add_argument("--device", default="auto", help="auto, cpu, cuda or mps.")
     p.add_argument("--precision", default="auto", choices=("auto", "fp32", "bf16"))
     p.add_argument("--schedule", default="wsd", choices=("wsd", "cosine"),
                    help="LR schedule: warmup-stable-decay (default) or cosine.")
     p.add_argument("--compile", action="store_true", help="Use torch.compile (faster on many machines).")
+    p.add_argument("--optimizer", default=None, choices=("adamw", "muon"),
+                   help="adamw, or muon (Muon for hidden matrices + AdamW for the rest). "
+                        "Default: muon for v3 presets, adamw otherwise.")
+    p.add_argument("--muon-lr", type=float, default=0.02)
     if sft:
         p.add_argument("--no-pack", action="store_true", help="One example per row instead of packing.")
     else:
@@ -72,10 +82,18 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--exclude", action="append", default=[],
                    help="Glob of paths to leave out, e.g. '*/tests/*' (repeatable). Use it to hold out eval data.")
     p.add_argument("--workers", type=int, default=None, help="Tokenizer processes (default: all CPU cores).")
+    p.add_argument("--sft-only", action="store_true",
+                   help="Only rebuild the instruction data, reusing --tokenizer (for re-tuning a pretrained model).")
+    p.add_argument("--tokenizer", type=Path, default=None, help="tokenizer.json to reuse with --sft-only.")
 
     _train_args(sub.add_parser("train", help="Pretrain a model on the code corpus."), sft=False)
     _train_args(sub.add_parser("sft", help="Instruction-tune a pretrained model so it answers requests."),
                 sft=True)
+
+    p = sub.add_parser("export", help="Write a slim inference-only copy of a model (no optimizer state).")
+    p.add_argument("--model", required=True, type=Path, help="Trained model directory.")
+    p.add_argument("--out", required=True, type=Path, help="Output directory.")
+    p.add_argument("--dtype", default="bf16", choices=("bf16", "fp32"), help="bf16 halves the size (default).")
 
     p = sub.add_parser("eval", help="Score models: bits/byte on held-out code + pass rate on coding problems.")
     p.add_argument("--model", action="append", type=Path, default=[],
@@ -108,6 +126,19 @@ def main(argv: list[str] | None = None) -> int:
         from ycode.lm.data import default_sources, prepare_dataset
 
         sources = args.source or default_sources()
+        if args.sft_only:
+            from ycode.lm.data import prepare_sft_dataset
+
+            if args.tokenizer is None:
+                print("error: --sft-only needs --tokenizer path/to/tokenizer.json", file=sys.stderr)
+                return 2
+            try:
+                prepare_sft_dataset(sources, args.out, args.tokenizer, extra_sft=args.sft_data,
+                                    exclude=args.exclude)
+            except (ValueError, OSError) as exc:
+                print(f"error: {exc}", file=sys.stderr)
+                return 1
+            return 0
         try:
             prepare_dataset(sources, args.out, vocab_size=args.vocab_size, extra_sft=args.sft_data,
                             exclude=args.exclude, workers=args.workers)
@@ -142,11 +173,15 @@ def main(argv: list[str] | None = None) -> int:
             precision=args.precision,
             schedule=args.schedule,
             compile=args.compile,
+            optimizer=args.optimizer or ("muon" if str(getattr(args, "preset", "")).startswith("v3") else "adamw"),
+            muon_lr=args.muon_lr,
             pack=not getattr(args, "no_pack", False),
             anneal_mix=getattr(args, "anneal_mix", 0.0),
             seed=args.seed,
             init_from=str(args.init_from) if sft else None,
             resume=getattr(args, "resume", False),
+            until_step=args.until_step,
+            save_interval=args.save_interval,
         )
         out = args.out or default_model_dir()
         try:
@@ -158,6 +193,17 @@ def main(argv: list[str] | None = None) -> int:
             print("\nInterrupted. The last checkpoint is in", out)
             return 130
         print(f"Saved model to {out} (val loss {summary['final']['val']:.3f})")
+        return 0
+
+    if args.command == "export":
+        from ycode.lm.train import export_checkpoint
+
+        try:
+            path = export_checkpoint(args.model, args.out, dtype=args.dtype)
+        except (FileNotFoundError, ValueError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        print(f"Exported {args.model} -> {path} ({path.stat().st_size / 1e6:.1f} MB, {args.dtype})")
         return 0
 
     from ycode.lm.generate import LocalLM
@@ -217,7 +263,7 @@ def main(argv: list[str] | None = None) -> int:
 def _eval(args) -> int:  # noqa: ANN001
     import json
 
-    from ycode.lm.evaluate import PROBLEMS, bits_per_byte, functional_eval, load_heldout_texts
+    from ycode.lm.evaluate import BUGGY, PROBLEMS, bits_per_byte, bugfix_eval, functional_eval, load_heldout_texts
     from ycode.lm.generate import LocalLM
 
     models = args.model or [default_model_dir()]
@@ -242,15 +288,19 @@ def _eval(args) -> int:  # noqa: ANN001
             if res.pass_at_k is not None:
                 row[f"pass@{res.k}"] = round(res.pass_at_k, 4)
             row["solved"] = res.solved
+            fix_rate, fixed = bugfix_eval(lm, log=print if args.verbose else None)
+            row["fix@1"] = round(fix_rate, 4)
+            row["fixed"] = fixed
         rows.append(row)
     print()
     header = ["model", "version", "params_m", "bits_per_byte", "pass@1"] + sorted(
-        {k for r in rows for k in r if k.startswith("pass@") and k != "pass@1"})
+        {k for r in rows for k in r if k.startswith("pass@") and k != "pass@1"}) + ["fix@1"]
     print(" | ".join(h for h in header))
     for r in rows:
         print(" | ".join(str(r.get(h, "-")) for h in header))
     if not args.no_functional:
-        print(f"\n({len(PROBLEMS)} problems; bits/byte: lower is better; pass@k: higher is better)")
+        print(f"\n({len(PROBLEMS)} problems, {len(BUGGY)} bug fixes; bits/byte: lower is better; "
+              "pass@k / fix@1: higher is better)")
     for r in rows:
         if r.get("solved"):
             print(f"{r['model']} solved: {', '.join(r['solved'])}")

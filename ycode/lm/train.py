@@ -16,6 +16,7 @@ import numpy as np
 import torch
 
 from ycode.lm.model import DEFAULT_PRESET, GPT, PRESETS, GPTConfig
+from ycode.lm.optim import build_optimizer
 from ycode.lm.tokenizer import BPETokenizer
 
 Log = Callable[[str], None]
@@ -79,13 +80,17 @@ class TrainConfig:
     anneal_mix: float = 0.2  # pretrain: share of instruction data mixed in during the decay phase
     pack: bool = True  # sft: pack several examples per sequence instead of padding
     compile: bool = False  # torch.compile the model for training
+    save_interval: int | None = None  # checkpoint every N steps without evaluating (cheap crash safety)
+    until_step: int | None = None  # stop early at this step (segmented runs); schedule still spans max_steps
+    optimizer: str = "adamw"  # adamw | muon (Muon for hidden matrices + AdamW for the rest)
+    muon_lr: float = 0.02
 
 
 # ------------------------------------------------------------- checkpoints
 
 
 def save_checkpoint(out_dir: Path, model: GPT, tok: BPETokenizer, *, step: int, stage: str,
-                    val_loss: float | None, optimizer: torch.optim.Optimizer | None = None) -> Path:
+                    val_loss: float | None, optimizer=None) -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
     payload = {
         "format": "ycode-lm",
@@ -124,6 +129,40 @@ def load_checkpoint(path: Path, device: str = "cpu") -> tuple[GPT, BPETokenizer,
     model.to(device)
     tok = BPETokenizer.from_dict(payload["tokenizer"])
     return model, tok, payload
+
+
+def export_checkpoint(src: Path, dst: Path, *, dtype: str = "bf16") -> Path:
+    """Write a slim, inference-only copy of a checkpoint (no optimizer state).
+
+    bf16 halves the file size; weights are converted back to float32 on load."""
+    src = Path(src)
+    path = src / CHECKPOINT_NAME if src.is_dir() else src
+    if not path.is_file():
+        raise FileNotFoundError(f"No model checkpoint at {path}")
+    payload = torch.load(path, map_location="cpu", weights_only=True)
+    if payload.get("format") != "ycode-lm":
+        raise ValueError(f"{path} is not a YCode model checkpoint")
+    if dtype not in ("bf16", "fp32"):
+        raise ValueError("dtype must be bf16 or fp32")
+    target = torch.bfloat16 if dtype == "bf16" else torch.float32
+    converted: dict[int, torch.Tensor] = {}  # keep tied weights (embedding/head) stored once
+    model_state = {}
+    for key, tensor in payload["model"].items():
+        ptr = tensor.data_ptr()
+        if ptr not in converted:
+            converted[ptr] = tensor.to(target) if tensor.is_floating_point() else tensor
+        model_state[key] = converted[ptr]
+    payload["model"] = model_state
+    payload["exported_dtype"] = dtype
+    dst = Path(dst)
+    dst.mkdir(parents=True, exist_ok=True)
+    torch.save(payload, dst / CHECKPOINT_NAME)
+    params = sum(v.numel() for v in converted.values())
+    (dst / "info.json").write_text(json.dumps({
+        "step": payload.get("step"), "stage": payload.get("stage"), "val_loss": payload.get("val_loss"),
+        "version": payload.get("version"), "params": params, "dtype": dtype, "config": payload["config"],
+    }, indent=2))
+    return dst / CHECKPOINT_NAME
 
 
 # ------------------------------------------------------------------ data
@@ -260,10 +299,15 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
         torch.set_num_threads(max(1, os.cpu_count() or 1))
 
     start_step = 0
-    if cfg.init_from or cfg.resume:
-        source = Path(cfg.init_from) if cfg.init_from else out_dir
+    has_checkpoint = (out_dir / CHECKPOINT_NAME).is_file()
+    if cfg.resume and not has_checkpoint and not cfg.init_from:
+        log(f"No checkpoint in {out_dir} yet; starting a new run.")
+    if cfg.init_from or (cfg.resume and has_checkpoint):
+        # Resuming continues the run in out_dir; otherwise start from init_from.
+        resumable = cfg.resume and (out_dir / CHECKPOINT_NAME).is_file()
+        source = out_dir if (resumable or not cfg.init_from) else Path(cfg.init_from)
         model, tok, payload = load_checkpoint(source, device)
-        if cfg.resume:
+        if cfg.resume and source == out_dir:
             start_step = int(payload.get("step", 0))
         log(f"Loaded {source} (step {payload.get('step')}, stage {payload.get('stage')})")
     else:
@@ -281,15 +325,14 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
     else:
         data = PretrainData(data_dir, block, cfg.batch_size, device)
 
-    decay = [p for n, p in model.named_parameters() if p.dim() >= 2]
-    no_decay = [p for n, p in model.named_parameters() if p.dim() < 2]
-    optimizer = torch.optim.AdamW(
-        [{"params": decay, "weight_decay": cfg.weight_decay}, {"params": no_decay, "weight_decay": 0.0}],
-        lr=cfg.lr, betas=(0.9, 0.95), fused=(device == "cuda"),
-    )
+    optimizer = build_optimizer(model, kind=cfg.optimizer, lr=cfg.lr, muon_lr=cfg.muon_lr,
+                                weight_decay=cfg.weight_decay, fused=(device == "cuda"))
     if cfg.resume and (out_dir / "optim.pt").is_file():
-        state = torch.load(out_dir / "optim.pt", map_location=device, weights_only=True)
-        optimizer.load_state_dict(state["optimizer"])
+        state = torch.load(out_dir / "optim.pt", map_location=device, weights_only=True)["optimizer"]
+        try:
+            optimizer.load_state_dict(state if "optimizers" in state else {"optimizers": [state]})
+        except (ValueError, KeyError, IndexError):
+            log("Optimizer state does not match (different --optimizer?); starting it fresh.")
 
     precision = pick_precision(cfg.precision, device)
     autocast = torch.autocast(device_type="cuda" if device == "cuda" else "cpu", dtype=torch.bfloat16,
@@ -305,7 +348,7 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
             log(f"torch.compile unavailable ({exc}); continuing without it.")
 
     log(f"Model: YCode-LM v{model.cfg.arch_version}, {model.num_params() / 1e6:.2f}M parameters, "
-        f"context {block}, device {device}, precision {precision}, stage {cfg.stage}"
+        f"context {block}, device {device}, precision {precision}, optimizer {cfg.optimizer}, stage {cfg.stage}"
         f"{', compiled' if train_model is not model else ''}")
     t0 = time.time()
     tokens_seen = 0
@@ -314,7 +357,8 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
     step = start_step
     model.train()
     annealing_logged = False
-    while step < cfg.max_steps:
+    stop_at = min(cfg.max_steps, cfg.until_step) if cfg.until_step else cfg.max_steps
+    while step < stop_at:
         progress = step / max(1, cfg.max_steps)
         if cfg.max_minutes is not None:
             progress = max(progress, (time.time() - t0) / 60 / cfg.max_minutes)
@@ -322,8 +366,7 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
                 log(f"Time limit of {cfg.max_minutes} minutes reached.")
                 break
         lr = lr_at(step, cfg, progress)
-        for group in optimizer.param_groups:
-            group["lr"] = lr
+        optimizer.set_lr_scale(lr / cfg.lr)
         mix = cfg.anneal_mix if (cfg.stage == "pretrain" and in_decay_phase(cfg, progress)) else 0.0
         if mix and not annealing_logged:
             log(f"Decay phase: annealing with {mix:.0%} instruction data.")
@@ -353,6 +396,10 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
                 best_val = losses["val"]
             save_checkpoint(out_dir, model, tok, step=step, stage=cfg.stage, val_loss=losses["val"],
                             optimizer=optimizer)
+        elif cfg.save_interval and step % cfg.save_interval == 0:
+            save_checkpoint(out_dir, model, tok, step=step, stage=cfg.stage,
+                            val_loss=history[-1]["val"] if history else None, optimizer=optimizer)
+            log(f"checkpoint saved at step {step}")
 
     if not history or history[-1]["step"] != step:
         losses = estimate_loss(model, data, cfg, eval_gen, autocast)

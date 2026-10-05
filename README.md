@@ -109,6 +109,8 @@ ycode/
 │   ├── model.py         # GPT transformer: RoPE, RMSNorm, SwiGLU, KV-cache sampling
 │   ├── data.py          # corpus collection, instruction-pair extraction, encoding
 │   ├── train.py         # pretraining + instruction tuning, checkpoints, resume
+│   ├── optim.py         # Muon optimizer (v3) + AdamW wiring
+│   ├── evaluate.py      # bits/byte on held-out code, pass@k on executed problems
 │   ├── generate.py      # inference (chat + completion, streaming)
 │   └── cli.py           # the `ycode-lm` command
 ├── tools/
@@ -193,6 +195,18 @@ YCode-LM is a programming language model you train from scratch on your own mach
 | Data prep | single process | tokenization on all CPU cores |
 | Measurement | loss only | `ycode-lm eval`: bits per byte on held-out code + pass@k on 30 executed coding problems |
 
+**Try the included models (no training needed).** The repository ships two trained models:
+
+| Model | Params | Size | Card |
+| --- | --- | --- | --- |
+| YCode-LM v3 | 40.8M | 81.8 MB | [`models/ycode-lm-v3`](models/ycode-lm-v3/README.md) |
+| YCode-LM v2 | 7.7M | 15.6 MB | [`models/ycode-lm-v2`](models/ycode-lm-v2/README.md) |
+
+```bash
+pip install -e ".[local]"
+ycode --local models/ycode-lm-v3          # or: ycode-lm chat --model models/ycode-lm-v3
+```
+
 **Set up and train:**
 
 ```bash
@@ -217,16 +231,43 @@ ycode --local                                   # inside YCode (default model di
 ycode --local models/chat                       # or point to any trained model
 ```
 
-Other commands: `ycode-lm sample --model models/base --prompt "def quicksort("` (raw code completion), `ycode-lm info`, and `ycode-lm train --resume` (continue an interrupted run). Ctrl+C during training keeps the last checkpoint. Training options include `--schedule wsd|cosine`, `--anneal-mix`, `--no-pack`, `--compile` (torch.compile) and `--grad-accum`.
+Other commands: `ycode-lm sample --model models/base --prompt "def quicksort("` (raw code completion), `ycode-lm info`, `ycode-lm export --model DIR --out DIR` (slim bf16 copy for sharing, about 4× smaller than a training checkpoint), and `ycode-lm train --resume` (continue an interrupted run). Ctrl+C during training keeps the last checkpoint. Training options include `--schedule wsd|cosine`, `--anneal-mix`, `--no-pack`, `--compile` (torch.compile) and `--grad-accum`.
 
-**Evaluation.** `ycode-lm eval` reports two numbers:
-- **Bits per byte** on code the model never saw. Lower is better. It is comparable across tokenizers, so v1 vs v2 is a fair comparison.
-- **pass@1 / pass@k** on 30 small programming problems. YCode-LM writes each solution, and it is *executed* against unit tests in an isolated subprocess with a timeout. Only evaluate models you trained yourself, because generated code is run.
+**Version 3: the 40M-parameter model.** `--preset v3-40m` uses the v2 architecture scaled to 40.8M parameters with a 1024-token context. It trains with the **Muon optimizer** by default: transformer weight matrices are updated with orthogonalized momentum (Newton–Schulz iterations), while embeddings and norms stay on AdamW. On small transformers, Muon reaches a given loss with fewer tokens, which matters most when compute is the bottleneck. Use `--optimizer adamw` to switch back.
+
+```bash
+ycode-lm train --data data/ --out models/v3-base --preset v3-40m --compile --minutes 480
+ycode-lm sft   --data data/ --init-from models/v3-base --out ~/.ycode/models/ycode-lm --compile --minutes 60
+```
+
+In an A/B test (same model, data, seed and 600 steps), Muon reached a held-out loss of **4.13** against AdamW's **4.26**, for 14% more wall-clock per step at that tiny size; the overhead shrinks as models grow.
+
+A 40M model wants far more data and compute than a CPU can supply. The compute-optimal budget is about 800M training tokens, while 8 hours on a 4-core CPU covers about 50M. On a single consumer GPU, the same run takes hours instead of days.
+
+**Measured results (v1 vs v2 vs v3).** All three models were trained on a 4-core CPU and evaluated the same way. Bits per byte is measured on 11 packages none of them saw in training. The code tasks are *executed* against unit tests:
+
+| | v1 | v2 | v3 |
+| --- | --- | --- | --- |
+| Parameters | 6.9M | 7.7M | 40.8M |
+| Pretraining tokens | ~41M (54 MB corpus) | ~82M (176 MB corpus) | ~60M (176 MB corpus, Muon) |
+| Bits per byte on held-out code | 1.095 | 0.966 | **0.857** |
+| Write a function, pass@1 (30 problems) | 0 / 30 | 0 / 30 | 0 / 30 |
+| Fix an injected bug, fix@1 (15 functions) | 0 / 15 | **5 / 15** | 4 / 15 |
+
+Each version models real code better than the last. v2 and v3 write short, well-formed answers and can find and fix simple bugs ("The bug is in `result = 1`. It should be `result = 0`."), while v1 falls into repetition loops. None of them yet writes correct functions from a description, and on 15 bug fixes v2 and v3 are within noise of each other. At this size and CPU budget, the gains show up in how well the model represents code before they show up in correct programs.
+
+For long runs on machines that may be interrupted, train in segments: `--until-step N` stops and saves, `--resume` continues with the same LR schedule, and `--save-interval N` saves cheaply between evaluations.
+
+**Evaluation.** `ycode-lm eval` reports:
+- **Bits per byte** on code the model never saw. Lower is better. It is comparable across tokenizers, so v1, v2 and v3 compare fairly.
+- **pass@1 / pass@k** on 30 small programming problems, plus **fix@1** on 15 functions with one injected bug each. YCode-LM writes each solution or fix, and it is *executed* against unit tests in an isolated subprocess with a timeout. Only evaluate models you trained yourself, because generated code is run.
 
 **Model sizes** (`--preset`; parameter counts are for an 8k vocabulary):
 
 | Preset | Layers × width | Heads (KV) | Context | Params | Where to train |
 | --- | --- | --- | --- | --- | --- |
+| **`v3-40m`** | 13 × 512 | 8 (2) | 1024 | **40.8M** | GPU ideal; CPU works but slowly (measured ~2.1k tok/s on 4 Xeon cores with bf16 + compile) |
+| `v3-tiny` | 3 × 64 | 4 (2) | 128 | ~0.7M | tests |
 | `v2-tiny` | 2 × 64 | 4 (2) | 128 | ~0.6M | tests / smoke runs |
 | **`v2-small`** (default) | 8 × 256 | 8 (2) | 512 | ~7.7M | laptop CPU, 2–4 h |
 | `v2-base` | 12 × 512 | 8 (2) | 1024 | ~38M | GPU |
