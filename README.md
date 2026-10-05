@@ -228,7 +228,22 @@ ycode-lm train --data data/ --out models/v3-base --preset v3-40m --compile --min
 ycode-lm sft   --data data/ --init-from models/v3-base --out ~/.ycode/models/ycode-lm --compile --minutes 60
 ```
 
+In an A/B test (same model, data, seed and 600 steps), Muon reached a held-out loss of **4.13** against AdamW's **4.26**, for 14% more wall-clock per step at that tiny size; the overhead shrinks as models grow.
+
 A 40M model wants far more data and compute than a CPU can supply. The compute-optimal budget is about 800M training tokens, while 8 hours on a 4-core CPU covers about 50M. On a single consumer GPU, the same run takes hours instead of days.
+
+**Measured results (v1 vs v2).** Both models were trained on a 4-core CPU and evaluated on 11 packages that neither saw in training (click, anyio, jsonschema, markdown_it, starlette, uvicorn, h11, attr, pluggy, filelock, idna):
+
+| | v1 | v2 |
+| --- | --- | --- |
+| Parameters | 6.9M | 7.7M |
+| Pretraining tokens | ~41M (54 MB corpus) | ~82M (176 MB corpus) |
+| Bits per byte on held-out code | 1.095 | **0.966** (−12%) |
+| pass@1 on the 30 problems | 0 / 30 | 0 / 30 |
+
+v2 predicts unseen code clearly better. Its answers are complete and well-formed, and it follows formats like the bug-fix one ("The bug is in `…`. It should be `…`."), where v1 falls into repetition loops. Neither model yet writes code that passes the tests: at this size and budget, the gains show up in how well it models code before they show up in correct programs.
+
+For long runs on machines that may be interrupted, train in segments: `--until-step N` stops and saves, `--resume` continues with the same LR schedule, and `--save-interval N` saves cheaply between evaluations.
 
 **Evaluation.** `ycode-lm eval` reports two numbers:
 - **Bits per byte** on code the model never saw. Lower is better. It is comparable across tokenizers, so v1 vs v2 is a fair comparison.
@@ -238,7 +253,7 @@ A 40M model wants far more data and compute than a CPU can supply. The compute-o
 
 | Preset | Layers × width | Heads (KV) | Context | Params | Where to train |
 | --- | --- | --- | --- | --- | --- |
-| **`v3-40m`** | 13 × 512 | 8 (2) | 1024 | **40.8M** | GPU ideal; CPU works but slowly (~1.5–2k tok/s on 4 cores) |
+| **`v3-40m`** | 13 × 512 | 8 (2) | 1024 | **40.8M** | GPU ideal; CPU works but slowly (measured ~2.1k tok/s on 4 Xeon cores with bf16 + compile) |
 | `v3-tiny` | 3 × 64 | 4 (2) | 128 | ~0.7M | tests |
 | `v2-tiny` | 2 × 64 | 4 (2) | 128 | ~0.6M | tests / smoke runs |
 | **`v2-small`** (default) | 8 × 256 | 8 (2) | 512 | ~7.7M | laptop CPU, 2–4 h |

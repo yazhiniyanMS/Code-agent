@@ -122,3 +122,14 @@ def test_sft_resume_continues_in_out_dir(data_dir, tmp_path):
     summary = train(data_dir, tmp_path / "chat", _cfg(max_steps=8, resume=True, **sft), log=logs.append)
     assert summary["steps"] == 8
     assert any("chat" in line and "step 3" in line for line in logs)  # resumed the SFT run, not the base
+
+
+def test_save_interval_checkpoints_between_evals(data_dir, tmp_path):
+    import json
+
+    logs = []
+    train(data_dir, tmp_path / "m", _cfg(max_steps=20, until_step=7, eval_interval=20, save_interval=3),
+          log=logs.append)
+    assert [line for line in logs if "checkpoint saved" in line] == [
+        "checkpoint saved at step 3", "checkpoint saved at step 6"]
+    assert json.loads((tmp_path / "m" / "info.json").read_text())["step"] == 7  # final save at the segment end

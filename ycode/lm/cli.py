@@ -49,6 +49,8 @@ def _train_args(p: argparse.ArgumentParser, *, sft: bool) -> None:
     p.add_argument("--grad-accum", type=int, default=1)
     p.add_argument("--lr", type=float, default=None)
     p.add_argument("--eval-interval", type=int, default=100)
+    p.add_argument("--save-interval", type=int, default=None,
+                   help="Also checkpoint every N steps without evaluating (cheap protection against crashes).")
     p.add_argument("--device", default="auto", help="auto, cpu, cuda or mps.")
     p.add_argument("--precision", default="auto", choices=("auto", "fp32", "bf16"))
     p.add_argument("--schedule", default="wsd", choices=("wsd", "cosine"),
@@ -158,6 +160,7 @@ def main(argv: list[str] | None = None) -> int:
             init_from=str(args.init_from) if sft else None,
             resume=getattr(args, "resume", False),
             until_step=args.until_step,
+            save_interval=args.save_interval,
         )
         out = args.out or default_model_dir()
         try:

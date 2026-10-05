@@ -80,6 +80,7 @@ class TrainConfig:
     anneal_mix: float = 0.2  # pretrain: share of instruction data mixed in during the decay phase
     pack: bool = True  # sft: pack several examples per sequence instead of padding
     compile: bool = False  # torch.compile the model for training
+    save_interval: int | None = None  # checkpoint every N steps without evaluating (cheap crash safety)
     until_step: int | None = None  # stop early at this step (segmented runs); schedule still spans max_steps
     optimizer: str = "adamw"  # adamw | muon (Muon for hidden matrices + AdamW for the rest)
     muon_lr: float = 0.02
@@ -358,6 +359,10 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
                 best_val = losses["val"]
             save_checkpoint(out_dir, model, tok, step=step, stage=cfg.stage, val_loss=losses["val"],
                             optimizer=optimizer)
+        elif cfg.save_interval and step % cfg.save_interval == 0:
+            save_checkpoint(out_dir, model, tok, step=step, stage=cfg.stage,
+                            val_loss=history[-1]["val"] if history else None, optimizer=optimizer)
+            log(f"checkpoint saved at step {step}")
 
     if not history or history[-1]["step"] != step:
         losses = estimate_loss(model, data, cfg, eval_gen, autocast)
