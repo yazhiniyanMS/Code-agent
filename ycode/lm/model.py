@@ -227,9 +227,15 @@ class GPT(nn.Module):
     @torch.no_grad()
     def generate(self, idx: torch.Tensor, max_new_tokens: int, *, temperature: float = 0.8,
                  top_k: int | None = 50, top_p: float | None = 0.95, stop_ids: set[int] | None = None,
-                 on_token=None) -> torch.Tensor:
-        """Sample tokens after ``idx`` (shape (1, T)). Uses a KV cache."""
+                 on_token=None, no_repeat_ngram: int = 0) -> torch.Tensor:
+        """Sample tokens after ``idx`` (shape (1, T)). Uses a KV cache.
+
+        ``no_repeat_ngram=n`` forbids any token that would repeat an n-token span already
+        generated; this breaks degenerate loops without penalising ordinary repetition
+        such as indentation or a variable name used twice."""
         self.eval()
+        seen: dict[tuple[int, ...], set[int]] = {}
+        generated: list[int] = []
         stop_ids = stop_ids or set()
         # Keep the most recent context that leaves room for generation.
         budget = self.cfg.block_size - max_new_tokens
@@ -243,6 +249,10 @@ class GPT(nn.Module):
         out = idx
         for _ in range(max_new_tokens):
             next_logits = logits[:, -1, :].float()
+            if no_repeat_ngram > 1 and len(generated) >= no_repeat_ngram - 1:
+                banned = seen.get(tuple(generated[-(no_repeat_ngram - 1):]))
+                if banned:
+                    next_logits[:, list(banned)] = float("-inf")
             if temperature <= 0:
                 next_id = next_logits.argmax(dim=-1, keepdim=True)
             else:
@@ -259,6 +269,9 @@ class GPT(nn.Module):
                     probs = probs / probs.sum(-1, keepdim=True)
                 next_id = torch.multinomial(probs, 1)
             token = int(next_id)
+            generated.append(token)
+            if no_repeat_ngram > 1 and len(generated) >= no_repeat_ngram:
+                seen.setdefault(tuple(generated[-no_repeat_ngram:-1]), set()).add(token)
             out = torch.cat([out, next_id], dim=1)
             if token in stop_ids:
                 break

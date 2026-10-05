@@ -35,7 +35,8 @@ class LocalLM:
         return self.model.num_params()
 
     def _stream(self, prompt_ids: list[int], *, max_new_tokens: int, temperature: float, top_k: int | None,
-                top_p: float | None, stop_ids: set[int], on_text: Callable[[str], None] | None) -> str:
+                top_p: float | None, stop_ids: set[int], on_text: Callable[[str], None] | None,
+                no_repeat_ngram: int = 0) -> str:
         generated: list[int] = []
         emitted = 0
 
@@ -52,7 +53,7 @@ class LocalLM:
 
         idx = torch.tensor([prompt_ids], dtype=torch.long, device=self.device)
         self.model.generate(idx, max_new_tokens, temperature=temperature, top_k=top_k, top_p=top_p,
-                            stop_ids=stop_ids, on_token=on_token)
+                            stop_ids=stop_ids, on_token=on_token, no_repeat_ngram=no_repeat_ngram)
         text = self.tokenizer.decode(generated, skip_special=True)
         if on_text is not None and len(text) > emitted:
             on_text(text[emitted:])
@@ -68,7 +69,7 @@ class LocalLM:
 
     def chat(self, turns: list[tuple[str, str]], *, max_new_tokens: int = 300, temperature: float = 0.7,
              top_k: int | None = 40, top_p: float | None = 0.9,
-             on_text: Callable[[str], None] | None = None) -> str:
+             on_text: Callable[[str], None] | None = None, no_repeat_ngram: int = 12) -> str:
         """Answer the last user turn. ``turns`` is a list of (role, text), role in {user, assistant}."""
         text = ""
         for role, content in turns:
@@ -81,5 +82,6 @@ class LocalLM:
         # trims from the left, so make sure the newest turn survives).
         stop = {self.tokenizer.token_id(END), self.tokenizer.eot_id, self.tokenizer.token_id(USER)}
         return self._stream(ids, max_new_tokens=max_new_tokens, temperature=temperature, top_k=top_k,
-                            top_p=top_p, stop_ids=stop, on_text=on_text).strip()
+                            top_p=top_p, stop_ids=stop, on_text=on_text,
+                            no_repeat_ngram=no_repeat_ngram).strip()
 

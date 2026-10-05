@@ -325,28 +325,37 @@ def extract_python_examples(source: str, rng: random.Random, *, max_chars: int =
                 ))
         if summary is None:
             continue
-        if args.startswith("self"):
-            args = args[4:].lstrip(", ")
-        sig = f"{node.name}({args})"
         task = _as_task(summary)
         imp = summary[0].lower() + summary[1:] if summary[1:2].islower() else summary
         imp = imp if imp.endswith((".", "?", "!")) else imp + "."
-        examples.append(InstructionExample(
-            rng.choice(_PROMPTS_WRITE).format(sig=sig, name=node.name, task=task, imp=imp),
-            f"```python\n{full}\n```",
-        ))
+        # "Write"/"complete" answers must be self-contained functions in a compact style:
+        # no methods (their bodies depend on `self`), one-line docstring, short bodies.
+        first_arg = node.args.args[0].arg if node.args.args else ""
+        standalone = first_arg not in ("self", "cls") and n_lines <= 25
+        compact = None
+        if standalone:
+            try:
+                compact = _with_short_doc(node, summary)
+            except (ValueError, RecursionError):
+                compact = None
+        if compact is not None:
+            sig = f"{node.name}({args})"
+            examples.append(InstructionExample(
+                rng.choice(_PROMPTS_WRITE).format(sig=sig, name=node.name, task=task, imp=imp),
+                f"```python\n{compact}\n```",
+            ))
         examples.append(InstructionExample(
             rng.choice(_PROMPTS_EXPLAIN).format(code=bare),
             f"The function `{node.name}` {task}",
         ))
-        if rng.random() < 0.5:
+        if compact is not None and rng.random() < 0.5:
             try:
                 stub = _stub(node, summary)
             except (ValueError, RecursionError):
                 stub = None
             if stub:
                 examples.append(InstructionExample(
-                    rng.choice(_PROMPTS_COMPLETE).format(stub=stub), f"```python\n{full}\n```"))
+                    rng.choice(_PROMPTS_COMPLETE).format(stub=stub), f"```python\n{compact}\n```"))
         if rng.random() < 0.3:
             examples.append(InstructionExample(
                 rng.choice(_PROMPTS_DOCSTRING).format(code=bare), f'"""{summary}"""'))
@@ -401,6 +410,63 @@ def encode_example(tok: BPETokenizer, ex: InstructionExample) -> tuple[list[int]
     return prompt_ids + answer_ids, [0] * len(prompt_ids) + [1] * len(answer_ids)
 
 
+def collect_examples(files: list[tuple[Path, str]], extra_sft: list[Path] | None,
+                     rng: random.Random) -> list[InstructionExample]:
+    examples: list[InstructionExample] = []
+    for path, text in files:
+        if path.suffix == ".py":
+            examples.extend(extract_python_examples(text, rng))
+    for path in extra_sft or []:
+        examples.extend(load_jsonl_examples(path))
+    unique: dict[str, InstructionExample] = {}
+    for ex in examples:
+        unique.setdefault(ex.prompt, ex)
+    examples = list(unique.values())
+    rng.shuffle(examples)
+    return examples
+
+
+def write_sft_files(tok: BPETokenizer, examples: list[InstructionExample], out_dir: Path) -> int:
+    """Encode instruction examples to sft_tokens.bin / sft_mask.bin / sft_index.npy."""
+    tokens: list[int] = []
+    mask: list[int] = []
+    index: list[tuple[int, int]] = []
+    for ex in examples:
+        t, m = encode_example(tok, ex)
+        index.append((len(tokens), len(t)))
+        tokens.extend(t)
+        mask.extend(m)
+    np.asarray(tokens, dtype=np.uint16).tofile(out_dir / "sft_tokens.bin")
+    np.asarray(mask, dtype=np.uint8).tofile(out_dir / "sft_mask.bin")
+    np.save(out_dir / "sft_index.npy", np.asarray(index, dtype=np.int64).reshape(-1, 2))
+    return len(tokens)
+
+
+def prepare_sft_dataset(sources: list[Path], out_dir: Path, tokenizer_path: Path, *,
+                        extra_sft: list[Path] | None = None, exclude: Iterable[str] = (), seed: int = 1337,
+                        log: Log = print) -> dict:
+    """Rebuild only the instruction data, with an existing tokenizer.
+
+    Lets you improve SFT data and re-tune an already pretrained model, which must
+    keep the tokenizer it was trained with."""
+    rng = random.Random(seed)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    tok = BPETokenizer.load(tokenizer_path)
+    tok.save(out_dir / "tokenizer.json")
+    files = read_code_files(sources, exclude=exclude)
+    if not files:
+        raise ValueError("No source files found.")
+    rng.shuffle(files)
+    examples = collect_examples(files, extra_sft, rng)
+    n_tokens = write_sft_files(tok, examples, out_dir)
+    meta = {"vocab_size": tok.vocab_size, "files": len(files), "sft_examples": len(examples),
+            "sft_tokens": n_tokens, "sft_only": True, "sources": [str(s) for s in sources],
+            "exclude": list(exclude)}
+    (out_dir / "meta.json").write_text(json.dumps(meta, indent=2))
+    log(f"  {len(examples)} instruction examples, {n_tokens:,} tokens -> {out_dir}")
+    return meta
+
+
 def prepare_dataset(
     sources: list[Path],
     out_dir: Path,
@@ -427,17 +493,7 @@ def prepare_dataset(
     total_chars = sum(len(t) for _, t in files)
     log(f"  {len(files)} files, {total_chars / 1e6:.1f} MB of code")
 
-    examples: list[InstructionExample] = []
-    for path, text in files:
-        if path.suffix == ".py":
-            examples.extend(extract_python_examples(text, rng))
-    for path in extra_sft or []:
-        examples.extend(load_jsonl_examples(path))
-    unique: dict[str, InstructionExample] = {}
-    for ex in examples:
-        unique.setdefault(ex.prompt, ex)
-    examples = list(unique.values())
-    rng.shuffle(examples)
+    examples = collect_examples(files, extra_sft, rng)
     log(f"  {len(examples)} instruction examples")
 
     sample, size = [], 0
@@ -462,17 +518,7 @@ def prepare_dataset(
         counts[split] = len(ids)
     log(f"  train {counts['train']:,} tokens, val {counts['val']:,} tokens")
 
-    tokens: list[int] = []
-    mask: list[int] = []
-    index: list[tuple[int, int]] = []
-    for ex in examples:
-        t, m = encode_example(tok, ex)
-        index.append((len(tokens), len(t)))
-        tokens.extend(t)
-        mask.extend(m)
-    np.asarray(tokens, dtype=np.uint16).tofile(out_dir / "sft_tokens.bin")
-    np.asarray(mask, dtype=np.uint8).tofile(out_dir / "sft_mask.bin")
-    np.save(out_dir / "sft_index.npy", np.asarray(index, dtype=np.int64).reshape(-1, 2))
+    tokens = write_sft_files(tok, examples, out_dir)
 
     meta = {
         "vocab_size": tok.vocab_size,
@@ -481,7 +527,7 @@ def prepare_dataset(
         "train_tokens": counts["train"],
         "val_tokens": counts["val"],
         "sft_examples": len(examples),
-        "sft_tokens": len(tokens),
+        "sft_tokens": tokens,
         "sources": [str(s) for s in sources],
         "exclude": list(exclude),
     }

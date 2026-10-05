@@ -82,6 +82,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--exclude", action="append", default=[],
                    help="Glob of paths to leave out, e.g. '*/tests/*' (repeatable). Use it to hold out eval data.")
     p.add_argument("--workers", type=int, default=None, help="Tokenizer processes (default: all CPU cores).")
+    p.add_argument("--sft-only", action="store_true",
+                   help="Only rebuild the instruction data, reusing --tokenizer (for re-tuning a pretrained model).")
+    p.add_argument("--tokenizer", type=Path, default=None, help="tokenizer.json to reuse with --sft-only.")
 
     _train_args(sub.add_parser("train", help="Pretrain a model on the code corpus."), sft=False)
     _train_args(sub.add_parser("sft", help="Instruction-tune a pretrained model so it answers requests."),
@@ -123,6 +126,19 @@ def main(argv: list[str] | None = None) -> int:
         from ycode.lm.data import default_sources, prepare_dataset
 
         sources = args.source or default_sources()
+        if args.sft_only:
+            from ycode.lm.data import prepare_sft_dataset
+
+            if args.tokenizer is None:
+                print("error: --sft-only needs --tokenizer path/to/tokenizer.json", file=sys.stderr)
+                return 2
+            try:
+                prepare_sft_dataset(sources, args.out, args.tokenizer, extra_sft=args.sft_data,
+                                    exclude=args.exclude)
+            except (ValueError, OSError) as exc:
+                print(f"error: {exc}", file=sys.stderr)
+                return 1
+            return 0
         try:
             prepare_dataset(sources, args.out, vocab_size=args.vocab_size, extra_sft=args.sft_data,
                             exclude=args.exclude, workers=args.workers)

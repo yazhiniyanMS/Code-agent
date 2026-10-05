@@ -161,3 +161,67 @@ def test_export_bf16_is_smaller_and_loads(data_dir, tmp_path):
     assert torch.allclose(original(x, x)[0], exported(x, x)[0], atol=0.1)
     assert isinstance(LocalLM(tmp_path / "slim", device="cpu").chat([("user", "hi")], max_new_tokens=3), str)
     assert cli.main(["export", "--model", str(tmp_path / "nope"), "--out", str(tmp_path / "x")]) == 1
+
+
+def test_no_repeat_ngram_blocks_loops():
+    torch.manual_seed(0)
+    model = GPT(GPTConfig(vocab_size=20, block_size=128, n_layer=1, n_head=2, n_embd=16))
+    plain = model.generate(torch.tensor([[1, 2, 3]]), 60, temperature=0)[0, 3:].tolist()
+    blocked = model.generate(torch.tensor([[1, 2, 3]]), 60, temperature=0, no_repeat_ngram=4)[0, 3:].tolist()
+
+    def repeats(seq):
+        grams = [tuple(seq[i:i + 4]) for i in range(len(seq) - 3)]
+        return len(grams) - len(set(grams))
+
+    assert repeats(plain) > 0  # an untrained model loops under greedy decoding
+    assert repeats(blocked) == 0
+
+
+def test_write_examples_are_compact_standalone_functions():
+    import random
+
+    from ycode.lm.data import extract_python_examples
+
+    source = '''
+def area(width, height):
+    """Return the area of a rectangle.
+
+    A much longer explanation that should not appear in answers.
+
+    >>> area(2, 3)
+    6
+    """
+    result = width * height
+    return result
+
+
+class Shape:
+    def scale(self, factor):
+        """Scale the shape by the given factor."""
+        self.size = self.size * factor
+        return self.size
+'''
+    examples = []
+    for seed in range(5):
+        examples += extract_python_examples(source, random.Random(seed))
+    writes = [e for e in examples if e.response.startswith("```python") and "bug" not in e.response.lower()]
+    assert writes and all("area" in e.response for e in writes)  # no method `scale` in write answers
+    for e in writes:
+        assert '"""Return the area of a rectangle."""' in e.response
+        assert ">>>" not in e.response and "longer explanation" not in e.response
+
+
+def test_prepare_sft_only_reuses_tokenizer(data_dir, tmp_path):
+    from ycode.lm import cli
+    from ycode.lm.tokenizer import BPETokenizer
+
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "m.py").write_text('def area(w, h):\n    """Return the area of a rectangle."""\n'
+                              '    if w < 0:\n        return 0\n    return w * h\n')
+    out = tmp_path / "sft"
+    assert cli.main(["prepare", "--source", str(src), "--out", str(out), "--sft-only"]) == 2  # needs --tokenizer
+    assert cli.main(["prepare", "--source", str(src), "--out", str(out), "--sft-only",
+                     "--tokenizer", str(data_dir / "tokenizer.json")]) == 0
+    assert BPETokenizer.load(out / "tokenizer.json").merges == BPETokenizer.load(data_dir / "tokenizer.json").merges
+    assert (out / "sft_index.npy").is_file() and not (out / "train.bin").exists()
