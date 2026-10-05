@@ -265,7 +265,10 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
         torch.set_num_threads(max(1, os.cpu_count() or 1))
 
     start_step = 0
-    if cfg.init_from or cfg.resume:
+    has_checkpoint = (out_dir / CHECKPOINT_NAME).is_file()
+    if cfg.resume and not has_checkpoint and not cfg.init_from:
+        log(f"No checkpoint in {out_dir} yet; starting a new run.")
+    if cfg.init_from or (cfg.resume and has_checkpoint):
         # Resuming continues the run in out_dir; otherwise start from init_from.
         resumable = cfg.resume and (out_dir / CHECKPOINT_NAME).is_file()
         source = out_dir if (resumable or not cfg.init_from) else Path(cfg.init_from)

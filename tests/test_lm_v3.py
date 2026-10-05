@@ -133,3 +133,9 @@ def test_save_interval_checkpoints_between_evals(data_dir, tmp_path):
     assert [line for line in logs if "checkpoint saved" in line] == [
         "checkpoint saved at step 3", "checkpoint saved at step 6"]
     assert json.loads((tmp_path / "m" / "info.json").read_text())["step"] == 7  # final save at the segment end
+
+
+def test_resume_without_checkpoint_starts_fresh(data_dir, tmp_path):
+    logs = []
+    summary = train(data_dir, tmp_path / "new", _cfg(max_steps=3, resume=True), log=logs.append)
+    assert summary["steps"] == 3 and any("starting a new run" in line for line in logs)
