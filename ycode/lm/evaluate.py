@@ -85,7 +85,8 @@ PROBLEMS: tuple[Problem, ...] = (
     _p("char_count", "char_count(s, ch)", "returns how many times the character ch occurs in s.",
        "assert char_count('banana', 'a') == 3\nassert char_count('abc', 'z') == 0"),
     _p("merge_dicts", "merge_dicts(a, b)", "returns a new dict with the keys of a and b, b winning on conflicts.",
-       "assert merge_dicts({'x': 1}, {'x': 2, 'y': 3}) == {'x': 2, 'y': 3}"),
+       "assert merge_dicts({'x': 1}, {'x': 2, 'y': 3}) == {'x': 2, 'y': 3}\n"
+       "assert merge_dicts({'a': 1}, {'b': 2}) == {'a': 1, 'b': 2}"),
     _p("first_word", "first_word(text)", "returns the first word of text.",
        "assert first_word('hello world') == 'hello'"),
     _p("to_upper", "to_upper(s)", "returns s converted to upper case.", "assert to_upper('abC') == 'ABC'"),
