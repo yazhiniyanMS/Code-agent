@@ -55,7 +55,9 @@ def _train_args(p: argparse.ArgumentParser, *, sft: bool) -> None:
     p.add_argument("--save-interval", type=int, default=None,
                    help="Also checkpoint every N steps without evaluating (cheap protection against crashes).")
     p.add_argument("--device", default="auto", help="auto, cpu, cuda or mps.")
-    p.add_argument("--precision", default="auto", choices=("auto", "fp32", "bf16"))
+    p.add_argument("--precision", default="auto", choices=("auto", "fp32", "bf16", "fp16"))
+    p.add_argument("--grad-checkpoint", action="store_true",
+                   help="Recompute activations in backward: far less GPU memory, ~30%% slower.")
     p.add_argument("--schedule", default="wsd", choices=("wsd", "cosine"),
                    help="LR schedule: warmup-stable-decay (default) or cosine.")
     p.add_argument("--compile", action="store_true", help="Use torch.compile (faster on many machines).")
@@ -87,7 +89,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--workers", type=int, default=None, help="Tokenizer processes (default: all CPU cores).")
     p.add_argument("--sft-only", action="store_true",
                    help="Only rebuild the instruction data, reusing --tokenizer (for re-tuning a pretrained model).")
-    p.add_argument("--tokenizer", type=Path, default=None, help="tokenizer.json to reuse with --sft-only.")
+    p.add_argument("--tokenizer", type=Path, default=None,
+                   help="Reuse this tokenizer.json (needed to continue training an existing model).")
+    p.add_argument("--max-mb", type=float, default=None, help="Cap the code corpus at this many MB.")
 
     _train_args(sub.add_parser("train", help="Pretrain a model on the code corpus."), sft=False)
     _train_args(sub.add_parser("sft", help="Instruction-tune a pretrained model so it answers requests."),
@@ -106,6 +110,37 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--dtype", default="bf16", choices=("bf16", "fp32"), help="bf16 halves the size (default).")
     p.add_argument("--max-shard-mb", type=float, default=None,
                    help="Split weights into files of at most this size (e.g. 45 to stay under GitHub's limits).")
+
+    p = sub.add_parser("autotrain", help="Grow, train, tune, evaluate and publish a model across GPU sessions "
+                                         "(Kaggle/Colab), syncing checkpoints to Hugging Face.")
+    p.add_argument("--base-model", required=True, type=Path, help="Model to grow from, e.g. models/ycode-lm-v4.")
+    p.add_argument("--preset", default="v5-385m", help="Target architecture (default v5-385m).")
+    p.add_argument("--work", type=Path, default=Path("ycode-autotrain"), help="Local working directory.")
+    p.add_argument("--hf-repo", default=None, help="Hugging Face repo for the finished model, e.g. you/ycode-lm-v5.")
+    p.add_argument("--ckpt-repo", default=None, help="Private repo for checkpoints (default: <hf-repo>-checkpoints).")
+    p.add_argument("--public", action="store_true", help="Make the finished-model repo public.")
+    p.add_argument("--local-hub", type=Path, default=None, help="Use a local folder instead of Hugging Face.")
+    p.add_argument("--pretrain-steps", type=int, default=6000)
+    p.add_argument("--sft-steps", type=int, default=800)
+    p.add_argument("--batch-size", type=int, default=8)
+    p.add_argument("--grad-accum", type=int, default=1)
+    p.add_argument("--nproc", type=int, default=None, help="GPUs to use (default: all visible).")
+    p.add_argument("--hours", type=float, default=11.0, help="Session time budget (Kaggle sessions last 12 h).")
+    p.add_argument("--segment-minutes", type=float, default=90.0, help="Checkpoint upload interval.")
+    p.add_argument("--max-mb", type=float, default=1000.0, help="Cap on the code corpus size.")
+    p.add_argument("--source", action="append", type=Path, default=[], help="Code to train on (default: "
+                   "the Python standard library + installed packages).")
+    p.add_argument("--no-grad-checkpoint", action="store_true", help="Faster but needs much more GPU memory.")
+    p.add_argument("--compile", action="store_true")
+    p.add_argument("--device", default="auto")
+    p.add_argument("--precision", default="auto", choices=("auto", "fp32", "bf16", "fp16"))
+    p.add_argument("--max-segments", type=int, default=None, help=argparse.SUPPRESS)
+    p.add_argument("--eval-interval", type=int, default=250)
+
+    p = sub.add_parser("push-hf", help="Upload an exported model folder to a Hugging Face model repo.")
+    p.add_argument("--model", required=True, type=Path, help="Folder from `ycode-lm export`.")
+    p.add_argument("--repo", required=True, help="Repo id, e.g. you/ycode-lm-v5.")
+    p.add_argument("--public", action="store_true")
 
     p = sub.add_parser("eval", help="Score models: bits/byte on held-out code + pass rate on coding problems.")
     p.add_argument("--model", action="append", type=Path, default=[],
@@ -153,7 +188,8 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         try:
             prepare_dataset(sources, args.out, vocab_size=args.vocab_size, extra_sft=args.sft_data,
-                            exclude=args.exclude, workers=args.workers)
+                            exclude=args.exclude, workers=args.workers, tokenizer_path=args.tokenizer,
+                            max_mb=args.max_mb)
         except (ValueError, OSError) as exc:
             print(f"error: {exc}", file=sys.stderr)
             return 1
@@ -185,6 +221,7 @@ def main(argv: list[str] | None = None) -> int:
             precision=args.precision,
             schedule=args.schedule,
             compile=args.compile,
+            grad_checkpoint=args.grad_checkpoint,
             optimizer=args.optimizer or ("muon" if str(getattr(args, "preset", "")).startswith("v3") else "adamw"),
             muon_lr=args.muon_lr,
             pack=not getattr(args, "no_pack", False),
@@ -204,7 +241,23 @@ def main(argv: list[str] | None = None) -> int:
         except KeyboardInterrupt:
             print("\nInterrupted. The last checkpoint is in", out)
             return 130
-        print(f"Saved model to {out} (val loss {summary['final']['val']:.3f})")
+        if summary:  # empty on non-zero ranks of a multi-GPU run; rank 0 reports
+            print(f"Saved model to {out} (val loss {summary['final']['val']:.3f})")
+        return 0
+
+    if args.command == "autotrain":
+        return _autotrain(args)
+
+    if args.command == "push-hf":
+        from ycode.lm.hub import HFHub
+
+        try:
+            hub = HFHub(args.repo, private=not args.public)
+            hub.upload_folder(args.model, "", f"Upload {args.model.name}")
+        except Exception as exc:  # noqa: BLE001 - network/auth errors become a clear message
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        print(f"Uploaded {args.model} to {hub.url()}")
         return 0
 
     if args.command == "grow":
@@ -294,6 +347,37 @@ def main(argv: list[str] | None = None) -> int:
             continue
         print()
         history.append(("assistant", answer))
+
+
+def _autotrain(args) -> int:  # noqa: ANN001
+    from ycode.lm.autotrain import AutoTrainer, Plan
+    from ycode.lm.hub import HFHub, LocalHub
+
+    import torch
+
+    nproc = args.nproc if args.nproc is not None else max(1, torch.cuda.device_count())
+    plan = Plan(base_model=str(args.base_model), preset=args.preset, sources=[str(s) for s in args.source],
+                max_mb=args.max_mb, pretrain_steps=args.pretrain_steps, sft_steps=args.sft_steps,
+                batch_size=args.batch_size, grad_accum=args.grad_accum, nproc=nproc, precision=args.precision,
+                grad_checkpoint=not args.no_grad_checkpoint, compile=args.compile, session_hours=args.hours,
+                segment_minutes=args.segment_minutes, max_segments=args.max_segments, device=args.device,
+                eval_interval=args.eval_interval)
+    try:
+        if args.local_hub is not None:
+            ckpt, release = LocalHub(args.local_hub, "checkpoints"), LocalHub(args.local_hub, "release")
+        else:
+            if not args.hf_repo:
+                print("error: pass --hf-repo you/ycode-lm-v5 (or --local-hub DIR for a dry run)", file=sys.stderr)
+                return 2
+            ckpt = HFHub(args.ckpt_repo or f"{args.hf_repo}-checkpoints", private=True)
+            release = HFHub(args.hf_repo, private=not args.public)
+        state = AutoTrainer(plan, args.work, ckpt, release).run()
+    except (RuntimeError, ValueError, FileNotFoundError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    print(f"Phase: {state.phase} | pretrain {state.pretrain_step}/{plan.pretrain_steps} | "
+          f"sft {state.sft_step}/{plan.sft_steps}")
+    return 0
 
 
 def _eval(args) -> int:  # noqa: ANN001

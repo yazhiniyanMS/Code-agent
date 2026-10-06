@@ -45,8 +45,9 @@ def cpu_supports_bf16() -> bool:
 def pick_precision(requested: str, device: str) -> str:
     if requested != "auto":
         return requested
-    if device == "cuda":
-        return "bf16" if torch.cuda.is_bf16_supported() else "fp32"
+    if device.startswith("cuda"):
+        # bf16 needs Ampere or newer (A100, RTX 30xx+); older GPUs such as the T4 use fp16.
+        return "bf16" if torch.cuda.is_bf16_supported() else "fp16"
     if device == "cpu" and cpu_supports_bf16():
         return "bf16"
     return "fp32"
@@ -70,7 +71,7 @@ class TrainConfig:
     eval_iters: int = 20
     log_interval: int = 10
     device: str = "auto"
-    precision: str = "auto"  # auto | fp32 | bf16
+    precision: str = "auto"  # auto | fp32 | bf16 | fp16 (fp16 uses dynamic loss scaling)
     seed: int = 1337
     init_from: str | None = None  # checkpoint dir to start from (required for sft)
     resume: bool = False
@@ -80,6 +81,7 @@ class TrainConfig:
     anneal_mix: float = 0.2  # pretrain: share of instruction data mixed in during the decay phase
     pack: bool = True  # sft: pack several examples per sequence instead of padding
     compile: bool = False  # torch.compile the model for training
+    grad_checkpoint: bool = False  # recompute activations in backward: much less memory, ~30% slower
     save_interval: int | None = None  # checkpoint every N steps without evaluating (cheap crash safety)
     until_step: int | None = None  # stop early at this step (segmented runs); schedule still spans max_steps
     optimizer: str = "adamw"  # adamw | muon (Muon for hidden matrices + AdamW for the rest)
@@ -332,12 +334,67 @@ def estimate_loss(model: GPT, data, cfg: TrainConfig, gen: torch.Generator, auto
     return out
 
 
+def _dist_info() -> tuple[int, int, int]:
+    """(world_size, rank, local_rank) from torchrun's environment variables."""
+    return (int(os.environ.get("WORLD_SIZE", "1")), int(os.environ.get("RANK", "0")),
+            int(os.environ.get("LOCAL_RANK", "0")))
+
+
+class LossScaler:
+    """Dynamic loss scaling for fp16 (GPUs without bf16, e.g. the T4).
+
+    fp16 gradients underflow without scaling, so the loss is multiplied by a large factor
+    before backward and the gradients divided by it afterwards. If any gradient overflows
+    the step is skipped and the scale halved; after enough clean steps it doubles again.
+    Works with any optimizer, including the Muon + AdamW combination."""
+
+    def __init__(self, init_scale: float = 2.0 ** 16, growth_interval: int = 1000) -> None:
+        self.scale = init_scale
+        self.growth_interval = growth_interval
+        self.good_steps = 0
+        self.skipped = 0
+
+    def unscale_and_check(self, params) -> bool:
+        """Divide grads by the scale; return True if they are all finite."""
+        finite = True
+        for p in params:
+            if p.grad is not None:
+                p.grad.div_(self.scale)
+                if finite and not torch.isfinite(p.grad).all():
+                    finite = False
+        return finite
+
+    def update(self, finite: bool) -> None:
+        if finite:
+            self.good_steps += 1
+            if self.good_steps % self.growth_interval == 0:
+                self.scale = min(self.scale * 2.0, 2.0 ** 24)
+        else:
+            self.skipped += 1
+            self.good_steps = 0
+            self.scale = max(self.scale / 2.0, 1.0)
+
+
 def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) -> dict:
     data_dir, out_dir = Path(data_dir), Path(out_dir)
+    world, rank, local_rank = _dist_info()
+    distributed = world > 1
     device = pick_device(cfg.device)
+    dev_type = "cuda" if device.startswith("cuda") else device
+    if distributed:
+        import torch.distributed as dist
+
+        if not dist.is_initialized():
+            dist.init_process_group(backend="nccl" if dev_type == "cuda" else "gloo")
+        if dev_type == "cuda":
+            device = f"cuda:{local_rank}"
+            torch.cuda.set_device(local_rank)
+    main = rank == 0
+    if not main:
+        log = lambda *_: None  # noqa: E731 - only rank 0 talks
     torch.manual_seed(cfg.seed)
     if device == "cpu":
-        torch.set_num_threads(max(1, os.cpu_count() or 1))
+        torch.set_num_threads(max(1, (os.cpu_count() or 1) // world))
 
     start_step = 0
     has_checkpoint = (out_dir / CHECKPOINT_NAME).is_file()
@@ -345,7 +402,7 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
         log(f"No checkpoint in {out_dir} yet; starting a new run.")
     if cfg.init_from or (cfg.resume and has_checkpoint):
         # Resuming continues the run in out_dir; otherwise start from init_from.
-        resumable = cfg.resume and (out_dir / CHECKPOINT_NAME).is_file()
+        resumable = cfg.resume and has_checkpoint
         source = out_dir if (resumable or not cfg.init_from) else Path(cfg.init_from)
         model, tok, payload = load_checkpoint(source, device)
         if cfg.resume and source == out_dir:
@@ -359,6 +416,7 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
             raise ValueError(f"unknown preset {cfg.preset!r}; choose from {', '.join(PRESETS)}")
         model_cfg = GPTConfig(vocab_size=tok.vocab_size, **{**PRESETS[cfg.preset], **cfg.model_overrides})
         model = GPT(model_cfg).to(device)
+    model.grad_checkpoint = cfg.grad_checkpoint
 
     block = model.cfg.block_size
     if cfg.stage == "sft":
@@ -367,18 +425,21 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
         data = PretrainData(data_dir, block, cfg.batch_size, device)
 
     optimizer = build_optimizer(model, kind=cfg.optimizer, lr=cfg.lr, muon_lr=cfg.muon_lr,
-                                weight_decay=cfg.weight_decay, fused=(device == "cuda"))
-    if cfg.resume and (out_dir / "optim.pt").is_file():
+                                weight_decay=cfg.weight_decay, fused=(dev_type == "cuda"))
+    if cfg.resume and has_checkpoint and (out_dir / "optim.pt").is_file():
         state = torch.load(out_dir / "optim.pt", map_location=device, weights_only=True)["optimizer"]
         try:
             optimizer.load_state_dict(state if "optimizers" in state else {"optimizers": [state]})
         except (ValueError, KeyError, IndexError):
             log("Optimizer state does not match (different --optimizer?); starting it fresh.")
 
-    precision = pick_precision(cfg.precision, device)
-    autocast = torch.autocast(device_type="cuda" if device == "cuda" else "cpu", dtype=torch.bfloat16,
-                              enabled=(precision == "bf16" and device in ("cuda", "cpu")))
-    gen = torch.Generator().manual_seed(cfg.seed + start_step)
+    precision = pick_precision(cfg.precision, dev_type)
+    amp_dtype = torch.float16 if precision == "fp16" else torch.bfloat16
+    autocast = torch.autocast(device_type=dev_type if dev_type in ("cuda", "cpu") else "cpu", dtype=amp_dtype,
+                              enabled=(precision in ("bf16", "fp16") and dev_type in ("cuda", "cpu")))
+    scaler = LossScaler() if precision == "fp16" else None
+    # Each rank draws different batches; the eval generator is shared so evals are comparable.
+    gen = torch.Generator().manual_seed(cfg.seed + start_step + 7919 * rank)
     eval_gen = torch.Generator().manual_seed(cfg.seed + 999)
 
     train_model = model
@@ -387,10 +448,16 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
             train_model = torch.compile(model)
         except Exception as exc:  # noqa: BLE001 - compilation is an optional speed-up
             log(f"torch.compile unavailable ({exc}); continuing without it.")
+    compiled = train_model is not model
+    if distributed:
+        from torch.nn.parallel import DistributedDataParallel as DDP
+
+        train_model = DDP(train_model, device_ids=[local_rank] if dev_type == "cuda" else None)
 
     log(f"Model: YCode-LM v{model.cfg.arch_version}, {model.num_params() / 1e6:.2f}M parameters, "
-        f"context {block}, device {device}, precision {precision}, optimizer {cfg.optimizer}, stage {cfg.stage}"
-        f"{', compiled' if train_model is not model else ''}")
+        f"context {block}, device {device}{f' x{world}' if distributed else ''}, precision {precision}, "
+        f"optimizer {cfg.optimizer}, stage {cfg.stage}{', compiled' if compiled else ''}"
+        f"{', grad checkpointing' if cfg.grad_checkpoint else ''}")
     t0 = time.time()
     tokens_seen = 0
     best_val = None
@@ -403,9 +470,15 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
         progress = step / max(1, cfg.max_steps)
         if cfg.max_minutes is not None:
             progress = max(progress, (time.time() - t0) / 60 / cfg.max_minutes)
-            if progress >= 1.0:
-                log(f"Time limit of {cfg.max_minutes} minutes reached.")
-                break
+        if distributed:
+            # Every rank must use rank 0's clock: same LR, same stop decision, no hangs.
+            synced = torch.tensor([progress], dtype=torch.float64,
+                                  device=device if dev_type == "cuda" else "cpu")
+            dist.broadcast(synced, 0)
+            progress = float(synced.item())
+        if cfg.max_minutes is not None and progress >= 1.0:
+            log(f"Time limit of {cfg.max_minutes} minutes reached.")
+            break
         lr = lr_at(step, cfg, progress)
         optimizer.set_lr_scale(lr / cfg.lr)
         mix = cfg.anneal_mix if (cfg.stage == "pretrain" and in_decay_phase(cfg, progress)) else 0.0
@@ -413,15 +486,25 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
             log(f"Decay phase: annealing with {mix:.0%} instruction data.")
             annealing_logged = True
         loss_total = 0.0
-        for _ in range(cfg.grad_accum):
+        loss_scale = scaler.scale if scaler else 1.0
+        for micro in range(cfg.grad_accum):
             x, y, m = data.batch("train", gen, mix=mix)
-            with autocast:
-                _, loss = train_model(x, y, loss_mask=m)
-            (loss / cfg.grad_accum).backward()
+            last = micro == cfg.grad_accum - 1
+            sync = contextlib.nullcontext() if (last or not distributed) else train_model.no_sync()
+            with sync:
+                with autocast:
+                    _, loss = train_model(x, y, loss_mask=m)
+                (loss * (loss_scale / cfg.grad_accum)).backward()
             loss_total += loss.item() / cfg.grad_accum
-            tokens_seen += x.numel()
-        torch.nn.utils.clip_grad_norm_(model.parameters(), cfg.grad_clip)
-        optimizer.step()
+            tokens_seen += x.numel() * world
+        finite = scaler.unscale_and_check(model.parameters()) if scaler else True
+        if finite:
+            torch.nn.utils.clip_grad_norm_(model.parameters(), cfg.grad_clip)
+            optimizer.step()
+        else:
+            log(f"step {step + 1}: fp16 gradient overflow, skipping update (loss scale {loss_scale:g})")
+        if scaler:
+            scaler.update(finite)
         optimizer.zero_grad(set_to_none=True)
         step += 1
 
@@ -429,7 +512,7 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
             elapsed = time.time() - t0
             log(f"step {step:>6} | loss {loss_total:.3f} | lr {lr:.2e} | "
                 f"{tokens_seen / max(elapsed, 1e-9):,.0f} tok/s | {elapsed / 60:.1f} min")
-        if step % cfg.eval_interval == 0 or step == cfg.max_steps:
+        if main and (step % cfg.eval_interval == 0 or step == cfg.max_steps):
             losses = estimate_loss(model, data, cfg, eval_gen, autocast)
             history.append({"step": step, **losses})
             log(f"eval step {step}: train {losses['train']:.3f} | val {losses['val']:.3f}")
@@ -437,18 +520,25 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
                 best_val = losses["val"]
             save_checkpoint(out_dir, model, tok, step=step, stage=cfg.stage, val_loss=losses["val"],
                             optimizer=optimizer)
-        elif cfg.save_interval and step % cfg.save_interval == 0:
+        elif main and cfg.save_interval and step % cfg.save_interval == 0:
             save_checkpoint(out_dir, model, tok, step=step, stage=cfg.stage,
                             val_loss=history[-1]["val"] if history else None, optimizer=optimizer)
             log(f"checkpoint saved at step {step}")
 
-    if not history or history[-1]["step"] != step:
-        losses = estimate_loss(model, data, cfg, eval_gen, autocast)
-        history.append({"step": step, **losses})
-        log(f"final eval step {step}: train {losses['train']:.3f} | val {losses['val']:.3f}")
-        save_checkpoint(out_dir, model, tok, step=step, stage=cfg.stage, val_loss=losses["val"],
-                        optimizer=optimizer)
-    summary = {"steps": step, "minutes": (time.time() - t0) / 60, "tokens": tokens_seen,
-               "final": history[-1], "params": model.num_params(), "out_dir": str(out_dir)}
-    (out_dir / "train_log.json").write_text(json.dumps({"summary": summary, "history": history}, indent=2))
+    summary: dict = {}
+    if main:
+        if not history or history[-1]["step"] != step:
+            losses = estimate_loss(model, data, cfg, eval_gen, autocast)
+            history.append({"step": step, **losses})
+            log(f"final eval step {step}: train {losses['train']:.3f} | val {losses['val']:.3f}")
+            save_checkpoint(out_dir, model, tok, step=step, stage=cfg.stage, val_loss=losses["val"],
+                            optimizer=optimizer)
+        summary = {"steps": step, "minutes": (time.time() - t0) / 60, "tokens": tokens_seen,
+                   "final": history[-1], "params": model.num_params(), "out_dir": str(out_dir),
+                   "world_size": world, "precision": precision,
+                   "fp16_skipped_steps": scaler.skipped if scaler else 0}
+        (out_dir / "train_log.json").write_text(json.dumps({"summary": summary, "history": history}, indent=2))
+    if distributed:
+        dist.barrier()
+        dist.destroy_process_group()
     return summary

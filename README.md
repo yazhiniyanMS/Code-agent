@@ -261,6 +261,20 @@ Each version models real code better than the last. v2–v4 write short, well-fo
 
 For long runs on machines that may be interrupted, train in segments: `--until-step N` stops and saves, `--resume` continues with the same LR schedule, and `--save-interval N` saves cheaply between evaluations.
 
+**Version 5: ~385M parameters, trained on free Kaggle GPUs.** v5 is too large for a CPU, so it trains on GPUs and is published to Hugging Face. Open [`notebooks/kaggle_train_v5.ipynb`](notebooks/kaggle_train_v5.ipynb) on [Kaggle](https://www.kaggle.com/code) and follow its instructions:
+
+1. Turn on **GPU T4 x2** and **Internet** in the notebook settings.
+2. Add a Hugging Face token with **Write** access as a Kaggle secret named `HF_TOKEN`, and set `HF_USER` in the first cell.
+3. Click **Save Version → Save & Run All**. Repeat in a new session whenever one ends.
+
+The notebook runs `ycode-lm autotrain`, which:
+- grows v4 to the `v5-385m` preset (34 × 1024, 16 query / 4 KV heads)
+- pretrains on both GPUs (DDP) in fp16 with dynamic loss scaling and gradient checkpointing
+- uploads a checkpoint to a private `<repo>-checkpoints` repo every ~90 minutes, so the next session resumes where the last one stopped
+- instruction-tunes and evaluates the model, then publishes it to `https://huggingface.co/<HF_USER>/ycode-lm-v5` with a model card
+
+Expect about 3–5 twelve-hour sessions, within Kaggle's free weekly GPU quota. The same command works on any CUDA machine (`pip install -e ".[local,hub]"`, `export HF_TOKEN=...`, then `ycode-lm autotrain --base-model models/ycode-lm-v4 --hf-repo you/ycode-lm-v5`). A `v5-1.5b` preset (34 × 2048) is also available for rented A100/H100 GPUs. To publish any model directory, use `ycode-lm push-hf --model DIR --repo you/name`.
+
 **Evaluation.** `ycode-lm eval` reports:
 - **Bits per byte** on code the model never saw. Lower is better. It is comparable across tokenizers, so v1, v2 and v3 compare fairly.
 - **pass@1 / pass@k** on 30 small programming problems, plus **fix@1** on 15 functions with one injected bug each. YCode-LM writes each solution or fix, and it is *executed* against unit tests in an isolated subprocess with a timeout. Only evaluate models you trained yourself, because generated code is run.
@@ -269,6 +283,8 @@ For long runs on machines that may be interrupted, train in segments: `--until-s
 
 | Preset | Layers × width | Heads (KV) | Context | Params | Where to train |
 | --- | --- | --- | --- | --- | --- |
+| **`v5-385m`** | 34 × 1024 | 16 (4) | 1024 | **~385M** | grow from v4; Kaggle 2× T4 via `ycode-lm autotrain` |
+| `v5-1.5b` | 34 × 2048 | 32 (8) | 1024 | ~1.52B | rented A100/H100 GPUs |
 | **`v4-100m`** | 34 × 512 | 8 (2) | 1024 | **100.0M** | grow from v3 (`ycode-lm grow`); GPU recommended for training |
 | **`v3-40m`** | 13 × 512 | 8 (2) | 1024 | **40.8M** | GPU ideal; CPU works but slowly (measured ~2.1k tok/s on 4 Xeon cores with bf16 + compile) |
 | `v3-tiny` | 3 × 64 | 4 (2) | 128 | ~0.7M | tests |
