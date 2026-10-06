@@ -296,3 +296,131 @@ def test_sharded_export_round_trip(data_dir, tmp_path):
     sorted((tmp_path / "t").glob("model-*-of-*.pt"))[0].unlink()
     with pytest.raises(FileNotFoundError, match="Missing model shard"):
         load_checkpoint(tmp_path / "t")
+
+
+def test_width_growth_preserves_function_and_new_capacity_learns():
+    from ycode.lm.grow import grow_depth, grow_width
+
+    torch.manual_seed(0)
+    small = GPT(GPTConfig(vocab_size=100, block_size=32, n_layer=2, n_head=4, n_kv_head=2, n_embd=32,
+                          qk_norm=True, arch_version=4)).eval()
+    with torch.no_grad():  # make norms non-trivial so the rescaling is really exercised
+        for p in small.parameters():
+            if p.dim() == 1:
+                p.add_(torch.rand_like(p) * 0.5)
+    wide = grow_width(small, 64, arch_version=5)
+    assert (wide.cfg.n_embd, wide.cfg.n_head, wide.cfg.kv_heads, wide.cfg.arch_version) == (64, 8, 4, 5)
+    x = torch.randint(0, 100, (2, 12))
+    # Equal up to RMSNorm's tiny eps term, which cannot be rescaled exactly (~1e-4).
+    assert torch.allclose(small(x, x)[0], wide.eval()(x, x)[0], atol=2e-3)
+    both = grow_depth(wide, 5).eval()
+    assert torch.allclose(small(x, x)[0], both(x, x)[0], atol=2e-3)
+    assert torch.equal(small.generate(x[:1], 6, temperature=0), both.generate(x[:1], 6, temperature=0))
+
+    # One training step must reach the new channels / heads / MLP units.
+    wide.train()
+    _, loss = wide(x, x)
+    loss.backward()
+    blk = wide.blocks[0]
+    assert blk.attn.proj.weight.grad[32:].abs().sum() > 0          # writes into new channels
+    assert blk.attn.proj.weight.grad[:, 32:].abs().sum() > 0       # reads new heads
+    old_hidden = small.blocks[0].mlp.gate.weight.shape[0]
+    assert blk.mlp.down.weight.shape[1] > old_hidden
+    assert blk.mlp.down.weight.grad[:, old_hidden:].abs().sum() > 0  # reads new MLP units
+    assert wide.embed.weight.grad[:, 32:].abs().sum() > 0
+
+
+def test_grow_width_rejects_bad_shapes():
+    from ycode.lm.grow import grow_width
+
+    m = GPT(GPTConfig(vocab_size=50, block_size=16, n_layer=1, n_head=4, n_kv_head=2, n_embd=32, qk_norm=True))
+    with pytest.raises(ValueError):
+        grow_width(m, 16)          # shrinking
+    with pytest.raises(ValueError):
+        grow_width(m, 36)          # not a multiple of the head size (8)
+    with pytest.raises(ValueError):
+        grow_width(m, 64, new_heads=8, new_kv_heads=8)  # changes the query/kv ratio
+
+
+def test_v5_presets_sizes():
+    small = GPTConfig(vocab_size=8192, **PRESETS["v5-385m"])
+    assert 380e6 <= GPT(small).num_params() <= 390e6 and small.arch_version == 5
+    big = GPTConfig(vocab_size=8192, **PRESETS["v5-1.5b"])
+    # Count without allocating 6 GB: per-layer parameters x layers + embedding.
+    C, hd = big.n_embd, big.n_embd // big.n_head
+    hidden = 64 * ((int(8 * C / 3) + 63) // 64)
+    per_layer = C * (C + 2 * big.kv_heads * hd) + C * C + 3 * C * hidden + 2 * C + 2 * hd
+    assert 1.45e9 <= big.n_layer * per_layer + 8192 * C + C <= 1.6e9
+
+
+def test_grad_checkpointing_gives_same_loss_and_grads():
+    torch.manual_seed(0)
+    model = GPT(GPTConfig(vocab_size=50, block_size=16, n_layer=2, n_head=2, n_embd=16))
+    x = torch.randint(0, 50, (2, 16))
+    _, loss_a = model(x, x)
+    loss_a.backward()
+    grads_a = [p.grad.clone() for p in model.parameters()]
+    model.zero_grad()
+    model.grad_checkpoint = True
+    _, loss_b = model(x, x)
+    loss_b.backward()
+    assert torch.allclose(loss_a, loss_b)
+    assert all(torch.allclose(a, p.grad, atol=1e-6) for a, p in zip(grads_a, model.parameters()))
+
+
+def test_loss_scaler_skips_overflow_and_adapts():
+    from ycode.lm.train import LossScaler
+
+    p = torch.nn.Parameter(torch.ones(3))
+    s = LossScaler(init_scale=8.0, growth_interval=2)
+    p.grad = torch.full((3,), 16.0)
+    assert s.unscale_and_check([p]) and torch.equal(p.grad, torch.full((3,), 2.0))
+    s.update(True)
+    s.update(True)
+    assert s.scale == 16.0  # grew after 2 good steps
+    p.grad = torch.tensor([1.0, float("inf"), 0.0])
+    assert not s.unscale_and_check([p])
+    s.update(False)
+    assert s.scale == 8.0 and s.skipped == 1
+
+
+def test_fp16_training_runs_and_learns(data_dir, tmp_path):
+    logs = []
+    summary = train(data_dir, tmp_path / "m", _cfg(max_steps=25, precision="fp16", optimizer="adamw", lr=3e-3,
+                                                    grad_checkpoint=True), log=logs.append)
+    assert summary["precision"] == "fp16" and summary["steps"] == 25
+    assert any("precision fp16" in line and "grad checkpointing" in line for line in logs)
+    assert summary["final"]["train"] < 5.5  # untrained ~ ln(400) = 6.0
+
+
+def test_distributed_training_two_processes(data_dir, tmp_path):
+    """Real multi-process data-parallel training (gloo on CPU), as used on 2x T4."""
+    import subprocess
+    import sys
+
+    out = tmp_path / "ddp"
+    cmd = [sys.executable, "-m", "torch.distributed.run", "--nproc_per_node=2", "--master_port=29517",
+           "-m", "ycode.lm.cli", "train", "--data", str(data_dir), "--out", str(out), "--preset", "v3-tiny",
+           "--context", "32", "--steps", "6", "--batch-size", "2", "--device", "cpu", "--precision", "fp32",
+           "--eval-interval", "6", "--optimizer", "muon"]
+    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+    assert proc.returncode == 0, proc.stderr[-2000:]
+    assert "x2" in proc.stdout  # logged once, by rank 0, with the world size
+    assert proc.stdout.count("Model: YCode-LM") == 1
+    model, _, payload = load_checkpoint(out)
+    assert payload["step"] == 6
+
+
+def test_prepare_reuses_tokenizer_and_caps_size(data_dir, tmp_path):
+    from ycode.lm.data import prepare_dataset
+    from ycode.lm.tokenizer import BPETokenizer
+
+    src = tmp_path / "src"
+    src.mkdir()
+    for i in range(10):
+        (src / f"m{i}.py").write_text(f"def f{i}(x):\n    return x + {i}\n" * 200)
+    meta = prepare_dataset([src], tmp_path / "d", tokenizer_path=data_dir / "tokenizer.json", max_mb=0.01,
+                           workers=1, log=lambda *_: None)
+    assert meta["files"] < 10  # capped
+    assert BPETokenizer.load(tmp_path / "d" / "tokenizer.json").merges == \
+        BPETokenizer.load(data_dir / "tokenizer.json").merges

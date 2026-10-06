@@ -18,6 +18,7 @@ from dataclasses import asdict, dataclass
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.utils.checkpoint
 
 
 @dataclass
@@ -69,6 +70,15 @@ _V4 = dict(qk_norm=True, arch_version=4)
 PRESETS.update({
     "v4-tiny": dict(n_layer=5, n_head=4, n_kv_head=2, n_embd=64, block_size=128, **_V4),
     "v4-100m": dict(n_layer=34, n_head=8, n_kv_head=2, n_embd=512, block_size=1024, **_V4),
+})
+# version 5: grown from v4 (34 x 512) in width only, so the depth stays 34.
+#   v5-385m  34 x 1024 (16 q / 4 kv heads)  ~385M  -> free Kaggle / Colab GPUs (T4)
+#   v5-1.5b  34 x 2048 (32 q / 8 kv heads)  ~1.5B  -> a rented A100 / H100
+_V5 = dict(qk_norm=True, arch_version=5)
+PRESETS.update({
+    "v5-tiny": dict(n_layer=6, n_head=8, n_kv_head=4, n_embd=128, block_size=128, **_V5),  # grows from v4-tiny
+    "v5-385m": dict(n_layer=34, n_head=16, n_kv_head=4, n_embd=1024, block_size=1024, **_V5),
+    "v5-1.5b": dict(n_layer=34, n_head=32, n_kv_head=8, n_embd=2048, block_size=1024, **_V5),
 })
 DEFAULT_PRESET = "v2-small"
 
@@ -185,6 +195,7 @@ class GPT(nn.Module):
     def __init__(self, cfg: GPTConfig) -> None:
         super().__init__()
         self.cfg = cfg
+        self.grad_checkpoint = False
         self.embed = nn.Embedding(cfg.vocab_size, cfg.n_embd)
         self.drop = nn.Dropout(cfg.dropout)
         self.blocks = nn.ModuleList(Block(cfg) for _ in range(cfg.n_layer))
@@ -216,9 +227,16 @@ class GPT(nn.Module):
             raise ValueError(f"sequence length {start_pos + T} exceeds block_size {self.cfg.block_size}")
         cos = self.rope_cos[start_pos: start_pos + T]
         sin = self.rope_sin[start_pos: start_pos + T]
-        x = self.drop(self.embed(idx))
+        # fp32 residual stream, even when sharded training gathers the weights in fp16/bf16.
+        x = self.drop(self.embed(idx).float())
+        checkpointing = self.grad_checkpoint and self.training and caches is None
         for i, block in enumerate(self.blocks):
-            x = block(x, cos, sin, caches[i] if caches is not None else None)
+            if checkpointing:
+                # Recompute this block's activations in the backward pass instead of storing them:
+                # far less memory (fits bigger models/batches on a 16 GB GPU) for ~30% more compute.
+                x = torch.utils.checkpoint.checkpoint(block, x, cos, sin, None, use_reentrant=False)
+            else:
+                x = block(x, cos, sin, caches[i] if caches is not None else None)
         x = self.norm(x)
         if targets is None:
             return self.head(x[:, -1:, :]), None

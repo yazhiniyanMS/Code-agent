@@ -476,6 +476,8 @@ def prepare_dataset(
     extra_sft: list[Path] | None = None,
     exclude: Iterable[str] = (),
     workers: int | None = None,
+    tokenizer_path: Path | None = None,
+    max_mb: float | None = None,
     tokenizer_sample_chars: int = 8_000_000,
     seed: int = 1337,
     log: Log = print,
@@ -490,6 +492,14 @@ def prepare_dataset(
     if not files:
         raise ValueError("No source files found. Pass --source with directories that contain code.")
     rng.shuffle(files)
+    if max_mb is not None:  # cap the corpus so preparation time stays bounded
+        kept, size = [], 0
+        for item in files:
+            if size >= max_mb * 1e6:
+                break
+            kept.append(item)
+            size += len(item[1])
+        files = kept
     total_chars = sum(len(t) for _, t in files)
     log(f"  {len(files)} files, {total_chars / 1e6:.1f} MB of code")
 
@@ -503,8 +513,13 @@ def prepare_dataset(
         if size >= tokenizer_sample_chars:
             break
     sample += [format_chat(e.prompt, e.response) for e in examples[:5000]]
-    log(f"Training tokenizer (vocab {vocab_size}) ...")
-    tok = BPETokenizer.train(sample, vocab_size)
+    if tokenizer_path is not None:
+        # Continuing from an existing model requires its exact vocabulary.
+        tok = BPETokenizer.load(tokenizer_path)
+        log(f"Reusing tokenizer {tokenizer_path} (vocab {tok.vocab_size})")
+    else:
+        log(f"Training tokenizer (vocab {vocab_size}) ...")
+        tok = BPETokenizer.train(sample, vocab_size)
     tok.save(out_dir / "tokenizer.json")
 
     log("Encoding pretraining corpus ...")

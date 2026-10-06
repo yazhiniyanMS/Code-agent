@@ -261,6 +261,20 @@ Each version models real code better than the last. v2–v4 write short, well-fo
 
 For long runs on machines that may be interrupted, train in segments: `--until-step N` stops and saves, `--resume` continues with the same LR schedule, and `--save-interval N` saves cheaply between evaluations.
 
+**Version 5: 1.5 billion parameters, trained on a CPU.** v5 (`--preset v5-1.5b`, 34 layers × 2048 wide, 32 query / 8 KV heads, 1,523M parameters) is v4 grown 4× in width with `ycode-lm grow --width 2048`, so it starts out computing exactly what v4 computed and keeps everything v4 learned. A 1.5B model normally needs ~18 GB just for fp32 weights, gradients and optimizer state. v5 trains in **15 GB of RAM** with a low-memory mode (`--optimizer lion`):
+
+- **Lion optimizer:** the update is the sign of a momentum, so it keeps one state per weight instead of AdamW's two, stored in bf16 (3 GB).
+- **Updates inside backward:** each weight is updated the moment its gradient is ready, and the gradient is freed at once. A full set of gradients (6 GB) never exists.
+- Gradient checkpointing, bf16 autocast without the cast-weight cache (which would be another 3 GB copy), and memory-mapped checkpoint loading.
+
+```bash
+ycode-lm grow  --model models/ycode-lm-v4 --out models/v5-base --width 2048 --version 5
+ycode-lm train --data data/ --out models/v5-base --resume --steps 600 --batch-size 4 \
+               --optimizer lion --lr 3e-5 --grad-checkpoint --save-interval 20 --until-step 80
+```
+
+On 4 CPU cores this runs at about 55 tokens per second, so a day of training covers only a few million tokens. A 1.5B model would ideally see tens of billions. v5 therefore benefits most from GPUs. With several GPUs, `--shard` splits the weights, gradients and optimizer state across them (FSDP) so models too large for one GPU still train. Muon works on the sharded weights. `ycode-lm autotrain` drives a whole run across time-limited GPU sessions, saving checkpoints to Hugging Face. [`notebooks/kaggle_train_v5.ipynb`](notebooks/kaggle_train_v5.ipynb) does this on free Kaggle GPUs. To publish any model directory, use `ycode-lm push-hf --model DIR --repo you/name`.
+
 **Evaluation.** `ycode-lm eval` reports:
 - **Bits per byte** on code the model never saw. Lower is better. It is comparable across tokenizers, so v1, v2 and v3 compare fairly.
 - **pass@1 / pass@k** on 30 small programming problems, plus **fix@1** on 15 functions with one injected bug each. YCode-LM writes each solution or fix, and it is *executed* against unit tests in an isolated subprocess with a timeout. Only evaluate models you trained yourself, because generated code is run.
@@ -269,6 +283,8 @@ For long runs on machines that may be interrupted, train in segments: `--until-s
 
 | Preset | Layers × width | Heads (KV) | Context | Params | Where to train |
 | --- | --- | --- | --- | --- | --- |
+| **`v5-1.5b`** | 34 × 2048 | 32 (8) | 1024 | **1,523M** | grow from v4; CPU with `--optimizer lion` (slow), or GPUs (`--shard` for several) |
+| `v5-385m` | 34 × 1024 | 16 (4) | 1024 | ~385M | grow from v4; a 16 GB GPU |
 | **`v4-100m`** | 34 × 512 | 8 (2) | 1024 | **100.0M** | grow from v3 (`ycode-lm grow`); GPU recommended for training |
 | **`v3-40m`** | 13 × 512 | 8 (2) | 1024 | **40.8M** | GPU ideal; CPU works but slowly (measured ~2.1k tok/s on 4 Xeon cores with bf16 + compile) |
 | `v3-tiny` | 3 × 64 | 4 (2) | 128 | ~0.7M | tests |
