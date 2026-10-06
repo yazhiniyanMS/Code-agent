@@ -56,6 +56,9 @@ class Plan:
     max_segments: int | None = None  # for tests / dry runs
     device: str = "auto"
     model_name: str = "YCode-LM v5"
+    shard: bool = False  # FSDP across GPUs (models that do not fit on one GPU)
+    sft_muon_lr: float = 0.003  # SFT uses Muon when sharded: AdamW's two states would not fit
+    release_shard_mb: float = 45.0
 
 
 @dataclass
@@ -67,6 +70,32 @@ class State:
     sessions: int = 0
     data_uploaded: bool = False
     history: list[dict] = field(default_factory=list)
+    # Set when a segment ran out of GPU memory: smaller micro-batches, same tokens per step.
+    batch_size: int | None = None
+    grad_accum: int | None = None
+
+
+def preset_params(preset: str, vocab_size: int = 8192) -> int:
+    """Parameter count of a preset without allocating its weights."""
+    import torch
+
+    from ycode.lm.model import GPT, PRESETS, GPTConfig
+
+    with torch.device("meta"):
+        return GPT(GPTConfig(vocab_size=vocab_size, **PRESETS[preset])).num_params()
+
+
+def _run_streaming(cmd: list[str]) -> tuple[int, str]:
+    """Run a command, echoing its output live; return (exit code, last part of the output)."""
+    proc = subprocess.Popen(cmd, env=os.environ.copy(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                            text=True, bufsize=1)
+    tail: list[str] = []
+    assert proc.stdout is not None
+    for line in proc.stdout:
+        sys.stdout.write(line)
+        sys.stdout.flush()
+        tail = (tail + [line])[-200:]
+    return proc.wait(), "".join(tail)
 
 
 def _default_sources() -> list[str]:
@@ -151,19 +180,26 @@ class AutoTrainer:
                  f"({grown.num_params() / 1e6:.1f}M)")
         return init
 
-    def _train_cmd(self, stage: str, data: Path, init: Path, out: Path, total: int, until: int) -> list[str]:
+    def _train_cmd(self, stage: str, data: Path, init: Path, out: Path, total: int, until: int,
+                   state: State | None = None) -> list[str]:
         p = self.plan
+        batch = (state.batch_size if state and state.batch_size else None) or p.batch_size
+        accum = (state.grad_accum if state and state.grad_accum else None) or p.grad_accum
         launcher = ([sys.executable, "-m", "torch.distributed.run", f"--nproc_per_node={p.nproc}"]
                     if p.nproc > 1 else [sys.executable])
         cmd = launcher + ["-m", "ycode.lm.cli", "train" if stage == "pretrain" else "sft",
                           "--data", str(data), "--init-from", str(init), "--out", str(out), "--resume",
-                          "--steps", str(total), "--until-step", str(until), "--batch-size", str(p.batch_size),
-                          "--grad-accum", str(p.grad_accum), "--eval-interval", str(p.eval_interval),
+                          "--steps", str(total), "--until-step", str(until), "--batch-size", str(batch),
+                          "--grad-accum", str(accum), "--eval-interval", str(p.eval_interval),
                           "--device", p.device, "--precision", p.precision]
         if stage == "pretrain":
             cmd += ["--lr", str(p.lr), "--muon-lr", str(p.muon_lr), "--optimizer", "muon"]
+        elif p.shard:
+            cmd += ["--lr", str(p.sft_lr), "--muon-lr", str(p.sft_muon_lr), "--optimizer", "muon"]
         else:
             cmd += ["--lr", str(p.sft_lr), "--optimizer", "adamw"]
+        if p.shard and p.nproc > 1:
+            cmd.append("--shard")
         if p.grad_checkpoint:
             cmd.append("--grad-checkpoint")
         if p.compile:
@@ -191,9 +227,18 @@ class AutoTrainer:
             until = min(total, step + max(1, steps))
             self.log(f"[{stage}] training steps {step} -> {until} of {total} ...")
             t0 = time.time()
-            proc = subprocess.run(self._train_cmd(stage, data, init, out, total, until), env=os.environ.copy())
-            if proc.returncode != 0:
-                raise RuntimeError(f"training failed (exit {proc.returncode}); see the output above")
+            code, output = _run_streaming(self._train_cmd(stage, data, init, out, total, until, state))
+            if code != 0:
+                batch = state.batch_size or self.plan.batch_size
+                if "out of memory" in output.lower() and batch > 1:
+                    # Halve the micro-batch and double accumulation: same tokens per step, less memory.
+                    state.batch_size = batch // 2
+                    state.grad_accum = (state.grad_accum or self.plan.grad_accum) * 2
+                    self.log(f"Out of GPU memory; retrying with batch {state.batch_size} x "
+                             f"{state.grad_accum} accumulation.")
+                    self.save_state(state, "smaller micro-batch after out-of-memory")
+                    continue
+                raise RuntimeError(f"training failed (exit {code}); see the output above")
             done = json.loads((out / "info.json").read_text())["step"]
             if done > step:
                 state.seconds_per_step = (time.time() - t0) / (done - step)
@@ -224,7 +269,7 @@ class AutoTrainer:
         results["fix@1"] = f"{len(fixed)}/{len(BUGGY)}"
         self.log(f"Evaluation: {results}")
         release = self.work / "release"
-        export_checkpoint(chat, release, dtype="bf16", max_shard_mb=45)
+        export_checkpoint(chat, release, dtype="bf16", max_shard_mb=self.plan.release_shard_mb)
         (release / "README.md").write_text(model_card(self.plan, state, results, lm.num_params))
         (release / "eval.json").write_text(json.dumps(results, indent=2))
         target = self.release_hub or self.hub
@@ -293,8 +338,8 @@ transformer and training loop, no pretrained weights from anyone else.
 It was **grown** from YCode-LM v4 (100M parameters) to the `{plan.preset}` architecture. Growth keeps the
 smaller model's function exactly at the start: new channels, attention heads and MLP units begin with
 zeroed outputs and learn during training. Then it went through continued pretraining
-({plan.pretrain_steps} steps with Muon) and instruction tuning ({plan.sft_steps} steps), on free GPU
-notebooks, using `ycode-lm autotrain`.
+({plan.pretrain_steps} steps with Muon{", sharded across GPUs" if plan.shard else ""}) and instruction
+tuning ({plan.sft_steps} steps) on GPU notebooks, using `ycode-lm autotrain`.
 
 ## Evaluation
 
@@ -317,6 +362,6 @@ huggingface-cli download <this repo> --local-dir models/ycode-lm-v5
 ycode --local models/ycode-lm-v5          # or: ycode-lm chat --model models/ycode-lm-v5
 ```
 
-The weights are bfloat16, split into shards of at most 45 MB; `model.pt` holds the config, the tokenizer
+The weights are bfloat16, split into shards of at most {plan.release_shard_mb:g} MB; `model.pt` holds the config, the tokenizer
 and the shard index. Training sessions used: {state.sessions}.
 """

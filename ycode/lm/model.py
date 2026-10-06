@@ -227,7 +227,8 @@ class GPT(nn.Module):
             raise ValueError(f"sequence length {start_pos + T} exceeds block_size {self.cfg.block_size}")
         cos = self.rope_cos[start_pos: start_pos + T]
         sin = self.rope_sin[start_pos: start_pos + T]
-        x = self.drop(self.embed(idx))
+        # fp32 residual stream, even when sharded training gathers the weights in fp16/bf16.
+        x = self.drop(self.embed(idx).float())
         checkpointing = self.grad_checkpoint and self.training and caches is None
         for i, block in enumerate(self.blocks):
             if checkpointing:

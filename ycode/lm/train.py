@@ -16,7 +16,7 @@ import numpy as np
 import torch
 
 from ycode.lm.model import DEFAULT_PRESET, GPT, PRESETS, GPTConfig
-from ycode.lm.optim import build_optimizer
+from ycode.lm.optim import build_optimizer, cuda_has_bf16
 from ycode.lm.tokenizer import BPETokenizer
 
 Log = Callable[[str], None]
@@ -47,7 +47,7 @@ def pick_precision(requested: str, device: str) -> str:
         return requested
     if device.startswith("cuda"):
         # bf16 needs Ampere or newer (A100, RTX 30xx+); older GPUs such as the T4 use fp16.
-        return "bf16" if torch.cuda.is_bf16_supported() else "fp16"
+        return "bf16" if cuda_has_bf16() else "fp16"
     if device == "cpu" and cpu_supports_bf16():
         return "bf16"
     return "fp32"
@@ -84,21 +84,28 @@ class TrainConfig:
     grad_checkpoint: bool = False  # recompute activations in backward: much less memory, ~30% slower
     save_interval: int | None = None  # checkpoint every N steps without evaluating (cheap crash safety)
     until_step: int | None = None  # stop early at this step (segmented runs); schedule still spans max_steps
-    optimizer: str = "adamw"  # adamw | muon (Muon for hidden matrices + AdamW for the rest)
+    # adamw | muon (Muon for hidden matrices + AdamW for the rest) | lion (low memory: one bf16
+    # state per weight, applied during backward so gradients are never all held at once)
+    optimizer: str = "adamw"
     muon_lr: float = 0.02
+    # Multi-GPU only: shard weights, gradients and optimizer state across GPUs (FSDP) instead of
+    # replicating them (DDP). Needed when a model does not fit on one GPU, e.g. 1.5B on 16 GB T4s.
+    shard: bool = False
 
 
 # ------------------------------------------------------------- checkpoints
 
 
 def save_checkpoint(out_dir: Path, model: GPT, tok: BPETokenizer, *, step: int, stage: str,
-                    val_loss: float | None, optimizer=None) -> Path:
+                    val_loss: float | None, optimizer=None, state: dict | None = None) -> Path:
+    """Write model.pt (+ optim.pt). ``state`` overrides model.state_dict() (sharded training)."""
     out_dir.mkdir(parents=True, exist_ok=True)
+    state = state if state is not None else model.state_dict()
     payload = {
         "format": "ycode-lm",
         "version": model.cfg.arch_version,
         "config": model.cfg.to_dict(),
-        "model": {k: v.detach().cpu() for k, v in model.state_dict().items()},
+        "model": {k: v.detach().cpu() for k, v in state.items()},
         "tokenizer": tok.to_dict(),
         "step": step,
         "stage": stage,
@@ -123,7 +130,9 @@ def load_checkpoint(path: Path, device: str = "cpu") -> tuple[GPT, BPETokenizer,
         path = path / CHECKPOINT_NAME
     if not path.is_file():
         raise FileNotFoundError(f"No model checkpoint at {path}")
-    payload = torch.load(path, map_location=device, weights_only=True)
+    # Memory-map on CPU: a 1.5B checkpoint is 6 GB, and mapping avoids holding a second copy in RAM.
+    mmap = {"mmap": True} if device == "cpu" else {}
+    payload = torch.load(path, map_location=device, weights_only=True, **mmap)
     if payload.get("format") != "ycode-lm":
         raise ValueError(f"{path} is not a YCode model checkpoint")
     if "shards" in payload:  # large exported models are split into several files
@@ -132,12 +141,13 @@ def load_checkpoint(path: Path, device: str = "cpu") -> tuple[GPT, BPETokenizer,
             shard_path = path.parent / name
             if not shard_path.is_file():
                 raise FileNotFoundError(f"Missing model shard {shard_path}")
-            state.update(torch.load(shard_path, map_location=device, weights_only=True))
+            state.update(torch.load(shard_path, map_location=device, weights_only=True, **mmap))
         for key, source in payload.get("tied", {}).items():
             state[key] = state[source]
         payload["model"] = state
     model = GPT(GPTConfig(**payload["config"]))
     model.load_state_dict(payload["model"])
+    payload["model"] = {}  # the weights now live in the model; drop the duplicate
     model.to(device)
     tok = BPETokenizer.from_dict(payload["tokenizer"])
     return model, tok, payload
@@ -340,6 +350,68 @@ def _dist_info() -> tuple[int, int, int]:
             int(os.environ.get("LOCAL_RANK", "0")))
 
 
+def _local(t: torch.Tensor) -> torch.Tensor:
+    """This rank's part of a sharded (DTensor) tensor; plain tensors pass through."""
+    return t.to_local() if hasattr(t, "to_local") else t
+
+
+def _shard_model(model: GPT, dev_type: str, world: int, param_dtype) -> None:
+    """FSDP2: shard each transformer block (and the embeddings at the root) across all ranks.
+    Weights are gathered layer by layer in ``param_dtype`` for compute; gradients are
+    reduce-scattered in fp32, and each rank keeps only its shard of the optimizer state."""
+    from torch.distributed.device_mesh import init_device_mesh
+
+    try:
+        from torch.distributed.fsdp import MixedPrecisionPolicy, fully_shard
+    except ImportError:  # PyTorch < 2.6
+        from torch.distributed._composable.fsdp import MixedPrecisionPolicy, fully_shard
+    mesh = init_device_mesh(dev_type, (world,))
+    policy = MixedPrecisionPolicy(param_dtype=param_dtype, reduce_dtype=torch.float32)
+    for block in model.blocks:
+        fully_shard(block, mesh=mesh, mp_policy=policy)
+    fully_shard(model, mesh=mesh, mp_policy=policy)
+
+
+def _full_state_dict(model: GPT) -> dict:
+    """Gather a sharded model's full weights onto rank 0's CPU (collective: every rank calls it)."""
+    from torch.distributed.checkpoint.state_dict import StateDictOptions, get_model_state_dict
+
+    return get_model_state_dict(model, options=StateDictOptions(full_state_dict=True, cpu_offload=True))
+
+
+def _to_local_tree(obj):
+    if isinstance(obj, dict):
+        return {k: _to_local_tree(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_to_local_tree(v) for v in obj]
+    if isinstance(obj, torch.Tensor):
+        return _local(obj).detach().clone().cpu()
+    return obj
+
+
+def _optim_shard_name(rank: int, world: int) -> str:
+    return f"optim-rank{rank}-of-{world}.pt"
+
+
+def _load_sharded_optimizer(optimizer, state: dict) -> None:
+    """Load one rank's optimizer shard and turn its tensors back into DTensors."""
+    from torch.distributed.tensor import DTensor
+
+    optimizer.load_state_dict(state)
+    for opt in optimizer.optimizers:
+        for p, st in opt.state.items():
+            if not isinstance(p, DTensor):
+                continue
+            local = p.to_local()
+            for key, value in list(st.items()):
+                if isinstance(value, torch.Tensor) and not isinstance(value, DTensor) and value.dim() > 0:
+                    if value.shape != local.shape:
+                        raise ValueError(f"optimizer shard shape {tuple(value.shape)} != {tuple(local.shape)}")
+                    st[key] = DTensor.from_local(value.to(local.device, local.dtype), p.device_mesh,
+                                                 p.placements, shape=p.shape, stride=p.stride(),
+                                                 run_check=False)
+
+
 class LossScaler:
     """Dynamic loss scaling for fp16 (GPUs without bf16, e.g. the T4).
 
@@ -354,15 +426,19 @@ class LossScaler:
         self.good_steps = 0
         self.skipped = 0
 
-    def unscale_and_check(self, params) -> bool:
-        """Divide grads by the scale; return True if they are all finite."""
+    def unscale_and_check(self, params, all_ranks: Callable[[bool], bool] | None = None) -> bool:
+        """Divide grads by the scale; return True if they are all finite.
+
+        With sharded gradients each rank only sees its part, so ``all_ranks`` combines
+        the verdicts (every rank must skip or apply the same step)."""
         finite = True
         for p in params:
             if p.grad is not None:
-                p.grad.div_(self.scale)
-                if finite and not torch.isfinite(p.grad).all():
+                grad = _local(p.grad)
+                grad.div_(self.scale)
+                if finite and not torch.isfinite(grad).all():
                     finite = False
-        return finite
+        return all_ranks(finite) if all_ranks is not None else finite
 
     def update(self, finite: bool) -> None:
         if finite:
@@ -390,6 +466,9 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
             device = f"cuda:{local_rank}"
             torch.cuda.set_device(local_rank)
     main = rank == 0
+    shard = cfg.shard and distributed
+    # Sharded models are built on the CPU and moved to the GPUs shard by shard.
+    load_device = "cpu" if shard else device
     if not main:
         log = lambda *_: None  # noqa: E731 - only rank 0 talks
     torch.manual_seed(cfg.seed)
@@ -404,7 +483,7 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
         # Resuming continues the run in out_dir; otherwise start from init_from.
         resumable = cfg.resume and has_checkpoint
         source = out_dir if (resumable or not cfg.init_from) else Path(cfg.init_from)
-        model, tok, payload = load_checkpoint(source, device)
+        model, tok, payload = load_checkpoint(source, load_device)
         if cfg.resume and source == out_dir:
             start_step = int(payload.get("step", 0))
         log(f"Loaded {source} (step {payload.get('step')}, stage {payload.get('stage')})")
@@ -415,8 +494,12 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
         if cfg.preset not in PRESETS:
             raise ValueError(f"unknown preset {cfg.preset!r}; choose from {', '.join(PRESETS)}")
         model_cfg = GPTConfig(vocab_size=tok.vocab_size, **{**PRESETS[cfg.preset], **cfg.model_overrides})
-        model = GPT(model_cfg).to(device)
+        model = GPT(model_cfg).to(load_device)
     model.grad_checkpoint = cfg.grad_checkpoint
+    precision = pick_precision(cfg.precision, dev_type)
+    amp_dtype = torch.float16 if precision == "fp16" else torch.bfloat16
+    if shard:
+        _shard_model(model, dev_type, world, amp_dtype if precision in ("fp16", "bf16") else None)
 
     block = model.cfg.block_size
     if cfg.stage == "sft":
@@ -425,18 +508,37 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
         data = PretrainData(data_dir, block, cfg.batch_size, device)
 
     optimizer = build_optimizer(model, kind=cfg.optimizer, lr=cfg.lr, muon_lr=cfg.muon_lr,
-                                weight_decay=cfg.weight_decay, fused=(dev_type == "cuda"))
-    if cfg.resume and has_checkpoint and (out_dir / "optim.pt").is_file():
-        state = torch.load(out_dir / "optim.pt", map_location=device, weights_only=True)["optimizer"]
+                                weight_decay=cfg.weight_decay, fused=(dev_type == "cuda" and not shard))
+    in_backward = cfg.optimizer == "lion"
+    if in_backward and (cfg.grad_accum != 1 or distributed or precision == "fp16"):
+        raise ValueError("--optimizer lion updates weights during backward: it needs --grad-accum 1, "
+                         "a single process and no fp16")
+    optim_shard = out_dir / _optim_shard_name(rank, world)
+    if shard and cfg.resume and has_checkpoint:
+        if optim_shard.is_file():
+            try:
+                _load_sharded_optimizer(optimizer, torch.load(optim_shard, map_location="cpu",
+                                                              weights_only=True)["optimizer"])
+            except (ValueError, KeyError, IndexError) as exc:
+                log(f"Optimizer state does not match ({exc}); starting it fresh.")
+                optimizer = build_optimizer(model, kind=cfg.optimizer, lr=cfg.lr, muon_lr=cfg.muon_lr,
+                                            weight_decay=cfg.weight_decay)
+        else:
+            log(f"No optimizer state for {world} sharded ranks; starting it fresh.")
+    elif cfg.resume and has_checkpoint and (out_dir / "optim.pt").is_file():
+        state = torch.load(out_dir / "optim.pt", map_location=device, weights_only=True,
+                           **({"mmap": True} if device == "cpu" else {}))["optimizer"]
         try:
             optimizer.load_state_dict(state if "optimizers" in state else {"optimizers": [state]})
         except (ValueError, KeyError, IndexError):
             log("Optimizer state does not match (different --optimizer?); starting it fresh.")
 
-    precision = pick_precision(cfg.precision, dev_type)
-    amp_dtype = torch.float16 if precision == "fp16" else torch.bfloat16
+    if in_backward:
+        optimizer.optimizers[0].attach()
     autocast = torch.autocast(device_type=dev_type if dev_type in ("cuda", "cpu") else "cpu", dtype=amp_dtype,
-                              enabled=(precision in ("bf16", "fp16") and dev_type in ("cuda", "cpu")))
+                              enabled=(precision in ("bf16", "fp16") and dev_type in ("cuda", "cpu")),
+                              # The cast-weight cache is a second (16-bit) copy of the model: 3 GB at 1.5B.
+                              cache_enabled=not in_backward)
     scaler = LossScaler() if precision == "fp16" else None
     # Each rank draws different batches; the eval generator is shared so evals are comparable.
     gen = torch.Generator().manual_seed(cfg.seed + start_step + 7919 * rank)
@@ -449,7 +551,7 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
         except Exception as exc:  # noqa: BLE001 - compilation is an optional speed-up
             log(f"torch.compile unavailable ({exc}); continuing without it.")
     compiled = train_model is not model
-    if distributed:
+    if distributed and not shard:
         from torch.nn.parallel import DistributedDataParallel as DDP
 
         train_model = DDP(train_model, device_ids=[local_rank] if dev_type == "cuda" else None)
@@ -457,7 +559,28 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
     log(f"Model: YCode-LM v{model.cfg.arch_version}, {model.num_params() / 1e6:.2f}M parameters, "
         f"context {block}, device {device}{f' x{world}' if distributed else ''}, precision {precision}, "
         f"optimizer {cfg.optimizer}, stage {cfg.stage}{', compiled' if compiled else ''}"
-        f"{', grad checkpointing' if cfg.grad_checkpoint else ''}")
+        f"{', grad checkpointing' if cfg.grad_checkpoint else ''}{', sharded (FSDP)' if shard else ''}")
+
+    def all_ranks_finite(finite: bool) -> bool:
+        flag = torch.tensor([1.0 if finite else 0.0], device=device)
+        dist.all_reduce(flag, op=dist.ReduceOp.MIN)
+        return bool(flag.item())
+
+    def checkpoint(val_loss: float | None) -> None:
+        """Save model + optimizer. Sharded: every rank joins the gather and writes its optimizer shard."""
+        if not shard:
+            save_checkpoint(out_dir, model, tok, step=step, stage=cfg.stage, val_loss=val_loss,
+                            optimizer=optimizer)
+            return
+        full = _full_state_dict(model)
+        if main:
+            save_checkpoint(out_dir, model, tok, step=step, stage=cfg.stage, val_loss=val_loss, state=full)
+        del full
+        out_dir.mkdir(parents=True, exist_ok=True)
+        tmp = optim_shard.with_suffix(".tmp")
+        torch.save({"optimizer": _to_local_tree(optimizer.state_dict()), "step": step}, tmp)
+        os.replace(tmp, optim_shard)
+        dist.barrier()
     t0 = time.time()
     tokens_seen = 0
     best_val = None
@@ -490,15 +613,18 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
         for micro in range(cfg.grad_accum):
             x, y, m = data.batch("train", gen, mix=mix)
             last = micro == cfg.grad_accum - 1
-            sync = contextlib.nullcontext() if (last or not distributed) else train_model.no_sync()
+            # DDP: all-reduce gradients only after the last micro-batch. (FSDP reduce-scatters every
+            # micro-batch; keeping unsharded gradients around would defeat the point of sharding.)
+            sync = contextlib.nullcontext() if (last or not distributed or shard) else train_model.no_sync()
             with sync:
                 with autocast:
                     _, loss = train_model(x, y, loss_mask=m)
                 (loss * (loss_scale / cfg.grad_accum)).backward()
             loss_total += loss.item() / cfg.grad_accum
             tokens_seen += x.numel() * world
-        finite = scaler.unscale_and_check(model.parameters()) if scaler else True
-        if finite:
+        finite = (scaler.unscale_and_check(model.parameters(), all_ranks_finite if shard else None)
+                  if scaler else True)
+        if finite and not in_backward:  # (in-backward updates already happened, unclipped: Lion is sign-based)
             torch.nn.utils.clip_grad_norm_(model.parameters(), cfg.grad_clip)
             optimizer.step()
         else:
@@ -512,27 +638,26 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
             elapsed = time.time() - t0
             log(f"step {step:>6} | loss {loss_total:.3f} | lr {lr:.2e} | "
                 f"{tokens_seen / max(elapsed, 1e-9):,.0f} tok/s | {elapsed / 60:.1f} min")
-        if main and (step % cfg.eval_interval == 0 or step == cfg.max_steps):
+        # Sharded models need every rank for a forward pass or a save; replicated ones only rank 0.
+        acting = main or shard
+        if acting and (step % cfg.eval_interval == 0 or step == cfg.max_steps):
             losses = estimate_loss(model, data, cfg, eval_gen, autocast)
             history.append({"step": step, **losses})
             log(f"eval step {step}: train {losses['train']:.3f} | val {losses['val']:.3f}")
             if best_val is None or losses["val"] < best_val:
                 best_val = losses["val"]
-            save_checkpoint(out_dir, model, tok, step=step, stage=cfg.stage, val_loss=losses["val"],
-                            optimizer=optimizer)
-        elif main and cfg.save_interval and step % cfg.save_interval == 0:
-            save_checkpoint(out_dir, model, tok, step=step, stage=cfg.stage,
-                            val_loss=history[-1]["val"] if history else None, optimizer=optimizer)
+            checkpoint(losses["val"])
+        elif acting and cfg.save_interval and step % cfg.save_interval == 0:
+            checkpoint(history[-1]["val"] if history else None)
             log(f"checkpoint saved at step {step}")
 
     summary: dict = {}
+    if (main or shard) and (not history or history[-1]["step"] != step):
+        losses = estimate_loss(model, data, cfg, eval_gen, autocast)
+        history.append({"step": step, **losses})
+        log(f"final eval step {step}: train {losses['train']:.3f} | val {losses['val']:.3f}")
+        checkpoint(losses["val"])
     if main:
-        if not history or history[-1]["step"] != step:
-            losses = estimate_loss(model, data, cfg, eval_gen, autocast)
-            history.append({"step": step, **losses})
-            log(f"final eval step {step}: train {losses['train']:.3f} | val {losses['val']:.3f}")
-            save_checkpoint(out_dir, model, tok, step=step, stage=cfg.stage, val_loss=losses["val"],
-                            optimizer=optimizer)
         summary = {"steps": step, "minutes": (time.time() - t0) / 60, "tokens": tokens_seen,
                    "final": history[-1], "params": model.num_params(), "out_dir": str(out_dir),
                    "world_size": world, "precision": precision,

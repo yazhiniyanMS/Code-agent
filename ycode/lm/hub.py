@@ -79,7 +79,16 @@ class HFHub(Hub):
         tmp = Path(local_dir).parent / f".hf-download-{os.getpid()}"
         snapshot_download(self.repo_id, allow_patterns=[f"{path_in_repo}/*"], local_dir=str(tmp),
                           token=self.api.token)
-        shutil.copytree(tmp / path_in_repo, local_dir, dirs_exist_ok=True)
+        # Move rather than copy: checkpoints of large models are many GB, and disk is limited.
+        local_dir = Path(local_dir)
+        local_dir.mkdir(parents=True, exist_ok=True)
+        for item in (tmp / path_in_repo).iterdir():
+            target = local_dir / item.name
+            if target.is_dir():
+                shutil.rmtree(target)
+            elif target.exists():
+                target.unlink()
+            shutil.move(str(item), str(target))
         shutil.rmtree(tmp, ignore_errors=True)
         return True
 

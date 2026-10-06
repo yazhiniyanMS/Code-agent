@@ -52,16 +52,20 @@ def _train_args(p: argparse.ArgumentParser, *, sft: bool) -> None:
     p.add_argument("--grad-accum", type=int, default=1)
     p.add_argument("--lr", type=float, default=None)
     p.add_argument("--eval-interval", type=int, default=100)
+    p.add_argument("--eval-iters", type=int, default=20, help="Batches per evaluation (per split).")
     p.add_argument("--save-interval", type=int, default=None,
                    help="Also checkpoint every N steps without evaluating (cheap protection against crashes).")
     p.add_argument("--device", default="auto", help="auto, cpu, cuda or mps.")
     p.add_argument("--precision", default="auto", choices=("auto", "fp32", "bf16", "fp16"))
     p.add_argument("--grad-checkpoint", action="store_true",
                    help="Recompute activations in backward: far less GPU memory, ~30%% slower.")
+    p.add_argument("--shard", action="store_true",
+                   help="With several GPUs (torchrun): split weights and optimizer state across them (FSDP) "
+                        "so models too big for one GPU can train.")
     p.add_argument("--schedule", default="wsd", choices=("wsd", "cosine"),
                    help="LR schedule: warmup-stable-decay (default) or cosine.")
     p.add_argument("--compile", action="store_true", help="Use torch.compile (faster on many machines).")
-    p.add_argument("--optimizer", default=None, choices=("adamw", "muon"),
+    p.add_argument("--optimizer", default=None, choices=("adamw", "muon", "lion"),
                    help="adamw, or muon (Muon for hidden matrices + AdamW for the rest). "
                         "Default: muon for v3 presets, adamw otherwise.")
     p.add_argument("--muon-lr", type=float, default=0.02)
@@ -131,6 +135,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--source", action="append", type=Path, default=[], help="Code to train on (default: "
                    "the Python standard library + installed packages).")
     p.add_argument("--no-grad-checkpoint", action="store_true", help="Faster but needs much more GPU memory.")
+    p.add_argument("--shard", default="auto", choices=("auto", "yes", "no"),
+                   help="Split the model across GPUs (FSDP). auto: for models over 600M parameters.")
+    p.add_argument("--lr", type=float, default=None, help="Pretraining LR for AdamW-trained weights.")
+    p.add_argument("--muon-lr", type=float, default=None, help="Pretraining LR for Muon-trained matrices.")
     p.add_argument("--compile", action="store_true")
     p.add_argument("--device", default="auto")
     p.add_argument("--precision", default="auto", choices=("auto", "fp32", "bf16", "fp16"))
@@ -217,11 +225,13 @@ def main(argv: list[str] | None = None) -> int:
             max_steps=args.steps or (1000 if sft else 5000),
             max_minutes=args.minutes,
             eval_interval=args.eval_interval,
+            eval_iters=args.eval_iters,
             device=args.device,
             precision=args.precision,
             schedule=args.schedule,
             compile=args.compile,
             grad_checkpoint=args.grad_checkpoint,
+            shard=args.shard,
             optimizer=args.optimizer or ("muon" if str(getattr(args, "preset", "")).startswith("v3") else "adamw"),
             muon_lr=args.muon_lr,
             pack=not getattr(args, "no_pack", False),
@@ -350,13 +360,22 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _autotrain(args) -> int:  # noqa: ANN001
-    from ycode.lm.autotrain import AutoTrainer, Plan
+    from ycode.lm.autotrain import AutoTrainer, Plan, preset_params
     from ycode.lm.hub import HFHub, LocalHub
 
     import torch
 
     nproc = args.nproc if args.nproc is not None else max(1, torch.cuda.device_count())
-    plan = Plan(base_model=str(args.base_model), preset=args.preset, sources=[str(s) for s in args.source],
+    big = preset_params(args.preset) > 600e6
+    shard = nproc > 1 and (args.shard == "yes" or (args.shard == "auto" and big))
+    if big and not shard and torch.cuda.is_available():
+        gb = torch.cuda.get_device_properties(0).total_memory / 1e9
+        if gb < 40:
+            print(f"warning: {args.preset} needs about 18 GB of GPU memory for weights and optimizer state "
+                  f"alone; with one {gb:.0f} GB GPU it will likely run out of memory. Use 2+ GPUs "
+                  "(sharded) or a 40 GB+ GPU.", file=sys.stderr)
+    extra = {k: v for k, v in (("lr", args.lr), ("muon_lr", args.muon_lr)) if v is not None}
+    plan = Plan(shard=shard, release_shard_mb=1000.0 if big else 45.0, **extra,base_model=str(args.base_model), preset=args.preset, sources=[str(s) for s in args.source],
                 max_mb=args.max_mb, pretrain_steps=args.pretrain_steps, sft_steps=args.sft_steps,
                 batch_size=args.batch_size, grad_accum=args.grad_accum, nproc=nproc, precision=args.precision,
                 grad_checkpoint=not args.no_grad_checkpoint, compile=args.compile, session_hours=args.hours,
