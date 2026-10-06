@@ -624,7 +624,9 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
             tokens_seen += x.numel() * world
         finite = (scaler.unscale_and_check(model.parameters(), all_ranks_finite if shard else None)
                   if scaler else True)
-        if finite and not in_backward:  # (in-backward updates already happened, unclipped: Lion is sign-based)
+        if in_backward:
+            pass  # Lion already updated every weight during backward (sign-based, so no clipping)
+        elif finite:
             torch.nn.utils.clip_grad_norm_(model.parameters(), cfg.grad_clip)
             optimizer.step()
         else:

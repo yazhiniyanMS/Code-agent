@@ -61,8 +61,10 @@ def test_training_with_lion_low_memory_and_resume(data_dir, tmp_path):
     cfg = dict(preset="v3-tiny", model_overrides={"block_size": 32}, batch_size=4, warmup_steps=2,
                eval_interval=6, eval_iters=2, log_interval=1000, device="cpu", precision="fp32",
                optimizer="lion", lr=3e-3, grad_checkpoint=True)
-    s1 = train(data_dir, tmp_path / "m", TrainConfig(max_steps=12, until_step=6, **cfg), log=lambda *_: None)
+    logs = []
+    s1 = train(data_dir, tmp_path / "m", TrainConfig(max_steps=12, until_step=6, **cfg), log=logs.append)
     assert s1["steps"] == 6
+    assert not any("overflow" in line for line in logs)
     state = torch.load(tmp_path / "m" / "optim.pt", weights_only=True)["optimizer"]["optimizers"][0]
     assert next(iter(state["state"].values()))["exp_avg"].dtype == torch.bfloat16
     s2 = train(data_dir, tmp_path / "m", TrainConfig(max_steps=12, resume=True, **cfg), log=lambda *_: None)
