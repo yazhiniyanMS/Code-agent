@@ -225,3 +225,74 @@ def test_prepare_sft_only_reuses_tokenizer(data_dir, tmp_path):
                      "--tokenizer", str(data_dir / "tokenizer.json")]) == 0
     assert BPETokenizer.load(out / "tokenizer.json").merges == BPETokenizer.load(data_dir / "tokenizer.json").merges
     assert (out / "sft_index.npy").is_file() and not (out / "train.bin").exists()
+
+
+def test_insertion_plan():
+    from ycode.lm.grow import insertion_plan
+
+    assert sum(insertion_plan(13, 34)) == 21 and max(insertion_plan(13, 34)) - min(insertion_plan(13, 34)) <= 1
+    assert insertion_plan(4, 4) == [0, 0, 0, 0]
+    with pytest.raises(ValueError):
+        insertion_plan(5, 3)
+
+
+def test_grown_model_computes_the_same_function_and_trains(data_dir, tmp_path):
+    from ycode.lm import cli
+
+    torch.manual_seed(0)
+    small = GPT(GPTConfig(vocab_size=120, block_size=32, n_layer=3, n_head=4, n_kv_head=2, n_embd=32,
+                          qk_norm=True, arch_version=3)).eval()
+    from ycode.lm.grow import grow_depth
+
+    big = grow_depth(small, 8, arch_version=4).eval()
+    assert big.cfg.n_layer == 8 and big.cfg.arch_version == 4 and big.num_params() > small.num_params()
+    x = torch.randint(0, 120, (2, 16))
+    assert torch.allclose(small(x, x)[0], big(x, x)[0], atol=1e-5)  # identical at step 0
+    assert torch.equal(small.generate(x[:1], 6, temperature=0), big.generate(x[:1], 6, temperature=0))
+
+    # CLI round trip, then continued pretraining from the grown checkpoint.
+    train(data_dir, tmp_path / "v3", _cfg(max_steps=3), log=lambda *_: None)
+    assert cli.main(["grow", "--model", str(tmp_path / "v3"), "--out", str(tmp_path / "v4"), "--layers", "5",
+                     "--version", "4"]) == 0
+    grown, _, payload = load_checkpoint(tmp_path / "v4")
+    assert grown.cfg.n_layer == 5 and payload["stage"] == "grown"
+    summary = train(data_dir, tmp_path / "v4b", _cfg(max_steps=3, init_from=str(tmp_path / "v4")),
+                    log=lambda *_: None)
+    assert summary["steps"] == 3
+
+
+def test_v4_preset_is_about_100m_params():
+    cfg = GPTConfig(vocab_size=8192, **PRESETS["v4-100m"])
+    assert 99e6 <= GPT(cfg).num_params() <= 101e6 and cfg.arch_version == 4
+
+
+def test_train_cli_accepts_init_from(data_dir, tmp_path):
+    from ycode.lm import cli
+
+    train(data_dir, tmp_path / "base", _cfg(max_steps=2), log=lambda *_: None)
+    assert cli.main(["train", "--data", str(data_dir), "--init-from", str(tmp_path / "base"), "--out",
+                     str(tmp_path / "more"), "--steps", "2", "--batch-size", "2", "--device", "cpu"]) == 0
+    assert load_checkpoint(tmp_path / "more")[2]["step"] == 2
+
+
+def test_sharded_export_round_trip(data_dir, tmp_path):
+    from ycode.lm import cli
+
+    train(data_dir, tmp_path / "m", _cfg(max_steps=2), log=lambda *_: None)
+    assert cli.main(["export", "--model", str(tmp_path / "m"), "--out", str(tmp_path / "s"),
+                     "--max-shard-mb", "0.05"]) == 0
+    shards = sorted((tmp_path / "s").glob("model-*-of-*.pt"))
+    assert len(shards) >= 3 and all(f.stat().st_size < 0.2e6 for f in shards)
+    original, _, _ = load_checkpoint(tmp_path / "m")
+    loaded, _, payload = load_checkpoint(tmp_path / "s")
+    assert "head.weight" in payload["tied"]  # tied weights stored once
+    x = torch.randint(0, original.cfg.vocab_size, (1, 8))
+    assert torch.allclose(original(x, x)[0], loaded(x, x)[0], atol=0.1)
+    # Re-exporting unsharded removes stale shards; a missing shard is a clear error.
+    assert cli.main(["export", "--model", str(tmp_path / "m"), "--out", str(tmp_path / "s")]) == 0
+    assert not list((tmp_path / "s").glob("model-*-of-*.pt"))
+    assert cli.main(["export", "--model", str(tmp_path / "m"), "--out", str(tmp_path / "t"),
+                     "--max-shard-mb", "0.05"]) == 0
+    sorted((tmp_path / "t").glob("model-*-of-*.pt"))[0].unlink()
+    with pytest.raises(FileNotFoundError, match="Missing model shard"):
+        load_checkpoint(tmp_path / "t")

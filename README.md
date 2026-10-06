@@ -199,12 +199,13 @@ YCode-LM is a programming language model you train from scratch on your own mach
 
 | Model | Params | Size | Card |
 | --- | --- | --- | --- |
+| **YCode-LM v4** | **100M** | 200 MB in 5 shards | [`models/ycode-lm-v4`](models/ycode-lm-v4/README.md) |
 | YCode-LM v3 | 40.8M | 81.8 MB | [`models/ycode-lm-v3`](models/ycode-lm-v3/README.md) |
 | YCode-LM v2 | 7.7M | 15.6 MB | [`models/ycode-lm-v2`](models/ycode-lm-v2/README.md) |
 
 ```bash
 pip install -e ".[local]"
-ycode --local models/ycode-lm-v3          # or: ycode-lm chat --model models/ycode-lm-v3
+ycode --local models/ycode-lm-v4          # or: ycode-lm chat --model models/ycode-lm-v4
 ```
 
 **Set up and train:**
@@ -244,17 +245,19 @@ In an A/B test (same model, data, seed and 600 steps), Muon reached a held-out l
 
 A 40M model wants far more data and compute than a CPU can supply. The compute-optimal budget is about 800M training tokens, while 8 hours on a 4-core CPU covers about 50M. On a single consumer GPU, the same run takes hours instead of days.
 
-**Measured results (v1 vs v2 vs v3).** All three models were trained on a 4-core CPU and evaluated the same way. Bits per byte is measured on 11 packages none of them saw in training. The code tasks are *executed* against unit tests:
+**Measured results (v1 → v4).** All four models were trained on a 4-core CPU and evaluated the same way. Bits per byte is measured on 11 packages none of them saw in training. The code tasks are *executed* against unit tests:
 
-| | v1 | v2 | v3 |
-| --- | --- | --- | --- |
-| Parameters | 6.9M | 7.7M | 40.8M |
-| Pretraining tokens | ~41M (54 MB corpus) | ~82M (176 MB corpus) | ~60M (176 MB corpus, Muon) |
-| Bits per byte on held-out code | 1.095 | 0.966 | **0.857** |
-| Write a function, pass@1 (30 problems) | 0 / 30 | 0 / 30 | 0 / 30 |
-| Fix an injected bug, fix@1 (15 functions) | 0 / 15 | **5 / 15** | 4 / 15 |
+| | v1 | v2 | v3 | v4 |
+| --- | --- | --- | --- | --- |
+| Parameters | 6.9M | 7.7M | 40.8M | 100M |
+| Training | ~41M tokens | ~82M tokens | ~60M tokens (Muon) | grown from v3 + ~24.6M tokens |
+| Bits per byte on held-out code | 1.095 | 0.966 | 0.857 | **0.814** |
+| Write a function, pass@1 (30 problems) | 0 / 30 | 0 / 30 | 0 / 30 | **1 / 30** |
+| Fix an injected bug, fix@1 (15 functions) | 0 / 15 | **5 / 15** | 4 / 15 | **5 / 15** |
 
-Each version models real code better than the last. v2 and v3 write short, well-formed answers and can find and fix simple bugs ("The bug is in `result = 1`. It should be `result = 0`."), while v1 falls into repetition loops. None of them yet writes correct functions from a description, and on 15 bug fixes v2 and v3 are within noise of each other. At this size and CPU budget, the gains show up in how well the model represents code before they show up in correct programs.
+Each version models real code better than the last. v2–v4 write short, well-formed answers and can find and fix simple bugs ("The bug is in `result = 1`. It should be `result = 0`."), while v1 falls into repetition loops. v4 is the first to write a correct function from a description (`square` → `return x * x`). Writing functions reliably needs much more training data and compute than a CPU provides.
+
+**Growing models.** `ycode-lm grow --model v3 --out v4-init --layers 34` deepens a trained model by inserting copies of existing blocks with zeroed output projections. The result computes exactly the same function, so `train --init-from v4-init` continues from everything the small model learned. v4 was built this way. For files over GitHub's 100 MB limit, `export --max-shard-mb 45` splits the weights into shards that load transparently.
 
 For long runs on machines that may be interrupted, train in segments: `--until-step N` stops and saves, `--resume` continues with the same LR schedule, and `--save-interval N` saves cheaply between evaluations.
 
@@ -266,6 +269,7 @@ For long runs on machines that may be interrupted, train in segments: `--until-s
 
 | Preset | Layers × width | Heads (KV) | Context | Params | Where to train |
 | --- | --- | --- | --- | --- | --- |
+| **`v4-100m`** | 34 × 512 | 8 (2) | 1024 | **100.0M** | grow from v3 (`ycode-lm grow`); GPU recommended for training |
 | **`v3-40m`** | 13 × 512 | 8 (2) | 1024 | **40.8M** | GPU ideal; CPU works but slowly (measured ~2.1k tok/s on 4 Xeon cores with bf16 + compile) |
 | `v3-tiny` | 3 × 64 | 4 (2) | 128 | ~0.7M | tests |
 | `v2-tiny` | 2 × 64 | 4 (2) | 128 | ~0.6M | tests / smoke runs |

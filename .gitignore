@@ -37,3 +37,4 @@ env/
 # ...except the published, exported YCode-LM models
 !/models/ycode-lm-*/
 !/models/ycode-lm-*/model.pt
+!/models/ycode-lm-*/model-*-of-*.pt

@@ -124,6 +124,16 @@ def load_checkpoint(path: Path, device: str = "cpu") -> tuple[GPT, BPETokenizer,
     payload = torch.load(path, map_location=device, weights_only=True)
     if payload.get("format") != "ycode-lm":
         raise ValueError(f"{path} is not a YCode model checkpoint")
+    if "shards" in payload:  # large exported models are split into several files
+        state: dict[str, torch.Tensor] = {}
+        for name in payload["shards"]:
+            shard_path = path.parent / name
+            if not shard_path.is_file():
+                raise FileNotFoundError(f"Missing model shard {shard_path}")
+            state.update(torch.load(shard_path, map_location=device, weights_only=True))
+        for key, source in payload.get("tied", {}).items():
+            state[key] = state[source]
+        payload["model"] = state
     model = GPT(GPTConfig(**payload["config"]))
     model.load_state_dict(payload["model"])
     model.to(device)
@@ -131,7 +141,7 @@ def load_checkpoint(path: Path, device: str = "cpu") -> tuple[GPT, BPETokenizer,
     return model, tok, payload
 
 
-def export_checkpoint(src: Path, dst: Path, *, dtype: str = "bf16") -> Path:
+def export_checkpoint(src: Path, dst: Path, *, dtype: str = "bf16", max_shard_mb: float | None = None) -> Path:
     """Write a slim, inference-only copy of a checkpoint (no optimizer state).
 
     bf16 halves the file size; weights are converted back to float32 on load."""
@@ -153,14 +163,45 @@ def export_checkpoint(src: Path, dst: Path, *, dtype: str = "bf16") -> Path:
             converted[ptr] = tensor.to(target) if tensor.is_floating_point() else tensor
         model_state[key] = converted[ptr]
     payload["model"] = model_state
+    shard_files: list[str] = []
+    if max_shard_mb is not None:
+        # Split the weights into files under max_shard_mb (e.g. GitHub's 100 MB file limit).
+        # Tied tensors are stored once and re-linked on load.
+        seen: dict[int, str] = {}
+        tied: dict[str, str] = {}
+        shards: list[dict[str, torch.Tensor]] = [{}]
+        sizes = [0]
+        limit = max_shard_mb * 1e6
+        for key, tensor in model_state.items():
+            ptr = tensor.data_ptr()
+            if ptr in seen:
+                tied[key] = seen[ptr]
+                continue
+            seen[ptr] = key
+            nbytes = tensor.numel() * tensor.element_size()
+            if sizes[-1] and sizes[-1] + nbytes > limit:
+                shards.append({})
+                sizes.append(0)
+            shards[-1][key] = tensor
+            sizes[-1] += nbytes
+        shard_files = [f"model-{i + 1:05d}-of-{len(shards):05d}.pt" for i in range(len(shards))]
+        payload["shards"] = shard_files
+        payload["tied"] = tied
+        payload["model"] = {}
     payload["exported_dtype"] = dtype
     dst = Path(dst)
     dst.mkdir(parents=True, exist_ok=True)
+    for old_shard in dst.glob("model-*-of-*.pt"):
+        old_shard.unlink()  # never leave stale shards from a previous export
     torch.save(payload, dst / CHECKPOINT_NAME)
+    if shard_files:
+        for name, shard in zip(shard_files, shards):
+            torch.save(shard, dst / name)
     params = sum(v.numel() for v in converted.values())
     (dst / "info.json").write_text(json.dumps({
         "step": payload.get("step"), "stage": payload.get("stage"), "val_loss": payload.get("val_loss"),
         "version": payload.get("version"), "params": params, "dtype": dtype, "config": payload["config"],
+        "files": [CHECKPOINT_NAME, *shard_files],
     }, indent=2))
     return dst / CHECKPOINT_NAME
 
