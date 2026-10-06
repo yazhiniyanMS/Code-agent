@@ -96,7 +96,8 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("grow", help="Deepen a trained model; the grown model starts out computing the same function.")
     p.add_argument("--model", required=True, type=Path, help="Trained model directory.")
     p.add_argument("--out", required=True, type=Path, help="Output directory (use as --init-from for train).")
-    p.add_argument("--layers", type=int, required=True, help="New number of layers.")
+    p.add_argument("--layers", type=int, default=None, help="New number of layers.")
+    p.add_argument("--width", type=int, default=None, help="New width (embedding size); heads scale with it.")
     p.add_argument("--version", type=int, default=None, help="Architecture version to record (e.g. 4).")
 
     p = sub.add_parser("export", help="Write a slim inference-only copy of a model (no optimizer state).")
@@ -207,17 +208,24 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "grow":
-        from ycode.lm.grow import grow_depth
+        from ycode.lm.grow import grow_depth, grow_width
         from ycode.lm.train import load_checkpoint, save_checkpoint
 
         try:
             model, tok, payload = load_checkpoint(args.model)
-            grown = grow_depth(model, args.layers, arch_version=args.version)
+            if args.layers is None and args.width is None:
+                raise ValueError("pass --layers and/or --width")
+            grown = model
+            if args.width is not None and args.width != model.cfg.n_embd:
+                grown = grow_width(grown, args.width, arch_version=args.version)
+            if args.layers is not None and args.layers != grown.cfg.n_layer:
+                grown = grow_depth(grown, args.layers, arch_version=args.version)
         except (FileNotFoundError, ValueError) as exc:
             print(f"error: {exc}", file=sys.stderr)
             return 1
         save_checkpoint(args.out, grown, tok, step=0, stage="grown", val_loss=None)
-        print(f"Grew {model.cfg.n_layer} -> {args.layers} layers: {model.num_params() / 1e6:.2f}M -> "
+        print(f"Grew {model.cfg.n_layer}x{model.cfg.n_embd} -> {grown.cfg.n_layer}x{grown.cfg.n_embd}: "
+              f"{model.num_params() / 1e6:.2f}M -> "
               f"{grown.num_params() / 1e6:.2f}M parameters, saved to {args.out}")
         return 0
 

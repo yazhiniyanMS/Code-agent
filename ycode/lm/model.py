@@ -70,6 +70,12 @@ PRESETS.update({
     "v4-tiny": dict(n_layer=5, n_head=4, n_kv_head=2, n_embd=64, block_size=128, **_V4),
     "v4-100m": dict(n_layer=34, n_head=8, n_kv_head=2, n_embd=512, block_size=1024, **_V4),
 })
+# version 5: ~500M parameters, grown from v4 in width (512 -> 1024) and depth (34 -> 45).
+_V5 = dict(qk_norm=True, arch_version=5)
+PRESETS.update({
+    "v5-tiny": dict(n_layer=6, n_head=8, n_kv_head=2, n_embd=128, block_size=128, **_V5),
+    "v5-500m": dict(n_layer=45, n_head=16, n_kv_head=4, n_embd=1024, block_size=1024, **_V5),
+})
 DEFAULT_PRESET = "v2-small"
 
 

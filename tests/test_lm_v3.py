@@ -296,3 +296,53 @@ def test_sharded_export_round_trip(data_dir, tmp_path):
     sorted((tmp_path / "t").glob("model-*-of-*.pt"))[0].unlink()
     with pytest.raises(FileNotFoundError, match="Missing model shard"):
         load_checkpoint(tmp_path / "t")
+
+
+def test_width_growth_preserves_function_and_new_capacity_learns():
+    from ycode.lm.grow import grow_depth, grow_width
+
+    torch.manual_seed(0)
+    small = GPT(GPTConfig(vocab_size=100, block_size=32, n_layer=2, n_head=4, n_kv_head=2, n_embd=32,
+                          qk_norm=True, arch_version=4)).eval()
+    with torch.no_grad():  # make norms non-trivial so the rescaling is really exercised
+        for p in small.parameters():
+            if p.dim() == 1:
+                p.add_(torch.rand_like(p) * 0.5)
+    wide = grow_width(small, 64, arch_version=5)
+    assert (wide.cfg.n_embd, wide.cfg.n_head, wide.cfg.kv_heads, wide.cfg.arch_version) == (64, 8, 4, 5)
+    x = torch.randint(0, 100, (2, 12))
+    # Equal up to RMSNorm's tiny eps term, which cannot be rescaled exactly (~1e-4).
+    assert torch.allclose(small(x, x)[0], wide.eval()(x, x)[0], atol=2e-3)
+    both = grow_depth(wide, 5).eval()
+    assert torch.allclose(small(x, x)[0], both(x, x)[0], atol=2e-3)
+    assert torch.equal(small.generate(x[:1], 6, temperature=0), both.generate(x[:1], 6, temperature=0))
+
+    # One training step must reach the new channels / heads / MLP units.
+    wide.train()
+    _, loss = wide(x, x)
+    loss.backward()
+    blk = wide.blocks[0]
+    assert blk.attn.proj.weight.grad[32:].abs().sum() > 0          # writes into new channels
+    assert blk.attn.proj.weight.grad[:, 32:].abs().sum() > 0       # reads new heads
+    old_hidden = small.blocks[0].mlp.gate.weight.shape[0]
+    assert blk.mlp.down.weight.shape[1] > old_hidden
+    assert blk.mlp.down.weight.grad[:, old_hidden:].abs().sum() > 0  # reads new MLP units
+    assert wide.embed.weight.grad[:, 32:].abs().sum() > 0
+
+
+def test_grow_width_rejects_bad_shapes():
+    from ycode.lm.grow import grow_width
+
+    m = GPT(GPTConfig(vocab_size=50, block_size=16, n_layer=1, n_head=4, n_kv_head=2, n_embd=32, qk_norm=True))
+    with pytest.raises(ValueError):
+        grow_width(m, 16)          # shrinking
+    with pytest.raises(ValueError):
+        grow_width(m, 36)          # not a multiple of the head size (8)
+    with pytest.raises(ValueError):
+        grow_width(m, 64, new_heads=8, new_kv_heads=8)  # changes the query/kv ratio
+
+
+def test_v5_preset_is_about_500m_params():
+    cfg = GPTConfig(vocab_size=8192, **PRESETS["v5-500m"])
+    params = GPT(cfg).num_params()
+    assert 495e6 <= params <= 515e6 and cfg.arch_version == 5
