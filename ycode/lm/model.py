@@ -231,7 +231,8 @@ class GPT(nn.Module):
         x = self.drop(self.embed(idx).float())
         checkpointing = self.grad_checkpoint and self.training and caches is None
         for i, block in enumerate(self.blocks):
-            if checkpointing:
+            # Frozen blocks keep no activations anyway, so recomputing them would only cost time.
+            if checkpointing and block.norm1.weight.requires_grad:
                 # Recompute this block's activations in the backward pass instead of storing them:
                 # far less memory (fits bigger models/batches on a 16 GB GPU) for ~30% more compute.
                 x = torch.utils.checkpoint.checkpoint(block, x, cos, sin, None, use_reentrant=False)
