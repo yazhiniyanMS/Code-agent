@@ -234,7 +234,7 @@ YCode-LM is a programming language model you train from scratch on your own mach
 
 | Model | Params | Size | Card |
 | --- | --- | --- | --- |
-| YCode-LM v5 | 1,523M | 2.9 GB in 103 shards | `ycode --local v5` |
+| YCode-LM v5 | 1,523M | 2.9 GB in 103 shards | [`models/ycode-lm-v5`](models/ycode-lm-v5/README.md) |
 | **YCode-LM v4** (default) | **100M** | 200 MB in 5 shards | [`models/ycode-lm-v4`](models/ycode-lm-v4/README.md) |
 | YCode-LM v3 | 40.8M | 81.8 MB | [`models/ycode-lm-v3`](models/ycode-lm-v3/README.md) |
 | YCode-LM v2 | 7.7M | 15.6 MB | [`models/ycode-lm-v2`](models/ycode-lm-v2/README.md) |
@@ -280,17 +280,17 @@ In an A/B test (same model, data, seed and 600 steps), Muon reached a held-out l
 
 A 40M model wants far more data and compute than a CPU can supply. The compute-optimal budget is about 800M training tokens, while 8 hours on a 4-core CPU covers about 50M. On a single consumer GPU, the same run takes hours instead of days.
 
-**Measured results (v1 → v4).** All four models were trained on a 4-core CPU and evaluated the same way. Bits per byte is measured on 11 packages none of them saw in training. The code tasks are *executed* against unit tests:
+**Measured results (v1 → v5).** All five models were evaluated the same way. Bits per byte is measured on 11 packages none of them saw in training. The code tasks are *executed* against unit tests:
 
-| | v1 | v2 | v3 | v4 |
-| --- | --- | --- | --- | --- |
-| Parameters | 6.9M | 7.7M | 40.8M | 100M |
-| Training | ~41M tokens | ~82M tokens | ~60M tokens (Muon) | grown from v3 + ~24.6M tokens |
-| Bits per byte on held-out code | 1.095 | 0.966 | 0.857 | **0.814** |
-| Write a function, pass@1 (30 problems) | 0 / 30 | 0 / 30 | 0 / 30 | **1 / 30** |
-| Fix an injected bug, fix@1 (15 functions) | 0 / 15 | **5 / 15** | 4 / 15 | **5 / 15** |
+| | v1 | v2 | v3 | v4 | v5 |
+| --- | --- | --- | --- | --- | --- |
+| Parameters | 6.9M | 7.7M | 40.8M | 100M | 1,523M |
+| Training | ~41M tokens | ~82M tokens | ~60M tokens (Muon) | grown from v3 + ~24.6M tokens | grown from v4 + ~2.5M tokens (Lion, CPU) |
+| Bits per byte on held-out code | 1.095 | 0.966 | 0.857 | 0.814 | **0.758** |
+| Write a function, pass@1 (30 problems) | 0 / 30 | 0 / 30 | 0 / 30 | **1 / 30** | 0 / 30 |
+| Fix an injected bug, fix@1 (15 functions) | 0 / 15 | **5 / 15** | 4 / 15 | **5 / 15** | 4 / 15 |
 
-Each version models real code better than the last. v2–v4 write short, well-formed answers and can find and fix simple bugs ("The bug is in `result = 1`. It should be `result = 0`."), while v1 falls into repetition loops. v4 is the first to write a correct function from a description (`square` → `return x * x`). Writing functions reliably needs much more training data and compute than a CPU provides.
+Each version models real code better than the last; v5's 7% gain over v4 is the largest step so far, but it has not yet turned into solving more tasks (it is badly under-trained for its size). v2–v4 write short, well-formed answers and can find and fix simple bugs ("The bug is in `result = 1`. It should be `result = 0`."), while v1 falls into repetition loops. v4 is the first to write a correct function from a description (`square` → `return x * x`). Writing functions reliably needs much more training data and compute than a CPU provides.
 
 **Growing models.** `ycode-lm grow --model v3 --out v4-init --layers 34` deepens a trained model by inserting copies of existing blocks with zeroed output projections. The result computes exactly the same function, so `train --init-from v4-init` continues from everything the small model learned. v4 was built this way. For files over GitHub's 100 MB limit, `export --max-shard-mb 45` splits the weights into shards that load transparently.
 
