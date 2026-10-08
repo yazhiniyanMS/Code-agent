@@ -524,7 +524,8 @@ python -m pytest -q
 ## Roadmap
 
 - YCode-LM: tool-calling training data, so the local model can drive the agent
-- YCode-LM: multi-GPU / distributed training, larger presets
+- YCode-LM: train v5 much longer on GPUs (`ycode-lm autotrain`, `--shard` are ready), then publish it on Hugging Face
+- YCode-LM: faster CPU inference for v5 (8-bit weights)
 - More providers: OpenAI-compatible, local models through Ollama
 - Session persistence and resume (`ycode --continue`)
 - Context compaction for very long sessions
