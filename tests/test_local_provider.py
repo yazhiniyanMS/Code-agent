@@ -54,7 +54,7 @@ def test_missing_local_model_is_a_clear_error(tmp_path):
     pytest.importorskip("torch")
     with pytest.raises(ConfigError) as info:
         create_provider(Config(provider="local", local_model=str(tmp_path / "none")))
-    assert "No trained model" in str(info.value) and "ycode-lm" in info.value.hint
+    assert "No model found" in str(info.value) and "v4" in info.value.hint  # lists the bundled models
 
 
 def test_no_api_key_needed_for_local(tmp_path, monkeypatch):
@@ -100,3 +100,53 @@ def test_agent_sends_no_tools_to_local_provider(workspace, make_ctx, tmp_path):
                   tool_context=make_ctx(workspace), system_prompt="s")
     agent.run("hi")
     assert seen["tools"] == []
+
+
+def test_resolve_local_model(tmp_path, monkeypatch, isolated_home):
+    import ycode.config as config
+    from ycode.config import DEFAULT_BUNDLED_MODEL, bundled_models, resolve_local_model
+
+    monkeypatch.setenv("YCODE_MODELS_DIR", str(tmp_path / "bundled"))
+    monkeypatch.setattr(config, "available_memory_gb", lambda: 16.0)
+    for name in ("ycode-lm-v4", "ycode-lm-v5"):
+        (tmp_path / "bundled" / name).mkdir(parents=True)
+        (tmp_path / "bundled" / name / "model.pt").write_bytes(b"")
+    assert bundled_models() == ["ycode-lm-v4", "ycode-lm-v5"]
+    assert DEFAULT_BUNDLED_MODEL == "ycode-lm-v5"  # v5 is the deployed default
+    assert resolve_local_model("") == tmp_path / "bundled" / DEFAULT_BUNDLED_MODEL
+    monkeypatch.setattr(config, "available_memory_gb", lambda: 2.0)  # small machine: falls back to v4
+    assert resolve_local_model("") == tmp_path / "bundled" / "ycode-lm-v4"
+    monkeypatch.setattr(config, "available_memory_gb", lambda: 16.0)
+    assert resolve_local_model("v5") == tmp_path / "bundled" / "ycode-lm-v5"
+    assert resolve_local_model("ycode-lm-v5") == tmp_path / "bundled" / "ycode-lm-v5"
+    assert resolve_local_model(str(tmp_path / "mine")) == tmp_path / "mine"
+    own = isolated_home / "models" / "ycode-lm"  # a model you trained yourself wins over the bundled one
+    own.mkdir(parents=True)
+    (own / "model.pt").write_bytes(b"")
+    assert resolve_local_model("") == own
+
+
+def test_repository_ships_the_default_model():
+    from ycode.config import DEFAULT_BUNDLED_MODEL, bundled_models
+
+    assert DEFAULT_BUNDLED_MODEL in bundled_models()
+
+
+def test_claude_is_optional(monkeypatch):
+    """Without the anthropic package, only an explicit --provider anthropic mentions Claude."""
+    import builtins as b
+    import sys
+
+    real_import = b.__import__
+
+    def no_anthropic(name, *args, **kwargs):
+        if name == "anthropic" or name.startswith("anthropic."):
+            raise ImportError("No module named 'anthropic'")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.delitem(sys.modules, "ycode.llm.anthropic", raising=False)
+    monkeypatch.delitem(sys.modules, "anthropic", raising=False)
+    monkeypatch.setattr(b, "__import__", no_anthropic)
+    with pytest.raises(ConfigError) as info:
+        create_provider(Config(provider="anthropic"))
+    assert "not installed" in str(info.value) and ".[claude]" in info.value.hint

@@ -51,16 +51,29 @@ class LocalHub(Hub):
         return str(self.root)
 
 
+def _saved_login() -> str | None:
+    """A token saved by `hf auth login` / `huggingface-cli login`, if any."""
+    try:
+        from huggingface_hub import get_token
+    except ImportError:
+        return None
+    try:
+        return get_token()
+    except Exception:  # noqa: BLE001 - no saved login
+        return None
+
+
 class HFHub(Hub):
     def __init__(self, repo_id: str, *, private: bool = True, token: str | None = None) -> None:
         try:
             from huggingface_hub import HfApi
         except ImportError:
             raise RuntimeError("Uploading to Hugging Face needs: pip install huggingface_hub") from None
-        token = token or os.environ.get("HF_TOKEN")
+        token = token or os.environ.get("HF_TOKEN") or _saved_login()
         if not token:
-            raise RuntimeError("Set HF_TOKEN to a Hugging Face token with write access "
-                               "(https://huggingface.co/settings/tokens).")
+            raise RuntimeError("No Hugging Face access token. Create one with Write access at "
+                               "https://huggingface.co/settings/tokens, then either set HF_TOKEN or run "
+                               "`hf auth login`.")
         self.api = HfApi(token=token)
         self.repo_id = repo_id
         self.api.create_repo(repo_id, private=private, exist_ok=True, repo_type="model")

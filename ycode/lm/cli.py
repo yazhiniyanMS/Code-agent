@@ -14,7 +14,8 @@ import argparse
 import sys
 from pathlib import Path
 
-from ycode.config import default_local_model_dir as default_model_dir
+from ycode.config import default_local_model_dir
+from ycode.config import resolve_local_model as default_model_dir
 
 
 def _require_torch() -> None:
@@ -242,7 +243,7 @@ def main(argv: list[str] | None = None) -> int:
             until_step=args.until_step,
             save_interval=args.save_interval,
         )
-        out = args.out or default_model_dir()
+        out = args.out or default_local_model_dir()
         try:
             summary = train(args.data, out, cfg)
         except (ValueError, FileNotFoundError) as exc:
@@ -420,7 +421,8 @@ def _eval(args) -> int:  # noqa: ANN001
         print(f"Evaluating {model_dir} (YCode-LM v{lm.version}, {lm.num_params / 1e6:.1f}M params) ...")
         row = {"model": str(model_dir), "version": lm.version, "params_m": round(lm.num_params / 1e6, 2)}
         if texts:
-            row["bits_per_byte"] = round(bits_per_byte(lm.model, lm.tokenizer, texts, device=lm.device), 4)
+            with lm.precision():
+                row["bits_per_byte"] = round(bits_per_byte(lm.model, lm.tokenizer, texts, device=lm.device), 4)
         if not args.no_functional:
             res = functional_eval(lm, samples=args.samples, log=print if args.verbose else None)
             row["pass@1"] = round(res.pass_at_1, 4)

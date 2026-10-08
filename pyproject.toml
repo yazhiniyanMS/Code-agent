@@ -5,23 +5,29 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ycode"
 dynamic = ["version"]
-description = "YCode - a terminal-first AI coding agent powered by Claude"
+description = "YCode - a terminal-first AI coding agent with its own built-in language model (no API key needed)"
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.10"
 dependencies = [
-    "anthropic>=1.0,<2",
     "rich>=13.7",
     "prompt_toolkit>=3.0.40",
     "python-dotenv>=1.0",
     "tomli>=2.0; python_version < '3.11'",
+    # YCode's own model (the default provider) runs on PyTorch.
+    "torch>=2.1",
+    "numpy>=1.24",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0"]
-# Train and run your own from-scratch model (ycode-lm, --local)
-local = ["torch>=2.1", "numpy>=1.24"]
+dev = ["pytest>=8.0", "anthropic>=1.0,<2"]
+# Optional: use Claude instead of YCode's own model (ycode --provider anthropic). Not needed otherwise.
+claude = ["anthropic>=1.0,<2"]
+# Kept for compatibility: PyTorch and NumPy are now regular dependencies.
+local = []
 hub = ["huggingface_hub>=0.24"]
+# Hugging Face libraries: publish models (ycode-lm push-hf / autotrain) and work with the HF ecosystem.
+hf = ["huggingface_hub>=0.24", "transformers>=4.44", "safetensors>=0.4", "accelerate>=0.33"]
 
 [project.scripts]
 ycode = "ycode.cli:main"

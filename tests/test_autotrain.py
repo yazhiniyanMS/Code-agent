@@ -79,6 +79,9 @@ def test_hfhub_requires_token(monkeypatch):
     pytest.importorskip("huggingface_hub")
     from ycode.lm.hub import HFHub
 
+    import ycode.lm.hub as hub
+
     monkeypatch.delenv("HF_TOKEN", raising=False)
+    monkeypatch.setattr(hub, "_saved_login", lambda: None)
     with pytest.raises(RuntimeError, match="HF_TOKEN"):
         HFHub("you/repo")

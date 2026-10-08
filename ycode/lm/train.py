@@ -15,7 +15,7 @@ from typing import Callable
 import numpy as np
 import torch
 
-from ycode.lm.model import DEFAULT_PRESET, GPT, PRESETS, GPTConfig
+from ycode.lm.model import DEFAULT_PRESET, GPT, PRESETS, GPTConfig, rope_tables
 from ycode.lm.optim import build_optimizer, cuda_has_bf16
 from ycode.lm.tokenizer import BPETokenizer
 
@@ -116,7 +116,11 @@ def save_checkpoint(out_dir: Path, model: GPT, tok: BPETokenizer, *, step: int, 
     torch.save(payload, tmp)
     os.replace(tmp, path)
     if optimizer is not None:
-        torch.save({"optimizer": optimizer.state_dict(), "step": step}, out_dir / "optim.pt")
+        # Write-then-rename: a resumed optimizer's state may be memory-mapped from the old file,
+        # and overwriting that file in place would pull its pages away (SIGBUS).
+        optim_tmp = out_dir / "optim.pt.tmp"
+        torch.save({"optimizer": optimizer.state_dict(), "step": step}, optim_tmp)
+        os.replace(optim_tmp, out_dir / "optim.pt")
     (out_dir / "info.json").write_text(json.dumps({
         "step": step, "stage": stage, "val_loss": val_loss, "params": model.num_params(),
         "config": model.cfg.to_dict(),
@@ -124,7 +128,10 @@ def save_checkpoint(out_dir: Path, model: GPT, tok: BPETokenizer, *, step: int, 
     return path
 
 
-def load_checkpoint(path: Path, device: str = "cpu") -> tuple[GPT, BPETokenizer, dict]:
+def load_checkpoint(path: Path, device: str = "cpu", *,
+                    dtype: torch.dtype | None = None) -> tuple[GPT, BPETokenizer, dict]:
+    """Load a model. ``dtype`` (e.g. torch.bfloat16) keeps the weights in that precision: a 1.5B
+    model then needs 3 GB of RAM instead of 6 GB, with no full-precision copy made on the way."""
     path = Path(path)
     if path.is_dir():
         path = path / CHECKPOINT_NAME
@@ -145,8 +152,18 @@ def load_checkpoint(path: Path, device: str = "cpu") -> tuple[GPT, BPETokenizer,
         for key, source in payload.get("tied", {}).items():
             state[key] = state[source]
         payload["model"] = state
-    model = GPT(GPTConfig(**payload["config"]))
-    model.load_state_dict(payload["model"])
+    if dtype is not None:
+        # Build without allocating weights, then adopt the checkpoint's tensors directly.
+        with torch.device("meta"):
+            model = GPT(GPTConfig(**payload["config"]))
+        state = {k: (v.to(dtype) if v.is_floating_point() else v) for k, v in payload["model"].items()}
+        model.load_state_dict(state, assign=True)
+        model.head.weight = model.embed.weight  # keep the embedding/head weights tied
+        cos, sin = rope_tables(model.cfg.n_embd // model.cfg.n_head, model.cfg.block_size)
+        model.rope_cos, model.rope_sin = cos, sin  # position tables stay fp32 for accuracy
+    else:
+        model = GPT(GPTConfig(**payload["config"]))
+        model.load_state_dict(payload["model"])
     payload["model"] = {}  # the weights now live in the model; drop the duplicate
     model.to(device)
     tok = BPETokenizer.from_dict(payload["tokenizer"])

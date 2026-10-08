@@ -11,9 +11,11 @@
 
 YCode is an AI coding agent that runs in your terminal. Start it inside a project, describe a task in plain English, and it works through it: it looks around the repository, makes a short plan, edits files, runs your tests and build, reads any failures, fixes them, and then tells you what changed.
 
-It uses the Anthropic Claude API to do the reasoning. Everything else runs locally: the tool system, the permission checks and the terminal UI. The model sits behind a small provider interface, so you can add other LLM providers without rewriting the agent.
+**YCode works out of the box with no API key and no training.** By default it answers with **YCode-LM**, its own coding language model, trained from scratch and shipped in this repository (`models/`). Clone, install, and run `ycode`: nothing to sign up for, no key to paste, nothing sent over the network. See [Answering without an API key](#answering-without-an-api-key).
 
-YCode also includes **YCode-LM**, a coding language model you train yourself from scratch: its own tokenizer, its own transformer, and training code, with no pretrained weights and no API key (see [Your own LLM](#your-own-llm-ycode-lm-no-api-key)).
+YCode-LM is the only model YCode needs. If you also want full autonomous coding (reading, editing and running files in your project, as in the example below), you can optionally plug in Claude: see [Using Claude (optional)](#using-claude-optional). Everything else always runs locally: the tool system, the permission checks and the terminal UI. The model sits behind a small provider interface, so you can add other LLM providers without rewriting the agent.
+
+With Claude (`--provider anthropic`), YCode works through whole tasks:
 
 ```text
 ycode> Fix the failing add() test
@@ -59,8 +61,9 @@ ycode> Fix the failing add() test
 - **Diff awareness.** After each task YCode summarizes the changed files and the commands it ran. `/diff` shows the full diff.
 - **Project instructions.** A `YCODE.md` file in the repository is loaded into the agent's instructions.
 - **Layered configuration:** global and per-project TOML files, environment variables and CLI flags.
-- **Model-agnostic core.** The agent depends only on `LLMProvider`. There are two implementations: Claude, and your own local model.
-- **Your own LLM.** `ycode-lm` builds a byte-level BPE tokenizer and a GPT-style transformer from scratch, pretrains it on code, instruction-tunes it to answer programming questions, and serves it to YCode with `ycode --local`. Everything runs offline.
+- **No API key needed.** The default provider is YCode's own bundled model. It answers Python documentation questions exactly from Python's built-in docs, and writes functions that are checked to compile and define what you asked for. Everything runs offline.
+- **Model-agnostic core.** The agent depends only on `LLMProvider`. There are two implementations: your own local model (default) and Claude (optional).
+- **Your own LLM.** `ycode-lm` builds a byte-level BPE tokenizer and a GPT-style transformer from scratch, pretrains it on code, and instruction-tunes it to answer programming questions. Four trained versions ship with the repository, up to the 1.5B-parameter v5.
 
 ## Architecture
 
@@ -104,7 +107,7 @@ ycode/
 │   ├── base.py          # provider-neutral messages, ToolSpec, LLMProvider
 │   ├── anthropic.py     # Claude via the official anthropic SDK (streaming)
 │   └── local.py         # your own YCode-LM model (answer-only, no API key)
-├── lm/                  # YCode-LM: the from-scratch model (needs the [local] extra)
+├── lm/                  # YCode-LM: the from-scratch model; assist.py answers docs questions and checks code
 │   ├── tokenizer.py     # byte-level BPE tokenizer for code
 │   ├── model.py         # GPT transformer: RoPE, RMSNorm, SwiGLU, KV-cache sampling
 │   ├── data.py          # corpus collection, instruction-pair extraction, encoding
@@ -134,32 +137,92 @@ The dependencies point one way. The agent knows nothing about Rich or Anthropic:
 ## Requirements
 
 - Python 3.10+
-- Git (optional, but needed for the git features)
-- An Anthropic API key
+- About 4 GB of free RAM for the default model, YCode-LM v5 (1.5B parameters). With less, YCode uses the smaller v4 (about 1 GB) automatically.
+- Git, to clone the repository (it contains the trained models) and for the git features
+
+That's all. **No API key, no account and no internet connection are needed** to run YCode.
 
 ## Installation
 
 ```bash
-git clone <repo>
-cd ycode
+git clone https://github.com/yazhiniyanMS/Code-agent.git
+cd Code-agent
 python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
-pip install -e .
-cp .env.example .env             # then put your key in .env
+pip install -e .                 # includes PyTorch for the built-in model
+ycode                            # start asking questions: no API key, no training
 ```
 
-This installs a `ycode` command. `python -m ycode` works too.
+This installs a `ycode` command. `python -m ycode` works too. Install from the clone (as above) rather than from a bare package: the trained models live in the repository's `models/` folder. To keep them elsewhere, set `YCODE_MODELS_DIR`.
 
-## API key configuration
+Optional extras:
 
-YCode reads `ANTHROPIC_API_KEY`. In order of precedence, the places it looks are:
+```bash
+pip install -e ".[hf]"       # Hugging Face: transformers, huggingface_hub, safetensors, accelerate
+pip install -e ".[claude]"   # Claude support (only if you want --provider anthropic)
+pip install -e ".[dev]"      # tests
+```
+
+## Answering without an API key
+
+`ycode` uses YCode's own model by default. Every answer goes through three steps:
+
+1. **Documentation questions are answered exactly.** "What does `len()` do?", "How do I use `json.loads`?", "What is `yield`?", "Explain `os.path.join`", "What's the difference between a list and a tuple?": YCode looks the names up in Python's own built-in documentation, which ships with every Python install, and shows the signature and the official description. Only built-in names and standard-library modules are looked up. Your project's code is never imported.
+2. **"Write a function `name(...)`" requests are checked.** The model writes up to four candidates. YCode keeps the first one that compiles and defines the function you asked for. Candidates are only parsed, never run. The answer says that the name and syntax were checked, not the logic.
+3. **Everything else** goes to the model as a normal chat turn.
+
+```text
+ycode> What does the zip() function do?
+
+  zip(*iterables, strict=False) (class)
+    Yield tuples until an input is exhausted.
+    >>> list(zip('abcdefg', range(3), range(4)))
+    [('a', 0, 0), ('b', 1, 1), ('c', 2, 2)]
+    ...
+  (From Python's built-in documentation.)
+```
+
+**Choosing a model.** YCode picks a model in this order: one you trained yourself (`~/.ycode/models/ycode-lm`), otherwise the bundled **v5**. If less than 4 GB of memory is free, it uses v4 instead. Pick one explicitly with `--local`:
+
+```bash
+ycode                      # default: YCode-LM v5 (1.5B parameters), loaded in 16-bit: about 3 GB of RAM
+ycode --local v4           # YCode-LM v4 (100M parameters): much faster on a CPU
+ycode --local path/to/dir  # any model you trained
+```
+
+You can also set `local_model = "v4"` in `~/.ycode/config.toml` or `YCODE_LOCAL_MODEL=v4`. v5 models code best of all versions (see [the results](#your-own-llm-ycode-lm-no-api-key)), but a 1.5B model is slow on a CPU: expect a few tokens per second, so a long answer can take a minute or more. On a slow machine, v4 is the practical choice.
+
+**What to expect.** The bundled models were trained from scratch on a CPU, with a tiny fraction of the data and compute behind commercial assistants. They write well-formed Python, but their own code is often wrong, so test it. The local model also runs in **answer-only mode**: it answers in its reply but cannot read, edit or run files in your project. For autonomous work on a codebase, use Claude.
+
+## Hugging Face (optional)
+
+`pip install -e ".[hf]"` installs the Hugging Face libraries: `transformers`, `huggingface_hub`, `safetensors` and `accelerate`. With them, `ycode-lm push-hf` publishes a model to your Hugging Face account, and `ycode-lm autotrain` trains on GPUs while saving checkpoints there.
+
+These commands need a Hugging Face **access token** with Write access, created at https://huggingface.co/settings/tokens. Give it to YCode in either of these ways:
+
+```bash
+export HF_TOKEN=hf_...      # for this shell (or put HF_TOKEN=... in ~/.ycode/.env)
+hf auth login               # or save it once with the Hugging Face CLI
+```
+
+Then, for example:
+
+```bash
+ycode-lm push-hf --model models/ycode-lm-v5 --repo your-name/ycode-lm-v5 --public
+```
+
+The token is only used to upload models. Running YCode never needs it. Keep it secret: never commit it, and don't paste it into a chat.
+
+## Using Claude (optional)
+
+YCode never needs Claude. If you want it for autonomous work on a codebase, install the extra with `pip install -e ".[claude]"`, then run `ycode --provider anthropic` or set `provider = "anthropic"` in your config. YCode then reads `ANTHROPIC_API_KEY`. In order of precedence, the places it looks are:
 
 1. Your shell environment: `export ANTHROPIC_API_KEY=sk-ant-...`
 2. A `.env` file in the project you run YCode in
 3. `~/.ycode/.env`, which applies to every project
 4. The `.env` in the YCode checkout itself, which is handy with `pip install -e .`
 
-Values that are already set are never overridden. Any of these work too: `ANTHROPIC_AUTH_TOKEN`, an `ant auth login` profile, or workload identity federation. If YCode finds no credentials, it shows the banner, prints a clear error and exits with status 1.
+Values that are already set are never overridden. Any of these work too: `ANTHROPIC_AUTH_TOKEN`, an `ant auth login` profile, or workload identity federation. If you ask for Claude and YCode finds no credentials, it shows the banner, prints a clear error and exits with status 1. Without `--provider anthropic`, YCode never asks for a key.
 
 YCode never prints your key. It also removes `ANTHROPIC_API_KEY` and `ANTHROPIC_AUTH_TOKEN` from the environment of commands it runs, so a stray `env` can't leak the key to the model. **Never commit `.env`.** The included `.gitignore` excludes it.
 
@@ -195,23 +258,23 @@ YCode-LM is a programming language model you train from scratch on your own mach
 | Data prep | single process | tokenization on all CPU cores |
 | Measurement | loss only | `ycode-lm eval`: bits per byte on held-out code + pass@k on 30 executed coding problems |
 
-**Try the included models (no training needed).** The repository ships two trained models:
+**The included models (no training needed).** The repository ships four trained models. `ycode` uses v5 by default (v4 when memory is short):
 
 | Model | Params | Size | Card |
 | --- | --- | --- | --- |
-| **YCode-LM v4** | **100M** | 200 MB in 5 shards | [`models/ycode-lm-v4`](models/ycode-lm-v4/README.md) |
+| **YCode-LM v5** (default) | **1,523M** | 2.9 GB in 103 shards | [`models/ycode-lm-v5`](models/ycode-lm-v5/README.md) |
+| YCode-LM v4 | 100M | 200 MB in 5 shards | [`models/ycode-lm-v4`](models/ycode-lm-v4/README.md) |
 | YCode-LM v3 | 40.8M | 81.8 MB | [`models/ycode-lm-v3`](models/ycode-lm-v3/README.md) |
 | YCode-LM v2 | 7.7M | 15.6 MB | [`models/ycode-lm-v2`](models/ycode-lm-v2/README.md) |
 
 ```bash
-pip install -e ".[local]"
-ycode --local models/ycode-lm-v4          # or: ycode-lm chat --model models/ycode-lm-v4
+ycode --local v4                          # or: ycode-lm chat --model models/ycode-lm-v4
 ```
 
 **Set up and train:**
 
 ```bash
-pip install -e ".[local]"          # adds PyTorch + NumPy
+pip install -e .                   # PyTorch + NumPy are included
 
 # 1. Build the dataset: collect code, train the tokenizer, create instruction pairs.
 #    --exclude keeps code out of training so you can evaluate on it later.
@@ -228,7 +291,7 @@ ycode-lm eval --model ~/.ycode/models/ycode-lm --heldout path/to/unseen/code --s
 
 # 5. Use it
 ycode-lm chat                                   # quick Q&A in the terminal
-ycode --local                                   # inside YCode (default model dir ~/.ycode/models/ycode-lm)
+ycode                                           # inside YCode: your model in ~/.ycode/models/ycode-lm is used automatically
 ycode --local models/chat                       # or point to any trained model
 ```
 
@@ -245,17 +308,17 @@ In an A/B test (same model, data, seed and 600 steps), Muon reached a held-out l
 
 A 40M model wants far more data and compute than a CPU can supply. The compute-optimal budget is about 800M training tokens, while 8 hours on a 4-core CPU covers about 50M. On a single consumer GPU, the same run takes hours instead of days.
 
-**Measured results (v1 → v4).** All four models were trained on a 4-core CPU and evaluated the same way. Bits per byte is measured on 11 packages none of them saw in training. The code tasks are *executed* against unit tests:
+**Measured results (v1 → v5).** All five models were evaluated the same way. Bits per byte is measured on 11 packages none of them saw in training. The code tasks are *executed* against unit tests:
 
-| | v1 | v2 | v3 | v4 |
-| --- | --- | --- | --- | --- |
-| Parameters | 6.9M | 7.7M | 40.8M | 100M |
-| Training | ~41M tokens | ~82M tokens | ~60M tokens (Muon) | grown from v3 + ~24.6M tokens |
-| Bits per byte on held-out code | 1.095 | 0.966 | 0.857 | **0.814** |
-| Write a function, pass@1 (30 problems) | 0 / 30 | 0 / 30 | 0 / 30 | **1 / 30** |
-| Fix an injected bug, fix@1 (15 functions) | 0 / 15 | **5 / 15** | 4 / 15 | **5 / 15** |
+| | v1 | v2 | v3 | v4 | v5 |
+| --- | --- | --- | --- | --- | --- |
+| Parameters | 6.9M | 7.7M | 40.8M | 100M | 1,523M |
+| Training | ~41M tokens | ~82M tokens | ~60M tokens (Muon) | grown from v3 + ~24.6M tokens | grown from v4 + ~2.5M tokens (Lion, CPU) |
+| Bits per byte on held-out code | 1.095 | 0.966 | 0.857 | 0.814 | **0.758** |
+| Write a function, pass@1 (30 problems) | 0 / 30 | 0 / 30 | 0 / 30 | **1 / 30** | 0 / 30 |
+| Fix an injected bug, fix@1 (15 functions) | 0 / 15 | **5 / 15** | 4 / 15 | **5 / 15** | 4 / 15 |
 
-Each version models real code better than the last. v2–v4 write short, well-formed answers and can find and fix simple bugs ("The bug is in `result = 1`. It should be `result = 0`."), while v1 falls into repetition loops. v4 is the first to write a correct function from a description (`square` → `return x * x`). Writing functions reliably needs much more training data and compute than a CPU provides.
+Each version models real code better than the last; v5's 7% gain over v4 is the largest step so far, but it has not yet turned into solving more tasks (it is badly under-trained for its size). v2–v4 write short, well-formed answers and can find and fix simple bugs ("The bug is in `result = 1`. It should be `result = 0`."), while v1 falls into repetition loops. v4 is the first to write a correct function from a description (`square` → `return x * x`). Writing functions reliably needs much more training data and compute than a CPU provides.
 
 **Growing models.** `ycode-lm grow --model v3 --out v4-init --layers 34` deepens a trained model by inserting copies of existing blocks with zeroed output projections. The result computes exactly the same function, so `train --init-from v4-init` continues from everything the small model learned. v4 was built this way. For files over GitHub's 100 MB limit, `export --max-shard-mb 45` splits the weights into shards that load transparently.
 
@@ -298,11 +361,11 @@ The v1 presets (`tiny`, `small`, `base`, `medium`, `large`) are still available.
 
 Use `--layers/--heads/--embd/--context` to customize a preset.
 
-**Using it in YCode.** `ycode --local`, `YCODE_PROVIDER=local`, or `provider = "local"` in `config.toml` switches YCode to your model. Related settings: `local_model` (path), `local_max_tokens` and `local_temperature`. Nothing is sent over the network.
+**Using it in YCode.** The local model is YCode's default provider. Related settings: `local_model` (`v2`–`v5` or a path), `local_max_tokens` and `local_temperature`. Nothing is sent over the network.
 
 **Be realistic about quality.** Frontier coding models are trained on trillions of tokens with thousands of GPUs. A few-million-parameter model trained for an hour or two on a CPU learns real Python syntax, idioms and naming conventions, and can write small functions and short explanations. It will also often be wrong, repetitive or confused. Two consequences:
 
-- **Answer-only mode.** In YCode, the local model runs in answer-only mode. It hasn't learned the tool-calling protocol, so it cannot read, edit or run files in your project. YCode shows a notice when it starts. Use Claude (the default provider) for autonomous coding tasks.
+- **Answer-only mode.** In YCode, the local model runs in answer-only mode. It hasn't learned the tool-calling protocol, so it cannot read, edit or run files in your project. YCode shows a notice when it starts. Use Claude (`--provider anthropic`) for autonomous coding tasks.
 - **How to make it better:** more and better data (your own repositories), a bigger preset, a GPU and longer training. The loss figures in `train_log.json` show whether it is still improving.
 
 ## Usage
@@ -312,7 +375,9 @@ cd my-project
 ycode                                  # interactive session
 ycode "add a --verbose flag to the CLI" # one-shot: run the task, then exit
 ycode -p "explain src/auth.ts"         # same, with -p
-ycode -m claude-sonnet-5-5             # pick a model
+ycode --local v5                       # pick a bundled model (v2-v5) or a model directory
+ycode --provider anthropic             # optional: use Claude (needs the [claude] extra and ANTHROPIC_API_KEY)
+ycode --provider anthropic -m claude-sonnet-5-5   # pick a Claude model
 ycode --approval-mode strict           # approve every write and non-read-only command
 ycode --yes                            # auto-approve risky commands (blocked ones stay blocked)
 ycode -C ../other-project              # run against another directory
@@ -384,12 +449,14 @@ Settings are resolved in this order, with later sources winning:
 1. Built-in defaults
 2. Global config: `~/.ycode/config.toml` (move this directory with `YCODE_HOME`)
 3. Project config: `<project>/.ycode/config.toml` (can only tighten security settings)
-4. Environment: `YCODE_MODEL`, `YCODE_MAX_STEPS`, `YCODE_MAX_TOKENS`, `YCODE_EFFORT`, `YCODE_APPROVAL_MODE`, `YCODE_THEME`, `YCODE_COMMAND_TIMEOUT`, `YCODE_IGNORE_DIRS`
+4. Environment: `YCODE_PROVIDER`, `YCODE_LOCAL_MODEL`, `YCODE_MODELS_DIR`, `YCODE_MODEL`, `YCODE_MAX_STEPS`, `YCODE_MAX_TOKENS`, `YCODE_EFFORT`, `YCODE_APPROVAL_MODE`, `YCODE_THEME`, `YCODE_COMMAND_TIMEOUT`, `YCODE_IGNORE_DIRS`
 5. Command-line flags
 
 ```toml
 # ~/.ycode/config.toml
-model = "claude-opus-5-5"     # any Claude model ID
+provider = "local"            # local (default: YCode's own model, no key) | anthropic (Claude)
+local_model = "v5"            # v2 | v3 | v4 | v5 | a model directory (default: v5, or v4 when memory is short)
+model = "claude-opus-5-5"     # any Claude model ID (provider = "anthropic")
 max_steps = 50                # model calls per task before YCode stops
 max_tokens = 64000            # output token cap per model call
 effort = "high"               # low | medium | high | xhigh | max (models that support it)
@@ -445,7 +512,8 @@ The test suite needs no API key and makes no network calls:
 - `tests/test_anthropic_provider.py` mocks the Anthropic client: request shape, stream parsing, error mapping and missing credentials.
 - `tests/test_anthropic_wire.py` runs the real `anthropic` SDK against a mock HTTP transport that returns canned server-sent events. It checks the exact JSON YCode sends across a full tool-use round trip.
 - `tests/test_lm.py` covers YCode-LM: tokenizer round-trips (including Unicode), special tokens, a KV-cache check against full recomputation, answer-only loss masking, dataset preparation, pretraining that measurably lowers loss, SFT, resume, checkpoint round trips and the `ycode-lm` CLI end to end. These tests are skipped if PyTorch isn't installed.
-- `tests/test_local_provider.py` checks the local provider: no API key, no tools sent, `--local` from the CLI.
+- `tests/test_local_provider.py` checks the local provider: no API key, no tools sent, `--local` from the CLI, and how bundled models are found.
+- `tests/test_assist.py` checks answering without an API: documentation lookups and checked function writing.
 - `tests/test_agent_loop.py` drives the agent with a scripted fake provider: multi-step tasks, parallel tool calls, the step limit, interruption, truncated tool calls and refusals.
 - The other test files cover configuration, the banner, file tools, path security, command classification and approvals, command execution (timeouts, exit codes, secret stripping), git, project detection and YCODE.md, slash commands, and the CLI and REPL.
 
@@ -456,7 +524,8 @@ python -m pytest -q
 ## Roadmap
 
 - YCode-LM: tool-calling training data, so the local model can drive the agent
-- YCode-LM: multi-GPU / distributed training, larger presets
+- YCode-LM: train v5 much longer on GPUs (`ycode-lm autotrain`, `--shard` are ready), then publish it on Hugging Face
+- YCode-LM: faster CPU inference for v5 (8-bit weights)
 - More providers: OpenAI-compatible, local models through Ollama
 - Session persistence and resume (`ycode --continue`)
 - Context compaction for very long sessions

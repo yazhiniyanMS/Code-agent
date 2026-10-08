@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import contextlib
+import json
 import os
 from pathlib import Path
 from typing import Callable
@@ -13,14 +15,48 @@ from ycode.lm.tokenizer import END, USER
 from ycode.lm.train import load_checkpoint, pick_device
 
 
+# Models larger than this run with 16-bit weights: half the memory (3 GB instead of 6 GB for
+# the 1.5B v5) and faster on most CPUs. Smaller models keep full precision.
+HALF_PRECISION_PARAMS = 500e6
+
+
+def stored_params(model_dir: Path) -> int | None:
+    """Parameter count from a model folder's info.json, without loading the weights."""
+    try:
+        return int(json.loads((Path(model_dir) / "info.json").read_text())["params"])
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+
+
 class LocalLM:
-    def __init__(self, model_dir: Path | str, *, device: str = "auto") -> None:
+    def __init__(self, model_dir: Path | str, *, device: str = "auto", dtype: str = "auto") -> None:
         self.device = pick_device(device)
         if self.device == "cpu":
             torch.set_num_threads(max(1, os.cpu_count() or 1))
-        self.model, self.tokenizer, self.payload = load_checkpoint(Path(model_dir), self.device)
+        self.dtype = self._pick_dtype(Path(model_dir), dtype)
+        self.model, self.tokenizer, self.payload = load_checkpoint(Path(model_dir), self.device,
+                                                                   dtype=self.dtype)
         self.model.eval()
         self.path = Path(model_dir)
+
+    def _pick_dtype(self, model_dir: Path, requested: str) -> torch.dtype | None:
+        if requested == "fp32":
+            return None
+        if requested == "auto":
+            params = stored_params(model_dir)
+            if params is None or params < HALF_PRECISION_PARAMS:
+                return None
+        if self.device.startswith("cuda"):
+            from ycode.lm.optim import cuda_has_bf16
+
+            return torch.bfloat16 if cuda_has_bf16() else torch.float16
+        return torch.bfloat16
+
+    def precision(self):
+        """16-bit weights compute under autocast; activations between layers stay fp32."""
+        if self.dtype is None:
+            return contextlib.nullcontext()
+        return torch.autocast(device_type="cuda" if self.device.startswith("cuda") else "cpu", dtype=self.dtype)
 
     @property
     def version(self) -> int:
@@ -52,8 +88,9 @@ class LocalLM:
             emitted = len(text)
 
         idx = torch.tensor([prompt_ids], dtype=torch.long, device=self.device)
-        self.model.generate(idx, max_new_tokens, temperature=temperature, top_k=top_k, top_p=top_p,
-                            stop_ids=stop_ids, on_token=on_token, no_repeat_ngram=no_repeat_ngram)
+        with self.precision():
+            self.model.generate(idx, max_new_tokens, temperature=temperature, top_k=top_k, top_p=top_p,
+                                stop_ids=stop_ids, on_token=on_token, no_repeat_ngram=no_repeat_ngram)
         text = self.tokenizer.decode(generated, skip_special=True)
         if on_text is not None and len(text) > emitted:
             on_text(text[emitted:])

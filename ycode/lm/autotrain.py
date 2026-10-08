@@ -262,7 +262,9 @@ class AutoTrainer:
         held = [Path(d) / name for d in _default_sources() for name in HELD_OUT if (Path(d) / name).is_dir()]
         texts = load_heldout_texts(held) if held else []
         if texts:
-            results["bits_per_byte"] = round(bits_per_byte(lm.model, lm.tokenizer, texts, device=lm.device), 4)
+            with lm.precision():
+                results["bits_per_byte"] = round(bits_per_byte(lm.model, lm.tokenizer, texts,
+                                                               device=lm.device), 4)
         func = functional_eval(lm)
         results["pass@1"] = f"{len(func.solved)}/{len(PROBLEMS)}"
         fix_rate, fixed = bugfix_eval(lm)
