@@ -60,6 +60,7 @@ def _train_args(p: argparse.ArgumentParser, *, sft: bool) -> None:
     p.add_argument("--precision", default="auto", choices=("auto", "fp32", "bf16", "fp16"))
     p.add_argument("--grad-checkpoint", action="store_true",
                    help="Recompute activations in backward: far less GPU memory, ~30%% slower.")
+    p.add_argument("--warmup", type=int, default=None, help="Warmup steps (default 50 for sft, 100 for train).")
     p.add_argument("--train-layers", type=int, default=None,
                    help="Train only the top N transformer blocks; the rest stay frozen (fast fine-tuning).")
     p.add_argument("--shard", action="store_true",
@@ -233,7 +234,7 @@ def main(argv: list[str] | None = None) -> int:
             grad_accum=args.grad_accum,
             lr=args.lr or (3e-4 if sft else 1e-3),
             min_lr=(args.lr or (3e-4 if sft else 1e-3)) / 10,
-            warmup_steps=50 if sft else 100,
+            warmup_steps=args.warmup if args.warmup is not None else (50 if sft else 100),
             max_steps=args.steps or (1000 if sft else 5000),
             max_minutes=args.minutes,
             eval_interval=args.eval_interval,
