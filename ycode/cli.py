@@ -27,11 +27,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("task", nargs="*", help="Run a single task non-interactively, then exit.")
     parser.add_argument("-p", "--prompt", help="Same as passing a task: run it and exit.")
     parser.add_argument("-m", "--model", help="Model ID (overrides YCODE_MODEL and config files).")
-    parser.add_argument("--provider", choices=("anthropic", "local"),
-                        help="LLM provider: Claude API (default) or your own local model.")
-    parser.add_argument("--local", nargs="?", const="", default=None, metavar="MODEL_DIR",
-                        help="Use your own trained model (no API key). Optional path; "
-                             "default ~/.ycode/models/ycode-lm.")
+    parser.add_argument("--provider", choices=("local", "anthropic"),
+                        help="LLM provider: YCode's own model (default, no API key) or Claude "
+                             "(anthropic, needs ANTHROPIC_API_KEY).")
+    parser.add_argument("--local", nargs="?", const="", default=None, metavar="MODEL",
+                        help="Use YCode's own model (the default). Optionally pick one: v2, v3, v4, v5, "
+                             "or a model directory. Default: your trained model if you have one, else v4.")
     parser.add_argument("--max-steps", type=int, help="Maximum agent steps per task.")
     parser.add_argument("--approval-mode", choices=APPROVAL_MODES, help="How risky actions are approved.")
     parser.add_argument("--yes", action="store_true",

@@ -15,12 +15,39 @@ def test_version(capsys):
 
 def test_missing_api_key_exits_cleanly(workspace, capsys, monkeypatch, tmp_path):
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg"))
-    code = cli.main(["-C", str(workspace), "do something"])
+    code = cli.main(["-C", str(workspace), "--provider", "anthropic", "do something"])
     out = capsys.readouterr().out
     assert code == 1
     assert "ANTHROPIC_API_KEY" in out
     assert "Traceback" not in out
     assert "AI Coding Agent" in out  # the banner still shows
+
+
+def test_default_needs_no_api_key(workspace, capsys, monkeypatch):
+    """Out of the box, YCode answers with its own bundled model: no key, no training."""
+    import ycode.llm.local as local
+    from ycode.config import DEFAULT_BUNDLED_MODEL
+
+    seen = {}
+
+    class FakeLM:
+        num_params, version = 100_000_000, 4
+
+        def chat(self, turns, *, on_text=None, **_kw):
+            if on_text:
+                on_text("Use sorted(items).")
+            return "Use sorted(items)."
+
+    def fake_load(self, device):
+        seen["dir"] = self.model_dir
+        return FakeLM()
+
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.setattr(local.LocalProvider, "_load", fake_load)
+    code = cli.main(["-C", str(workspace), "--no-banner", "how do I sort a list?"])
+    assert code == 0
+    assert seen["dir"].name == DEFAULT_BUNDLED_MODEL
+    assert "sorted(items)" in capsys.readouterr().out
 
 
 def test_bad_config_exits_cleanly(workspace, capsys, isolated_home):

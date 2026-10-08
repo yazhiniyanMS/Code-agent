@@ -142,3 +142,30 @@ def test_autotrain_shards_large_models_on_multiple_gpus(tmp_path):
     sft = trainer._train_cmd("sft", tmp_path, tmp_path, tmp_path, 10, 5)
     assert "--shard" in pre and "torch.distributed.run" in pre
     assert sft[sft.index("--optimizer") + 1] == "muon"  # AdamW's two states would not fit
+
+
+def test_half_precision_loading_for_inference(data_dir, tmp_path):
+    """Big models load straight into bf16 (half the RAM, no fp32 copy) and still generate."""
+    from ycode.lm.generate import LocalLM
+    from ycode.lm.tokenizer import BPETokenizer
+    from ycode.lm.train import export_checkpoint, save_checkpoint
+
+    tok = BPETokenizer.load(data_dir / "tokenizer.json")
+    model = GPT(GPTConfig(vocab_size=tok.vocab_size, **{**PRESETS["v5-tiny"], "block_size": 64}))
+    save_checkpoint(tmp_path / "full", model, tok, step=1, stage="sft", val_loss=None)
+    export_checkpoint(tmp_path / "full", tmp_path / "slim", dtype="bf16", max_shard_mb=0.05)
+
+    small = LocalLM(tmp_path / "slim", device="cpu")  # tiny model: auto keeps full precision
+    assert small.dtype is None and next(small.model.parameters()).dtype == torch.float32
+    half = LocalLM(tmp_path / "slim", device="cpu", dtype="bf16")
+    assert half.dtype == torch.bfloat16
+    assert all(p.dtype == torch.bfloat16 for p in half.model.parameters())
+    assert half.model.head.weight is half.model.embed.weight  # still tied
+    assert half.model.rope_cos.dtype == torch.float32  # positions keep full precision
+    torch.manual_seed(0)
+    assert isinstance(half.complete("def f(", max_new_tokens=5), str)
+    with half.precision():
+        x = torch.randint(0, tok.vocab_size, (1, 16))
+        _, loss_half = half.model(x, x)
+    _, loss_full = small.model(x, x)
+    assert abs(loss_half.item() - loss_full.item()) < 0.1

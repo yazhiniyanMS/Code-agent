@@ -36,6 +36,12 @@ class LocalProvider(LLMProvider):
         self.max_new_tokens = max_new_tokens
         self.temperature = temperature
         self.lm = lm if lm is not None else self._load(device)
+        from ycode.lm.assist import Assistant
+
+        # Big models are slow on a CPU, so they get fewer tries at writing a checked function.
+        big = getattr(self.lm, "num_params", 0) > 500e6
+        self.assistant = Assistant(self.lm, max_new_tokens=max_new_tokens, temperature=temperature,
+                                   candidates=2 if big else 4)
 
     def _load(self, device: str):
         try:
@@ -48,11 +54,15 @@ class LocalProvider(LLMProvider):
         try:
             return LocalLM(self.model_dir, device=device)
         except FileNotFoundError:
+            from ycode.config import bundled_models
+
+            available = ", ".join(m.removeprefix("ycode-lm-") for m in bundled_models())
             raise ConfigError(
-                f"No trained model found at {self.model_dir}.",
-                hint="Train one first: `ycode-lm prepare --out data/`, `ycode-lm train --data data/ --out "
-                     "models/base`, `ycode-lm sft --data data/ --init-from models/base --out "
-                     f"{self.model_dir}` (see README).",
+                f"No model found at {self.model_dir}.",
+                hint=(f"Bundled models available: {available} (e.g. `ycode --local v4`)." if available else
+                      "YCode's trained models live in the repository's models/ folder: install from a clone "
+                      "(git clone https://github.com/yazhiniyanMS/Code-agent && pip install -e .), "
+                      "or set YCODE_MODELS_DIR to a folder containing them."),
             ) from None
         except (ValueError, RuntimeError) as exc:
             raise ConfigError(f"Could not load the local model at {self.model_dir}: {exc}") from None
@@ -84,8 +94,7 @@ class LocalProvider(LLMProvider):
         turns = self._turns(messages)[-6:]
         if not turns or turns[-1][0] != "user":
             turns.append(("user", "Continue."))
-        answer = self.lm.chat(turns, max_new_tokens=self.max_new_tokens, temperature=self.temperature,
-                              on_text=callbacks.text)
+        answer = self.assistant.answer(turns, on_text=callbacks.text)
         if not answer.strip():
             answer = "(The local model did not produce an answer. Try rephrasing the question.)"
             callbacks.text(answer)

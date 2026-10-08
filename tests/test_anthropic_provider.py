@@ -198,13 +198,13 @@ def test_missing_api_key_fails_gracefully(monkeypatch, tmp_path):
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
     assert not has_credentials()
     with pytest.raises(MissingCredentialsError) as info:
-        create_provider(Config())
+        create_provider(Config(provider="anthropic"))
     assert "ANTHROPIC_API_KEY" in info.value.hint
 
 
 def test_provider_created_with_key(monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
-    provider = create_provider(Config(model="claude-sonnet-5-5", max_tokens=1000))
+    provider = create_provider(Config(provider="anthropic", model="claude-sonnet-5-5", max_tokens=1000))
     assert isinstance(provider, AnthropicProvider)
     assert provider.model == "claude-sonnet-5-5" and provider.max_tokens == 1000
     assert "sk-ant" not in provider.display_name
