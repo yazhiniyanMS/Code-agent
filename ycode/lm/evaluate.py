@@ -141,6 +141,13 @@ BUGGY: tuple[tuple[str, str], ...] = (
 
 _ALL_TESTS = {p.name: p.tests for p in PROBLEMS}
 
+
+def fresh_problems() -> tuple[Problem, ...]:
+    """20 more problems, none of them a training concept in ycode.lm.basics."""
+    from ycode.lm.basics import FRESH_PROBLEMS
+
+    return tuple(_p(name, sig, task, tests) for name, sig, task, tests in FRESH_PROBLEMS)
+
 BUGFIX_PROMPT = "This function has a bug. Find and fix it:\n```python\n{code}\n```"
 
 

@@ -91,6 +91,10 @@ class TrainConfig:
     # Multi-GPU only: shard weights, gradients and optimizer state across GPUs (FSDP) instead of
     # replicating them (DDP). Needed when a model does not fit on one GPU, e.g. 1.5B on 16 GB T4s.
     shard: bool = False
+    # Train only the top N transformer blocks (plus the final norm); the rest stay frozen. Frozen
+    # layers need no gradients or stored activations, so each step costs far less: the way to
+    # fine-tune a 1.5B model on a CPU.
+    train_layers: int | None = None
 
 
 # ------------------------------------------------------------- checkpoints
@@ -367,6 +371,24 @@ def _dist_info() -> tuple[int, int, int]:
             int(os.environ.get("LOCAL_RANK", "0")))
 
 
+def freeze_below(model: GPT, train_layers: int) -> None:
+    """Freeze everything except the top ``train_layers`` blocks and the final norm."""
+    for p in model.parameters():
+        p.requires_grad_(False)
+    for block in model.blocks[-train_layers:]:
+        for p in block.parameters():
+            p.requires_grad_(True)
+    for p in model.norm.parameters():
+        p.requires_grad_(True)
+
+
+def compact_state(model: GPT) -> dict:
+    """State dict with frozen weights in bf16 (they do not change) and trained ones in fp32."""
+    trained = {name for name, p in model.named_parameters() if p.requires_grad}
+    return {k: (v.to(torch.bfloat16) if k not in trained and v.is_floating_point() else v)
+            for k, v in model.state_dict().items()}
+
+
 def _local(t: torch.Tensor) -> torch.Tensor:
     """This rank's part of a sharded (DTensor) tensor; plain tensors pass through."""
     return t.to_local() if hasattr(t, "to_local") else t
@@ -513,6 +535,8 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
         model_cfg = GPTConfig(vocab_size=tok.vocab_size, **{**PRESETS[cfg.preset], **cfg.model_overrides})
         model = GPT(model_cfg).to(load_device)
     model.grad_checkpoint = cfg.grad_checkpoint
+    if cfg.train_layers:
+        freeze_below(model, cfg.train_layers)
     precision = pick_precision(cfg.precision, dev_type)
     amp_dtype = torch.float16 if precision == "fp16" else torch.bfloat16
     if shard:
@@ -587,7 +611,7 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
         """Save model + optimizer. Sharded: every rank joins the gather and writes its optimizer shard."""
         if not shard:
             save_checkpoint(out_dir, model, tok, step=step, stage=cfg.stage, val_loss=val_loss,
-                            optimizer=optimizer)
+                            optimizer=optimizer, state=compact_state(model) if cfg.train_layers else None)
             return
         full = _full_state_dict(model)
         if main:

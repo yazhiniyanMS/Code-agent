@@ -194,15 +194,18 @@ def build_optimizer(model: torch.nn.Module, *, kind: str, lr: float, muon_lr: fl
                     fused: bool = False) -> CombinedOptimizer:
     """AdamW everywhere, or Muon for the transformer blocks' 2-D weights + AdamW for embeddings/norms."""
     adam_kwargs = dict(betas=(0.9, 0.95), fused=fused)
+    params = [p for p in model.parameters() if p.requires_grad]  # frozen weights are not optimized
     if kind == "adamw":
-        decay = [p for p in model.parameters() if p.dim() >= 2]
-        no_decay = [p for p in model.parameters() if p.dim() < 2]
+        decay = [p for p in params if p.dim() >= 2]
+        no_decay = [p for p in params if p.dim() < 2]
         return CombinedOptimizer([torch.optim.AdamW(
             [{"params": decay, "weight_decay": weight_decay}, {"params": no_decay, "weight_decay": 0.0}],
             lr=lr, **adam_kwargs)])
     if kind == "muon":
         matrices, others = [], []
         for name, p in model.named_parameters():
+            if not p.requires_grad:
+                continue
             (matrices if (p.dim() == 2 and name.startswith("blocks.")) else others).append(p)
         return CombinedOptimizer([
             Muon(matrices, lr=muon_lr, weight_decay=0.0),
@@ -212,6 +215,6 @@ def build_optimizer(model: torch.nn.Module, *, kind: str, lr: float, muon_lr: fl
         ])
     if kind == "lion":
         return CombinedOptimizer([Lion(
-            [{"params": [p for p in model.parameters() if p.dim() >= 2], "weight_decay": weight_decay},
-             {"params": [p for p in model.parameters() if p.dim() < 2], "weight_decay": 0.0}], lr=lr)])
+            [{"params": [p for p in params if p.dim() >= 2], "weight_decay": weight_decay},
+             {"params": [p for p in params if p.dim() < 2], "weight_decay": 0.0}], lr=lr)])
     raise ValueError(f"unknown optimizer {kind!r}; use 'adamw', 'muon' or 'lion'")

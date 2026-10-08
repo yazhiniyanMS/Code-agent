@@ -60,6 +60,9 @@ def _train_args(p: argparse.ArgumentParser, *, sft: bool) -> None:
     p.add_argument("--precision", default="auto", choices=("auto", "fp32", "bf16", "fp16"))
     p.add_argument("--grad-checkpoint", action="store_true",
                    help="Recompute activations in backward: far less GPU memory, ~30%% slower.")
+    p.add_argument("--warmup", type=int, default=None, help="Warmup steps (default 50 for sft, 100 for train).")
+    p.add_argument("--train-layers", type=int, default=None,
+                   help="Train only the top N transformer blocks; the rest stay frozen (fast fine-tuning).")
     p.add_argument("--shard", action="store_true",
                    help="With several GPUs (torchrun): split weights and optimizer state across them (FSDP) "
                         "so models too big for one GPU can train.")
@@ -146,6 +149,13 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--max-segments", type=int, default=None, help=argparse.SUPPRESS)
     p.add_argument("--eval-interval", type=int, default=250)
 
+    p = sub.add_parser("basics", help="Build an SFT dataset of basic exercises (write a function, fix a bug) "
+                                      "with verified solutions.")
+    p.add_argument("--out", required=True, type=Path)
+    p.add_argument("--tokenizer", required=True, type=Path, help="The model's tokenizer.json.")
+    p.add_argument("--replay-from", type=Path, default=None, help="Earlier SFT dataset to mix in.")
+    p.add_argument("--replay", type=int, default=0, help="How many earlier examples to mix in.")
+
     p = sub.add_parser("push-hf", help="Upload an exported model folder to a Hugging Face model repo.")
     p.add_argument("--model", required=True, type=Path, help="Folder from `ycode-lm export`.")
     p.add_argument("--repo", required=True, help="Repo id, e.g. you/ycode-lm-v5.")
@@ -157,6 +167,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--heldout", action="append", type=Path, default=[],
                    help="Code the models never trained on, for bits-per-byte (repeatable).")
     p.add_argument("--samples", type=int, default=1, help="Samples per problem for pass@k (default 1 = greedy).")
+    p.add_argument("--problems", default="standard", choices=("standard", "fresh", "both"),
+                   help="Coding problems: the standard 30, 20 fresh ones, or both.")
     p.add_argument("--no-functional", action="store_true", help="Skip the coding-problem benchmark.")
     p.add_argument("--verbose", action="store_true", help="Show each problem's result.")
     p.add_argument("--device", default="auto")
@@ -222,7 +234,7 @@ def main(argv: list[str] | None = None) -> int:
             grad_accum=args.grad_accum,
             lr=args.lr or (3e-4 if sft else 1e-3),
             min_lr=(args.lr or (3e-4 if sft else 1e-3)) / 10,
-            warmup_steps=50 if sft else 100,
+            warmup_steps=args.warmup if args.warmup is not None else (50 if sft else 100),
             max_steps=args.steps or (1000 if sft else 5000),
             max_minutes=args.minutes,
             eval_interval=args.eval_interval,
@@ -233,6 +245,7 @@ def main(argv: list[str] | None = None) -> int:
             compile=args.compile,
             grad_checkpoint=args.grad_checkpoint,
             shard=args.shard,
+            train_layers=args.train_layers,
             optimizer=args.optimizer or ("muon" if str(getattr(args, "preset", "")).startswith("v3") else "adamw"),
             muon_lr=args.muon_lr,
             pack=not getattr(args, "no_pack", False),
@@ -291,6 +304,12 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Grew {model.cfg.n_layer}x{model.cfg.n_embd} -> {grown.cfg.n_layer}x{grown.cfg.n_embd}: "
               f"{model.num_params() / 1e6:.2f}M -> "
               f"{grown.num_params() / 1e6:.2f}M parameters, saved to {args.out}")
+        return 0
+
+    if args.command == "basics":
+        from ycode.lm.basics import write_basics_dataset
+
+        write_basics_dataset(args.out, args.tokenizer, replay_dir=args.replay_from, replay=args.replay)
         return 0
 
     if args.command == "export":
@@ -424,7 +443,12 @@ def _eval(args) -> int:  # noqa: ANN001
             with lm.precision():
                 row["bits_per_byte"] = round(bits_per_byte(lm.model, lm.tokenizer, texts, device=lm.device), 4)
         if not args.no_functional:
-            res = functional_eval(lm, samples=args.samples, log=print if args.verbose else None)
+            from ycode.lm.evaluate import fresh_problems
+
+            problems = {"standard": PROBLEMS, "fresh": fresh_problems(),
+                        "both": PROBLEMS + fresh_problems()}[args.problems]
+            res = functional_eval(lm, samples=args.samples, problems=problems,
+                                  log=print if args.verbose else None)
             row["pass@1"] = round(res.pass_at_1, 4)
             if res.pass_at_k is not None:
                 row[f"pass@{res.k}"] = round(res.pass_at_k, 4)
@@ -440,7 +464,8 @@ def _eval(args) -> int:  # noqa: ANN001
     for r in rows:
         print(" | ".join(str(r.get(h, "-")) for h in header))
     if not args.no_functional:
-        print(f"\n({len(PROBLEMS)} problems, {len(BUGGY)} bug fixes; bits/byte: lower is better; "
+        n_problems = {"standard": 30, "fresh": 20, "both": 50}[args.problems]
+        print(f"\n({n_problems} problems, {len(BUGGY)} bug fixes; bits/byte: lower is better; "
               "pass@k / fix@1: higher is better)")
     for r in rows:
         if r.get("solved"):
