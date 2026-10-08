@@ -49,13 +49,13 @@ Evaluated with `ycode-lm eval`, the same way as every earlier version. Bits per 
 - A 1.5B model would ideally see tens of billions of training tokens; v5 saw a few million on top of
   v4. It is badly under-trained, and more training (ideally on GPUs: `ycode-lm autotrain`, `--shard`)
   is the clear next step.
-- YCode therefore keeps v4 as its default model: as good at answering, and much faster on a CPU.
+- YCode uses v5 as its default model on machines with at least 4 GB of free memory, and v4 otherwise. v4 is just as good at the benchmark tasks and much faster on a CPU, so `ycode --local v4` is a good choice on slow machines.
 
 ## Use
 
 ```bash
 pip install -e .
-ycode --local v5              # loads in bfloat16: about 3 GB of RAM
+ycode                         # v5 is the default; loads in bfloat16: about 3 GB of RAM
 ycode-lm chat --model models/ycode-lm-v5
 ```
 

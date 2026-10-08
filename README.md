@@ -13,7 +13,7 @@ YCode is an AI coding agent that runs in your terminal. Start it inside a projec
 
 **YCode works out of the box with no API key and no training.** By default it answers with **YCode-LM**, its own coding language model, trained from scratch and shipped in this repository (`models/`). Clone, install, and run `ycode`: nothing to sign up for, no key to paste, nothing sent over the network. See [Answering without an API key](#answering-without-an-api-key).
 
-For full autonomous coding (reading, editing and running files in your project, as in the example below), YCode can optionally use the Anthropic Claude API: `ycode --provider anthropic` with an `ANTHROPIC_API_KEY`. Everything else always runs locally: the tool system, the permission checks and the terminal UI. The model sits behind a small provider interface, so you can add other LLM providers without rewriting the agent.
+YCode-LM is the only model YCode needs. If you also want full autonomous coding (reading, editing and running files in your project, as in the example below), you can optionally plug in Claude: see [Using Claude (optional)](#using-claude-optional). Everything else always runs locally: the tool system, the permission checks and the terminal UI. The model sits behind a small provider interface, so you can add other LLM providers without rewriting the agent.
 
 With Claude (`--provider anthropic`), YCode works through whole tasks:
 
@@ -137,9 +137,10 @@ The dependencies point one way. The agent knows nothing about Rich or Anthropic:
 ## Requirements
 
 - Python 3.10+
-- About 2 GB of free RAM for the default model (v4). The 1.5B v5 model needs about 4 GB.
+- About 4 GB of free RAM for the default model, YCode-LM v5 (1.5B parameters). With less, YCode uses the smaller v4 (about 1 GB) automatically.
 - Git, to clone the repository (it contains the trained models) and for the git features
-- *Optional:* an Anthropic API key, only if you want Claude (`--provider anthropic`)
+
+That's all. **No API key, no account and no internet connection are needed** to run YCode.
 
 ## Installation
 
@@ -153,6 +154,14 @@ ycode                            # start asking questions: no API key, no traini
 ```
 
 This installs a `ycode` command. `python -m ycode` works too. Install from the clone (as above) rather than from a bare package: the trained models live in the repository's `models/` folder. To keep them elsewhere, set `YCODE_MODELS_DIR`.
+
+Optional extras:
+
+```bash
+pip install -e ".[hf]"       # Hugging Face: transformers, huggingface_hub, safetensors, accelerate
+pip install -e ".[claude]"   # Claude support (only if you want --provider anthropic)
+pip install -e ".[dev]"      # tests
+```
 
 ## Answering without an API key
 
@@ -173,21 +182,40 @@ ycode> What does the zip() function do?
   (From Python's built-in documentation.)
 ```
 
-**Choosing a model.** YCode picks a model in this order: one you trained yourself (`~/.ycode/models/ycode-lm`), otherwise the bundled v4. Pick another with `--local`:
+**Choosing a model.** YCode picks a model in this order: one you trained yourself (`~/.ycode/models/ycode-lm`), otherwise the bundled **v5**. If less than 4 GB of memory is free, it uses v4 instead. Pick one explicitly with `--local`:
 
 ```bash
-ycode                      # default: YCode-LM v4 (100M parameters, fast)
-ycode --local v5           # YCode-LM v5 (1.5B parameters): loads in 16-bit (about 3 GB of RAM), slower on a CPU
+ycode                      # default: YCode-LM v5 (1.5B parameters), loaded in 16-bit: about 3 GB of RAM
+ycode --local v4           # YCode-LM v4 (100M parameters): much faster on a CPU
 ycode --local path/to/dir  # any model you trained
 ```
 
-You can also set `local_model = "v5"` in `~/.ycode/config.toml`.
+You can also set `local_model = "v4"` in `~/.ycode/config.toml` or `YCODE_LOCAL_MODEL=v4`. v5 models code best of all versions (see [the results](#your-own-llm-ycode-lm-no-api-key)), but a 1.5B model is slow on a CPU: expect a few tokens per second, so a long answer can take a minute or more. On a slow machine, v4 is the practical choice.
 
 **What to expect.** The bundled models were trained from scratch on a CPU, with a tiny fraction of the data and compute behind commercial assistants. They write well-formed Python, but their own code is often wrong, so test it. The local model also runs in **answer-only mode**: it answers in its reply but cannot read, edit or run files in your project. For autonomous work on a codebase, use Claude.
 
+## Hugging Face (optional)
+
+`pip install -e ".[hf]"` installs the Hugging Face libraries: `transformers`, `huggingface_hub`, `safetensors` and `accelerate`. With them, `ycode-lm push-hf` publishes a model to your Hugging Face account, and `ycode-lm autotrain` trains on GPUs while saving checkpoints there.
+
+These commands need a Hugging Face **access token** with Write access, created at https://huggingface.co/settings/tokens. Give it to YCode in either of these ways:
+
+```bash
+export HF_TOKEN=hf_...      # for this shell (or put HF_TOKEN=... in ~/.ycode/.env)
+hf auth login               # or save it once with the Hugging Face CLI
+```
+
+Then, for example:
+
+```bash
+ycode-lm push-hf --model models/ycode-lm-v5 --repo your-name/ycode-lm-v5 --public
+```
+
+The token is only used to upload models. Running YCode never needs it. Keep it secret: never commit it, and don't paste it into a chat.
+
 ## Using Claude (optional)
 
-Run `ycode --provider anthropic`, or set `provider = "anthropic"` in your config, to have Claude do the reasoning. YCode then reads `ANTHROPIC_API_KEY`. In order of precedence, the places it looks are:
+YCode never needs Claude. If you want it for autonomous work on a codebase, install the extra with `pip install -e ".[claude]"`, then run `ycode --provider anthropic` or set `provider = "anthropic"` in your config. YCode then reads `ANTHROPIC_API_KEY`. In order of precedence, the places it looks are:
 
 1. Your shell environment: `export ANTHROPIC_API_KEY=sk-ant-...`
 2. A `.env` file in the project you run YCode in
@@ -230,12 +258,12 @@ YCode-LM is a programming language model you train from scratch on your own mach
 | Data prep | single process | tokenization on all CPU cores |
 | Measurement | loss only | `ycode-lm eval`: bits per byte on held-out code + pass@k on 30 executed coding problems |
 
-**The included models (no training needed).** The repository ships four trained models. `ycode` uses v4 by default:
+**The included models (no training needed).** The repository ships four trained models. `ycode` uses v5 by default (v4 when memory is short):
 
 | Model | Params | Size | Card |
 | --- | --- | --- | --- |
-| YCode-LM v5 | 1,523M | 2.9 GB in 103 shards | [`models/ycode-lm-v5`](models/ycode-lm-v5/README.md) |
-| **YCode-LM v4** (default) | **100M** | 200 MB in 5 shards | [`models/ycode-lm-v4`](models/ycode-lm-v4/README.md) |
+| **YCode-LM v5** (default) | **1,523M** | 2.9 GB in 103 shards | [`models/ycode-lm-v5`](models/ycode-lm-v5/README.md) |
+| YCode-LM v4 | 100M | 200 MB in 5 shards | [`models/ycode-lm-v4`](models/ycode-lm-v4/README.md) |
 | YCode-LM v3 | 40.8M | 81.8 MB | [`models/ycode-lm-v3`](models/ycode-lm-v3/README.md) |
 | YCode-LM v2 | 7.7M | 15.6 MB | [`models/ycode-lm-v2`](models/ycode-lm-v2/README.md) |
 
@@ -348,7 +376,7 @@ ycode                                  # interactive session
 ycode "add a --verbose flag to the CLI" # one-shot: run the task, then exit
 ycode -p "explain src/auth.ts"         # same, with -p
 ycode --local v5                       # pick a bundled model (v2-v5) or a model directory
-ycode --provider anthropic             # use Claude (needs ANTHROPIC_API_KEY)
+ycode --provider anthropic             # optional: use Claude (needs the [claude] extra and ANTHROPIC_API_KEY)
 ycode --provider anthropic -m claude-sonnet-5-5   # pick a Claude model
 ycode --approval-mode strict           # approve every write and non-read-only command
 ycode --yes                            # auto-approve risky commands (blocked ones stay blocked)
@@ -427,7 +455,7 @@ Settings are resolved in this order, with later sources winning:
 ```toml
 # ~/.ycode/config.toml
 provider = "local"            # local (default: YCode's own model, no key) | anthropic (Claude)
-local_model = "v4"            # v2 | v3 | v4 | v5 | a model directory
+local_model = "v5"            # v2 | v3 | v4 | v5 | a model directory (default: v5, or v4 when memory is short)
 model = "claude-opus-5-5"     # any Claude model ID (provider = "anthropic")
 max_steps = 50                # model calls per task before YCode stops
 max_tokens = 64000            # output token cap per model call

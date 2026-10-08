@@ -32,7 +32,8 @@ def build_parser() -> argparse.ArgumentParser:
                              "(anthropic, needs ANTHROPIC_API_KEY).")
     parser.add_argument("--local", nargs="?", const="", default=None, metavar="MODEL",
                         help="Use YCode's own model (the default). Optionally pick one: v2, v3, v4, v5, "
-                             "or a model directory. Default: your trained model if you have one, else v4.")
+                             "or a model directory. Default: your trained model if you have one, else v5 "
+                             "(v4 with less than 4 GB of free memory).")
     parser.add_argument("--max-steps", type=int, help="Maximum agent steps per task.")
     parser.add_argument("--approval-mode", choices=APPROVAL_MODES, help="How risky actions are approved.")
     parser.add_argument("--yes", action="store_true",

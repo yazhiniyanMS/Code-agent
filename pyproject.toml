@@ -10,7 +10,6 @@ readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.10"
 dependencies = [
-    "anthropic>=1.0,<2",
     "rich>=13.7",
     "prompt_toolkit>=3.0.40",
     "python-dotenv>=1.0",
@@ -21,10 +20,14 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0"]
+dev = ["pytest>=8.0", "anthropic>=1.0,<2"]
+# Optional: use Claude instead of YCode's own model (ycode --provider anthropic). Not needed otherwise.
+claude = ["anthropic>=1.0,<2"]
 # Kept for compatibility: PyTorch and NumPy are now regular dependencies.
 local = []
 hub = ["huggingface_hub>=0.24"]
+# Hugging Face libraries: publish models (ycode-lm push-hf / autotrain) and work with the HF ecosystem.
+hf = ["huggingface_hub>=0.24", "transformers>=4.44", "safetensors>=0.4", "accelerate>=0.33"]
 
 [project.scripts]
 ycode = "ycode.cli:main"

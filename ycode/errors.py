@@ -27,8 +27,9 @@ class MissingCredentialsError(ConfigError):
     """No API credentials were found."""
 
     hint = (
-        "Set ANTHROPIC_API_KEY in your environment, in a .env file in the "
-        "project directory, or in ~/.ycode/.env. See .env.example."
+        "Only needed for Claude (--provider anthropic): set ANTHROPIC_API_KEY in your environment, "
+        "in a .env file in the project directory, or in ~/.ycode/.env. Without it, run plain `ycode` "
+        "to use YCode's own model."
     )
 
 

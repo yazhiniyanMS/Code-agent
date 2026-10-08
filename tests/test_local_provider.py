@@ -103,14 +103,20 @@ def test_agent_sends_no_tools_to_local_provider(workspace, make_ctx, tmp_path):
 
 
 def test_resolve_local_model(tmp_path, monkeypatch, isolated_home):
+    import ycode.config as config
     from ycode.config import DEFAULT_BUNDLED_MODEL, bundled_models, resolve_local_model
 
     monkeypatch.setenv("YCODE_MODELS_DIR", str(tmp_path / "bundled"))
+    monkeypatch.setattr(config, "available_memory_gb", lambda: 16.0)
     for name in ("ycode-lm-v4", "ycode-lm-v5"):
         (tmp_path / "bundled" / name).mkdir(parents=True)
         (tmp_path / "bundled" / name / "model.pt").write_bytes(b"")
     assert bundled_models() == ["ycode-lm-v4", "ycode-lm-v5"]
+    assert DEFAULT_BUNDLED_MODEL == "ycode-lm-v5"  # v5 is the deployed default
     assert resolve_local_model("") == tmp_path / "bundled" / DEFAULT_BUNDLED_MODEL
+    monkeypatch.setattr(config, "available_memory_gb", lambda: 2.0)  # small machine: falls back to v4
+    assert resolve_local_model("") == tmp_path / "bundled" / "ycode-lm-v4"
+    monkeypatch.setattr(config, "available_memory_gb", lambda: 16.0)
     assert resolve_local_model("v5") == tmp_path / "bundled" / "ycode-lm-v5"
     assert resolve_local_model("ycode-lm-v5") == tmp_path / "bundled" / "ycode-lm-v5"
     assert resolve_local_model(str(tmp_path / "mine")) == tmp_path / "mine"
@@ -124,3 +130,23 @@ def test_repository_ships_the_default_model():
     from ycode.config import DEFAULT_BUNDLED_MODEL, bundled_models
 
     assert DEFAULT_BUNDLED_MODEL in bundled_models()
+
+
+def test_claude_is_optional(monkeypatch):
+    """Without the anthropic package, only an explicit --provider anthropic mentions Claude."""
+    import builtins as b
+    import sys
+
+    real_import = b.__import__
+
+    def no_anthropic(name, *args, **kwargs):
+        if name == "anthropic" or name.startswith("anthropic."):
+            raise ImportError("No module named 'anthropic'")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.delitem(sys.modules, "ycode.llm.anthropic", raising=False)
+    monkeypatch.delitem(sys.modules, "anthropic", raising=False)
+    monkeypatch.setattr(b, "__import__", no_anthropic)
+    with pytest.raises(ConfigError) as info:
+        create_provider(Config(provider="anthropic"))
+    assert "not installed" in str(info.value) and ".[claude]" in info.value.hint

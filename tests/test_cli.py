@@ -42,7 +42,10 @@ def test_default_needs_no_api_key(workspace, capsys, monkeypatch):
         seen["dir"] = self.model_dir
         return FakeLM()
 
+    import ycode.config as config
+
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.setattr(config, "available_memory_gb", lambda: 16.0)
     monkeypatch.setattr(local.LocalProvider, "_load", fake_load)
     code = cli.main(["-C", str(workspace), "--no-banner", "how do I sort a list?"])
     assert code == 0

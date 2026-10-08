@@ -12,7 +12,14 @@ __all__ = ["PROVIDERS", "create_provider", "LLMProvider"]
 def create_provider(config: Config, *, check_credentials: bool = True) -> LLMProvider:
     """Build the provider named in the config. Add new providers here."""
     if config.provider == "anthropic":
-        from ycode.llm.anthropic import AnthropicProvider, has_credentials
+        try:
+            from ycode.llm.anthropic import AnthropicProvider, has_credentials
+        except ImportError:
+            raise ConfigError(
+                "Claude support is not installed. YCode's own model needs nothing extra: run `ycode` "
+                "without --provider anthropic.",
+                hint='To use Claude anyway: pip install -e ".[claude]"',
+            ) from None
 
         if check_credentials and not has_credentials():
             raise MissingCredentialsError(

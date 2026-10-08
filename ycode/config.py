@@ -76,7 +76,23 @@ def default_local_model_dir() -> Path:
 
 
 # The trained models that ship with YCode (models/ycode-lm-vN in the repository).
-DEFAULT_BUNDLED_MODEL = "ycode-lm-v4"
+DEFAULT_BUNDLED_MODEL = "ycode-lm-v5"  # 1.5B parameters, loads in 16-bit: about 3 GB of RAM
+FALLBACK_BUNDLED_MODEL = "ycode-lm-v4"  # 100M parameters, for machines with less free memory
+_DEFAULT_MODEL_MIN_FREE_GB = 4.0
+
+
+def available_memory_gb() -> float | None:
+    """Free memory in GB (Linux: MemAvailable; elsewhere: total RAM), or None if unknown."""
+    try:
+        for line in Path("/proc/meminfo").read_text().splitlines():
+            if line.startswith("MemAvailable:"):
+                return int(line.split()[1]) / 1e6
+    except (OSError, ValueError, IndexError):
+        pass
+    try:
+        return os.sysconf("SC_PHYS_PAGES") * os.sysconf("SC_PAGE_SIZE") / 1e9
+    except (AttributeError, ValueError, OSError):
+        return None
 
 
 def bundled_models_dir() -> Path:
@@ -98,14 +114,19 @@ def resolve_local_model(spec: str = "") -> Path:
     """Turn a local-model setting into a model directory.
 
     "" (default): a model you trained yourself (~/.ycode/models/ycode-lm) if there is one,
-    otherwise the bundled default. "v5" or "ycode-lm-v5": a bundled model. Anything else: a path.
+    otherwise the bundled v5, or v4 when less than 4 GB of memory is free. "v5" or "ycode-lm-v5": a bundled model. Anything else: a path.
     """
     spec = (spec or "").strip()
     if not spec:
         own = default_local_model_dir()
         if (own / "model.pt").is_file():
             return own
-        return bundled_models_dir() / DEFAULT_BUNDLED_MODEL
+        root = bundled_models_dir()
+        free = available_memory_gb()
+        if (free is not None and free < _DEFAULT_MODEL_MIN_FREE_GB
+                and (root / FALLBACK_BUNDLED_MODEL / "model.pt").is_file()):
+            return root / FALLBACK_BUNDLED_MODEL
+        return root / DEFAULT_BUNDLED_MODEL
     name = spec.lower()
     if name.startswith("v") and name[1:].isdigit():
         name = f"ycode-lm-{name}"
