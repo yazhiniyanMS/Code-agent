@@ -152,7 +152,7 @@ def test_export_bf16_is_smaller_and_loads(data_dir, tmp_path):
     original, _, _ = load_checkpoint(tmp_path / "m")
     exported, _, payload = load_checkpoint(tmp_path / "slim")
     assert payload["exported_dtype"] == "bf16"
-    state = payload["model"]
+    state = torch.load(slim, weights_only=True)["model"]  # the file itself (the loader drops its copy)
     assert state["embed.weight"].data_ptr() == state["head.weight"].data_ptr()  # tied weights stored once
     import json
     assert json.loads((tmp_path / "slim" / "info.json").read_text())["params"] == original.num_params()
