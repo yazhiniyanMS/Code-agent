@@ -51,6 +51,26 @@ Evaluated with `ycode-lm eval`, the same way as every earlier version. Bits per 
   is the clear next step.
 - YCode uses v5 as its default model on machines with at least 4 GB of free memory, and v4 otherwise. v4 is just as good at the benchmark tasks and much faster on a CPU, so `ycode --local v4` is a good choice on slow machines.
 
+## Fine-tuning on basic exercises (an experiment)
+
+To raise the write-a-function and fix-a-bug scores, v5 was fine-tuned on `ycode-lm basics`: small
+exercises with reference solutions that are executed against tests before use. None of them is a
+benchmark problem, and 20 extra "fresh" problems were kept out of training to check generalization.
+To fit the CPU, only the top layers were trained.
+
+| | v5 (published) | Round 1: 117 concepts, top 8 layers, 72 steps | Round 2: 185 concepts, top 12 layers, +84 steps |
+| --- | --- | --- | --- |
+| Write a function, standard (30) | 0 / 30 | 3 / 30 | 1 / 30 |
+| Write a function, fresh (20) | not measured | 0 / 20 | 1 / 20 |
+| Fix an injected bug (15) | **4 / 15** | **4 / 15** | 1 / 15 |
+
+Validation loss on the exercises fell steadily (0.82 → 0.44), but benchmark scores barely moved and bug
+fixing got worse. The model learned the *format* (one short code block) without the *meaning*: asked
+for "the sum of a and b" it wrote `a.sum(b)`. Fine-tuning can only build on what pretraining put in the
+model, and v5's pretraining was ~2.5M tokens on a CPU. **The published v5 is unchanged**: neither
+fine-tuned version beats it. Real gains need much more pretraining, which needs GPUs
+(`ycode-lm autotrain`, `notebooks/kaggle_train_v5.ipynb`).
+
 ## Use
 
 ```bash
