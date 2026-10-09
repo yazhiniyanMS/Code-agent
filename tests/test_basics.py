@@ -96,3 +96,25 @@ def test_training_only_the_top_layers(data_dir, tmp_path):
     stored = torch.load(tmp_path / "tuned" / "model.pt", weights_only=True)["model"]
     assert stored["embed.weight"].dtype == torch.bfloat16  # frozen: stored compactly
     assert stored[f"blocks.{n - 1}.mlp.down.weight"].dtype == torch.float32  # trained: full precision
+
+
+def test_compositional_exercises_are_verified_and_hold_out_the_benchmark():
+    from ycode.lm.compose import HELD_OUT_KEYS, all_exercises, compose_bugfix_examples, compose_examples
+
+    exercises = all_exercises()
+    assert len(exercises) > 500
+    assert not {e.key for e in exercises} & HELD_OUT_KEYS
+    held_names = {p.name for p in PROBLEMS} | {name for name, *_ in FRESH_PROBLEMS}
+    assert not {e.name for e in exercises} & held_names
+    for ex in exercises[::25]:
+        tests = ex.tests()
+        assert tests and _passes(ex.source(), tests)
+    writes = compose_examples()
+    assert all(w.response.startswith("```python\ndef ") for w in writes)
+    fixes = compose_bugfix_examples()
+    assert len(fixes) > 400 and all(f.response.startswith("```python\ndef ") for f in fixes[:50])
+
+
+def test_bugfix_answers_are_code_only():
+    for ex in bugfix_examples(random.Random(1))[:20]:
+        assert ex.response.startswith("```python\ndef ") and "The bug is" not in ex.response

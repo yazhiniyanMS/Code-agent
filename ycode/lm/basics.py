@@ -648,7 +648,10 @@ def bugfix_examples(rng: random.Random, per_concept: int = 5) -> list[Instructio
             if buggy in made or not _parses(buggy) or _passes(buggy, _rename_tests(c.tests, name)):
                 continue  # a realistic bug: valid Python that actually breaks the function
             made.add(buggy)
-            answer = f"The bug is `{wrong}`: it should be `{right}`.\n```python\n{fixed}\n```"
+            # The answer is just the fixed function: copying it with one change is what the task
+            # needs, and an explanation that repeats both lines first only gives a small model
+            # more to get wrong.
+            answer = f"```python\n{fixed}\n```"
             out.append(InstructionExample(BUGFIX_PROMPT.format(code=buggy), answer))
     rng.shuffle(out)
     return out
@@ -665,7 +668,7 @@ def basics_examples(seed: int = 1337, *, write_per_concept: int = 6,
 
 
 def write_basics_dataset(out_dir, tokenizer_path, *, replay_dir=None, replay: int = 0, seed: int = 1337,
-                         log=print) -> dict:
+                         examples=None, log=print) -> dict:
     """Write an SFT dataset of basics examples, optionally mixed with ``replay`` examples drawn from
     an earlier SFT dataset (so fine-tuning does not erase what the model already learned)."""
     from pathlib import Path
@@ -680,7 +683,7 @@ def write_basics_dataset(out_dir, tokenizer_path, *, replay_dir=None, replay: in
     tok = BPETokenizer.load(tokenizer_path)
     tok.save(out_dir / "tokenizer.json")
     rng = random.Random(seed)
-    rows = [encode_example(tok, ex) for ex in basics_examples(seed)]
+    rows = [encode_example(tok, ex) for ex in (examples if examples is not None else basics_examples(seed))]
     n_basics = len(rows)
     if replay_dir and replay:
         replay_dir = Path(replay_dir)

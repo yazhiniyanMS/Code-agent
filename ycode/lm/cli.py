@@ -155,6 +155,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--tokenizer", required=True, type=Path, help="The model's tokenizer.json.")
     p.add_argument("--replay-from", type=Path, default=None, help="Earlier SFT dataset to mix in.")
     p.add_argument("--replay", type=int, default=0, help="How many earlier examples to mix in.")
+    p.add_argument("--compose", action="store_true",
+                   help="Also add the compositional exercises (ycode.lm.compose): thousands of varied tasks.")
 
     p = sub.add_parser("push-hf", help="Upload an exported model folder to a Hugging Face model repo.")
     p.add_argument("--model", required=True, type=Path, help="Folder from `ycode-lm export`.")
@@ -309,7 +311,15 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "basics":
         from ycode.lm.basics import write_basics_dataset
 
-        write_basics_dataset(args.out, args.tokenizer, replay_dir=args.replay_from, replay=args.replay)
+        examples = None
+        if args.compose:
+            from ycode.lm.basics import basics_examples
+            from ycode.lm.compose import compose_bugfix_examples, compose_examples
+
+            examples = (basics_examples(write_per_concept=4, bugfix_per_concept=8)
+                        + compose_examples(per_exercise=2) + compose_bugfix_examples(per_exercise=2))
+        write_basics_dataset(args.out, args.tokenizer, replay_dir=args.replay_from, replay=args.replay,
+                             examples=examples)
         return 0
 
     if args.command == "export":
