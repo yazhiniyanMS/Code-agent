@@ -42,7 +42,8 @@ def test_fresh_problems_are_valid():
     assert all(p.prompt.startswith("Write a Python function `") for p in problems)
 
 
-def test_bugfix_examples_are_realistic_and_correct():
+def test_bugfix_examples_are_realistic_and_correct(monkeypatch):
+    monkeypatch.setattr("ycode.lm.basics.NEUTRAL_P", 0.0)  # keep the concept names, to look up the tests
     examples = bugfix_examples(random.Random(0))
     assert len(examples) > 150
     assert BUGFIX_PROMPT == EVAL_BUGFIX_PROMPT  # same task format as the benchmark (different functions)

@@ -54,7 +54,7 @@ def test_lion_moves_each_weight_by_lr_and_keeps_bf16_state():
     fresh = Lion([p], lr=0.5)
     fresh.load_state_dict(opt.state_dict())  # torch's default would upcast the state to fp32
     assert fresh.state[p]["exp_avg"].dtype == torch.bfloat16
-    assert fresh.param_groups[0]["lr"] == 0.1
+    assert fresh.param_groups[0]["lr"] == 0.5  # the current run's LR wins
 
 
 def test_training_with_lion_low_memory_and_resume(data_dir, tmp_path):

@@ -18,6 +18,7 @@ exists: 20 problems whose concepts appear nowhere in this file's training set.
 from __future__ import annotations
 
 import random
+import re
 from dataclasses import dataclass
 
 from ycode.lm.data import InstructionExample, inject_bug
@@ -563,11 +564,50 @@ def verify_concepts(concepts=CONCEPTS) -> None:
             raise AssertionError(f"reference solution for {c.name} fails its tests")
 
 
-def assert_no_overlap(concepts=CONCEPTS) -> None:
-    """Training concepts must not share a name with any evaluation problem."""
+def held_out_names() -> set[str]:
+    """Function names of every benchmark item (standard 30, the 15 bug fixes, fresh 20)."""
     from ycode.lm.evaluate import BUGGY, PROBLEMS
 
-    held_out = {p.name for p in PROBLEMS} | {sig.split("(")[0] for sig, _ in BUGGY} | {p[0] for p in FRESH_PROBLEMS}
+    return {p.name for p in PROBLEMS} | {sig.split("(")[0] for sig, _ in BUGGY} | {p[0] for p in FRESH_PROBLEMS}
+
+
+def dev_names() -> set[str]:
+    """Function names of the dev set's items (held out of training, like the benchmark)."""
+    from ycode.lm.devset import dev_bugs, dev_problems
+
+    return {p.name for p in dev_problems()} | {sig.split("(")[0] for sig, _, _ in dev_bugs()}
+
+
+def training_concepts() -> tuple[Concept, ...]:
+    """CONCEPTS minus the ones held out for the dev set (ycode.lm.devset)."""
+    from ycode.lm.devset import DEV_CONCEPT_NAMES
+
+    return tuple(c for c in CONCEPTS if c.name not in DEV_CONCEPT_NAMES)
+
+
+# Neutral names: with these, only the description can say what the function must do (a name like
+# `sum_positive` lets a small model recall a body instead of reading the task).
+NEUTRAL_NAMES = ("f", "g", "func", "fn", "solve", "compute", "helper", "calc", "process", "run")
+
+
+NEUTRAL_P = 0.4
+
+
+def neutralize(ex: InstructionExample, name: str, rng: random.Random, p: float | None = None) -> InstructionExample:
+    """With probability p (default NEUTRAL_P), rename the function ``name`` everywhere in the example."""
+    if rng.random() >= (NEUTRAL_P if p is None else p):
+        return ex
+    new = rng.choice(NEUTRAL_NAMES)
+    if rng.random() < 0.3:
+        new += "_" + "".join(rng.choice("abcdefghijklmnopqrstuvwxyz") for _ in range(2))
+    pattern = re.compile(rf"(?<![\w.]){re.escape(name)}(?=\(|`)")
+    return InstructionExample(pattern.sub(new, ex.prompt), pattern.sub(new, ex.response))
+
+
+def assert_no_overlap(concepts=CONCEPTS) -> None:
+    """Training concepts must not share a name with any evaluation problem."""
+    held_out = held_out_names()
+    assert not set(NEUTRAL_NAMES) & held_out
     for c in concepts:
         clash = {c.name, *c.aliases} & held_out
         if clash:
@@ -584,13 +624,13 @@ def _with_doc(c: Concept, name: str, body: str) -> str:
 
 def write_examples(rng: random.Random, per_concept: int = 6) -> list[InstructionExample]:
     out = []
-    for c in CONCEPTS:
-        for i in range(per_concept):
-            name = (c.name, *c.aliases)[i % (1 + len(c.aliases))]
-            template = _WRITE_TEMPLATES[i % len(_WRITE_TEMPLATES)]
+    for c in training_concepts():
+        for _ in range(per_concept):
+            name = rng.choice((c.name, *c.aliases))
+            template = rng.choice(_WRITE_TEMPLATES)
             prompt = template.format(sig=f"{name}({c.params})", task=c.task, name=name,
                                      params=c.params.replace(", ", " and ") or "no arguments")
-            out.append(InstructionExample(prompt, f"```python\n{c.source(name)}\n```"))
+            out.append(neutralize(InstructionExample(prompt, f"```python\n{c.source(name)}\n```"), name, rng))
     rng.shuffle(out)
     return out
 
@@ -604,6 +644,7 @@ _TEXT_MUTATIONS = (
     ("x * x", "x * 2"), ("return a\n", "return b\n"), ("return b\n", "return a\n"), ("+= 1", "+= 2"),
     ("[:n]", "[:n - 1]"), ("[n:]", "[n + 1:]"), ("startswith", "endswith"), ("endswith", "startswith"),
     ("[i:i + size]", "[i:i + size - 1]"), ("== 0", "!= 0"), (" // ", " / "), ("2 * (", "("),
+    (" < ", " > "), (" > ", " < "), (" <= ", " >= "), (" >= ", " <= "),
 )
 
 
@@ -624,7 +665,7 @@ def _text_bugs(fixed: str) -> list[tuple[str, str, str]]:
 
 def bugfix_examples(rng: random.Random, per_concept: int = 5) -> list[InstructionExample]:
     out = []
-    for c in CONCEPTS:
+    for c in training_concepts():
         names = (c.name, *c.aliases)
         made = set()
         name = names[0]
@@ -652,7 +693,7 @@ def bugfix_examples(rng: random.Random, per_concept: int = 5) -> list[Instructio
             # needs, and an explanation that repeats both lines first only gives a small model
             # more to get wrong.
             answer = f"```python\n{fixed}\n```"
-            out.append(InstructionExample(BUGFIX_PROMPT.format(code=buggy), answer))
+            out.append(neutralize(InstructionExample(BUGFIX_PROMPT.format(code=buggy), answer), name, rng))
     rng.shuffle(out)
     return out
 
@@ -683,17 +724,39 @@ def write_basics_dataset(out_dir, tokenizer_path, *, replay_dir=None, replay: in
     tok = BPETokenizer.load(tokenizer_path)
     tok.save(out_dir / "tokenizer.json")
     rng = random.Random(seed)
-    rows = [encode_example(tok, ex) for ex in (examples if examples is not None else basics_examples(seed))]
+    rows = [encode_example(tok, ex, weighted=True)
+            for ex in (examples if examples is not None else basics_examples(seed))]
     n_basics = len(rows)
     if replay_dir and replay:
+        from ycode.lm.data import ASSISTANT
+
         replay_dir = Path(replay_dir)
         tokens = np.memmap(replay_dir / "sft_tokens.bin", dtype=np.uint16, mode="r")
         mask = np.memmap(replay_dir / "sft_mask.bin", dtype=np.uint8, mode="r")
         index = np.load(replay_dir / "sft_index.npy")
-        for i in rng.sample(range(len(index)), min(replay, len(index))):
+        # Never replay a benchmark or dev function (the old data has e.g. is_prime and gcd), nor the
+        # benchmark's bug-fix prompt answered in the old prose format (it now gets code-only answers).
+        names = "|".join(sorted(map(re.escape, held_out_names() | dev_names())))
+        leak = re.compile(rf"(?:\bdef |`)({names})\(")
+        dropped = {"benchmark name": 0, "prose bug fix": 0}
+        kept = 0
+        for i in rng.sample(range(len(index)), len(index)):
+            if kept >= replay:
+                break
             start, length = index[i]
-            if length <= 400:  # short examples, like the basics ones
-                rows.append((tokens[start:start + length].tolist(), mask[start:start + length].tolist()))
+            if length > 400:  # short examples, like the basics ones
+                continue
+            t = tokens[start:start + length].tolist()
+            text = tok.decode(t)
+            if leak.search(text):
+                dropped["benchmark name"] += 1
+                continue
+            if BUGFIX_PROMPT.split("\n")[0] in text and text.split(ASSISTANT, 1)[-1].lstrip().startswith("The bug is"):
+                dropped["prose bug fix"] += 1
+                continue
+            rows.append((t, mask[start:start + length].tolist()))
+            kept += 1
+        log(f"Replay: kept {kept}, dropped {dropped}")
     rng.shuffle(rows)
     all_tokens, all_mask, idx = [], [], []
     for t, m in rows:

@@ -169,8 +169,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--heldout", action="append", type=Path, default=[],
                    help="Code the models never trained on, for bits-per-byte (repeatable).")
     p.add_argument("--samples", type=int, default=1, help="Samples per problem for pass@k (default 1 = greedy).")
-    p.add_argument("--problems", default="standard", choices=("standard", "fresh", "both"),
-                   help="Coding problems: the standard 30, 20 fresh ones, or both.")
+    p.add_argument("--problems", default="standard", choices=("standard", "fresh", "both", "dev"),
+                   help="Coding problems: the standard 30, 20 fresh ones, both, or the held-out dev set "
+                        "used to pick fine-tuning checkpoints (its own bug fixes too).")
+    p.add_argument("--answers-out", type=Path, help="Write every answer (prompt, answer, code, pass) as JSONL.")
     p.add_argument("--no-functional", action="store_true", help="Skip the coding-problem benchmark.")
     p.add_argument("--verbose", action="store_true", help="Show each problem's result.")
     p.add_argument("--device", default="auto")
@@ -441,6 +443,8 @@ def _eval(args) -> int:  # noqa: ANN001
         print("error: no code found in --heldout", file=sys.stderr)
         return 1
     rows = []
+    if args.answers_out:
+        args.answers_out.unlink(missing_ok=True)  # one file for all --model runs
     for model_dir in models:
         try:
             lm = LocalLM(model_dir, device=args.device)
@@ -455,17 +459,36 @@ def _eval(args) -> int:  # noqa: ANN001
         if not args.no_functional:
             from ycode.lm.evaluate import fresh_problems
 
-            problems = {"standard": PROBLEMS, "fresh": fresh_problems(),
-                        "both": PROBLEMS + fresh_problems()}[args.problems]
+            bug_items = None
+            if args.problems == "dev":
+                from ycode.lm.devset import dev_bugs, dev_problems
+
+                problems, bug_items = dev_problems(), dev_bugs()
+            else:
+                problems = {"standard": PROBLEMS, "fresh": fresh_problems(),
+                            "both": PROBLEMS + fresh_problems()}[args.problems]
             res = functional_eval(lm, samples=args.samples, problems=problems,
                                   log=print if args.verbose else None)
             row["pass@1"] = round(res.pass_at_1, 4)
             if res.pass_at_k is not None:
                 row[f"pass@{res.k}"] = round(res.pass_at_k, 4)
             row["solved"] = res.solved
-            fix_rate, fixed = bugfix_eval(lm, log=print if args.verbose else None)
+            answers: list[dict] = []
+            fix_rate, fixed = bugfix_eval(lm, items=bug_items, answers=answers, log=print if args.verbose else None)
             row["fix@1"] = round(fix_rate, 4)
             row["fixed"] = fixed
+            row["n_problems"], row["n_bugs"] = len(problems), len(bug_items or BUGGY)
+            if args.answers_out:
+                from ycode.lm.evaluate import extract_code
+
+                solved = set(res.solved)
+                writes = [{"suite": "write", "name": prob.name, "prompt": prob.prompt, "answer": res.samples[prob.name][0],
+                           "code": extract_code(res.samples[prob.name][0]), "pass": prob.name in solved}
+                          for prob in problems]
+                args.answers_out.parent.mkdir(parents=True, exist_ok=True)
+                with args.answers_out.open("a", encoding="utf-8") as f:
+                    for item in writes + answers:
+                        f.write(json.dumps({"model": str(model_dir), **item}) + "\n")
         rows.append(row)
     print()
     header = ["model", "version", "params_m", "bits_per_byte", "pass@1"] + sorted(
@@ -474,8 +497,8 @@ def _eval(args) -> int:  # noqa: ANN001
     for r in rows:
         print(" | ".join(str(r.get(h, "-")) for h in header))
     if not args.no_functional:
-        n_problems = {"standard": 30, "fresh": 20, "both": 50}[args.problems]
-        print(f"\n({n_problems} problems, {len(BUGGY)} bug fixes; bits/byte: lower is better; "
+        n_problems, n_bugs = rows[0].get("n_problems", 0), rows[0].get("n_bugs", len(BUGGY))
+        print(f"\n({n_problems} problems, {n_bugs} bug fixes; bits/byte: lower is better; "
               "pass@k / fix@1: higher is better)")
     for r in rows:
         if r.get("solved"):

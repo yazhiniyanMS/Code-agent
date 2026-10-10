@@ -17,8 +17,8 @@ from __future__ import annotations
 import random
 from dataclasses import dataclass
 
-NUMBER_WORDS = {2: "two", 3: "three", 4: "four", 5: "five", 6: "six", 7: "seven", 8: "eight", 9: "nine",
-                10: "ten"}
+NUMBER_WORDS = {0: "zero", 1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six", 7: "seven",
+                8: "eight", 9: "nine", 10: "ten", 11: "eleven", 12: "twelve"}
 
 # Concepts asked for by the evaluation problems. Never generated.
 HELD_OUT_KEYS = {
@@ -69,6 +69,15 @@ def _w(k: int) -> str:
     return NUMBER_WORDS.get(k, str(k))
 
 
+def _num(k: int, rng: random.Random) -> str:
+    """k in task text: as a word ("three") or as digits, at random, so both readings are learned."""
+    return _w(k) if k in NUMBER_WORDS and rng.random() < 0.5 else str(k)
+
+
+def _items(k: int, rng: random.Random) -> str:
+    return f"{_num(k, rng)} item" + ("" if k == 1 else "s")
+
+
 # ------------------------------------------------------------------ families
 
 _INTS = [(-3,), (0,), (1,), (4,), (7,), (12,)]
@@ -98,7 +107,7 @@ def _unary(rng: random.Random) -> list[Exercise]:
             if (op == "pow" and k > 4) or ("unary", op, k) in HELD_OUT_KEYS:
                 continue
             for task, name in zip(tasks, rng.sample(names, len(names))):
-                out.append(Exercise(("unary", op, k), name.format(w=_w(k)), "x", task.format(k=k),
+                out.append(Exercise(("unary", op, k), name.format(w=_w(k)), "x", task.format(k=_num(k, rng)) + ".",
                                     f"return {expr.format(k=k)}", tuple(_INTS)))
     return out
 
@@ -175,7 +184,7 @@ def _predicates(rng: random.Random) -> list[Exercise]:
                 continue
             for task, name in zip(tasks, names):
                 ints = ((k - 1,), (k,), (k + 1,), (k * 3 + 1,), (-k,), (k * 2,))
-                out.append(Exercise(key, name.format(w=_w(k) if k else "zero"), "n", task.format(k=k) + ".",
+                out.append(Exercise(key, name.format(w=_w(k)), "n", task.format(k=_num(k, rng)) + ".",
                                     f"return {expr.format(k=k)}", ints))
     return out
 
@@ -238,17 +247,17 @@ def _aggregations() -> list[Exercise]:
     return out
 
 
-def _list_ops() -> list[Exercise]:
+def _list_ops(rng: random.Random) -> list[Exercise]:
     out = []
     for filt, (cond, what) in _FILTERS.items():
         if filt == "all" or ("list", filt, "id") in HELD_OUT_KEYS:
             continue
         out.append(Exercise(("list", filt, "id"), f"keep_{filt}", "numbers", f"returns a list of {what} in the list.",
                             f"return [x for x in numbers if {cond}]", _LISTS))
-    maps = {("add", k): (f"x + {k}", f"with {k} added to every number") for k in (1, 2, 5, 10)}
-    maps.update({("sub", k): (f"x - {k}", f"with {k} subtracted from every number") for k in (1, 3)})
-    maps.update({("mul", k): (f"{k} * x", f"with every number multiplied by {k}") for k in (2, 3, 10)})
-    maps.update({("div", k): (f"x / {k}", f"with every number divided by {k}") for k in (2, 4)})
+    maps = {("add", k): (f"x + {k}", f"with {_num(k, rng)} added to every number") for k in (1, 2, 5, 10)}
+    maps.update({("sub", k): (f"x - {k}", f"with {_num(k, rng)} subtracted from every number") for k in (1, 3)})
+    maps.update({("mul", k): (f"{k} * x", f"with every number multiplied by {_num(k, rng)}") for k in (2, 3, 10)})
+    maps.update({("div", k): (f"x / {k}", f"with every number divided by {_num(k, rng)}") for k in (2, 4)})
     maps.update({("square", 0): ("x * x", "of the squares of the numbers"),
                  ("neg", 0): ("-x", "with the sign of every number flipped"),
                  ("abs", 0): ("abs(x)", "of the absolute values of the numbers")})
@@ -263,25 +272,25 @@ def _list_ops() -> list[Exercise]:
     return out
 
 
-def _sequences() -> list[Exercise]:
+def _sequences(rng: random.Random) -> list[Exercise]:
     out = []
-    for k in (0, 2, 3):
+    for k in (0, 2, 3, 4):
         if ("index", k) in HELD_OUT_KEYS:
             continue
-        nth = {0: "first", 2: "third", 3: "fourth"}[k]
+        nth = {0: "first", 2: "third", 3: "fourth", 4: "fifth"}[k]
         out.append(Exercise(("index", k), f"{nth}_item", "items", f"returns the {nth} item of the list.",
-                            f"return items[{k}]", (((5, 6, 7, 8, 9),), ((1, 2, 3, 4),))))
+                            f"return items[{k}]", (((5, 6, 7, 8, 9),), ((1, 2, 3, 4),), ((3, 1, 4, 1, 5, 9),))))
     for k in (1, 2):
         nth = {1: "last", 2: "second to last"}[k]
         out.append(Exercise(("index", -k), nth.replace(" ", "_") + "_item", "items", f"returns the {nth} item of the list.",
                             f"return items[-{k}]", (((5, 6, 7, 8, 9),), ((1, 2, 3),))))
     for k in (1, 2, 3, 5):
         out.append(Exercise(("len_gt", k), f"longer_than_{_w(k)}", "items",
-                            f"returns True if the list has more than {k} items.", f"return len(items) > {k}",
+                            f"returns True if the list has more than {_items(k, rng)}.", f"return len(items) > {k}",
                             (((1,) * k,), ((1,) * (k + 1),), ((),))))
         if ("len_eq", k) not in HELD_OUT_KEYS:
-            out.append(Exercise(("len_eq", k), f"has_{_w(k)}_items", "items",
-                                f"returns True if the list has exactly {k} items.", f"return len(items) == {k}",
+            out.append(Exercise(("len_eq", k), f"has_{_w(k)}_item" + ("" if k == 1 else "s"), "items",
+                                f"returns True if the list has exactly {_items(k, rng)}.", f"return len(items) == {k}",
                                 (((1,) * k,), ((1,) * (k + 1),), ((),))))
     out.append(Exercise(("len",), "size", "items", "returns the number of items in the list.", "return len(items)",
                         (((1, 2, 3),), ((),))))
@@ -291,7 +300,7 @@ def _sequences() -> list[Exercise]:
 _STRINGS = (("hello world",), ("banana",), ("",), ("Mississippi",), ("a.b.c",))
 
 
-def _strings() -> list[Exercise]:
+def _strings(rng: random.Random) -> list[Exercise]:
     out = []
     for ch in ("e", "o", "s", "i", "x", ",", "-"):
         if ("str_count", ch) in HELD_OUT_KEYS:
@@ -312,10 +321,10 @@ def _strings() -> list[Exercise]:
         out.append(Exercise(("str_starts", prefix), name, "s", f"returns True if the string s starts with {prefix!r}.",
                             f"return s.startswith({prefix!r})", (("apple",), ("the end",), ("# note",), ("http://x",), ("",))))
     for k in (2, 3, 5):
-        out.append(Exercise(("str_first", k), f"first_{_w(k)}_chars", "s", f"returns the first {k} characters of s.",
+        out.append(Exercise(("str_first", k), f"first_{_w(k)}_chars", "s", f"returns the first {_num(k, rng)} characters of s.",
                             f"return s[:{k}]", _STRINGS))
         out.append(Exercise(("str_longer", k), f"longer_than_{_w(k)}_chars", "s",
-                            f"returns True if s has more than {k} characters.", f"return len(s) > {k}", _STRINGS))
+                            f"returns True if s has more than {_num(k, rng)} characters.", f"return len(s) > {k}", _STRINGS))
     out += [
         Exercise(("str", "strip"), "trim", "s", "returns s without leading and trailing whitespace.", "return s.strip()",
                  (("  hi ",), ("x",))),
@@ -333,13 +342,108 @@ def _strings() -> list[Exercise]:
     return out
 
 
-def all_exercises(seed: int = 7) -> list[Exercise]:
+# Loops, unit conversions and case changes. The same concepts as above written as explicit loops
+# (seven of the fifteen benchmark bug fixes are loops), plus families whose slot words must be read.
+# Excluded on purpose, as semantic equivalents of held-out problems: unfiltered max/min/sum/average,
+# the sum of the even numbers, counting zeros, counting spaces, vowels, the letter 'a' or one given
+# character, any division by 60, halving, adding 1 to each item, "no items", the middle item, the
+# second item, the sum of cubes, upper case, the first word, evenness.
+_LOOP_ADJ = {"positive": "positive", "negative": "negative", "odd": "odd", "gt5": "greater than 5",
+             "lt3": "less than 3", "mult3": "a multiple of 3", "nonzero": "non-zero"}
+
+
+def _loops(rng: random.Random) -> list[Exercise]:
+    out = []
+    for filt, adj in _LOOP_ADJ.items():
+        cond, what = _FILTERS[filt]
+        specs = [
+            ("sum", f"returns the sum of {what} in the list, using a loop.", f"loop_sum_{filt}",
+             f"total = 0\nfor x in numbers:\n    if {cond}:\n        total += x\nreturn total"),
+            ("count", f"counts the numbers in the list that are {adj}, using a loop.", f"loop_count_{filt}",
+             f"count = 0\nfor x in numbers:\n    if {cond}:\n        count += 1\nreturn count"),
+            ("max", f"returns the largest of {what} in the list, or None if there are none.", f"loop_largest_{filt}",
+             f"best = None\nfor x in numbers:\n    if {cond} and (best is None or x > best):\n        best = x\nreturn best"),
+            ("min", f"returns the smallest of {what} in the list, or None if there are none.", f"loop_smallest_{filt}",
+             f"best = None\nfor x in numbers:\n    if {cond} and (best is None or x < best):\n        best = x\nreturn best"),
+            ("any", f"returns True as soon as it finds a number in the list that is {adj}, otherwise False.",
+             f"loop_any_{filt}", f"for x in numbers:\n    if {cond}:\n        return True\nreturn False"),
+            ("all_", f"returns False as soon as it finds a number in the list that is not {adj}, otherwise True.",
+             f"loop_all_{filt}", f"for x in numbers:\n    if not ({cond}):\n        return False\nreturn True"),
+        ]
+        for agg, task, name, body in specs:
+            key = ("loop", "agg", agg, filt, "id")
+            if key[1:] not in HELD_OUT_KEYS:
+                out.append(Exercise(key, name, "numbers", task, body, _LISTS))
+    for k in (3, 4, 5, 6, 7, 9):
+        out.append(Exercise(("loop", "multiples", k), f"sum_multiples_of_{_w(k)}", "n",
+                            f"returns the sum of the multiples of {_num(k, rng)} below n.",
+                            f"total = 0\nfor i in range(n):\n    if i % {k} == 0:\n        total += i\nreturn total",
+                            ((10,), (20,), (1,), (31,))))
+        out.append(Exercise(("loop", "count_multiples", k), f"count_multiples_of_{_w(k)}", "n",
+                            f"returns how many of the numbers from 1 to n are multiples of {_num(k, rng)}.",
+                            f"count = 0\nfor i in range(1, n + 1):\n    if i % {k} == 0:\n        count += 1\nreturn count",
+                            ((10,), (20,), (1,), (31,))))
+    classes = {"digit": ("c.isdigit()", "digits"), "upper": ("c.isupper()", "upper-case letters"),
+               "lower": ("c.islower()", "lower-case letters"), "alpha": ("c.isalpha()", "letters"),
+               "punct": ("c in '.,!?'", "punctuation marks (. , ! ?)")}
+    texts = (("Hello World 42!",), ("abc",), ("",), ("A1b2C3, ok?",))
+    for cls, (cond, what) in classes.items():
+        out.append(Exercise(("loop", "str_count", cls), f"count_{cls}_chars", "s", f"returns how many {what} s contains.",
+                            f"count = 0\nfor c in s:\n    if {cond}:\n        count += 1\nreturn count", texts))
+        out.append(Exercise(("loop", "str_keep", cls), f"keep_{cls}_chars", "s", f"returns only the {what} of s, in order.",
+                            f"result = ''\nfor c in s:\n    if {cond}:\n        result += c\nreturn result", texts))
+    return out
+
+
+def _conversions(rng: random.Random) -> list[Exercise]:
+    units = [("days", "hours", 24), ("weeks", "days", 7), ("kilograms", "grams", 1000), ("metres", "centimetres", 100),
+             ("feet", "inches", 12), ("dozens", "items", 12), ("kilometres", "metres", 1000)]
+    out = []
+    for big, small, k in units:
+        out.append(Exercise(("conv", big, small), f"{big}_to_{small}", big, f"converts {big} to {small}.",
+                            f"return {big} * {k}", ((1,), (3,), (0,), (2.5,))))
+        out.append(Exercise(("conv", small, big), f"{small}_to_{big}", small, f"converts {small} to {big}.",
+                            f"return {small} / {k}", ((k,), (k * 3,), (0,), (k // 2,))))
+    return out
+
+
+def _cases() -> list[Exercise]:
+    specs = [("lower", "s.lower()", "returns s in lower case."), ("title", "s.title()", "returns s in title case."),
+             ("swap", "s.swapcase()", "returns s with the case of every letter swapped."),
+             ("cap", "s.capitalize()", "returns s with only its first letter in upper case.")]
+    out = [Exercise(("case", c), f"make_{c}", "s", task, f"return {expr}", (("Hello World",), ("abc",), ("",)))
+           for c, expr, task in specs]
+    for k, nth in ((2, "third"), (3, "fourth"), (-1, "last"), (-2, "second to last")):
+        out.append(Exercise(("word", k), f"{nth.replace(' ', '_')}_word", "text", f"returns the {nth} word of text.",
+                            f"return text.split()[{k}]", (("a b c d e",), ("one two three four",), ("x y",))))
+    return out
+
+
+def base_key(key: tuple) -> tuple:
+    """The concept behind a key: a loop rendering shares its concept with the one-liner."""
+    return key[1:] if key and key[0] == "loop" else key
+
+
+def _raw_exercises(seed: int = 7) -> list[Exercise]:
     rng = random.Random(seed)
-    exercises = (_unary(rng) + _ternary() + _binary() + _predicates(rng) + _aggregations() + _list_ops()
-                 + _sequences() + _strings())
-    clash = [e for e in exercises if e.key in HELD_OUT_KEYS]
+    return (_unary(rng) + _ternary() + _binary() + _predicates(rng) + _aggregations() + _list_ops(rng)
+            + _sequences(rng) + _strings(rng) + _loops(rng) + _conversions(rng) + _cases())
+
+
+def all_exercises(seed: int = 7) -> list[Exercise]:
+    """Training exercises: never a benchmark concept or name, a basics concept's name, or a dev item."""
+    from ycode.lm.basics import CONCEPTS, held_out_names
+    from ycode.lm.devset import DEV_KEYS
+
+    basics_names = {n for c in CONCEPTS for n in (c.name, *c.aliases)}
+    exercises = [e for e in _raw_exercises(seed)
+                 if base_key(e.key) not in DEV_KEYS and e.name not in basics_names]
+    clash = [e for e in exercises if base_key(e.key) in HELD_OUT_KEYS]
     if clash:
         raise AssertionError(f"held-out concepts generated: {sorted({e.key for e in clash})}")
+    names = {e.name for e in exercises} & held_out_names()
+    if names:
+        raise AssertionError(f"benchmark function names generated: {sorted(names)}")
     return exercises
 
 
@@ -352,8 +456,17 @@ _PROMPTS = (
 )
 
 
+def _documented(ex: Exercise, body: str | None = None) -> str:
+    doc = ex.task[0].upper() + ex.task[1:]
+    if doc.startswith("Returns "):
+        doc = "Return " + doc[len("Returns "):]
+    return (f'def {ex.name}({ex.params}):\n    """{doc}"""\n'
+            + "\n".join("    " + line for line in (ex.body if body is None else body).splitlines()))
+
+
 def compose_examples(seed: int = 7, per_exercise: int = 1):
     """Write-a-function examples (prompt, code-only answer) with verified, auto-generated tests."""
+    from ycode.lm.basics import neutralize
     from ycode.lm.data import InstructionExample
 
     rng = random.Random(seed)
@@ -363,14 +476,14 @@ def compose_examples(seed: int = 7, per_exercise: int = 1):
             continue
         for _ in range(per_exercise):
             prompt = rng.choice(_PROMPTS).format(sig=f"{ex.name}({ex.params})", task=ex.task)
-            out.append(InstructionExample(prompt, f"```python\n{ex.source()}\n```"))
+            out.append(neutralize(InstructionExample(prompt, f"```python\n{ex.source()}\n```"), ex.name, rng))
     rng.shuffle(out)
     return out
 
 
 def compose_bugfix_examples(seed: int = 7, per_exercise: int = 1):
     """Find-and-fix-the-bug examples from the exercises: realistic single bugs, answer = fixed code."""
-    from ycode.lm.basics import BUGFIX_PROMPT, _parses, _passes, _text_bugs
+    from ycode.lm.basics import BUGFIX_PROMPT, _parses, _passes, _text_bugs, neutralize
     from ycode.lm.data import InstructionExample, inject_bug
 
     rng = random.Random(seed + 1)
@@ -379,14 +492,12 @@ def compose_bugfix_examples(seed: int = 7, per_exercise: int = 1):
         tests = ex.tests()
         if tests is None:
             continue
-        doc = ex.task[0].upper() + ex.task[1:]
-        if doc.startswith("Returns "):
-            doc = "Return " + doc[len("Returns "):]
-        fixed = f'def {ex.name}({ex.params}):\n    """{doc}"""\n' + "\n".join("    " + l for l in ex.body.splitlines())
+        fixed = _documented(ex)
         candidates = _text_bugs(fixed)
-        ast_bug = inject_bug(fixed, rng)
-        if ast_bug:
-            candidates.append(ast_bug)
+        for _ in range(3):
+            ast_bug = inject_bug(fixed, rng)
+            if ast_bug and ast_bug not in candidates:
+                candidates.append(ast_bug)
         rng.shuffle(candidates)
         made = 0
         for buggy, _wrong, _right in candidates:
@@ -394,7 +505,41 @@ def compose_bugfix_examples(seed: int = 7, per_exercise: int = 1):
                 break
             if not _parses(buggy) or _passes(buggy, tests):
                 continue
-            out.append(InstructionExample(BUGFIX_PROMPT.format(code=buggy), f"```python\n{fixed}\n```"))
+            ex_out = InstructionExample(BUGFIX_PROMPT.format(code=buggy), f"```python\n{fixed}\n```")
+            out.append(neutralize(ex_out, ex.name, rng))
+            made += 1
+    rng.shuffle(out)
+    return out
+
+
+def contrast_examples(seed: int = 7, per_exercise: int = 1):
+    """Bug fixes whose buggy body is a neighbouring exercise's correct code (largest vs smallest, positive
+    vs negative, plus vs minus k, any vs all, ...): only the docstring says what is wrong, so copying the
+    code back can never be right."""
+    from collections import defaultdict
+
+    from ycode.lm.basics import BUGFIX_PROMPT, _parses, _passes, neutralize
+    from ycode.lm.data import InstructionExample
+
+    rng = random.Random(seed + 2)
+    exercises = [(ex, t) for ex in all_exercises(seed) if (t := ex.tests()) is not None]
+    groups = defaultdict(list)
+    for ex, _ in exercises:
+        groups[(ex.key[0], len(ex.key), ex.params)].append(ex)
+    out = []
+    for ex, tests in exercises:
+        partners = [o for o in groups[(ex.key[0], len(ex.key), ex.params)]
+                    if sum(a != b for a, b in zip(o.key, ex.key)) == 1 and o.body != ex.body]
+        rng.shuffle(partners)
+        made = 0
+        for other in partners:
+            if made >= per_exercise:
+                break
+            buggy = _documented(ex, other.body)
+            if not _parses(buggy) or _passes(buggy, tests):
+                continue
+            answer = f"```python\n{_documented(ex)}\n```"
+            out.append(neutralize(InstructionExample(BUGFIX_PROMPT.format(code=buggy), answer), ex.name, rng))
             made += 1
     rng.shuffle(out)
     return out

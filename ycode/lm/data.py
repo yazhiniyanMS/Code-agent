@@ -12,6 +12,7 @@ Outputs (in the data directory):
 from __future__ import annotations
 
 import ast
+import difflib
 import hashlib
 import json
 import random
@@ -184,62 +185,129 @@ _PROMPTS_CLASS = (
     "Explain this class:\n```python\n{code}\n```",
 )
 
-# Operator swaps used to inject realistic single-token bugs.
-_SWAPS: dict[type, type] = {
-    ast.Add: ast.Sub, ast.Sub: ast.Add, ast.Mult: ast.Add, ast.FloorDiv: ast.Div, ast.Div: ast.FloorDiv,
-    ast.Lt: ast.LtE, ast.LtE: ast.Lt, ast.Gt: ast.GtE, ast.GtE: ast.Gt, ast.Eq: ast.NotEq,
-    ast.NotEq: ast.Eq, ast.In: ast.NotIn, ast.NotIn: ast.In, ast.Is: ast.IsNot, ast.IsNot: ast.Is,
-    ast.And: ast.Or, ast.Or: ast.And,
+# Operator swaps used to inject realistic single-token bugs (a list: one is picked at random).
+_SWAPS: dict[type, tuple[type, ...]] = {
+    ast.Add: (ast.Sub,), ast.Sub: (ast.Add,), ast.Mult: (ast.Add,), ast.FloorDiv: (ast.Div,),
+    ast.Div: (ast.FloorDiv,), ast.Mod: (ast.FloorDiv,), ast.Pow: (ast.Mult,),
+    ast.Lt: (ast.LtE, ast.Gt), ast.LtE: (ast.Lt, ast.GtE), ast.Gt: (ast.GtE, ast.Lt), ast.GtE: (ast.Gt, ast.LtE),
+    ast.Eq: (ast.NotEq,), ast.NotEq: (ast.Eq,), ast.In: (ast.NotIn,), ast.NotIn: (ast.In,),
+    ast.Is: (ast.IsNot,), ast.IsNot: (ast.Is,), ast.And: (ast.Or,), ast.Or: (ast.And,),
 }
+_AUG_SWAPS: dict[type, tuple[type, ...]] = {ast.Add: (ast.Sub,), ast.Sub: (ast.Add,), ast.Mult: (ast.Add,)}
+_SYMBOLS: dict[type, str] = {
+    ast.Add: "+", ast.Sub: "-", ast.Mult: "*", ast.Div: "/", ast.FloorDiv: "//", ast.Mod: "%", ast.Pow: "**",
+    ast.Lt: "<", ast.LtE: "<=", ast.Gt: ">", ast.GtE: ">=", ast.Eq: "==", ast.NotEq: "!=", ast.In: "in",
+    ast.NotIn: "not in", ast.Is: "is", ast.IsNot: "is not", ast.And: "and", ast.Or: "or",
+}
+
+
+def _gap(a: ast.AST, b: ast.AST) -> tuple[int, int] | None:
+    """Byte columns between two nodes on the same line (where the operator sits)."""
+    if a.end_lineno != b.lineno:
+        return None
+    return a.end_col_offset, b.col_offset
+
+
+def _local_names(func: ast.AST) -> list[str]:
+    names = []
+    if isinstance(func, (ast.FunctionDef, ast.AsyncFunctionDef)):
+        names += [a.arg for a in func.args.args + func.args.kwonlyargs]
+    for node in ast.walk(func):
+        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store):
+            names.append(node.id)
+    return [n for n in dict.fromkeys(names) if not n.startswith("_")]
 
 
 def inject_bug(func_source: str, rng: random.Random) -> tuple[str, str, str] | None:
     """Return (buggy_source, buggy_line, fixed_line) or None if no mutation applies.
 
-    The original code is the fix, so every generated bug-fix example is correct by
-    construction."""
+    The bug is spliced into the original text (only the operator, constant or name changes), so
+    the buggy code differs from the fix in nothing but the bug: no reformatting gives it away.
+    The original code is the fix, so every generated bug-fix example is correct by construction."""
     try:
         tree = ast.parse(func_source)
     except (SyntaxError, ValueError, RecursionError):
         return None
+    locals_ = _local_names(tree.body[0]) if tree.body else []
     candidates: list[ast.AST] = []
     for node in ast.walk(tree):
+        if getattr(node, "lineno", None) is None or node.lineno != node.end_lineno:
+            continue  # single-line edits only
         if isinstance(node, ast.BinOp) and type(node.op) in _SWAPS:
             candidates.append(node)
         elif isinstance(node, ast.Compare) and len(node.ops) == 1 and type(node.ops[0]) in _SWAPS:
             candidates.append(node)
         elif isinstance(node, ast.BoolOp) and type(node.op) in _SWAPS:
             candidates.append(node)
-        elif isinstance(node, ast.Constant) and isinstance(node.value, bool):
+        elif isinstance(node, ast.AugAssign) and type(node.op) in _AUG_SWAPS:
             candidates.append(node)
-        elif isinstance(node, ast.Constant) and type(node.value) is int and node.value in (0, 1):
+        elif isinstance(node, ast.Constant) and (isinstance(node.value, bool) or type(node.value) is int):
+            candidates.append(node)
+        elif (isinstance(node, ast.Return) and isinstance(node.value, ast.Name)
+              and any(n != node.value.id for n in locals_)):
             candidates.append(node)
     if not candidates:
         return None
     node = rng.choice(candidates)
+    edits: list[tuple[int, int, str]] = []  # (start byte, end byte, new text) on the node's line
     try:
-        fixed = ast.unparse(node)
-        if isinstance(node, ast.BinOp):
-            node.op = _SWAPS[type(node.op)]()
+        if isinstance(node, (ast.BinOp, ast.AugAssign)):
+            table = _AUG_SWAPS if isinstance(node, ast.AugAssign) else _SWAPS
+            old, new = type(node.op), rng.choice(table[type(node.op)])
+            left, right = (node.target, node.value) if isinstance(node, ast.AugAssign) else (node.left, node.right)
+            suffix = "=" if isinstance(node, ast.AugAssign) else ""
+            edits.append((*_gap(left, right), (_SYMBOLS[old] + suffix, _SYMBOLS[new] + suffix)))
+            node.op = new()
         elif isinstance(node, ast.Compare):
-            node.ops = [_SWAPS[type(node.ops[0])]()]
+            old, new = type(node.ops[0]), rng.choice(_SWAPS[type(node.ops[0])])
+            edits.append((*_gap(node.left, node.comparators[0]), (_SYMBOLS[old], _SYMBOLS[new])))
+            node.ops = [new()]
         elif isinstance(node, ast.BoolOp):
-            node.op = _SWAPS[type(node.op)]()
+            old, new = type(node.op), _SWAPS[type(node.op)][0]
+            for a, b in zip(node.values, node.values[1:]):
+                edits.append((*_gap(a, b), (_SYMBOLS[old], _SYMBOLS[new])))
+            node.op = new()
+        elif isinstance(node, ast.Return):
+            name = rng.choice([n for n in locals_ if n != node.value.id])
+            edits.append((node.value.col_offset, node.value.end_col_offset, name))
+            node.value.id = name
         elif isinstance(node.value, bool):
             node.value = not node.value
+            edits.append((node.col_offset, node.end_col_offset, repr(node.value)))
         else:
-            node.value = 1 - node.value
-        buggy = ast.unparse(tree)
-        original = ast.unparse(ast.parse(func_source))
-    except (ValueError, RecursionError):
+            k = node.value
+            node.value = 1 - k if k in (0, 1) else k + rng.choice((-1, 1))
+            edits.append((node.col_offset, node.end_col_offset, repr(node.value)))
+    except TypeError:  # _gap found the operands on different lines
         return None
-    if buggy == original or len(fixed) > 160:
+    lines = func_source.splitlines()
+    row = node.lineno - 1
+    line = lines[row].encode()
+    for start, end, text in sorted(edits, reverse=True):
+        if isinstance(text, tuple):  # swap the operator inside the gap (it may hold parentheses)
+            gap = line[start:end].decode()
+            old_sym, new_sym = text
+            core = gap.replace("(", " ").replace(")", " ")
+            if " ".join(core.split()) != old_sym:
+                return None
+            at = gap.find(old_sym.split()[0])
+            span_end = at + len(old_sym) if " " not in old_sym else gap.find(old_sym.split()[1], at) + len(
+                old_sym.split()[1])
+            text = gap[:at] + new_sym + gap[span_end:]
+        line = line[:start] + text.encode() + line[end:]
+    lines[row] = line.decode()
+    buggy = "\n".join(lines)
+    try:
+        if ast.dump(ast.parse(buggy)) != ast.dump(tree):
+            return None  # the edit changed precedence or meant something else: skip it
+    except (SyntaxError, ValueError, RecursionError):
         return None
-    # Report the whole line that changed: far more informative than the token alone.
-    pairs = [(b, o) for b, o in zip(buggy.splitlines(), original.splitlines()) if b != o]
-    if len(pairs) != 1 or len(pairs[0][0].strip()) > 160:
+    if buggy == func_source:
         return None
-    return buggy, pairs[0][0].strip(), pairs[0][1].strip()
+    fixed_line, buggy_line = func_source.splitlines()[row].strip(), lines[row].strip()
+    if len(buggy_line) > 160:
+        return None
+    return buggy, buggy_line, fixed_line
 
 
 def _with_short_doc(node: ast.FunctionDef | ast.AsyncFunctionDef, summary: str | None) -> str:
@@ -403,11 +471,70 @@ def parallel_encode(tok: BPETokenizer, texts: list[str], workers: int | None = N
         return pool.map(_encode_doc, texts, chunksize=max(1, len(texts) // (workers * 8)))
 
 
-def encode_example(tok: BPETokenizer, ex: InstructionExample) -> tuple[list[int], list[int]]:
-    """Tokens plus a loss mask that is 1 only on the answer (and its end marker)."""
+# Loss weights for fine-tuning on exercises (``encode_example(weighted=True)``). In a bug fix only
+# ~3% of the answer differs from the buggy code in the prompt, so with equal weights handing the bug
+# back unchanged is nearly the cheapest answer. The changed tokens and their line weigh more, and so
+# does the body of a written function (the part that depends on reading the task).
+DIFF_WEIGHT, LINE_WEIGHT, BODY_WEIGHT = 8, 3, 3
+_BUGFIX_HEAD = "This function has a bug. Find and fix it:\n```python\n"
+
+
+def _token_lines(tok: BPETokenizer, ids: list[int]) -> list[int]:
+    """The source line each token belongs to (a token that starts with newlines belongs to the next line)."""
+    lines, line = [], 0
+    for i in ids:
+        piece = tok.decode([i])
+        lead = len(piece) - len(piece.lstrip("\n"))
+        lines.append(line + lead if piece.strip("\n") else line)
+        line += piece.count("\n")
+    return lines
+
+
+def answer_weights(tok: BPETokenizer, prompt: str, answer_ids: list[int]) -> list[int]:
+    """Per-token loss weights for an exercise answer (see DIFF_WEIGHT)."""
+    n = len(answer_ids)
+    lines = _token_lines(tok, answer_ids)
+    weights = [1] * n
+    if prompt.startswith(_BUGFIX_HEAD):
+        buggy = prompt[len(_BUGFIX_HEAD):].rsplit("\n```", 1)[0]
+        buggy_ids = tok.encode(f"```python\n{buggy}\n```", allow_special=False)
+        changed: set[int] = set()
+        after: set[int] = set()
+        a_end = b_end = 0
+        for a, b, size in difflib.SequenceMatcher(None, buggy_ids, answer_ids, autojunk=False).get_matching_blocks():
+            changed.update(range(b_end, b))  # tokens the fix inserts or replaces
+            if (b > b_end or a > a_end) and b < n:
+                after.add(b)  # and the token right after (where a deletion shows)
+            a_end, b_end = a + size, b + size
+        changed_lines = {lines[j] for j in changed} or {lines[j] for j in after}
+        changed |= after
+        for j in range(n):
+            weights[j] = DIFF_WEIGHT if j in changed else LINE_WEIGHT if lines[j] in changed_lines else 1
+    elif tok.decode(answer_ids).startswith("```python\ndef "):
+        text = tok.decode(answer_ids).split("\n")
+        first = 2  # line 0 is the fence, line 1 the def
+        if len(text) > first and text[first].strip().startswith('"""'):  # skip the docstring
+            if text[first].count('"""') < 2:
+                first += 1
+                while first < len(text) and '"""' not in text[first]:
+                    first += 1
+            first += 1
+        last = len(text) - 1 if text[-1].strip() == "```" else len(text)
+        for j in range(n):
+            if first <= lines[j] < last:
+                weights[j] = BODY_WEIGHT
+    return weights
+
+
+def encode_example(tok: BPETokenizer, ex: InstructionExample, *, weighted: bool = False) -> tuple[list[int], list[int]]:
+    """Tokens plus a loss mask that is 1 only on the answer (and its end marker).
+
+    ``weighted``: answer tokens get integer weights from ``answer_weights`` instead of 1."""
     prompt_ids = tok.encode(format_chat(ex.prompt))
-    answer_ids = tok.encode(ex.response.strip(), allow_special=False) + tok.encode("\n" + END)
-    return prompt_ids + answer_ids, [0] * len(prompt_ids) + [1] * len(answer_ids)
+    body_ids = tok.encode(ex.response.strip(), allow_special=False)
+    end_ids = tok.encode("\n" + END)
+    body_mask = answer_weights(tok, ex.prompt, body_ids) if weighted else [1] * len(body_ids)
+    return prompt_ids + body_ids + end_ids, [0] * len(prompt_ids) + body_mask + [1] * len(end_ids)
 
 
 def collect_examples(files: list[tuple[Path, str]], extra_sft: list[Path] | None,

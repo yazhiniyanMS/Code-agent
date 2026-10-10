@@ -263,7 +263,7 @@ class PretrainData:
         starts = torch.randint(len(data) - self.block_size - 1, (n,), generator=gen).numpy()
         return np.asarray(data[starts[:, None] + self.offsets], dtype=np.int64)  # one vectorised gather
 
-    def batch(self, split: str, gen: torch.Generator, mix: float = 0.0):
+    def batch(self, split: str, gen: torch.Generator, mix: float = 0.0, ordered: bool = False):
         n_mix = int(round(self.batch_size * mix)) if (self.sft is not None and split == "train") else 0
         rows = self._windows(self.splits[split], self.batch_size - n_mix, gen)
         if n_mix:
@@ -276,10 +276,19 @@ class SFTData:
     """Instruction examples with an answer-only loss mask.
 
     With packing (default), each row is filled with several whole examples
-    back to back, so no compute is wasted on padding."""
+    back to back, so no compute is wasted on padding.
+
+    The mask holds integer loss weights (0 = prompt, 1 = answer, >1 = up-weighted
+    answer tokens); the loss is sum(loss * mask) / sum(mask).
+
+    Training batches (``ordered=True``) walk a fresh permutation of the train
+    examples each epoch (seeded by ``seed + epoch``), so every example is seen once
+    per epoch; with several ranks each takes its own slice. Evaluation batches are
+    random draws."""
 
     def __init__(self, data_dir: Path, block_size: int, batch_size: int, device: str, pad_id: int,
-                 val_fraction: float = 0.05, pack: bool = True) -> None:
+                 val_fraction: float = 0.05, pack: bool = True, seed: int = 0, rank: int = 0,
+                 world: int = 1) -> None:
         self.tokens = np.memmap(data_dir / "sft_tokens.bin", dtype=np.uint16, mode="r")
         self.mask = np.memmap(data_dir / "sft_mask.bin", dtype=np.uint8, mode="r")
         index = np.load(data_dir / "sft_index.npy")
@@ -289,27 +298,57 @@ class SFTData:
         self.index = {"val": index[:n_val], "train": index[n_val:]}
         self.block_size, self.batch_size, self.device, self.pad_id = block_size, batch_size, device, pad_id
         self.pack = pack
+        self.seed, self.rank, self.world = seed, rank, world
+        self.epoch, self.cursor = 0, 0
+        self._order: np.ndarray | None = None
 
-    def _example(self, index, gen: torch.Generator):
-        start, length = index[int(torch.randint(len(index), (1,), generator=gen))]
+    def state_dict(self) -> dict:
+        return {"epoch": self.epoch, "cursor": self.cursor}
+
+    def load_state_dict(self, state: dict) -> None:
+        self.epoch, self.cursor = int(state["epoch"]), int(state["cursor"])
+        self._order = None
+
+    def epoch_order(self) -> np.ndarray:
+        """This rank's train-example order for the current epoch."""
+        if self._order is None:
+            perm = np.random.default_rng(self.seed + self.epoch).permutation(len(self.index["train"]))
+            mine = perm[self.rank::self.world]
+            self._order = mine if len(mine) else perm
+        return self._order
+
+    def _next_train(self) -> int:
+        if self.cursor >= len(self.epoch_order()):
+            self.epoch, self.cursor, self._order = self.epoch + 1, 0, None
+        i = int(self.epoch_order()[self.cursor])
+        self.cursor += 1
+        return i
+
+    def _example(self, split: str, gen: torch.Generator, ordered: bool):
+        index = self.index[split]
+        if ordered and split == "train":
+            i = self._next_train()
+        else:
+            i = int(torch.randint(len(index), (1,), generator=gen))
+        start, length = index[i]
         return (self.tokens[start: start + length].astype(np.int64),
-                self.mask[start: start + length].astype(np.int64))
+                self.mask[start: start + length].astype(np.int64))  # integer weights, never clamped
 
-    def _row(self, index, gen: torch.Generator):
+    def _row(self, split: str, gen: torch.Generator, ordered: bool):
         need = self.block_size + 1
         if not self.pack:
-            t, m = self._example(index, gen)
+            t, m = self._example(split, gen, ordered)
             return t[:need], m[:need]
         toks, masks, size = [], [], 0
         while size < need:
-            t, m = self._example(index, gen)
+            t, m = self._example(split, gen, ordered)
             toks.append(t)
             masks.append(m)
             size += len(t)
         return np.concatenate(toks)[:need], np.concatenate(masks)[:need]
 
-    def batch(self, split: str, gen: torch.Generator, mix: float = 0.0):
-        seqs = [self._row(self.index[split], gen) for _ in range(self.batch_size)]
+    def batch(self, split: str, gen: torch.Generator, mix: float = 0.0, ordered: bool = False):
+        seqs = [self._row(split, gen, ordered) for _ in range(self.batch_size)]
         width = max(len(t) for t, _ in seqs) - 1
         x = torch.full((len(seqs), width), self.pad_id, dtype=torch.long)
         y = torch.full((len(seqs), width), self.pad_id, dtype=torch.long)
@@ -544,9 +583,14 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
 
     block = model.cfg.block_size
     if cfg.stage == "sft":
-        data = SFTData(data_dir, block, cfg.batch_size, device, pad_id=tok.eot_id, pack=cfg.pack)
+        data = SFTData(data_dir, block, cfg.batch_size, device, pad_id=tok.eot_id, pack=cfg.pack,
+                       seed=cfg.seed, rank=rank, world=world)
     else:
         data = PretrainData(data_dir, block, cfg.batch_size, device)
+    sampler_path = out_dir / ("sampler.json" if rank == 0 else f"sampler-rank{rank}.json")
+    if hasattr(data, "load_state_dict") and start_step and sampler_path.is_file():
+        data.load_state_dict(json.loads(sampler_path.read_text()))
+        log(f"Resumed the example order at epoch {data.epoch}, example {data.cursor}.")
 
     optimizer = build_optimizer(model, kind=cfg.optimizer, lr=cfg.lr, muon_lr=cfg.muon_lr,
                                 weight_decay=cfg.weight_decay, fused=(dev_type == "cuda" and not shard))
@@ -571,8 +615,11 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
                            **({"mmap": True} if device == "cpu" else {}))["optimizer"]
         try:
             optimizer.load_state_dict(state if "optimizers" in state else {"optimizers": [state]})
-        except (ValueError, KeyError, IndexError):
-            log("Optimizer state does not match (different --optimizer?); starting it fresh.")
+        except (ValueError, KeyError, IndexError) as exc:
+            log(f"Optimizer state does not match ({exc}); starting it fresh.")
+            # Rebuild: a combined optimizer may have loaded some parts before the mismatch.
+            optimizer = build_optimizer(model, kind=cfg.optimizer, lr=cfg.lr, muon_lr=cfg.muon_lr,
+                                        weight_decay=cfg.weight_decay, fused=(dev_type == "cuda"))
 
     if in_backward:
         optimizer.optimizers[0].attach()
@@ -608,10 +655,12 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
         return bool(flag.item())
 
     def checkpoint(val_loss: float | None) -> None:
-        """Save model + optimizer. Sharded: every rank joins the gather and writes its optimizer shard."""
+        """Save model + optimizer (+ the example order). Sharded: every rank joins the gather and
+        writes its optimizer shard."""
         if not shard:
             save_checkpoint(out_dir, model, tok, step=step, stage=cfg.stage, val_loss=val_loss,
                             optimizer=optimizer, state=compact_state(model) if cfg.train_layers else None)
+            save_sampler()
             return
         full = _full_state_dict(model)
         if main:
@@ -621,7 +670,14 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
         tmp = optim_shard.with_suffix(".tmp")
         torch.save({"optimizer": _to_local_tree(optimizer.state_dict()), "step": step}, tmp)
         os.replace(tmp, optim_shard)
+        save_sampler()
         dist.barrier()
+
+    def save_sampler() -> None:
+        if hasattr(data, "state_dict"):  # where the epoch order stands, for --resume
+            tmp = sampler_path.with_suffix(".tmp")
+            tmp.write_text(json.dumps(data.state_dict()))
+            os.replace(tmp, sampler_path)
     t0 = time.time()
     tokens_seen = 0
     best_val = None
@@ -652,7 +708,7 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
         loss_total = 0.0
         loss_scale = scaler.scale if scaler else 1.0
         for micro in range(cfg.grad_accum):
-            x, y, m = data.batch("train", gen, mix=mix)
+            x, y, m = data.batch("train", gen, mix=mix, ordered=True)
             last = micro == cfg.grad_accum - 1
             # DDP: all-reduce gradients only after the last micro-batch. (FSDP reduce-scatters every
             # micro-batch; keeping unsharded gradients around would defeat the point of sharding.)
@@ -683,23 +739,29 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
                 f"{tokens_seen / max(elapsed, 1e-9):,.0f} tok/s | {elapsed / 60:.1f} min")
         # Sharded models need every rank for a forward pass or a save; replicated ones only rank 0.
         acting = main or shard
-        if acting and (step % cfg.eval_interval == 0 or step == cfg.max_steps):
+        if acting and cfg.eval_iters and (step % cfg.eval_interval == 0 or step == cfg.max_steps):
             losses = estimate_loss(model, data, cfg, eval_gen, autocast)
             history.append({"step": step, **losses})
             log(f"eval step {step}: train {losses['train']:.3f} | val {losses['val']:.3f}")
             if best_val is None or losses["val"] < best_val:
                 best_val = losses["val"]
             checkpoint(losses["val"])
+        elif acting and not cfg.eval_iters and step == cfg.max_steps:
+            pass  # saved once below
         elif acting and cfg.save_interval and step % cfg.save_interval == 0:
             checkpoint(history[-1]["val"] if history else None)
             log(f"checkpoint saved at step {step}")
 
     summary: dict = {}
     if (main or shard) and (not history or history[-1]["step"] != step):
-        losses = estimate_loss(model, data, cfg, eval_gen, autocast)
-        history.append({"step": step, **losses})
-        log(f"final eval step {step}: train {losses['train']:.3f} | val {losses['val']:.3f}")
-        checkpoint(losses["val"])
+        if cfg.eval_iters:
+            losses = estimate_loss(model, data, cfg, eval_gen, autocast)
+            history.append({"step": step, **losses})
+            log(f"final eval step {step}: train {losses['train']:.3f} | val {losses['val']:.3f}")
+            checkpoint(losses["val"])
+        else:  # --eval-iters 0: no validation passes (they cost minutes on a CPU), just save
+            history.append({"step": step})
+            checkpoint(None)
     if main:
         summary = {"steps": step, "minutes": (time.time() - t0) / 60, "tokens": tokens_seen,
                    "final": history[-1], "params": model.num_params(), "out_dir": str(out_dir),
