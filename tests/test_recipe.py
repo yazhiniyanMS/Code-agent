@@ -166,6 +166,20 @@ def test_training_without_eval_passes(data_dir, tmp_path):
     assert summary["final"] == {"step": 2} and (tmp_path / "m" / "model.pt").is_file()
 
 
+def test_sft_cli_without_eval_passes(data_dir, tmp_path, capsys):
+    from ycode.lm import cli
+    from ycode.lm.train import TrainConfig, train
+
+    cfg = TrainConfig(stage="pretrain", preset="v2-tiny", model_overrides={"block_size": 32}, batch_size=2,
+                      max_steps=1, warmup_steps=1, eval_interval=1, eval_iters=1, log_interval=1000, device="cpu",
+                      precision="fp32")
+    train(data_dir, tmp_path / "base", cfg, log=lambda *_: None)
+    assert cli.main(["sft", "--data", str(data_dir), "--init-from", str(tmp_path / "base"), "--out",
+                     str(tmp_path / "tuned"), "--steps", "1", "--warmup", "1", "--batch-size", "2",
+                     "--eval-iters", "0", "--device", "cpu", "--precision", "fp32"]) == 0
+    assert "Saved model to" in capsys.readouterr().out
+
+
 def test_bugfix_eval_logs_answers_and_copies():
     class Echo:
         def chat(self, turns, *, max_new_tokens, temperature, on_text=None):

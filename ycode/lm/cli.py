@@ -270,7 +270,8 @@ def main(argv: list[str] | None = None) -> int:
             print("\nInterrupted. The last checkpoint is in", out)
             return 130
         if summary:  # empty on non-zero ranks of a multi-GPU run; rank 0 reports
-            print(f"Saved model to {out} (val loss {summary['final']['val']:.3f})")
+            val = summary["final"].get("val")  # none with --eval-iters 0
+            print(f"Saved model to {out}" + (f" (val loss {val:.3f})" if val is not None else ""))
         return 0
 
     if args.command == "autotrain":
