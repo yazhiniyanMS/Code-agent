@@ -720,6 +720,11 @@ def basics_examples(seed: int = 1337, *, write_per_concept: int = 6,
     return examples
 
 
+# Replay rows answered in prose (explain a function or class, write a docstring).
+_PROSE_PROMPTS = ("What does this Python function do?", "Explain this code:", "Explain this class:",
+                  "class for?", "Write a docstring for this function:", "Document this Python function")
+
+
 def write_basics_dataset(out_dir, tokenizer_path, *, replay_dir=None, replay: int = 0, seed: int = 1337,
                          examples=None, log=print) -> dict:
     """Write an SFT dataset of basics examples, optionally mixed with ``replay`` examples drawn from
@@ -750,8 +755,9 @@ def write_basics_dataset(out_dir, tokenizer_path, *, replay_dir=None, replay: in
         # benchmark's bug-fix prompt answered in the old prose format (it now gets code-only answers).
         names = "|".join(sorted(map(re.escape, held_out_names() | dev_names())))
         leak = re.compile(rf"(?:\bdef |`)({names})\(")
-        dropped = {"benchmark name": 0, "prose bug fix": 0}
-        kept = rewritten = 0
+        dropped = {"benchmark name": 0, "prose bug fix": 0, "garbled prompt": 0, "prose over cap": 0}
+        kept = rewritten = prose = 0
+        max_prose = replay * 3 // 10  # explanations/docstrings: kept, but no more than 30% of replay
         for i in rng.sample(range(len(index)), len(index)):
             if kept >= replay:
                 break
@@ -763,9 +769,17 @@ def write_basics_dataset(out_dir, tokenizer_path, *, replay_dir=None, replay: in
             if leak.search(text):
                 dropped["benchmark name"] += 1
                 continue
-            if BUGFIX_PROMPT.split("\n")[0] in text and text.split(ASSISTANT, 1)[-1].lstrip().startswith("The bug is"):
-                dropped["prose bug fix"] += 1
+            if text.split(ASSISTANT, 1)[-1].lstrip().startswith("The bug is"):
+                dropped["prose bug fix"] += 1  # bug fixes are answered with code only now
                 continue
+            if "How would I write a Python function to" in text:
+                dropped["garbled prompt"] += 1  # "... to returns the ...": ungrammatical task text
+                continue
+            if any(p in text for p in _PROSE_PROMPTS):
+                if prose >= max_prose:
+                    dropped["prose over cap"] += 1
+                    continue
+                prose += 1
             prompt, _, answer = text.partition(f"\n{END}\n{ASSISTANT}\n")
             if answer.startswith("```python\ndef ") and prompt.startswith(USER + "\n"):
                 # Re-encode written functions like the new examples (def-line tokens, weights).

@@ -279,3 +279,35 @@ def test_in_place_saves_and_resume(data_dir, tmp_path):
     cfg.until_step, cfg.resume = None, True
     train(data_dir, tmp_path / "m", cfg, log=logs.append)
     assert json.loads((tmp_path / "m" / "info.json").read_text())["step"] == 4
+
+
+def test_whole_list_exercises_are_valid_and_boosted():
+    from ycode.lm.compose import HELD_OUT_KEYS, UNFILTERED_BOOST, _unfiltered, all_exercises, base_key
+    from ycode.lm.devset import DEV_KEYS
+
+    exercises = all_exercises(4)
+    whole = [e for e in exercises if base_key(e.key)[0] in ("map", "sum_map")]
+    assert len(whole) >= 20
+    for e in whole:
+        assert base_key(e.key) not in HELD_OUT_KEYS | DEV_KEYS
+        assert e.tests() and _passes(e.source(), e.tests()), e.name
+        assert "if" not in e.body  # no filter: that is the point
+    assert UNFILTERED_BOOST > 1 and all(_unfiltered(e.key) for e in whole)
+
+
+def test_replay_drops_prose_bug_fixes_under_any_prompt(data_dir, tmp_path):
+    from ycode.lm.basics import write_basics_dataset
+    from ycode.lm.data import write_sft_files
+    from ycode.lm.tokenizer import BPETokenizer
+
+    tok = BPETokenizer.load(data_dir / "tokenizer.json")
+    old = tmp_path / "old"
+    old.mkdir()
+    rows = [InstructionExample("Fix the bug in this code:\n```python\ndef q(a):\n    return a - 1\n```",
+                               "The bug is in `return a - 1`. It should be `return a + 1`."),
+            InstructionExample("How would I write a Python function to returns the size", "```python\ndef z():\n    pass\n```"),
+            InstructionExample("Write a function `tidy(s)` that strips s.", "```python\ndef tidy(s):\n    return s.strip()\n```")]
+    write_sft_files(tok, rows, old)
+    info = write_basics_dataset(tmp_path / "new", data_dir / "tokenizer.json", replay_dir=old, replay=3, seed=1,
+                                examples=[], log=lambda *_: None)
+    assert info["replay"] == 1  # only `tidy`

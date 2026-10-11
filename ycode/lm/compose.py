@@ -209,6 +209,7 @@ _TRANSFORMS = {
     "abs": ("abs(x)", "the absolute values of "),
 }
 _LISTS = ((1, 2, 3, 4, 5, 6),), ((-3, 0, 7, 2, 9),), ((0, 0, 4),), ((10, -1, 6, 3),)
+_DIGIT_LISTS = ((12, 7, 340),), ((5, 0, 19),), ((),)
 
 
 def _aggregations() -> list[Exercise]:
@@ -405,6 +406,43 @@ def _conversions(rng: random.Random) -> list[Exercise]:
     return out
 
 
+def _whole_list(rng: random.Random) -> list[Exercise]:
+    """Maps and sums over every item, with no filter. Trained mostly on filtered versions, the model
+    invented filters (the sum of cubes came back with an `if x == 0`). Excluded on purpose: halving,
+    adding 1 to each, cubes, plain sums/max/min/averages (held out); doubling and tripling (dev)."""
+    out = []
+    maps = [
+        ("last_digit", "x % 10", "the last decimal digit of every number", "last_digits", _DIGIT_LISTS),
+        ("str", "str(x)", "every number converted to a string", "as_strings", _LISTS),
+        ("sq_plus1", "x * x + 1", "every number squared and then increased by one", "square_plus_one_each", _LISTS),
+        ("positive", "x > 0", "True or False for each number, saying whether it is positive", "positive_flags", _LISTS),
+        ("even_flag", "x % 2 == 0", "True or False for each number, saying whether it is even", "even_flags", _LISTS),
+        ("neg_abs", "-abs(x)", "minus the absolute value of every number", "negative_magnitudes", _LISTS),
+    ]
+    for k in (2, 3, 5, 7, 10):
+        maps.append((f"dist{k}", f"abs(x - {k})", f"the distance of every number from {_num(k, rng)}",
+                     f"distances_from_{_w(k)}", _LISTS))
+    for k, c in ((2, 3), (4, 1), (3, 5), (10, 2), (5, 4)):
+        maps.append((f"lin{k}_{c}", f"{k} * x + {c}", f"every number multiplied by {_num(k, rng)} and then increased "
+                     f"by {_num(c, rng)}", f"times_{_w(k)}_plus_{_w(c)}", _LISTS))
+    for key, expr, phrase, name, samples in maps:
+        out.append(Exercise(("map", key), name, "numbers", f"returns a new list with {phrase}.",
+                            f"return [{expr} for x in numbers]", samples))
+    out.append(Exercise(("map", "first_char"), "first_letters", "words",
+                        "returns a list of the first character of every non-empty string in words.",
+                        "return [w[0] for w in words]", ((["ab", "cd"],), (["x"],), ([],))))
+    out.append(Exercise(("map", "upper_first"), "capitalized_words", "words",
+                        "returns a new list with every string in words capitalized.",
+                        "return [w.capitalize() for w in words]", ((["ab", "cD"],), ([],))))
+    sums = [("sq", "x * x", "the squares of all the numbers"), ("abs", "abs(x)", "the absolute values of all the numbers"),
+            ("double", "2 * x", "all the numbers doubled"), ("sq_plus1", "x * x + 1", "x * x + 1 for every number x")]
+    for key, expr, phrase in sums:
+        out.append(Exercise(("loop", "sum_map", key), f"sum_{key}_loop", "numbers",
+                            f"returns the sum of {phrase} in the list, using a loop.",
+                            f"total = 0\nfor x in numbers:\n    total += {expr}\nreturn total", _LISTS))
+    return out
+
+
 def _cases() -> list[Exercise]:
     specs = [("lower", "s.lower()", "returns s in lower case."), ("title", "s.title()", "returns s in title case."),
              ("swap", "s.swapcase()", "returns s with the case of every letter swapped."),
@@ -425,7 +463,7 @@ def base_key(key: tuple) -> tuple:
 def _raw_exercises(seed: int = 7) -> list[Exercise]:
     rng = random.Random(seed)
     return (_unary(rng) + _ternary() + _binary() + _predicates(rng) + _aggregations() + _list_ops(rng)
-            + _sequences(rng) + _strings(rng) + _loops(rng) + _conversions(rng) + _cases())
+            + _sequences(rng) + _strings(rng) + _loops(rng) + _conversions(rng) + _cases() + _whole_list(rng))
 
 
 def all_exercises(seed: int = 7) -> list[Exercise]:
@@ -461,6 +499,17 @@ def _documented(ex: Exercise, body: str | None = None) -> str:
             + "\n".join("    " + line for line in (ex.body if body is None else body).splitlines()))
 
 
+# Exercises over every item (no filter) are written twice as often: filtered ones outnumbered them
+# about 2:1 and the model added filters nobody asked for.
+UNFILTERED_BOOST = 2
+
+
+def _unfiltered(key: tuple) -> bool:
+    key = base_key(key)
+    return (key[0] in ("map", "sum_map") or (key[0] == "list" and key[1] == "all")
+            or (key[0] == "agg" and key[2] == "all"))
+
+
 def compose_examples(seed: int = 7, per_exercise: int = 1):
     """Write-a-function examples (prompt, code-only answer) with verified, auto-generated tests."""
     from ycode.lm.basics import neutralize
@@ -471,7 +520,7 @@ def compose_examples(seed: int = 7, per_exercise: int = 1):
     for ex in all_exercises(seed):
         if ex.tests() is None:
             continue
-        for _ in range(per_exercise):
+        for _ in range(per_exercise * (UNFILTERED_BOOST if _unfiltered(ex.key) else 1)):
             prompt = rng.choice(_PROMPTS).format(sig=f"{ex.name}({ex.params})", task=ex.task)
             out.append(neutralize(InstructionExample(prompt, f"```python\n{ex.source()}\n```"), ex.name, rng))
     rng.shuffle(out)
