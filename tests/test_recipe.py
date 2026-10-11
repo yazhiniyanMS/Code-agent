@@ -335,3 +335,14 @@ def test_novel_exercises_change_every_round_and_stay_held_out():
         assert base_key(e.key) not in HELD_OUT_KEYS and e.tests() and _passes(e.source(), e.tests()), e.name
     assert not {e.name for e in a} & held_out_names()
     assert len(novel_examples(30)) > 60
+
+
+def test_loop_renderings_compute_the_same_thing():
+    from ycode.lm.compose import all_exercises, loop_rendering
+
+    loops = [(e, loop_rendering(e)) for e in all_exercises(6)]
+    loops = [(e, x) for e, x in loops if x]
+    assert len(loops) > 100
+    for ex, loop in loops[::7]:
+        assert "for x in numbers:" in loop.body and loop.tests() == ex.tests()
+        assert _passes(loop.source(), ex.tests()), loop.source()

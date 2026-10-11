@@ -15,6 +15,7 @@ generated with three operands or with a constant.
 from __future__ import annotations
 
 import random
+import re
 from dataclasses import dataclass
 
 NUMBER_WORDS = {0: "zero", 1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six", 7: "seven",
@@ -499,6 +500,49 @@ def _documented(ex: Exercise, body: str | None = None) -> str:
             + "\n".join("    " + line for line in (ex.body if body is None else body).splitlines()))
 
 
+_COMPREHENSION = re.compile(r"return (?P<agg>sum|max|min|any|all)?\(?\[?(?P<expr>.+?) for x in numbers"
+                            r"(?: if (?P<cond>.+?))?[\])]$")
+LOOP_SHARE = 0.25
+
+
+def loop_rendering(ex: Exercise) -> Exercise | None:
+    """The same exercise written as an explicit loop (a comprehension or sum/max/min/any/all over the
+    list becomes a for loop with an accumulator), or None when there is no simple rewrite."""
+    if "\n" in ex.body or ex.params != "numbers":
+        return None
+    match = _COMPREHENSION.fullmatch(ex.body)
+    if not match:
+        return None
+    agg, expr, cond = match.group("agg"), match.group("expr"), match.group("cond")
+    is_list = ex.body.startswith("return [")
+    if is_list == bool(agg):
+        return None
+    pad = "    " if cond else ""
+    head = "for x in numbers:\n" + (f"    if {cond}:\n" if cond else "")
+    if is_list:
+        body = f"result = []\n{head}{pad}    result.append({expr})\nreturn result"
+    elif agg == "sum":
+        body = f"total = 0\n{head}{pad}    total += {expr}\nreturn total"
+    elif agg in ("max", "min"):
+        op = ">" if agg == "max" else "<"
+        body = (f"best = None\n{head}{pad}    if best is None or {expr} {op} best:\n{pad}        best = {expr}\n"
+                f"return best")
+    elif agg == "any":
+        body = f"{head}{pad}    if {expr}:\n{pad}        return True\nreturn False" if not cond else None
+    else:  # all
+        body = f"{head}{pad}    if not ({expr}):\n{pad}        return False\nreturn True" if not cond else None
+    if body is None:
+        return None
+    loop = Exercise(("loop",) + ex.key, ex.name, ex.params, ex.task, body, ex.samples)
+    return loop if loop.tests() == ex.tests() else None  # must compute the same thing on every sample
+
+
+def _maybe_loop(ex: Exercise, rng: random.Random) -> Exercise:
+    if rng.random() < LOOP_SHARE:
+        return loop_rendering(ex) or ex
+    return ex
+
+
 # Exercises over every item (no filter) are written twice as often: filtered ones outnumbered them
 # about 2:1 and the model added filters nobody asked for.
 UNFILTERED_BOOST = 2
@@ -522,7 +566,8 @@ def compose_examples(seed: int = 7, per_exercise: int = 1):
             continue
         for _ in range(per_exercise * (UNFILTERED_BOOST if _unfiltered(ex.key) else 1)):
             prompt = rng.choice(_PROMPTS).format(sig=f"{ex.name}({ex.params})", task=ex.task)
-            out.append(neutralize(InstructionExample(prompt, f"```python\n{ex.source()}\n```"), ex.name, rng))
+            shown = _maybe_loop(ex, rng)
+            out.append(neutralize(InstructionExample(prompt, f"```python\n{shown.source()}\n```"), ex.name, rng))
     rng.shuffle(out)
     return out
 
@@ -538,6 +583,7 @@ def compose_bugfix_examples(seed: int = 7, per_exercise: int = 1):
         tests = ex.tests()
         if tests is None:
             continue
+        ex = _maybe_loop(ex, rng)
         fixed = _documented(ex)
         candidates = _text_bugs(fixed)
         for _ in range(3):
