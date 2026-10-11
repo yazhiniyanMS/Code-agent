@@ -56,6 +56,10 @@ def _train_args(p: argparse.ArgumentParser, *, sft: bool) -> None:
     p.add_argument("--eval-iters", type=int, default=20, help="Batches per evaluation (per split).")
     p.add_argument("--save-interval", type=int, default=None,
                    help="Also checkpoint every N steps without evaluating (cheap protection against crashes).")
+    p.add_argument("--save-in-place", action="store_true",
+                   help="Delete the previous checkpoint before saving: half the disk, but a crash mid-save loses it.")
+    p.add_argument("--init-optim", action="store_true",
+                   help="With --init-from: also continue that run's optimizer state (optim.pt) if it matches.")
     p.add_argument("--device", default="auto", help="auto, cpu, cuda or mps.")
     p.add_argument("--precision", default="auto", choices=("auto", "fp32", "bf16", "fp16"))
     p.add_argument("--grad-checkpoint", action="store_true",
@@ -259,6 +263,8 @@ def main(argv: list[str] | None = None) -> int:
             resume=getattr(args, "resume", False),
             until_step=args.until_step,
             save_interval=args.save_interval,
+            save_in_place=args.save_in_place,
+            init_optim=args.init_optim,
         )
         out = args.out or default_local_model_dir()
         try:

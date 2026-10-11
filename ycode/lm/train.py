@@ -83,6 +83,8 @@ class TrainConfig:
     compile: bool = False  # torch.compile the model for training
     grad_checkpoint: bool = False  # recompute activations in backward: much less memory, ~30% slower
     save_interval: int | None = None  # checkpoint every N steps without evaluating (cheap crash safety)
+    save_in_place: bool = False  # replace checkpoints in place: half the disk, no atomic swap
+    init_optim: bool = False  # also start the optimizer state from init_from/optim.pt (if it matches)
     until_step: int | None = None  # stop early at this step (segmented runs); schedule still spans max_steps
     # adamw | muon (Muon for hidden matrices + AdamW for the rest) | lion (low memory: one bf16
     # state per weight, applied during backward so gradients are never all held at once)
@@ -100,10 +102,28 @@ class TrainConfig:
 # ------------------------------------------------------------- checkpoints
 
 
+def _load_optimizer(optimizer, state, model, cfg, dev_type, log):
+    try:
+        optimizer.load_state_dict(state if "optimizers" in state else {"optimizers": [state]})
+    except (ValueError, KeyError, IndexError) as exc:
+        log(f"Optimizer state does not match ({exc}); starting it fresh.")
+        # Rebuild: a combined optimizer may have loaded some parts before the mismatch.
+        optimizer = build_optimizer(model, kind=cfg.optimizer, lr=cfg.lr, muon_lr=cfg.muon_lr,
+                                    weight_decay=cfg.weight_decay, fused=(dev_type == "cuda"))
+    return optimizer
+
+
 def save_checkpoint(out_dir: Path, model: GPT, tok: BPETokenizer, *, step: int, stage: str,
-                    val_loss: float | None, optimizer=None, state: dict | None = None) -> Path:
-    """Write model.pt (+ optim.pt). ``state`` overrides model.state_dict() (sharded training)."""
+                    val_loss: float | None, optimizer=None, state: dict | None = None,
+                    in_place: bool = False) -> Path:
+    """Write model.pt (+ optim.pt). ``state`` overrides model.state_dict() (sharded training).
+
+    ``in_place`` deletes the previous files first, so a save needs disk for one checkpoint, not two
+    (a crash mid-save then leaves no checkpoint in out_dir, and a resumed run starts over)."""
     out_dir.mkdir(parents=True, exist_ok=True)
+    if in_place:
+        for name in (CHECKPOINT_NAME, "optim.pt"):
+            (out_dir / name).unlink(missing_ok=True)
     state = state if state is not None else model.state_dict()
     payload = {
         "format": "ycode-lm",
@@ -613,13 +633,16 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
     elif cfg.resume and has_checkpoint and (out_dir / "optim.pt").is_file():
         state = torch.load(out_dir / "optim.pt", map_location=device, weights_only=True,
                            **({"mmap": True} if device == "cpu" else {}))["optimizer"]
-        try:
-            optimizer.load_state_dict(state if "optimizers" in state else {"optimizers": [state]})
-        except (ValueError, KeyError, IndexError) as exc:
-            log(f"Optimizer state does not match ({exc}); starting it fresh.")
-            # Rebuild: a combined optimizer may have loaded some parts before the mismatch.
-            optimizer = build_optimizer(model, kind=cfg.optimizer, lr=cfg.lr, muon_lr=cfg.muon_lr,
-                                        weight_decay=cfg.weight_decay, fused=(dev_type == "cuda"))
+        optimizer = _load_optimizer(optimizer, state, model, cfg, dev_type, log)
+        del state  # the file is memory-mapped: keep no reference, so a later save can replace it
+    elif (cfg.init_optim and cfg.init_from and not (cfg.resume and has_checkpoint)
+          and (Path(cfg.init_from) / "optim.pt").is_file()):
+        # Continue the momentum of the run we start from (Lion's state), instead of from zero.
+        state = torch.load(Path(cfg.init_from) / "optim.pt", map_location=device, weights_only=True,
+                           **({"mmap": True} if device == "cpu" else {}))["optimizer"]
+        optimizer = _load_optimizer(optimizer, state, model, cfg, dev_type, log)
+        del state
+        log(f"Optimizer state continued from {cfg.init_from}.")
 
     if in_backward:
         optimizer.optimizers[0].attach()
@@ -659,7 +682,8 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
         writes its optimizer shard."""
         if not shard:
             save_checkpoint(out_dir, model, tok, step=step, stage=cfg.stage, val_loss=val_loss,
-                            optimizer=optimizer, state=compact_state(model) if cfg.train_layers else None)
+                            optimizer=optimizer, state=compact_state(model) if cfg.train_layers else None,
+                            in_place=cfg.save_in_place)
             save_sampler()
             return
         full = _full_state_dict(model)

@@ -208,3 +208,74 @@ def test_eval_cli_dev_problems_and_answers_file(data_dir, tmp_path, monkeypatch,
     last = [line for line in capsys.readouterr().out.splitlines() if line.startswith("[{")][-1]
     result = json.loads(last)[0]
     assert "solved" in result and "fixed" in result and result["n_bugs"] == 2
+
+
+def test_answers_spell_the_name_with_the_prompts_tokens(data_dir):
+    from ycode.lm.data import encode_answer, encode_example
+    from ycode.lm.tokenizer import BPETokenizer
+
+    tok = BPETokenizer.load(data_dir / "tokenizer.json")
+    prompt = "Write a Python function `is_zero_value(x)` that returns True if x equals zero."
+    response = "```python\ndef is_zero_value(x):\n    return x == 0\n```"
+    ids = encode_answer(tok, prompt, response)
+    assert tok.decode(ids) == response  # same text...
+    name = tok.encode("is_zero_value", allow_special=False)
+    head = tok.encode("```python\ndef", allow_special=False) + tok.encode(" ", allow_special=False)
+    assert ids[:len(head) + len(name)] == head + name  # ...but the name tokens are the prompt's
+    _, mask = encode_example(tok, InstructionExample(prompt, response), weighted=True)
+    body = [w for w in mask if w > 0]
+    assert body[len(head)] == 3  # the def line (the name) is weighted like the body
+
+
+def test_bug_fix_def_line_is_never_weighted_below_two(data_dir):
+    from ycode.lm.data import DEF_WEIGHT, answer_weights
+    from ycode.lm.tokenizer import BPETokenizer
+
+    tok = BPETokenizer.load(data_dir / "tokenizer.json")
+    fixed = 'def keep_in(x, low, high):\n    """Doc."""\n    return low <= x <= high'
+    prompt = evaluate.BUGFIX_PROMPT.format(code=fixed.replace("<= high", "< high"))
+    ids = tok.encode(f"```python\n{fixed}\n```", allow_special=False)
+    weights = answer_weights(tok, prompt, ids)
+    def_ids = len(tok.encode("```python\ndef keep_in(x, low, high):", allow_special=False))
+    assert min(weights[3:def_ids]) >= DEF_WEIGHT  # tokens 0-2 are the fence line
+
+
+def test_behaviour_equivalents_and_unspaced_templates_are_gone():
+    from ycode.lm.basics import _WRITE_TEMPLATES, BEHAVIOUR_EXCLUDED, training_concepts
+    from ycode.lm.compose import _PROMPTS, all_exercises
+
+    assert not {c.name for c in training_concepts()} & BEHAVIOUR_EXCLUDED
+    assert all("`{sig}`" in t or "`{name}`" in t for t in _WRITE_TEMPLATES + _PROMPTS)
+    assert "concatenate" not in {e.name for e in all_exercises(2)}
+
+
+def test_momentum_continues_from_init_from(data_dir, tmp_path):
+    from ycode.lm.train import TrainConfig, train
+
+    base = dict(preset="v2-tiny", model_overrides={"block_size": 32}, batch_size=2, warmup_steps=1,
+                eval_interval=100, eval_iters=0, log_interval=1000, device="cpu", precision="fp32",
+                optimizer="lion", lr=1e-3)
+    train(data_dir, tmp_path / "a", TrainConfig(stage="pretrain", max_steps=2, **base), log=lambda *_: None)
+    saved = torch.load(tmp_path / "a" / "optim.pt", weights_only=True)["optimizer"]
+    logs = []
+    train(data_dir, tmp_path / "b", TrainConfig(stage="pretrain", max_steps=1, init_from=str(tmp_path / "a"),
+                                                init_optim=True, **base), log=logs.append)
+    assert any("Optimizer state continued" in line for line in logs)
+    assert not any("starting it fresh" in line for line in logs)
+    assert saved  # the first run did save momentum
+
+
+def test_in_place_saves_and_resume(data_dir, tmp_path):
+    from ycode.lm.train import TrainConfig, train
+
+    cfg = TrainConfig(stage="pretrain", preset="v2-tiny", model_overrides={"block_size": 32}, batch_size=2,
+                      max_steps=4, until_step=2, warmup_steps=1, eval_interval=100, eval_iters=0,
+                      log_interval=1000, device="cpu", precision="fp32", optimizer="lion", lr=1e-3,
+                      save_interval=2, save_in_place=True)
+    train(data_dir, tmp_path / "m", cfg, log=lambda *_: None)
+    assert json.loads((tmp_path / "m" / "info.json").read_text())["step"] == 2
+    assert not list((tmp_path / "m").glob("*.tmp"))
+    logs = []
+    cfg.until_step, cfg.resume = None, True
+    train(data_dir, tmp_path / "m", cfg, log=logs.append)
+    assert json.loads((tmp_path / "m" / "info.json").read_text())["step"] == 4

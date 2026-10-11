@@ -504,7 +504,6 @@ FRESH_PROBLEMS: tuple[tuple[str, str, str, str], ...] = (
 _WRITE_TEMPLATES = (
     "Write a Python function `{sig}` that {task}",
     "Write a Python function `{sig}` that {task}",  # the most common phrasing, weighted double
-    "Write a function {sig} that {task}",
     "Implement `{sig}`, which {task}",
     "Create a Python function named `{name}` that takes {params} and {task}",
     "Python: define `{sig}`. It {task}",
@@ -578,11 +577,18 @@ def dev_names() -> set[str]:
     return {p.name for p in dev_problems()} | {sig.split("(")[0] for sig, _, _ in dev_bugs()}
 
 
+# Concepts whose code also passes a benchmark item's tests even though the names differ (an audit
+# ran each training function against every benchmark test): count_occurrences works as char_count
+# on strings, reverse_list's items[::-1] reverses strings too, and index_of has binary_search's
+# contract on sorted input. They are not trained on.
+BEHAVIOUR_EXCLUDED = frozenset({"count_occurrences", "reverse_list", "index_of"})
+
+
 def training_concepts() -> tuple[Concept, ...]:
-    """CONCEPTS minus the ones held out for the dev set (ycode.lm.devset)."""
+    """CONCEPTS minus the dev set's concepts (ycode.lm.devset) and BEHAVIOUR_EXCLUDED."""
     from ycode.lm.devset import DEV_CONCEPT_NAMES
 
-    return tuple(c for c in CONCEPTS if c.name not in DEV_CONCEPT_NAMES)
+    return tuple(c for c in CONCEPTS if c.name not in DEV_CONCEPT_NAMES | BEHAVIOUR_EXCLUDED)
 
 
 # Neutral names: with these, only the description can say what the function must do (a name like
@@ -591,15 +597,21 @@ NEUTRAL_NAMES = ("f", "g", "func", "fn", "solve", "compute", "helper", "calc", "
 
 
 NEUTRAL_P = 0.4
+_NAME_ADJECTIVES = ("copper", "silent", "amber", "rapid", "velvet", "frozen", "golden", "hollow", "crimson", "gentle")
+_NAME_NOUNS = ("lantern", "harbor", "pebble", "meadow", "falcon", "kettle", "canyon", "willow", "beacon", "orchard")
 
 
 def neutralize(ex: InstructionExample, name: str, rng: random.Random, p: float | None = None) -> InstructionExample:
     """With probability p (default NEUTRAL_P), rename the function ``name`` everywhere in the example."""
     if rng.random() >= (NEUTRAL_P if p is None else p):
         return ex
-    new = rng.choice(NEUTRAL_NAMES)
-    if rng.random() < 0.3:
-        new += "_" + "".join(rng.choice("abcdefghijklmnopqrstuvwxyz") for _ in range(2))
+    roll = rng.random()
+    if roll < 0.1:  # a meaningless two-word name: nothing to recall from it
+        new = f"{rng.choice(_NAME_ADJECTIVES)}_{rng.choice(_NAME_NOUNS)}"
+    else:
+        new = rng.choice(NEUTRAL_NAMES)
+        if roll < 0.37:
+            new += "_" + "".join(rng.choice("abcdefghijklmnopqrstuvwxyz") for _ in range(2))
     pattern = re.compile(rf"(?<![\w.]){re.escape(name)}(?=\(|`)")
     return InstructionExample(pattern.sub(new, ex.prompt), pattern.sub(new, ex.response))
 
@@ -728,7 +740,7 @@ def write_basics_dataset(out_dir, tokenizer_path, *, replay_dir=None, replay: in
             for ex in (examples if examples is not None else basics_examples(seed))]
     n_basics = len(rows)
     if replay_dir and replay:
-        from ycode.lm.data import ASSISTANT
+        from ycode.lm.data import ASSISTANT, END, USER
 
         replay_dir = Path(replay_dir)
         tokens = np.memmap(replay_dir / "sft_tokens.bin", dtype=np.uint16, mode="r")
@@ -739,7 +751,7 @@ def write_basics_dataset(out_dir, tokenizer_path, *, replay_dir=None, replay: in
         names = "|".join(sorted(map(re.escape, held_out_names() | dev_names())))
         leak = re.compile(rf"(?:\bdef |`)({names})\(")
         dropped = {"benchmark name": 0, "prose bug fix": 0}
-        kept = 0
+        kept = rewritten = 0
         for i in rng.sample(range(len(index)), len(index)):
             if kept >= replay:
                 break
@@ -754,9 +766,16 @@ def write_basics_dataset(out_dir, tokenizer_path, *, replay_dir=None, replay: in
             if BUGFIX_PROMPT.split("\n")[0] in text and text.split(ASSISTANT, 1)[-1].lstrip().startswith("The bug is"):
                 dropped["prose bug fix"] += 1
                 continue
-            rows.append((t, mask[start:start + length].tolist()))
+            prompt, _, answer = text.partition(f"\n{END}\n{ASSISTANT}\n")
+            if answer.startswith("```python\ndef ") and prompt.startswith(USER + "\n"):
+                # Re-encode written functions like the new examples (def-line tokens, weights).
+                answer = answer.rsplit(f"\n{END}", 1)[0]
+                rows.append(encode_example(tok, InstructionExample(prompt[len(USER) + 1:], answer), weighted=True))
+                rewritten += 1
+            else:
+                rows.append((t, mask[start:start + length].tolist()))
             kept += 1
-        log(f"Replay: kept {kept}, dropped {dropped}")
+        log(f"Replay: kept {kept} ({rewritten} written functions re-encoded), dropped {dropped}")
     rng.shuffle(rows)
     all_tokens, all_mask, idx = [], [], []
     for t, m in rows:

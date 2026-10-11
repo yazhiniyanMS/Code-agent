@@ -334,8 +334,6 @@ def _strings(rng: random.Random) -> list[Exercise]:
                  _STRINGS),
         Exercise(("str", "lower_eq"), "same_ignoring_case", "a, b", "returns True if a and b are equal ignoring case.",
                  "return a.lower() == b.lower()", (("Hi", "hI"), ("a", "b"))),
-        Exercise(("str", "concat"), "concatenate", "a, b", "returns the two strings joined together.", "return a + b",
-                 (("ab", "cd"), ("", "x"))),
         Exercise(("str", "is_lower"), "is_all_lower", "s", "returns True if every letter in s is lower case.",
                  "return s.islower()", (("abc",), ("aBc",))),
     ]
@@ -451,7 +449,6 @@ _PROMPTS = (
     "Write a Python function `{sig}` that {task}",
     "Write a Python function `{sig}` that {task}",
     "Write a Python function `{sig}` that {task}",
-    "Write a function {sig} that {task}",
     "Implement `{sig}`, which {task}",
 )
 

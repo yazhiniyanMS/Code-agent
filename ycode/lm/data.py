@@ -476,6 +476,7 @@ def parallel_encode(tok: BPETokenizer, texts: list[str], workers: int | None = N
 # back unchanged is nearly the cheapest answer. The changed tokens and their line weigh more, and so
 # does the body of a written function (the part that depends on reading the task).
 DIFF_WEIGHT, LINE_WEIGHT, BODY_WEIGHT = 8, 3, 3
+DEF_WEIGHT = 2  # floor for the def line of a bug fix (the signature must come back intact)
 _BUGFIX_HEAD = "This function has a bug. Find and fix it:\n```python\n"
 
 
@@ -508,11 +509,15 @@ def answer_weights(tok: BPETokenizer, prompt: str, answer_ids: list[int]) -> lis
             a_end, b_end = a + size, b + size
         changed_lines = {lines[j] for j in changed} or {lines[j] for j in after}
         changed |= after
+        def_line = next((i for i, line in enumerate(tok.decode(answer_ids).split("\n"))
+                         if line.lstrip().startswith("def ")), -1)
         for j in range(n):
             weights[j] = DIFF_WEIGHT if j in changed else LINE_WEIGHT if lines[j] in changed_lines else 1
+            if lines[j] == def_line:
+                weights[j] = max(weights[j], DEF_WEIGHT)
     elif tok.decode(answer_ids).startswith("```python\ndef "):
         text = tok.decode(answer_ids).split("\n")
-        first = 2  # line 0 is the fence, line 1 the def
+        first = 2  # line 0 is the fence; the def line (1) counts as body: the name must be copied right
         if len(text) > first and text[first].strip().startswith('"""'):  # skip the docstring
             if text[first].count('"""') < 2:
                 first += 1
@@ -521,9 +526,28 @@ def answer_weights(tok: BPETokenizer, prompt: str, answer_ids: list[int]) -> lis
             first += 1
         last = len(text) - 1 if text[-1].strip() == "```" else len(text)
         for j in range(n):
-            if first <= lines[j] < last:
+            if first <= lines[j] < last or lines[j] == 1:
                 weights[j] = BODY_WEIGHT
     return weights
+
+
+# The name after a backtick in a prompt (`is_zero(x)`) is tokenized without a leading space, but
+# after "def " the tokenizer would split it differently (" is_" + "zero"). A model that copies the
+# prompt's tokens then writes "defis_zero(". Answers therefore spell the name with the prompt's
+# own tokens: "def" + " " + name. The decoded text is identical.
+_NAMED = re.compile(r"`([A-Za-z_]\w*)[(`]")
+
+
+def encode_answer(tok: BPETokenizer, prompt: str, response: str) -> list[int]:
+    response = response.strip()
+    match = _NAMED.search(prompt)
+    if match:
+        head = f"```python\ndef {match.group(1)}("
+        if response.startswith(head):
+            return (tok.encode("```python\ndef", allow_special=False) + tok.encode(" ", allow_special=False)
+                    + tok.encode(match.group(1), allow_special=False)
+                    + tok.encode(response[len(head) - 1:], allow_special=False))
+    return tok.encode(response, allow_special=False)
 
 
 def encode_example(tok: BPETokenizer, ex: InstructionExample, *, weighted: bool = False) -> tuple[list[int], list[int]]:
@@ -531,7 +555,8 @@ def encode_example(tok: BPETokenizer, ex: InstructionExample, *, weighted: bool 
 
     ``weighted``: answer tokens get integer weights from ``answer_weights`` instead of 1."""
     prompt_ids = tok.encode(format_chat(ex.prompt))
-    body_ids = tok.encode(ex.response.strip(), allow_special=False)
+    body_ids = encode_answer(tok, ex.prompt, ex.response) if weighted else tok.encode(ex.response.strip(),
+                                                                                       allow_special=False)
     end_ids = tok.encode("\n" + END)
     body_mask = answer_weights(tok, ex.prompt, body_ids) if weighted else [1] * len(body_ids)
     return prompt_ids + body_ids + end_ids, [0] * len(prompt_ids) + body_mask + [1] * len(end_ids)
