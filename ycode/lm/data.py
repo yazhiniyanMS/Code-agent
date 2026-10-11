@@ -477,6 +477,12 @@ def parallel_encode(tok: BPETokenizer, texts: list[str], workers: int | None = N
 # does the body of a written function (the part that depends on reading the task).
 DIFF_WEIGHT, LINE_WEIGHT, BODY_WEIGHT = 8, 3, 3
 DEF_WEIGHT = 2  # floor for the def line of a bug fix (the signature must come back intact)
+# Operators, numbers and a few names on the lines a fix leaves alone: the usual wrong edits change
+# exactly these (items[0] -> items[1], a flipped comparison, *= -> +=), so keeping them is weighted.
+KEEP_WEIGHT = 2
+_KEEP_TOKENS = frozenset({"+", "-", "*", "/", "//", "%", "**", "<", ">", "<=", ">=", "==", "!=", "+=", "-=",
+                          "*=", "/=", "//=", "True", "False", "None", "and", "or", "in", "not", "is", "max", "min",
+                          "upper", "lower", "startswith", "endswith", "sum", "len", "any", "all"})
 _BUGFIX_HEAD = "This function has a bug. Find and fix it:\n```python\n"
 
 
@@ -513,6 +519,10 @@ def answer_weights(tok: BPETokenizer, prompt: str, answer_ids: list[int]) -> lis
                          if line.lstrip().startswith("def ")), -1)
         for j in range(n):
             weights[j] = DIFF_WEIGHT if j in changed else LINE_WEIGHT if lines[j] in changed_lines else 1
+            if weights[j] == 1:
+                piece = tok.decode([answer_ids[j]]).strip()
+                if piece in _KEEP_TOKENS or piece.isdigit():
+                    weights[j] = KEEP_WEIGHT
             if lines[j] == def_line:
                 weights[j] = max(weights[j], DEF_WEIGHT)
     elif tok.decode(answer_ids).startswith("```python\ndef "):

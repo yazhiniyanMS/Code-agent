@@ -311,3 +311,27 @@ def test_replay_drops_prose_bug_fixes_under_any_prompt(data_dir, tmp_path):
     info = write_basics_dataset(tmp_path / "new", data_dir / "tokenizer.json", replay_dir=old, replay=3, seed=1,
                                 examples=[], log=lambda *_: None)
     assert info["replay"] == 1  # only `tidy`
+
+
+def test_unchanged_operators_in_bug_fixes_weigh_two(data_dir):
+    from ycode.lm.data import KEEP_WEIGHT, answer_weights
+    from ycode.lm.tokenizer import BPETokenizer
+
+    tok = BPETokenizer.load(data_dir / "tokenizer.json")
+    fixed = 'def pick(items):\n    """Doc."""\n    x = items[0] * 3\n    return x - 1'
+    prompt = evaluate.BUGFIX_PROMPT.format(code=fixed.replace("x - 1", "x + 1"))
+    ids = tok.encode(f"```python\n{fixed}\n```", allow_special=False)
+    weights = answer_weights(tok, prompt, ids)
+    kept = {tok.decode([t]).strip() for t, w in zip(ids, weights) if w == KEEP_WEIGHT}
+    assert "*" in kept or "3" in kept  # an operator/number on the unchanged line
+
+
+def test_novel_exercises_change_every_round_and_stay_held_out():
+    from ycode.lm.compose import HELD_OUT_KEYS, base_key, novel_examples, novel_exercises
+
+    a, b = novel_exercises(30), novel_exercises(31)
+    assert {e.name for e in a} != {e.name for e in b}
+    for e in a:
+        assert base_key(e.key) not in HELD_OUT_KEYS and e.tests() and _passes(e.source(), e.tests()), e.name
+    assert not {e.name for e in a} & held_out_names()
+    assert len(novel_examples(30)) > 60

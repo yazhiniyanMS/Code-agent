@@ -558,6 +558,101 @@ def compose_bugfix_examples(seed: int = 7, per_exercise: int = 1):
     return out
 
 
+_ORDINALS = {5: "sixth", 6: "seventh", 7: "eighth", 8: "ninth", 9: "tenth", -3: "third to last",
+             -4: "fourth to last", -5: "fifth to last"}
+
+
+def novel_exercises(seed: int) -> list[Exercise]:
+    """Exercises whose constants change every round (k from 11 to 60, ordinals up to tenth, pairs of
+    conditions, best-so-far loops over records). Fixed constants let a model memorise "add_five ->
+    x + 5"; fresh ones make it read the number. Held out as everywhere: division by 60, the second
+    and middle items, plain max/min/sum of a list, sum of evens, counting zeros."""
+    rng = random.Random(seed * 7919 + 13)
+    out = []
+    for _ in range(6):
+        k = rng.randint(11, 60)
+        word = _num(k, rng)
+        out += [
+            Exercise(("novel", "add", k), f"add_{k}", "x", f"returns x plus {word}.", f"return x + {k}", tuple(_INTS)),
+            Exercise(("novel", "sub", k), f"minus_{k}", "x", f"returns {word} less than x.", f"return x - {k}",
+                     tuple(_INTS)),
+            Exercise(("novel", "mul", k), f"times_{k}", "x", f"returns x multiplied by {word}.", f"return {k} * x",
+                     tuple(_INTS)),
+            Exercise(("novel", "mod", k), f"remainder_by_{k}", "n", f"returns the remainder when n is divided by {word}.",
+                     f"return n % {k}", ((100,), (k,), (k + 3,), (7,))),
+            Exercise(("novel", "gt", k), f"above_{k}", "n", f"returns True if n is greater than {word}.",
+                     f"return n > {k}", ((k - 1,), (k,), (k + 1,), (0,))),
+            Exercise(("novel", "lt", k), f"below_{k}", "n", f"returns True if n is less than {word}.",
+                     f"return n < {k}", ((k - 1,), (k,), (k + 1,), (100,))),
+            Exercise(("novel", "len_gt", k), f"longer_than_{k}", "items",
+                     f"returns True if the list has more than {word} items.", f"return len(items) > {k}",
+                     (([0] * k,), ([0] * (k + 1),), ([],))),
+            Exercise(("novel", "multiples", k), f"sum_of_multiples_of_{k}", "n",
+                     f"returns the sum of the multiples of {word} below n.",
+                     f"total = 0\nfor i in range(n):\n    if i % {k} == 0:\n        total += i\nreturn total",
+                     ((100,), (k,), (3 * k + 1,))),
+        ]
+    for i, nth in rng.sample(sorted(_ORDINALS.items()), 4):
+        out.append(Exercise(("novel", "index", i), f"{nth.replace(' ', '_')}_item", "items",
+                            f"returns the {nth} item of a list with at least ten items.", f"return items[{i}]",
+                            ((list(range(10, 22)),), (list("abcdefghij"),))))
+    conds = {"positive": "x > 0", "odd": "x % 2 == 1", "gt5": "x > 5", "lt3": "x < 3", "mult3": "x % 3 == 0",
+             "negative": "x < 0"}
+    for a, b in rng.sample([(a, b) for a in conds for b in conds if a < b], 6):
+        cond = f"{conds[a]} and {conds[b]}"
+        what = f"{_FILTERS[a][1]} that are also {_FILTERS[b][1].replace('the ', '')}"
+        out.append(Exercise(("novel", "count2", a, b), f"count_{a}_{b}", "numbers",
+                            f"returns how many of {what} there are in the list.",
+                            f"return sum(1 for x in numbers if {cond})", _LISTS))
+        out.append(Exercise(("novel", "keep2", a, b), f"keep_{a}_{b}", "numbers", f"returns a list of {what}.",
+                            f"return [x for x in numbers if {cond}]", _LISTS))
+    records = [
+        ("longest_inner_list", "lists", "the longest list in a non-empty list of lists (the first one if tied)",
+         "len(x) > len(best)", ((([1], [2, 3], [4]),), (([5, 6], [7]),))),
+        ("shortest_string", "words", "the shortest string in a non-empty list (the first one if tied)",
+         "len(x) < len(best)", ((("aa", "b", "ccc"),), (("xy", "zz"),))),
+        ("pair_with_largest_second", "pairs", "the pair whose second element is largest, in a non-empty list of pairs",
+         "x[1] > best[1]", ((((1, 5), (2, 9), (3, 1)),), (((0, 0),),))),
+        ("pair_with_smallest_first", "pairs", "the pair whose first element is smallest, in a non-empty list of pairs",
+         "x[0] < best[0]", ((((4, 5), (2, 9), (3, 1)),), (((0, 0),),))),
+    ]
+    for name, param, what, better, samples in records:
+        out.append(Exercise(("novel", "best", name), name, param, f"returns {what}.",
+                            f"best = {param}[0]\nfor x in {param}:\n    if {better}:\n        best = x\nreturn best",
+                            tuple(tuple(list(s) for s in sample) for sample in samples)))
+    return out
+
+
+def novel_examples(seed: int = 7, per_exercise: int = 1):
+    """Write and fix-the-bug examples from novel_exercises(seed): new constants every round."""
+    from ycode.lm.basics import BUGFIX_PROMPT, _parses, _passes, _text_bugs, held_out_names, neutralize
+    from ycode.lm.data import InstructionExample, inject_bug
+    from ycode.lm.devset import DEV_KEYS
+
+    rng = random.Random(seed + 3)
+    exercises = [e for e in novel_exercises(seed) if base_key(e.key) not in DEV_KEYS]
+    assert not {base_key(e.key) for e in exercises} & HELD_OUT_KEYS
+    assert not {e.name for e in exercises} & held_out_names()
+    out = []
+    for ex in exercises:
+        tests = ex.tests()
+        if tests is None:
+            continue
+        for _ in range(per_exercise):
+            prompt = rng.choice(_PROMPTS).format(sig=f"{ex.name}({ex.params})", task=ex.task)
+            out.append(neutralize(InstructionExample(prompt, f"```python\n{ex.source()}\n```"), ex.name, rng))
+        fixed = _documented(ex)
+        candidates = _text_bugs(fixed) + [b for b in (inject_bug(fixed, rng) for _ in range(3)) if b]
+        rng.shuffle(candidates)
+        for buggy, _wrong, _right in candidates:
+            if _parses(buggy) and not _passes(buggy, tests):
+                out.append(neutralize(InstructionExample(BUGFIX_PROMPT.format(code=buggy), f"```python\n{fixed}\n```"),
+                                      ex.name, rng))
+                break
+    rng.shuffle(out)
+    return out
+
+
 def contrast_examples(seed: int = 7, per_exercise: int = 1):
     """Bug fixes whose buggy body is a neighbouring exercise's correct code (largest vs smallest, positive
     vs negative, plus vs minus k, any vs all, ...): only the docstring says what is wrong, so copying the
