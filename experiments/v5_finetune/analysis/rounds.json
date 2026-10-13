@@ -1,0 +1,1750 @@
+[
+ {
+  "round": 8,
+  "set": "bench",
+  "points": 11,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 4,
+   "instruction_following": 31,
+   "hallucination": 2,
+   "coding": 2,
+   "factual": 3,
+   "reasoning": 12
+  },
+  "groups": {
+   "fixed": 4,
+   "fresh": 2,
+   "standard": 5
+  }
+ },
+ {
+  "round": 8,
+  "set": "dev",
+  "points": 10,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 5,
+   "instruction_following": 35,
+   "hallucination": 0,
+   "coding": 2,
+   "factual": 0,
+   "reasoning": 10
+  },
+  "groups": {
+   "dev_concept": 2,
+   "dev_fix": 0,
+   "dev_slot": 8
+  }
+ },
+ {
+  "round": 9,
+  "set": "bench",
+  "points": 10,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 5,
+   "instruction_following": 26,
+   "hallucination": 3,
+   "coding": 5,
+   "factual": 4,
+   "reasoning": 12
+  },
+  "groups": {
+   "fixed": 5,
+   "fresh": 3,
+   "standard": 2
+  }
+ },
+ {
+  "round": 9,
+  "set": "dev",
+  "points": 8,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 4,
+   "instruction_following": 34,
+   "hallucination": 2,
+   "coding": 2,
+   "factual": 0,
+   "reasoning": 12
+  },
+  "groups": {
+   "dev_concept": 1,
+   "dev_fix": 2,
+   "dev_slot": 5
+  }
+ },
+ {
+  "round": 10,
+  "set": "bench",
+  "points": 14,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 4,
+   "instruction_following": 25,
+   "hallucination": 2,
+   "coding": 5,
+   "factual": 3,
+   "reasoning": 12
+  },
+  "groups": {
+   "fixed": 7,
+   "fresh": 3,
+   "standard": 4
+  }
+ },
+ {
+  "round": 10,
+  "set": "dev",
+  "points": 10,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 4,
+   "instruction_following": 34,
+   "hallucination": 1,
+   "coding": 2,
+   "factual": 0,
+   "reasoning": 11
+  },
+  "groups": {
+   "dev_concept": 1,
+   "dev_fix": 2,
+   "dev_slot": 7
+  }
+ },
+ {
+  "round": 11,
+  "set": "bench",
+  "points": 13,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 4,
+   "instruction_following": 24,
+   "hallucination": 2,
+   "coding": 7,
+   "factual": 3,
+   "reasoning": 12
+  },
+  "groups": {
+   "fixed": 6,
+   "fresh": 4,
+   "standard": 3
+  }
+ },
+ {
+  "round": 11,
+  "set": "dev",
+  "points": 14,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 5,
+   "instruction_following": 24,
+   "hallucination": 1,
+   "coding": 2,
+   "factual": 0,
+   "reasoning": 16
+  },
+  "groups": {
+   "dev_concept": 1,
+   "dev_fix": 2,
+   "dev_slot": 11
+  }
+ },
+ {
+  "round": 12,
+  "set": "bench",
+  "points": 11,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 4,
+   "instruction_following": 29,
+   "hallucination": 1,
+   "coding": 7,
+   "factual": 3,
+   "reasoning": 10
+  },
+  "groups": {
+   "fixed": 5,
+   "fresh": 2,
+   "standard": 4
+  }
+ },
+ {
+  "round": 12,
+  "set": "dev",
+  "points": 16,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 6,
+   "instruction_following": 28,
+   "hallucination": 1,
+   "coding": 2,
+   "factual": 0,
+   "reasoning": 9
+  },
+  "groups": {
+   "dev_concept": 2,
+   "dev_fix": 3,
+   "dev_slot": 11
+  }
+ },
+ {
+  "round": 13,
+  "set": "bench",
+  "points": 14,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 6,
+   "instruction_following": 27,
+   "hallucination": 1,
+   "coding": 6,
+   "factual": 2,
+   "reasoning": 9
+  },
+  "groups": {
+   "fixed": 5,
+   "fresh": 4,
+   "standard": 5
+  }
+ },
+ {
+  "round": 13,
+  "set": "dev",
+  "points": 16,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 6,
+   "instruction_following": 27,
+   "hallucination": 1,
+   "coding": 1,
+   "factual": 0,
+   "reasoning": 11
+  },
+  "groups": {
+   "dev_concept": 2,
+   "dev_fix": 4,
+   "dev_slot": 10
+  }
+ },
+ {
+  "round": 14,
+  "set": "bench",
+  "points": 15,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 4,
+   "instruction_following": 25,
+   "hallucination": 0,
+   "coding": 5,
+   "factual": 3,
+   "reasoning": 13
+  },
+  "groups": {
+   "fixed": 7,
+   "fresh": 3,
+   "standard": 5
+  }
+ },
+ {
+  "round": 14,
+  "set": "dev",
+  "points": 18,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 6,
+   "instruction_following": 27,
+   "hallucination": 1,
+   "coding": 1,
+   "factual": 0,
+   "reasoning": 9
+  },
+  "groups": {
+   "dev_concept": 3,
+   "dev_fix": 3,
+   "dev_slot": 12
+  }
+ },
+ {
+  "round": 15,
+  "set": "bench",
+  "points": 18,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 5,
+   "instruction_following": 23,
+   "hallucination": 2,
+   "coding": 6,
+   "factual": 3,
+   "reasoning": 8
+  },
+  "groups": {
+   "fixed": 8,
+   "fresh": 4,
+   "standard": 6
+  }
+ },
+ {
+  "round": 15,
+  "set": "dev",
+  "points": 17,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 4,
+   "instruction_following": 28,
+   "hallucination": 1,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 12
+  },
+  "groups": {
+   "dev_concept": 2,
+   "dev_fix": 3,
+   "dev_slot": 12
+  }
+ },
+ {
+  "round": 16,
+  "set": "bench",
+  "points": 16,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 5,
+   "instruction_following": 23,
+   "hallucination": 2,
+   "coding": 6,
+   "factual": 3,
+   "reasoning": 10
+  },
+  "groups": {
+   "fixed": 9,
+   "fresh": 3,
+   "standard": 4
+  }
+ },
+ {
+  "round": 16,
+  "set": "dev",
+  "points": 20,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 4,
+   "instruction_following": 28,
+   "hallucination": 0,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 10
+  },
+  "groups": {
+   "dev_concept": 2,
+   "dev_fix": 3,
+   "dev_slot": 15
+  }
+ },
+ {
+  "round": 17,
+  "set": "bench",
+  "points": 20,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 5,
+   "instruction_following": 22,
+   "hallucination": 2,
+   "coding": 5,
+   "factual": 4,
+   "reasoning": 7
+  },
+  "groups": {
+   "fixed": 9,
+   "fresh": 5,
+   "standard": 6
+  }
+ },
+ {
+  "round": 17,
+  "set": "dev",
+  "points": 23,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 5,
+   "instruction_following": 20,
+   "hallucination": 0,
+   "coding": 1,
+   "factual": 0,
+   "reasoning": 13
+  },
+  "groups": {
+   "dev_concept": 3,
+   "dev_fix": 3,
+   "dev_slot": 17
+  }
+ },
+ {
+  "round": 18,
+  "set": "bench",
+  "points": 18,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 6,
+   "instruction_following": 24,
+   "hallucination": 2,
+   "coding": 6,
+   "factual": 2,
+   "reasoning": 7
+  },
+  "groups": {
+   "fixed": 7,
+   "fresh": 5,
+   "standard": 6
+  }
+ },
+ {
+  "round": 18,
+  "set": "dev",
+  "points": 24,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 5,
+   "instruction_following": 20,
+   "hallucination": 0,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 13
+  },
+  "groups": {
+   "dev_concept": 1,
+   "dev_fix": 4,
+   "dev_slot": 19
+  }
+ },
+ {
+  "round": 19,
+  "set": "bench",
+  "points": 19,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 6,
+   "instruction_following": 23,
+   "hallucination": 2,
+   "coding": 4,
+   "factual": 4,
+   "reasoning": 7
+  },
+  "groups": {
+   "fixed": 9,
+   "fresh": 4,
+   "standard": 6
+  }
+ },
+ {
+  "round": 19,
+  "set": "dev",
+  "points": 27,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 4,
+   "instruction_following": 17,
+   "hallucination": 0,
+   "coding": 1,
+   "factual": 0,
+   "reasoning": 13
+  },
+  "groups": {
+   "dev_concept": 2,
+   "dev_fix": 4,
+   "dev_slot": 21
+  }
+ },
+ {
+  "round": 20,
+  "set": "bench",
+  "points": 21,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 5,
+   "instruction_following": 22,
+   "hallucination": 2,
+   "coding": 3,
+   "factual": 3,
+   "reasoning": 9
+  },
+  "groups": {
+   "fixed": 9,
+   "fresh": 6,
+   "standard": 6
+  }
+ },
+ {
+  "round": 20,
+  "set": "dev",
+  "points": 30,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 4,
+   "instruction_following": 16,
+   "hallucination": 0,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 12
+  },
+  "groups": {
+   "dev_concept": 3,
+   "dev_fix": 6,
+   "dev_slot": 21
+  }
+ },
+ {
+  "round": 21,
+  "set": "dev",
+  "points": 27,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 1,
+   "instruction_following": 18,
+   "hallucination": 1,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 15
+  },
+  "groups": {
+   "dev_concept": 3,
+   "dev_fix": 3,
+   "dev_slot": 21
+  }
+ },
+ {
+  "round": 22,
+  "set": "dev",
+  "points": 27,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 2,
+   "instruction_following": 17,
+   "hallucination": 1,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 15
+  },
+  "groups": {
+   "dev_concept": 3,
+   "dev_fix": 3,
+   "dev_slot": 21
+  }
+ },
+ {
+  "round": 23,
+  "set": "bench",
+  "points": 21,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 1,
+   "instruction_following": 25,
+   "hallucination": 2,
+   "coding": 2,
+   "factual": 6,
+   "reasoning": 8
+  },
+  "groups": {
+   "fixed": 9,
+   "fresh": 8,
+   "standard": 4
+  }
+ },
+ {
+  "round": 23,
+  "set": "dev",
+  "points": 28,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 2,
+   "instruction_following": 16,
+   "hallucination": 1,
+   "coding": 1,
+   "factual": 0,
+   "reasoning": 14
+  },
+  "groups": {
+   "dev_concept": 4,
+   "dev_fix": 3,
+   "dev_slot": 21
+  }
+ },
+ {
+  "round": 24,
+  "set": "bench",
+  "points": 18,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 2,
+   "instruction_following": 24,
+   "hallucination": 4,
+   "coding": 1,
+   "factual": 7,
+   "reasoning": 9
+  },
+  "groups": {
+   "fixed": 8,
+   "fresh": 5,
+   "standard": 5
+  }
+ },
+ {
+  "round": 24,
+  "set": "dev",
+  "points": 29,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 2,
+   "instruction_following": 18,
+   "hallucination": 0,
+   "coding": 1,
+   "factual": 0,
+   "reasoning": 12
+  },
+  "groups": {
+   "dev_concept": 2,
+   "dev_fix": 5,
+   "dev_slot": 22
+  }
+ },
+ {
+  "round": 25,
+  "set": "bench",
+  "points": 21,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 1,
+   "instruction_following": 19,
+   "hallucination": 4,
+   "coding": 2,
+   "factual": 8,
+   "reasoning": 10
+  },
+  "groups": {
+   "fixed": 8,
+   "fresh": 6,
+   "standard": 7
+  }
+ },
+ {
+  "round": 25,
+  "set": "dev",
+  "points": 28,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 2,
+   "instruction_following": 17,
+   "hallucination": 0,
+   "coding": 1,
+   "factual": 0,
+   "reasoning": 14
+  },
+  "groups": {
+   "dev_concept": 3,
+   "dev_fix": 4,
+   "dev_slot": 21
+  }
+ },
+ {
+  "round": 26,
+  "set": "bench",
+  "points": 16,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 1,
+   "instruction_following": 20,
+   "hallucination": 2,
+   "coding": 5,
+   "factual": 6,
+   "reasoning": 15
+  },
+  "groups": {
+   "fixed": 6,
+   "fresh": 5,
+   "standard": 5
+  }
+ },
+ {
+  "round": 26,
+  "set": "dev",
+  "points": 31,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 1,
+   "instruction_following": 19,
+   "hallucination": 2,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 9
+  },
+  "groups": {
+   "dev_concept": 3,
+   "dev_fix": 5,
+   "dev_slot": 23
+  }
+ },
+ {
+  "round": 27,
+  "set": "bench",
+  "points": 21,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 2,
+   "instruction_following": 21,
+   "hallucination": 2,
+   "coding": 4,
+   "factual": 5,
+   "reasoning": 10
+  },
+  "groups": {
+   "fixed": 7,
+   "fresh": 7,
+   "standard": 7
+  }
+ },
+ {
+  "round": 27,
+  "set": "dev",
+  "points": 34,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 18,
+   "hallucination": 1,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 9
+  },
+  "groups": {
+   "dev_concept": 3,
+   "dev_fix": 6,
+   "dev_slot": 25
+  }
+ },
+ {
+  "round": 28,
+  "set": "bench",
+  "points": 20,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 1,
+   "instruction_following": 19,
+   "hallucination": 2,
+   "coding": 3,
+   "factual": 6,
+   "reasoning": 14
+  },
+  "groups": {
+   "fixed": 6,
+   "fresh": 8,
+   "standard": 6
+  }
+ },
+ {
+  "round": 28,
+  "set": "dev",
+  "points": 33,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 1,
+   "instruction_following": 17,
+   "hallucination": 0,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 11
+  },
+  "groups": {
+   "dev_concept": 3,
+   "dev_fix": 5,
+   "dev_slot": 25
+  }
+ },
+ {
+  "round": 29,
+  "set": "bench",
+  "points": 21,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 2,
+   "instruction_following": 19,
+   "hallucination": 1,
+   "coding": 3,
+   "factual": 6,
+   "reasoning": 13
+  },
+  "groups": {
+   "fixed": 7,
+   "fresh": 9,
+   "standard": 5
+  }
+ },
+ {
+  "round": 29,
+  "set": "dev",
+  "points": 36,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 16,
+   "hallucination": 1,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 9
+  },
+  "groups": {
+   "dev_concept": 5,
+   "dev_fix": 5,
+   "dev_slot": 26
+  }
+ },
+ {
+  "round": 30,
+  "set": "bench",
+  "points": 21,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 1,
+   "instruction_following": 21,
+   "hallucination": 1,
+   "coding": 2,
+   "factual": 8,
+   "reasoning": 11
+  },
+  "groups": {
+   "fixed": 6,
+   "fresh": 9,
+   "standard": 6
+  }
+ },
+ {
+  "round": 30,
+  "set": "dev",
+  "points": 36,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 17,
+   "hallucination": 1,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 8
+  },
+  "groups": {
+   "dev_concept": 4,
+   "dev_fix": 6,
+   "dev_slot": 26
+  }
+ },
+ {
+  "round": 31,
+  "set": "bench",
+  "points": 19,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 1,
+   "instruction_following": 26,
+   "hallucination": 1,
+   "coding": 2,
+   "factual": 6,
+   "reasoning": 10
+  },
+  "groups": {
+   "fixed": 4,
+   "fresh": 9,
+   "standard": 6
+  }
+ },
+ {
+  "round": 31,
+  "set": "dev",
+  "points": 36,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 20,
+   "hallucination": 0,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 6
+  },
+  "groups": {
+   "dev_concept": 4,
+   "dev_fix": 7,
+   "dev_slot": 25
+  }
+ },
+ {
+  "round": 32,
+  "set": "bench",
+  "points": 22,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 1,
+   "instruction_following": 20,
+   "hallucination": 1,
+   "coding": 3,
+   "factual": 6,
+   "reasoning": 12
+  },
+  "groups": {
+   "fixed": 5,
+   "fresh": 8,
+   "standard": 9
+  }
+ },
+ {
+  "round": 32,
+  "set": "dev",
+  "points": 37,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 16,
+   "hallucination": 1,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 8
+  },
+  "groups": {
+   "dev_concept": 4,
+   "dev_fix": 6,
+   "dev_slot": 27
+  }
+ },
+ {
+  "round": 33,
+  "set": "bench",
+  "points": 21,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 1,
+   "instruction_following": 25,
+   "hallucination": 3,
+   "coding": 2,
+   "factual": 6,
+   "reasoning": 7
+  },
+  "groups": {
+   "fixed": 5,
+   "fresh": 9,
+   "standard": 7
+  }
+ },
+ {
+  "round": 33,
+  "set": "dev",
+  "points": 37,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 15,
+   "hallucination": 0,
+   "coding": 1,
+   "factual": 0,
+   "reasoning": 9
+  },
+  "groups": {
+   "dev_concept": 4,
+   "dev_fix": 6,
+   "dev_slot": 27
+  }
+ },
+ {
+  "round": 34,
+  "set": "bench",
+  "points": 23,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 1,
+   "instruction_following": 21,
+   "hallucination": 2,
+   "coding": 1,
+   "factual": 3,
+   "reasoning": 14
+  },
+  "groups": {
+   "fixed": 6,
+   "fresh": 9,
+   "standard": 8
+  }
+ },
+ {
+  "round": 34,
+  "set": "dev",
+  "points": 36,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 16,
+   "hallucination": 0,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 10
+  },
+  "groups": {
+   "dev_concept": 4,
+   "dev_fix": 6,
+   "dev_slot": 26
+  }
+ },
+ {
+  "round": 35,
+  "set": "bench",
+  "points": 24,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 1,
+   "instruction_following": 25,
+   "hallucination": 1,
+   "coding": 0,
+   "factual": 5,
+   "reasoning": 9
+  },
+  "groups": {
+   "fixed": 8,
+   "fresh": 9,
+   "standard": 7
+  }
+ },
+ {
+  "round": 35,
+  "set": "dev",
+  "points": 37,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 15,
+   "hallucination": 0,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 10
+  },
+  "groups": {
+   "dev_concept": 4,
+   "dev_fix": 5,
+   "dev_slot": 28
+  }
+ },
+ {
+  "round": 36,
+  "set": "bench",
+  "points": 26,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 1,
+   "instruction_following": 21,
+   "hallucination": 1,
+   "coding": 2,
+   "factual": 4,
+   "reasoning": 10
+  },
+  "groups": {
+   "fixed": 10,
+   "fresh": 9,
+   "standard": 7
+  }
+ },
+ {
+  "round": 36,
+  "set": "dev",
+  "points": 39,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 15,
+   "hallucination": 0,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 8
+  },
+  "groups": {
+   "dev_concept": 5,
+   "dev_fix": 6,
+   "dev_slot": 28
+  }
+ },
+ {
+  "round": 37,
+  "set": "bench",
+  "points": 25,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 1,
+   "instruction_following": 17,
+   "hallucination": 3,
+   "coding": 1,
+   "factual": 6,
+   "reasoning": 12
+  },
+  "groups": {
+   "fixed": 8,
+   "fresh": 9,
+   "standard": 8
+  }
+ },
+ {
+  "round": 37,
+  "set": "dev",
+  "points": 38,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 15,
+   "hallucination": 0,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 9
+  },
+  "groups": {
+   "dev_concept": 4,
+   "dev_fix": 6,
+   "dev_slot": 28
+  }
+ },
+ {
+  "round": 38,
+  "set": "bench",
+  "points": 22,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 1,
+   "instruction_following": 21,
+   "hallucination": 1,
+   "coding": 1,
+   "factual": 6,
+   "reasoning": 13
+  },
+  "groups": {
+   "fixed": 7,
+   "fresh": 8,
+   "standard": 7
+  }
+ },
+ {
+  "round": 38,
+  "set": "dev",
+  "points": 36,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 15,
+   "hallucination": 0,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 11
+  },
+  "groups": {
+   "dev_concept": 4,
+   "dev_fix": 5,
+   "dev_slot": 27
+  }
+ },
+ {
+  "round": 39,
+  "set": "bench",
+  "points": 22,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 1,
+   "instruction_following": 22,
+   "hallucination": 2,
+   "coding": 3,
+   "factual": 4,
+   "reasoning": 11
+  },
+  "groups": {
+   "fixed": 6,
+   "fresh": 8,
+   "standard": 8
+  }
+ },
+ {
+  "round": 39,
+  "set": "dev",
+  "points": 37,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 15,
+   "hallucination": 0,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 10
+  },
+  "groups": {
+   "dev_concept": 5,
+   "dev_fix": 5,
+   "dev_slot": 27
+  }
+ },
+ {
+  "round": 40,
+  "set": "bench",
+  "points": 24,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 1,
+   "instruction_following": 21,
+   "hallucination": 2,
+   "coding": 2,
+   "factual": 6,
+   "reasoning": 9
+  },
+  "groups": {
+   "fixed": 9,
+   "fresh": 8,
+   "standard": 7
+  }
+ },
+ {
+  "round": 40,
+  "set": "dev",
+  "points": 38,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 16,
+   "hallucination": 0,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 8
+  },
+  "groups": {
+   "dev_concept": 5,
+   "dev_fix": 6,
+   "dev_slot": 27
+  }
+ },
+ {
+  "round": 41,
+  "set": "dev",
+  "points": 35,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 17,
+   "hallucination": 1,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 9
+  },
+  "groups": {
+   "dev_concept": 3,
+   "dev_fix": 5,
+   "dev_slot": 27
+  }
+ },
+ {
+  "round": 42,
+  "set": "bench",
+  "points": 21,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 20,
+   "hallucination": 1,
+   "coding": 2,
+   "factual": 5,
+   "reasoning": 16
+  },
+  "groups": {
+   "fixed": 7,
+   "fresh": 7,
+   "standard": 7
+  }
+ },
+ {
+  "round": 42,
+  "set": "dev",
+  "points": 38,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 14,
+   "hallucination": 1,
+   "coding": 1,
+   "factual": 0,
+   "reasoning": 8
+  },
+  "groups": {
+   "dev_concept": 5,
+   "dev_fix": 6,
+   "dev_slot": 27
+  }
+ },
+ {
+  "round": 43,
+  "set": "bench",
+  "points": 22,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 21,
+   "hallucination": 3,
+   "coding": 4,
+   "factual": 5,
+   "reasoning": 10
+  },
+  "groups": {
+   "fixed": 7,
+   "fresh": 10,
+   "standard": 5
+  }
+ },
+ {
+  "round": 43,
+  "set": "dev",
+  "points": 36,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 16,
+   "hallucination": 1,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 9
+  },
+  "groups": {
+   "dev_concept": 3,
+   "dev_fix": 6,
+   "dev_slot": 27
+  }
+ },
+ {
+  "round": 44,
+  "set": "bench",
+  "points": 24,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 22,
+   "hallucination": 2,
+   "coding": 0,
+   "factual": 4,
+   "reasoning": 13
+  },
+  "groups": {
+   "fixed": 7,
+   "fresh": 9,
+   "standard": 8
+  }
+ },
+ {
+  "round": 44,
+  "set": "dev",
+  "points": 36,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 14,
+   "hallucination": 0,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 12
+  },
+  "groups": {
+   "dev_concept": 5,
+   "dev_fix": 4,
+   "dev_slot": 27
+  }
+ },
+ {
+  "round": 45,
+  "set": "bench",
+  "points": 21,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 1,
+   "instruction_following": 22,
+   "hallucination": 2,
+   "coding": 4,
+   "factual": 4,
+   "reasoning": 11
+  },
+  "groups": {
+   "fixed": 5,
+   "fresh": 9,
+   "standard": 7
+  }
+ },
+ {
+  "round": 45,
+  "set": "dev",
+  "points": 38,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 1,
+   "instruction_following": 15,
+   "hallucination": 0,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 8
+  },
+  "groups": {
+   "dev_concept": 4,
+   "dev_fix": 7,
+   "dev_slot": 27
+  }
+ },
+ {
+  "round": 46,
+  "set": "bench",
+  "points": 24,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 22,
+   "hallucination": 1,
+   "coding": 3,
+   "factual": 5,
+   "reasoning": 10
+  },
+  "groups": {
+   "fixed": 6,
+   "fresh": 10,
+   "standard": 8
+  }
+ },
+ {
+  "round": 46,
+  "set": "dev",
+  "points": 36,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 16,
+   "hallucination": 0,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 10
+  },
+  "groups": {
+   "dev_concept": 4,
+   "dev_fix": 5,
+   "dev_slot": 27
+  }
+ },
+ {
+  "round": 47,
+  "set": "bench",
+  "points": 25,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 20,
+   "hallucination": 4,
+   "coding": 1,
+   "factual": 4,
+   "reasoning": 11
+  },
+  "groups": {
+   "fixed": 7,
+   "fresh": 10,
+   "standard": 8
+  }
+ },
+ {
+  "round": 47,
+  "set": "dev",
+  "points": 38,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 1,
+   "instruction_following": 14,
+   "hallucination": 0,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 9
+  },
+  "groups": {
+   "dev_concept": 5,
+   "dev_fix": 6,
+   "dev_slot": 27
+  }
+ },
+ {
+  "round": 48,
+  "set": "bench",
+  "points": 25,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 19,
+   "hallucination": 2,
+   "coding": 3,
+   "factual": 4,
+   "reasoning": 12
+  },
+  "groups": {
+   "fixed": 7,
+   "fresh": 10,
+   "standard": 8
+  }
+ },
+ {
+  "round": 48,
+  "set": "dev",
+  "points": 37,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 1,
+   "instruction_following": 15,
+   "hallucination": 0,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 9
+  },
+  "groups": {
+   "dev_concept": 4,
+   "dev_fix": 6,
+   "dev_slot": 27
+  }
+ },
+ {
+  "round": 49,
+  "set": "bench",
+  "points": 24,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 17,
+   "hallucination": 3,
+   "coding": 1,
+   "factual": 4,
+   "reasoning": 16
+  },
+  "groups": {
+   "fixed": 8,
+   "fresh": 9,
+   "standard": 7
+  }
+ },
+ {
+  "round": 49,
+  "set": "dev",
+  "points": 39,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 1,
+   "instruction_following": 12,
+   "hallucination": 1,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 9
+  },
+  "groups": {
+   "dev_concept": 5,
+   "dev_fix": 7,
+   "dev_slot": 27
+  }
+ },
+ {
+  "round": 50,
+  "set": "bench",
+  "points": 23,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 23,
+   "hallucination": 1,
+   "coding": 1,
+   "factual": 5,
+   "reasoning": 12
+  },
+  "groups": {
+   "fixed": 6,
+   "fresh": 9,
+   "standard": 8
+  }
+ },
+ {
+  "round": 50,
+  "set": "dev",
+  "points": 40,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 12,
+   "hallucination": 2,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 8
+  },
+  "groups": {
+   "dev_concept": 5,
+   "dev_fix": 8,
+   "dev_slot": 27
+  }
+ },
+ {
+  "round": 51,
+  "set": "bench",
+  "points": 24,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 1,
+   "instruction_following": 23,
+   "hallucination": 1,
+   "coding": 2,
+   "factual": 4,
+   "reasoning": 10
+  },
+  "groups": {
+   "fixed": 6,
+   "fresh": 8,
+   "standard": 10
+  }
+ },
+ {
+  "round": 51,
+  "set": "dev",
+  "points": 37,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 14,
+   "hallucination": 0,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 11
+  },
+  "groups": {
+   "dev_concept": 5,
+   "dev_fix": 5,
+   "dev_slot": 27
+  }
+ },
+ {
+  "round": 52,
+  "set": "bench",
+  "points": 26,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 18,
+   "hallucination": 4,
+   "coding": 2,
+   "factual": 4,
+   "reasoning": 11
+  },
+  "groups": {
+   "fixed": 8,
+   "fresh": 9,
+   "standard": 9
+  }
+ },
+ {
+  "round": 52,
+  "set": "dev",
+  "points": 38,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 12,
+   "hallucination": 0,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 12
+  },
+  "groups": {
+   "dev_concept": 5,
+   "dev_fix": 6,
+   "dev_slot": 27
+  }
+ },
+ {
+  "round": 53,
+  "set": "dev",
+  "points": 36,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 14,
+   "hallucination": 1,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 11
+  },
+  "groups": {
+   "dev_concept": 3,
+   "dev_fix": 6,
+   "dev_slot": 27
+  }
+ },
+ {
+  "round": 54,
+  "set": "bench",
+  "points": 22,
+  "of": 65,
+  "lost_by_category": {
+   "formatting": 1,
+   "instruction_following": 23,
+   "hallucination": 2,
+   "coding": 3,
+   "factual": 3,
+   "reasoning": 11
+  },
+  "groups": {
+   "fixed": 6,
+   "fresh": 9,
+   "standard": 7
+  }
+ },
+ {
+  "round": 54,
+  "set": "dev",
+  "points": 39,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 2,
+   "instruction_following": 11,
+   "hallucination": 0,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 10
+  },
+  "groups": {
+   "dev_concept": 5,
+   "dev_fix": 7,
+   "dev_slot": 27
+  }
+ },
+ {
+  "round": 55,
+  "set": "dev",
+  "points": 36,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 15,
+   "hallucination": 0,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 11
+  },
+  "groups": {
+   "dev_concept": 3,
+   "dev_fix": 6,
+   "dev_slot": 27
+  }
+ },
+ {
+  "round": 56,
+  "set": "dev",
+  "points": 36,
+  "of": 62,
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 15,
+   "hallucination": 2,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 9
+  },
+  "groups": {
+   "dev_concept": 5,
+   "dev_fix": 4,
+   "dev_slot": 27
+  }
+ }
+]

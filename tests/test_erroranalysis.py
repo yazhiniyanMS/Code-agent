@@ -10,8 +10,10 @@ from ycode.lm.references import FRESH_REFERENCE, REFERENCE  # noqa: E402
 
 
 def test_parse_tests_understands_every_assert_form():
-    kinds = [k for *_, k in parse_tests("assert f(1) == 2\nassert abs(f(2) - 0.5) < 1e-9\nassert f(0)\nassert not f(3)")]
-    assert kinds == ["eq", "approx", "truth", "truth"]
+    kinds = [k for *_, k in parse_tests("assert f(1) == 2\nassert abs(f(2) - 0.5) < 1e-9\nassert f(0)\nassert not f(3)\n"
+                                         "assert f(4) is True")]
+    assert kinds == ["eq", "approx", "truth", "truth", "is"]
+    assert diagnose("def f(x):\n    return 1", "assert f(4) is True")["asserts"][0]["actual"] == "1"
     assert parse_tests("assert not f(3)")[0][2] == "False"
 
 
@@ -59,6 +61,22 @@ def test_analysis_and_comparison_of_two_runs():
     rows[1]["pass"], rows[1]["code"] = True, REFERENCE[rows[1]["name"]]
     diff = compare(first, analyze(rows, "bench"))
     assert diff["points"] == [2, 3] and diff["gained"] == [rows[1]["name"]] and diff["lost"] == []
+
+
+def test_failure_store_records_prompt_expected_actual_and_model():
+    from ycode.lm.erroranalysis import failure_rows, lost_points_table
+
+    rows = [{"suite": "write", "name": "add", "prompt": "Write add", "answer": "```python\ndef add(a, b):\n    return a * b\n```",
+             "pass": False, "code": "def add(a, b):\n    return a * b"}]
+    meta = {"run": "r1", "model": "m", "model_sha256": "abc", "settings": {"decoding": "greedy"}}
+    stored = failure_rows(analyze(rows, "bench"), meta)
+    assert len(stored) == 1
+    rec = stored[0]
+    assert rec["prompt"] == "Write add" and "a + b" in rec["expected_reference"] and "a * b" in rec["actual_code"]
+    assert rec["model_sha256"] == "abc" and rec["settings"] == {"decoding": "greedy"} and rec["category"]
+    assert rec["failed_asserts"] and rec["failed_asserts"][0]["expected"] != rec["failed_asserts"][0]["actual"]
+    table = lost_points_table(stored * 3)
+    assert table["total_lost"] == 3 and table["items"][0]["failures"] == 3
 
 
 def test_every_reference_passes_its_tests():

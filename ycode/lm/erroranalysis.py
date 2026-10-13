@@ -62,6 +62,9 @@ if out["error"] is None:
             elif kind == "eq":
                 want = eval(expected, ns)
                 rec["expected"], rec["ok"] = repr(want)[:200], actual == want
+            elif kind == "is":
+                want = eval(expected, ns)
+                rec["expected"], rec["ok"] = repr(want)[:200], actual is want
             else:
                 rec["expected"], rec["ok"] = expected, bool(actual) == (expected == "True")
         except BaseException as e:
@@ -89,6 +92,8 @@ def parse_tests(tests: str) -> list[tuple[str, str, str, str]]:
             out.append((line, src(node.left.args[0].left), src(node.left.args[0].right), "approx"))
         elif isinstance(node, ast.Compare) and len(node.ops) == 1 and isinstance(node.ops[0], ast.Eq):
             out.append((line, src(node.left), src(node.comparators[0]), "eq"))
+        elif isinstance(node, ast.Compare) and len(node.ops) == 1 and isinstance(node.ops[0], ast.Is):
+            out.append((line, src(node.left), src(node.comparators[0]), "is"))
         elif isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
             out.append((line, src(node.operand), "False", "truth"))
         else:
@@ -280,6 +285,59 @@ def compare(old: dict, new: dict) -> dict:
             "lost_by_category": {c: [old["lost_by_category"][c], new["lost_by_category"][c]] for c in CATEGORIES},
             "identical_answers": sum(1 for i in new["items"] if i.get("same_answer_as_before")),
             "items": len(new["items"])}
+
+
+def model_fingerprint(model_dir: Path) -> str | None:
+    """SHA-256 of a checkpoint's model.pt, cached next to it (keyed by size and mtime): hashing 5 GB is slow."""
+    path = Path(model_dir) / "model.pt"
+    if not path.is_file():
+        return None
+    stat = path.stat()
+    stamp = f"{stat.st_size}:{stat.st_mtime_ns}"
+    cache = Path(model_dir) / "model.sha256"
+    if cache.is_file():
+        cached_stamp, _, digest = cache.read_text().strip().partition(" ")
+        if cached_stamp == stamp:
+            return digest
+    import hashlib
+
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        while chunk := f.read(1 << 22):
+            h.update(chunk)
+    try:
+        cache.write_text(f"{stamp} {h.hexdigest()}")
+    except OSError:
+        pass
+    return h.hexdigest()
+
+
+def failure_rows(result: dict, meta: dict) -> list[dict]:
+    """One flat record per failed item: prompt, expected, actual, category, model version, settings."""
+    rows = []
+    for i in result["items"]:
+        if i["pass"]:
+            continue
+        rows.append({**meta, "set": result["set"], "group": i["group"], "suite": i["suite"], "name": i["name"],
+                     "category": i["category"], "reason": i["reason"], "prompt": i["prompt"],
+                     "expected_reference": i["expected"], "failed_asserts": i.get("failed_asserts", []),
+                     "error": i.get("error"), "actual_answer": i["answer"], "actual_code": i["code"]})
+    return rows
+
+
+def lost_points_table(failures: list[dict]) -> dict:
+    """Aggregate failure records: points lost per category, per group, and the most-failed items."""
+    by_cat = Counter(f["category"] for f in failures)
+    by_group: dict[str, Counter] = {}
+    by_item: dict[tuple, Counter] = {}
+    for f in failures:
+        by_group.setdefault(f["group"], Counter())[f["category"]] += 1
+        by_item.setdefault((f["set"], f["group"], f["name"]), Counter())[f["category"]] += 1
+    items = sorted(by_item.items(), key=lambda kv: -sum(kv[1].values()))
+    return {"total_lost": len(failures), "by_category": dict(by_cat.most_common()),
+            "by_group": {g: dict(c.most_common()) for g, c in sorted(by_group.items())},
+            "items": [{"set": k[0], "group": k[1], "name": k[2], "failures": sum(c.values()),
+                       "categories": dict(c.most_common())} for k, c in items]}
 
 
 def load_answers(path: Path) -> list[dict]:

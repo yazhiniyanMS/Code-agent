@@ -186,6 +186,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--set", default="bench", choices=("bench", "dev"), help="Which test set the answers are from.")
     p.add_argument("--compare", type=Path, help="An earlier answers file on the same prompts: show what changed.")
     p.add_argument("--json", type=Path, help="Write the full analysis (every failed item) as JSON.")
+    p.add_argument("--store", type=Path,
+                   help="Append one record per failed item (prompt, expected, actual, category, model, settings) "
+                        "to this JSONL failure store.")
+    p.add_argument("--model", type=Path, help="Checkpoint the answers came from (recorded with its SHA-256).")
+    p.add_argument("--run", help="A label for this evaluation run in the failure store (e.g. round54-bench).")
 
     for name, help_text in (("chat", "Interactive Q&A with your model."),
                             ("sample", "Continue a code prompt."), ("info", "Show model details.")):
@@ -467,6 +472,21 @@ def _analyze(args) -> int:  # noqa: ANN001
         result["comparison"] = diff
     if args.json:
         args.json.write_text(json.dumps(result, indent=1))
+    if args.store:
+        from ycode.lm.erroranalysis import failure_rows, model_fingerprint
+
+        first = load_answers(args.answers)[0] if args.answers.stat().st_size else {}
+        model = args.model or (Path(first["model"]) if first.get("model") else None)
+        meta = {"run": args.run or args.answers.stem, "answers_file": str(args.answers),
+                "model": str(model) if model else None, "model_step": first.get("model_step"),
+                "model_sha256": model_fingerprint(model) if args.model else None,
+                "settings": first.get("settings", EVAL_SETTINGS)}
+        rows = failure_rows(result, meta)
+        args.store.parent.mkdir(parents=True, exist_ok=True)
+        with args.store.open("a", encoding="utf-8") as f:
+            for row in rows:
+                f.write(json.dumps(row) + "\n")
+        print(f"\n{len(rows)} failure records appended to {args.store}")
     return 0
 
 
