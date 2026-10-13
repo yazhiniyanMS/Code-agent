@@ -139,10 +139,18 @@ class Lion(torch.optim.Optimizer):
     def load_state_dict(self, state_dict: dict) -> None:
         # torch's loader would cast the state to the weights' dtype (fp32): 6 GB more for 1.5B.
         params = [p for group in self.param_groups for p in group["params"]]
-        for index, saved in state_dict["state"].items():
+        saved_state = state_dict["state"]
+        if len(saved_state) != len(params):
+            raise ValueError(f"saved Lion state has {len(saved_state)} entries for {len(params)} parameters")
+        for index, saved in saved_state.items():  # validate everything before changing anything
+            i = int(index)
+            if not 0 <= i < len(params) or saved["exp_avg"].shape != params[i].shape:
+                raise ValueError(f"saved Lion state {index} does not match its parameter's shape")
+        for index, saved in saved_state.items():
             self.state[params[int(index)]]["exp_avg"] = saved["exp_avg"].to(self.state_dtype).clone()
+        # Betas and weight decay come back; the learning rate is the current run's.
         for group, saved in zip(self.param_groups, state_dict["param_groups"]):
-            group.update({k: v for k, v in saved.items() if k != "params"})
+            group.update({k: v for k, v in saved.items() if k not in ("params", "lr", "base_lr")})
 
     def attach(self) -> None:
         """Update weights during backward (then step() and zero_grad() have nothing left to do)."""

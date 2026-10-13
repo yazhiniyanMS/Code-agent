@@ -1,0 +1,7 @@
+logged: round 53: dev 36 {'devB': 3, 'devC': 27, 'dfix': 6, 'dcopied': 2} (anchor 38, max 40) -> rejected
+rule 1: dev 36 >= anchor 38 - 3 = 35: True
+rule 2: dev 36 >= best ever 40 - 3 = 37: False
+=> rejected (logged: rejected); the best-ever dev 40 came from round 50
+re-scored the 62 saved round-53 dev answers with the same harness: 36 pass (logged 36); 62/62 items get the same verdict
+vs its anchor (round 52): gained ['cube'] lost ['cube', 'index_of_min', 'remove_spaces']
+vs its anchor (round 52): gained ['bugfix:cube'] lost ['bugfix:index_of_min', 'write:cube', 'write:remove_spaces']

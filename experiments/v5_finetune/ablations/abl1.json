@@ -1,0 +1,16 @@
+{
+  "name": "abl1",
+  "question": "Do the two changes made at round 56 (skill families in the data; 50/50 averaging with the anchor) help on held-out prompts?",
+  "anchor": "/home/user/lmwork/loop/anchor",
+  "anchor_sha256": "2538b55d5aee371899a988799168042af4da27c03cafff3417a3c9925b8e8e98",
+  "steps": 72,
+  "precision": "bf16",
+  "baseline": "base_s1",
+  "decision_rule": "keep a change if its dev score beats base_s1 by more than the seed-to-seed difference (base_s1 vs base_s2) and no error category loses 2 or more extra points; the benchmark is reported, not used to decide",
+  "arms": [
+    {"name": "base_s1", "seed": 1101, "skills": false, "average": 0},
+    {"name": "base_s2", "seed": 1102, "skills": false, "average": 0},
+    {"name": "skills", "seed": 1101, "skills": true, "average": 0},
+    {"name": "average", "seed": 1101, "skills": false, "average": 0.5}
+  ]
+}

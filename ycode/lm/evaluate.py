@@ -151,19 +151,30 @@ def fresh_problems() -> tuple[Problem, ...]:
 BUGFIX_PROMPT = "This function has a bug. Find and fix it:\n```python\n{code}\n```"
 
 
-def bugfix_eval(lm, *, max_new_tokens: int = 200, log: Log | None = None) -> tuple[float, list[str]]:
-    """fix@1: share of buggy functions whose greedy "fixed" version passes the tests."""
-    tests = _ALL_TESTS
+def bugfix_eval(lm, *, items=None, answers: list | None = None, max_new_tokens: int = 200,
+                log: Log | None = None) -> tuple[float, list[str]]:
+    """fix@1: share of buggy functions whose greedy "fixed" version passes the tests.
+
+    ``items`` holds (signature, buggy code, tests); the default is the 15 BUGGY functions. Pass a
+    list as ``answers`` to collect every answer (with ``copied``: the bug was handed back unchanged).
+    """
+    if items is None:
+        items = [(signature, code, _ALL_TESTS[signature.split("(")[0]]) for signature, code in BUGGY]
     fixed: list[str] = []
-    for signature, code in BUGGY:
+    for signature, code, tests in items:
         name = signature.split("(")[0]
-        answer = lm.chat([("user", BUGFIX_PROMPT.format(code=code))], max_new_tokens=max_new_tokens, temperature=0)
-        ok = run_tests(extract_code(answer), tests[name])
+        prompt = BUGFIX_PROMPT.format(code=code)
+        answer = lm.chat([("user", prompt)], max_new_tokens=max_new_tokens, temperature=0)
+        candidate = extract_code(answer)
+        ok = run_tests(candidate, tests)
         if ok:
             fixed.append(name)
+        if answers is not None:
+            answers.append({"suite": "bugfix", "name": name, "prompt": prompt, "answer": answer, "code": candidate,
+                            "pass": ok, "copied": candidate.strip() == code.strip()})
         if log:
             log(f"  {'FIXED' if ok else 'fail '}  {name}")
-    return len(fixed) / len(BUGGY), fixed
+    return len(fixed) / len(items), fixed
 
 
 _CODE_BLOCK = re.compile(r"```(?:python|py)?\s*\n(.*?)(?:```|$)", re.DOTALL)

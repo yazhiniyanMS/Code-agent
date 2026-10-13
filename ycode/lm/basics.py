@@ -18,6 +18,7 @@ exists: 20 problems whose concepts appear nowhere in this file's training set.
 from __future__ import annotations
 
 import random
+import re
 from dataclasses import dataclass
 
 from ycode.lm.data import InstructionExample, inject_bug
@@ -304,6 +305,157 @@ CONCEPTS: tuple[Concept, ...] = (
        "assert f(3, 4) == 14", "perimeter"),
     _c("circle_area", "radius", "returns the area of a circle with the given radius.",
        "import math\nreturn math.pi * radius ** 2", "import math\nassert abs(f(2) - 4 * math.pi) < 1e-9"),
+    # ---- more arithmetic and conversions
+    _c("square_root", "x", "returns the square root of x.", "import math\nreturn math.sqrt(x)",
+       "assert f(9) == 3\nassert f(2) ** 2 - 2 < 1e-9", "sqrt_of"),
+    _c("hypotenuse", "a, b", "returns the length of the hypotenuse of a right triangle with legs a and b.",
+       "return (a * a + b * b) ** 0.5", "assert f(3, 4) == 5"),
+    _c("is_between", "x, low, high", "returns True if x is between low and high, inclusive.",
+       "return low <= x <= high", "assert f(2, 1, 3)\nassert f(1, 1, 3)\nassert not f(4, 1, 3)", "in_range"),
+    _c("round_to", "x, digits", "returns x rounded to the given number of decimal places.", "return round(x, digits)",
+       "assert f(3.14159, 2) == 3.14"),
+    _c("celsius_to_kelvin", "c", "converts a temperature from Celsius to Kelvin.", "return c + 273.15",
+       "assert f(0) == 273.15"),
+    _c("miles_to_km", "miles", "converts a distance from miles to kilometres (1 mile = 1.609344 km).",
+       "return miles * 1.609344", "assert abs(f(10) - 16.09344) < 1e-9"),
+    _c("pounds_to_kg", "pounds", "converts a weight from pounds to kilograms (1 lb = 0.45359237 kg).",
+       "return pounds * 0.45359237", "assert abs(f(2) - 0.90718474) < 1e-9"),
+    _c("inches_to_cm", "inches", "converts a length from inches to centimetres (1 inch = 2.54 cm).",
+       "return inches * 2.54", "assert abs(f(10) - 25.4) < 1e-9"),
+    _c("simple_interest", "principal, rate, years", "returns the simple interest: principal * rate * years.",
+       "return principal * rate * years", "assert f(1000, 0.05, 2) == 100"),
+    _c("compound_amount", "principal, rate, years",
+       "returns the amount after compounding principal yearly at rate for years.",
+       "return principal * (1 + rate) ** years", "assert abs(f(100, 0.1, 2) - 121) < 1e-9"),
+    _c("bmi", "weight, height", "returns the body mass index: weight divided by height squared.",
+       "return weight / (height * height)", "assert f(80, 2) == 20"),
+    _c("sphere_volume", "radius", "returns the volume of a sphere with the given radius.",
+       "import math\nreturn 4 / 3 * math.pi * radius ** 3", "import math\nassert abs(f(1) - 4 / 3 * math.pi) < 1e-9"),
+    _c("is_right_triangle", "a, b, c", "returns True if sides a, b and c (c the longest) form a right triangle.",
+       "return a * a + b * b == c * c", "assert f(3, 4, 5)\nassert not f(2, 3, 4)"),
+    _c("is_perfect_square", "n", "returns True if the non-negative integer n is a perfect square.",
+       "k = 0\nwhile k * k < n:\n    k += 1\nreturn k * k == n", "assert f(16)\nassert f(0)\nassert not f(15)"),
+    _c("next_multiple", "n, k", "returns the smallest multiple of k that is greater than or equal to n.",
+       "while n % k != 0:\n    n += 1\nreturn n", "assert f(7, 5) == 10\nassert f(10, 5) == 10", "round_up_to_multiple"),
+    _c("count_divisors", "n", "returns how many positive divisors the positive integer n has.",
+       "return sum(1 for d in range(1, n + 1) if n % d == 0)", "assert f(12) == 6\nassert f(1) == 1"),
+    _c("sum_of_divisors", "n", "returns the sum of the positive divisors of n smaller than n.",
+       "return sum(d for d in range(1, n) if n % d == 0)", "assert f(6) == 6\nassert f(8) == 7"),
+    _c("is_perfect_number", "n", "returns True if n equals the sum of its divisors smaller than n.",
+       "return n > 0 and sum(d for d in range(1, n) if n % d == 0) == n", "assert f(28)\nassert not f(12)"),
+    _c("binary_string", "n", "returns the binary representation of the non-negative integer n, without a prefix.",
+       "return bin(n)[2:]", "assert f(5) == '101'\nassert f(0) == '0'", "to_binary"),
+    _c("from_binary", "bits", "converts a string of binary digits to an integer.", "return int(bits, 2)",
+       "assert f('101') == 5\nassert f('0') == 0", "parse_binary"),
+    _c("safe_divide", "a, b", "returns a divided by b, or None if b is zero.",
+       "if b == 0:\n    return None\nreturn a / b", "assert f(6, 3) == 2\nassert f(1, 0) is None"),
+    _c("tip_amount", "bill, percent", "returns the tip for a bill at the given percentage.",
+       "return bill * percent / 100", "assert f(50, 20) == 10"),
+    _c("discounted_price", "price, percent", "returns the price after a discount of percent percent.",
+       "return price * (100 - percent) / 100", "assert f(200, 25) == 150"),
+    _c("split_minutes", "total_minutes", "returns a tuple (hours, minutes) for a number of minutes.",
+       "return total_minutes // 60, total_minutes % 60", "assert f(135) == (2, 15)\nassert f(59) == (0, 59)"),
+    _c("is_valid_triangle", "a, b, c", "returns True if three side lengths can form a triangle.",
+       "return a + b > c and a + c > b and b + c > a", "assert f(3, 4, 5)\nassert not f(1, 2, 3)"),
+    _c("days_in_month", "month", "returns the number of days in the given month (1-12) of a non-leap year.",
+       "if month == 2:\n    return 28\nif month in (4, 6, 9, 11):\n    return 30\nreturn 31",
+       "assert f(2) == 28\nassert f(4) == 30\nassert f(1) == 31"),
+    # ---- more strings
+    _c("capitalize_first", "s", "returns s with its first character in upper case.",
+       "if not s:\n    return s\nreturn s[0].upper() + s[1:]", "assert f('hello') == 'Hello'\nassert f('') == ''"),
+    _c("is_uppercase", "s", "returns True if every letter in s is upper case.", "return s.isupper()",
+       "assert f('ABC')\nassert not f('AbC')"),
+    _c("remove_vowels", "s", "returns s with the vowels a, e, i, o and u removed.",
+       "return ''.join(c for c in s if c.lower() not in 'aeiou')", "assert f('banana') == 'bnn'"),
+    _c("double_letters", "s", "returns s with every character repeated twice.", "return ''.join(c * 2 for c in s)",
+       "assert f('abc') == 'aabbcc'\nassert f('') == ''"),
+    _c("truncate", "s, n", "returns s cut to at most n characters.", "return s[:n]",
+       "assert f('python', 3) == 'pyt'\nassert f('hi', 5) == 'hi'"),
+    _c("count_lines", "text", "returns the number of lines in text.", "return len(text.splitlines())",
+       "assert f('a\\nb\\nc') == 3\nassert f('') == 0"),
+    _c("last_chars", "s, n", "returns the last n characters of s.", "return s[-n:] if n > 0 else ''",
+       "assert f('python', 2) == 'on'\nassert f('ab', 0) == ''"),
+    _c("remove_digits", "s", "returns s with all digits removed.", "return ''.join(c for c in s if not c.isdigit())",
+       "assert f('a1b2c3') == 'abc'"),
+    _c("letters_only", "s", "returns only the letters of s, in order.", "return ''.join(c for c in s if c.isalpha())",
+       "assert f('a-b c!') == 'abc'"),
+    _c("char_frequencies", "s", "returns a dictionary mapping each character of s to how often it occurs.",
+       "counts = {}\nfor c in s:\n    counts[c] = counts.get(c, 0) + 1\nreturn counts",
+       "assert f('aab') == {'a': 2, 'b': 1}\nassert f('') == {}"),
+    _c("is_blank", "s", "returns True if s is empty or contains only whitespace.", "return s.strip() == ''",
+       "assert f('   ')\nassert f('')\nassert not f(' a ')"),
+    _c("wrap_in_brackets", "s", "returns s surrounded by square brackets.", "return '[' + s + ']'",
+       "assert f('x') == '[x]'"),
+    _c("snake_to_camel", "name", "converts a snake_case name to camelCase.",
+       "parts = name.split('_')\nreturn parts[0] + ''.join(p.capitalize() for p in parts[1:])",
+       "assert f('hello_big_world') == 'helloBigWorld'\nassert f('x') == 'x'"),
+    _c("slugify", "text", "returns text in lower case with words joined by hyphens.",
+       "return '-'.join(text.lower().split())", "assert f('Hello Big World') == 'hello-big-world'"),
+    _c("caesar_shift", "s, k", "shifts each lower-case letter of s forward by k places in the alphabet, wrapping around.",
+       "result = ''\nfor c in s:\n    if 'a' <= c <= 'z':\n        result += chr((ord(c) - ord('a') + k) % 26 + ord('a'))\n"
+       "    else:\n        result += c\nreturn result", "assert f('abz', 1) == 'bca'\nassert f('a b', 2) == 'c d'"),
+    _c("reverse_each_word", "text", "returns text with the letters of each word reversed, keeping the word order.",
+       "return ' '.join(word[::-1] for word in text.split())", "assert f('ab cd') == 'ba dc'"),
+    # ---- more lists
+    _c("last_n", "items, n", "returns the last n items of the list.", "return items[-n:] if n > 0 else []",
+       "assert f([1, 2, 3, 4], 2) == [3, 4]\nassert f([1], 0) == []"),
+    _c("every_other", "items", "returns every second item of the list, starting with the first.", "return items[::2]",
+       "assert f([1, 2, 3, 4, 5]) == [1, 3, 5]"),
+    _c("split_at", "items, index", "returns a tuple of the items before index and the items from index on.",
+       "return items[:index], items[index:]", "assert f([1, 2, 3], 1) == ([1], [2, 3])"),
+    _c("index_of_min", "numbers", "returns the index of the smallest number in a non-empty list.",
+       "best = 0\nfor i in range(1, len(numbers)):\n    if numbers[i] < numbers[best]:\n        best = i\nreturn best",
+       "assert f([3, 1, 2]) == 1\nassert f([5]) == 0", "argmin"),
+    _c("count_true", "flags", "returns how many values in the list are True.", "return sum(1 for x in flags if x)",
+       "assert f([True, False, True]) == 2\nassert f([]) == 0"),
+    _c("longest_list", "lists", "returns the longest list in a non-empty list of lists (the first one if tied).",
+       "return max(lists, key=len)", "assert f([[1], [1, 2], [3, 4]]) == [1, 2]"),
+    _c("first_negative", "numbers", "returns the first negative number in the list, or None if there is none.",
+       "for n in numbers:\n    if n < 0:\n        return n\nreturn None", "assert f([3, -1, -5]) == -1\nassert f([1]) is None"),
+    _c("remove_none", "items", "returns a new list without the None values.", "return [x for x in items if x is not None]",
+       "assert f([1, None, 2]) == [1, 2]"),
+    _c("clip_negatives", "numbers", "returns a new list with every negative number replaced by 0.",
+       "return [n if n > 0 else 0 for n in numbers]", "assert f([3, -1, 2]) == [3, 0, 2]"),
+    _c("dot_product", "a, b", "returns the dot product of two lists of numbers of equal length.",
+       "return sum(x * y for x, y in zip(a, b))", "assert f([1, 2, 3], [4, 5, 6]) == 32\nassert f([], []) == 0"),
+    _c("multiply_lists", "a, b", "returns a list of the products of the numbers at the same positions in a and b.",
+       "return [x * y for x, y in zip(a, b)]", "assert f([1, 2], [3, 4]) == [3, 8]"),
+    _c("row_sums", "matrix", "returns a list of the sums of each row of a list of lists.",
+       "return [sum(row) for row in matrix]", "assert f([[1, 2], [3, 4]]) == [3, 7]"),
+    _c("column_sums", "matrix", "returns a list of the sums of each column of a rectangular list of lists.",
+       "return [sum(col) for col in zip(*matrix)]", "assert f([[1, 2], [3, 4]]) == [4, 6]"),
+    _c("diagonal_sum", "matrix", "returns the sum of the main diagonal of a square list of lists.",
+       "return sum(matrix[i][i] for i in range(len(matrix)))", "assert f([[1, 2], [3, 4]]) == 5"),
+    _c("identity_matrix", "n", "returns the n by n identity matrix as a list of lists.",
+       "return [[1 if i == j else 0 for j in range(n)] for i in range(n)]", "assert f(2) == [[1, 0], [0, 1]]"),
+    _c("sort_by_length", "words", "returns the words sorted from shortest to longest.", "return sorted(words, key=len)",
+       "assert f(['ccc', 'a', 'bb']) == ['a', 'bb', 'ccc']"),
+    _c("group_by_length", "words", "returns a dictionary mapping each word length to the list of words of that length.",
+       "groups = {}\nfor w in words:\n    groups.setdefault(len(w), []).append(w)\nreturn groups",
+       "assert f(['a', 'bb', 'c']) == {1: ['a', 'c'], 2: ['bb']}"),
+    _c("running_max", "numbers", "returns a list where each position holds the largest number seen so far.",
+       "result = []\nbest = None\nfor n in numbers:\n    if best is None or n > best:\n        best = n\n    result.append(best)\nreturn result",
+       "assert f([1, 3, 2, 5]) == [1, 3, 3, 5]\nassert f([]) == []"),
+    _c("count_pairs_with_sum", "numbers, target", "returns how many pairs of positions i < j have numbers summing to target.",
+       "count = 0\nfor i in range(len(numbers)):\n    for j in range(i + 1, len(numbers)):\n"
+       "        if numbers[i] + numbers[j] == target:\n            count += 1\nreturn count",
+       "assert f([1, 2, 3, 4], 5) == 2\nassert f([], 1) == 0"),
+    _c("two_sum", "numbers, target", "returns the indexes (i, j), i < j, of the first pair of numbers adding up to target, or None.",
+       "for i in range(len(numbers)):\n    for j in range(i + 1, len(numbers)):\n        if numbers[i] + numbers[j] == target:\n"
+       "            return (i, j)\nreturn None", "assert f([2, 7, 11], 9) == (0, 1)\nassert f([1, 2], 9) is None"),
+    # ---- more dicts
+    _c("dict_from_lists", "keys, values", "builds a dictionary from a list of keys and a list of values.",
+       "return dict(zip(keys, values))", "assert f(['a', 'b'], [1, 2]) == {'a': 1, 'b': 2}", "zip_to_dict"),
+    _c("filter_dict", "d, limit", "returns a new dictionary with only the items whose value is greater than limit.",
+       "return {k: v for k, v in d.items() if v > limit}", "assert f({'a': 1, 'b': 5}, 2) == {'b': 5}"),
+    _c("max_dict_value", "d", "returns the largest value in the non-empty dictionary d.", "return max(d.values())",
+       "assert f({'a': 3, 'b': 7}) == 7"),
+    _c("sorted_keys", "d", "returns the keys of the dictionary d in sorted order.", "return sorted(d)",
+       "assert f({'b': 1, 'a': 2}) == ['a', 'b']"),
+    _c("keys_with_value", "d, value", "returns a list of the keys of d whose value equals value.",
+       "return [k for k, v in d.items() if v == value]", "assert f({'a': 1, 'b': 2, 'c': 1}, 1) == ['a', 'c']"),
+    _c("increment", "counts, key", "adds 1 to counts[key] (starting from 0 if it is missing) and returns counts.",
+       "counts[key] = counts.get(key, 0) + 1\nreturn counts", "assert f({}, 'a') == {'a': 1}\nassert f({'a': 1}, 'a') == {'a': 2}"),
 )
 
 
@@ -352,7 +504,6 @@ FRESH_PROBLEMS: tuple[tuple[str, str, str, str], ...] = (
 _WRITE_TEMPLATES = (
     "Write a Python function `{sig}` that {task}",
     "Write a Python function `{sig}` that {task}",  # the most common phrasing, weighted double
-    "Write a function {sig} that {task}",
     "Implement `{sig}`, which {task}",
     "Create a Python function named `{name}` that takes {params} and {task}",
     "Python: define `{sig}`. It {task}",
@@ -412,11 +563,63 @@ def verify_concepts(concepts=CONCEPTS) -> None:
             raise AssertionError(f"reference solution for {c.name} fails its tests")
 
 
-def assert_no_overlap(concepts=CONCEPTS) -> None:
-    """Training concepts must not share a name with any evaluation problem."""
+def held_out_names() -> set[str]:
+    """Function names of every benchmark item (standard 30, the 15 bug fixes, fresh 20)."""
     from ycode.lm.evaluate import BUGGY, PROBLEMS
 
-    held_out = {p.name for p in PROBLEMS} | {sig.split("(")[0] for sig, _ in BUGGY} | {p[0] for p in FRESH_PROBLEMS}
+    return {p.name for p in PROBLEMS} | {sig.split("(")[0] for sig, _ in BUGGY} | {p[0] for p in FRESH_PROBLEMS}
+
+
+def dev_names() -> set[str]:
+    """Function names of the dev set's items (held out of training, like the benchmark)."""
+    from ycode.lm.devset import dev_bugs, dev_problems
+
+    return {p.name for p in dev_problems()} | {sig.split("(")[0] for sig, _, _ in dev_bugs()}
+
+
+# Concepts whose code also passes a benchmark item's tests even though the names differ (an audit
+# ran each training function against every benchmark test): count_occurrences works as char_count
+# on strings, reverse_list's items[::-1] reverses strings too, and index_of has binary_search's
+# contract on sorted input. They are not trained on.
+BEHAVIOUR_EXCLUDED = frozenset({"count_occurrences", "reverse_list", "index_of"})
+
+
+def training_concepts() -> tuple[Concept, ...]:
+    """CONCEPTS minus the dev set's concepts (ycode.lm.devset) and BEHAVIOUR_EXCLUDED."""
+    from ycode.lm.devset import DEV_CONCEPT_NAMES
+
+    return tuple(c for c in CONCEPTS if c.name not in DEV_CONCEPT_NAMES | BEHAVIOUR_EXCLUDED)
+
+
+# Neutral names: with these, only the description can say what the function must do (a name like
+# `sum_positive` lets a small model recall a body instead of reading the task).
+NEUTRAL_NAMES = ("f", "g", "func", "fn", "solve", "compute", "helper", "calc", "process", "run")
+
+
+NEUTRAL_P = 0.4
+_NAME_ADJECTIVES = ("copper", "silent", "amber", "rapid", "velvet", "frozen", "golden", "hollow", "crimson", "gentle")
+_NAME_NOUNS = ("lantern", "harbor", "pebble", "meadow", "falcon", "kettle", "canyon", "willow", "beacon", "orchard")
+
+
+def neutralize(ex: InstructionExample, name: str, rng: random.Random, p: float | None = None) -> InstructionExample:
+    """With probability p (default NEUTRAL_P), rename the function ``name`` everywhere in the example."""
+    if rng.random() >= (NEUTRAL_P if p is None else p):
+        return ex
+    roll = rng.random()
+    if roll < 0.1:  # a meaningless two-word name: nothing to recall from it
+        new = f"{rng.choice(_NAME_ADJECTIVES)}_{rng.choice(_NAME_NOUNS)}"
+    else:
+        new = rng.choice(NEUTRAL_NAMES)
+        if roll < 0.37:
+            new += "_" + "".join(rng.choice("abcdefghijklmnopqrstuvwxyz") for _ in range(2))
+    pattern = re.compile(rf"(?<![\w.]){re.escape(name)}(?=\(|`)")
+    return InstructionExample(pattern.sub(new, ex.prompt), pattern.sub(new, ex.response))
+
+
+def assert_no_overlap(concepts=CONCEPTS) -> None:
+    """Training concepts must not share a name with any evaluation problem."""
+    held_out = held_out_names()
+    assert not set(NEUTRAL_NAMES) & held_out
     for c in concepts:
         clash = {c.name, *c.aliases} & held_out
         if clash:
@@ -433,13 +636,13 @@ def _with_doc(c: Concept, name: str, body: str) -> str:
 
 def write_examples(rng: random.Random, per_concept: int = 6) -> list[InstructionExample]:
     out = []
-    for c in CONCEPTS:
-        for i in range(per_concept):
-            name = (c.name, *c.aliases)[i % (1 + len(c.aliases))]
-            template = _WRITE_TEMPLATES[i % len(_WRITE_TEMPLATES)]
+    for c in training_concepts():
+        for _ in range(per_concept):
+            name = rng.choice((c.name, *c.aliases))
+            template = rng.choice(_WRITE_TEMPLATES)
             prompt = template.format(sig=f"{name}({c.params})", task=c.task, name=name,
                                      params=c.params.replace(", ", " and ") or "no arguments")
-            out.append(InstructionExample(prompt, f"```python\n{c.source(name)}\n```"))
+            out.append(neutralize(InstructionExample(prompt, f"```python\n{c.source(name)}\n```"), name, rng))
     rng.shuffle(out)
     return out
 
@@ -453,6 +656,7 @@ _TEXT_MUTATIONS = (
     ("x * x", "x * 2"), ("return a\n", "return b\n"), ("return b\n", "return a\n"), ("+= 1", "+= 2"),
     ("[:n]", "[:n - 1]"), ("[n:]", "[n + 1:]"), ("startswith", "endswith"), ("endswith", "startswith"),
     ("[i:i + size]", "[i:i + size - 1]"), ("== 0", "!= 0"), (" // ", " / "), ("2 * (", "("),
+    (" < ", " > "), (" > ", " < "), (" <= ", " >= "), (" >= ", " <= "),
 )
 
 
@@ -473,7 +677,7 @@ def _text_bugs(fixed: str) -> list[tuple[str, str, str]]:
 
 def bugfix_examples(rng: random.Random, per_concept: int = 5) -> list[InstructionExample]:
     out = []
-    for c in CONCEPTS:
+    for c in training_concepts():
         names = (c.name, *c.aliases)
         made = set()
         name = names[0]
@@ -497,8 +701,11 @@ def bugfix_examples(rng: random.Random, per_concept: int = 5) -> list[Instructio
             if buggy in made or not _parses(buggy) or _passes(buggy, _rename_tests(c.tests, name)):
                 continue  # a realistic bug: valid Python that actually breaks the function
             made.add(buggy)
-            answer = f"The bug is `{wrong}`: it should be `{right}`.\n```python\n{fixed}\n```"
-            out.append(InstructionExample(BUGFIX_PROMPT.format(code=buggy), answer))
+            # The answer is just the fixed function: copying it with one change is what the task
+            # needs, and an explanation that repeats both lines first only gives a small model
+            # more to get wrong.
+            answer = f"```python\n{fixed}\n```"
+            out.append(neutralize(InstructionExample(BUGFIX_PROMPT.format(code=buggy), answer), name, rng))
     rng.shuffle(out)
     return out
 
@@ -513,8 +720,13 @@ def basics_examples(seed: int = 1337, *, write_per_concept: int = 6,
     return examples
 
 
+# Replay rows answered in prose (explain a function or class, write a docstring).
+_PROSE_PROMPTS = ("What does this Python function do?", "Explain this code:", "Explain this class:",
+                  "class for?", "Write a docstring for this function:", "Document this Python function")
+
+
 def write_basics_dataset(out_dir, tokenizer_path, *, replay_dir=None, replay: int = 0, seed: int = 1337,
-                         log=print) -> dict:
+                         examples=None, log=print) -> dict:
     """Write an SFT dataset of basics examples, optionally mixed with ``replay`` examples drawn from
     an earlier SFT dataset (so fine-tuning does not erase what the model already learned)."""
     from pathlib import Path
@@ -529,17 +741,55 @@ def write_basics_dataset(out_dir, tokenizer_path, *, replay_dir=None, replay: in
     tok = BPETokenizer.load(tokenizer_path)
     tok.save(out_dir / "tokenizer.json")
     rng = random.Random(seed)
-    rows = [encode_example(tok, ex) for ex in basics_examples(seed)]
+    rows = [encode_example(tok, ex, weighted=True)
+            for ex in (examples if examples is not None else basics_examples(seed))]
     n_basics = len(rows)
     if replay_dir and replay:
+        from ycode.lm.data import ASSISTANT, END, USER
+
         replay_dir = Path(replay_dir)
         tokens = np.memmap(replay_dir / "sft_tokens.bin", dtype=np.uint16, mode="r")
         mask = np.memmap(replay_dir / "sft_mask.bin", dtype=np.uint8, mode="r")
         index = np.load(replay_dir / "sft_index.npy")
-        for i in rng.sample(range(len(index)), min(replay, len(index))):
+        # Never replay a benchmark or dev function (the old data has e.g. is_prime and gcd), nor the
+        # benchmark's bug-fix prompt answered in the old prose format (it now gets code-only answers).
+        names = "|".join(sorted(map(re.escape, held_out_names() | dev_names())))
+        leak = re.compile(rf"(?:\bdef |`)({names})\(")
+        dropped = {"benchmark name": 0, "prose bug fix": 0, "garbled prompt": 0, "prose over cap": 0}
+        kept = rewritten = prose = 0
+        max_prose = replay * 3 // 10  # explanations/docstrings: kept, but no more than 30% of replay
+        for i in rng.sample(range(len(index)), len(index)):
+            if kept >= replay:
+                break
             start, length = index[i]
-            if length <= 400:  # short examples, like the basics ones
-                rows.append((tokens[start:start + length].tolist(), mask[start:start + length].tolist()))
+            if length > 400:  # short examples, like the basics ones
+                continue
+            t = tokens[start:start + length].tolist()
+            text = tok.decode(t)
+            if leak.search(text):
+                dropped["benchmark name"] += 1
+                continue
+            if text.split(ASSISTANT, 1)[-1].lstrip().startswith("The bug is"):
+                dropped["prose bug fix"] += 1  # bug fixes are answered with code only now
+                continue
+            if "How would I write a Python function to" in text:
+                dropped["garbled prompt"] += 1  # "... to returns the ...": ungrammatical task text
+                continue
+            if any(p in text for p in _PROSE_PROMPTS):
+                if prose >= max_prose:
+                    dropped["prose over cap"] += 1
+                    continue
+                prose += 1
+            prompt, _, answer = text.partition(f"\n{END}\n{ASSISTANT}\n")
+            if answer.startswith("```python\ndef ") and prompt.startswith(USER + "\n"):
+                # Re-encode written functions like the new examples (def-line tokens, weights).
+                answer = answer.rsplit(f"\n{END}", 1)[0]
+                rows.append(encode_example(tok, InstructionExample(prompt[len(USER) + 1:], answer), weighted=True))
+                rewritten += 1
+            else:
+                rows.append((t, mask[start:start + length].tolist()))
+            kept += 1
+        log(f"Replay: kept {kept} ({rewritten} written functions re-encoded), dropped {dropped}")
     rng.shuffle(rows)
     all_tokens, all_mask, idx = [], [], []
     for t, m in rows:

@@ -181,41 +181,7 @@ def test_v2_training_end_to_end(data_dir, tmp_path):
 
 # ------------------------------------------------------------- evaluation
 
-REFERENCE = {
-    "add": "def add(a, b):\n    return a + b",
-    "subtract": "def subtract(a, b):\n    return a - b",
-    "is_even": "def is_even(n):\n    return n % 2 == 0",
-    "square": "def square(x):\n    return x * x",
-    "maximum": "def maximum(items):\n    return max(items)",
-    "minimum": "def minimum(items):\n    return min(items)",
-    "total": "def total(numbers):\n    return sum(numbers)",
-    "average": "def average(numbers):\n    return sum(numbers) / len(numbers)",
-    "reverse_string": "def reverse_string(s):\n    return s[::-1]",
-    "is_palindrome": "def is_palindrome(s):\n    return s == s[::-1]",
-    "factorial": "def factorial(n):\n    return 1 if n < 2 else n * factorial(n - 1)",
-    "fibonacci": "def fibonacci(n):\n    a, b = 0, 1\n    for _ in range(n):\n        a, b = b, a + b\n    return a",
-    "count_vowels": "def count_vowels(s):\n    return sum(c in 'aeiou' for c in s)",
-    "is_prime": "def is_prime(n):\n    return n > 1 and all(n % d for d in range(2, int(n ** 0.5) + 1))",
-    "gcd": "def gcd(a, b):\n    while b:\n        a, b = b, a % b\n    return a",
-    "celsius_to_fahrenheit": "def celsius_to_fahrenheit(c):\n    return c * 9 / 5 + 32",
-    "filter_even": "def filter_even(numbers):\n    return [n for n in numbers if n % 2 == 0]",
-    "unique": "def unique(items):\n    return list(dict.fromkeys(items))",
-    "count_words": "def count_words(text):\n    return len(text.split())",
-    "flatten": "def flatten(lists):\n    return [x for l in lists for x in l]",
-    "clamp": "def clamp(x, low, high):\n    return max(low, min(x, high))",
-    "char_count": "def char_count(s, ch):\n    return s.count(ch)",
-    "merge_dicts": "def merge_dicts(a, b):\n    return {**a, **b}",
-    "first_word": "def first_word(text):\n    return text.split()[0]",
-    "to_upper": "def to_upper(s):\n    return s.upper()",
-    "is_sorted": "def is_sorted(items):\n    return items == sorted(items)",
-    "second_largest": "def second_largest(numbers):\n    return sorted(set(numbers))[-2]",
-    "binary_search": ("def binary_search(items, target):\n    lo, hi = 0, len(items) - 1\n    while lo <= hi:\n"
-                      "        mid = (lo + hi) // 2\n        if items[mid] == target:\n            return mid\n"
-                      "        if items[mid] < target:\n            lo = mid + 1\n        else:\n            hi = mid - 1\n"
-                      "    return -1"),
-    "is_anagram": "def is_anagram(a, b):\n    return sorted(a) == sorted(b)",
-    "digit_sum": "def digit_sum(n):\n    return sum(int(d) for d in str(n))",
-}
+from ycode.lm.references import REFERENCE  # noqa: E402
 
 
 def test_every_problem_has_a_working_reference():
