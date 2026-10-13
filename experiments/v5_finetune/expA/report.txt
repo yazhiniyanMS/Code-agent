@@ -1,0 +1,7 @@
+dev: totals [39, 39, 39] / 62  mean 39.00  stdev 0.00  identical verdicts 62/62  identical answers 62/62
+   groups run1: {'dev_concept': 5, 'dev_fix': 7, 'dev_slot': 27}
+   lost by category run1: {'formatting': 2, 'instruction_following': 11, 'hallucination': 0, 'coding': 0, 'factual': 0, 'reasoning': 10}
+bench: totals [22, 22, 22] / 65  mean 22.00  stdev 0.00  identical verdicts 65/65  identical answers 65/65
+   groups run1: {'fixed': 6, 'fresh': 9, 'standard': 7}
+   lost by category run1: {'formatting': 1, 'instruction_following': 23, 'hallucination': 2, 'coding': 3, 'factual': 3, 'reasoning': 11}
+rejection rate: 9/53 rounds = 17%  (rounds [5, 7, 9, 21, 22, 41, 53, 55, 56])
