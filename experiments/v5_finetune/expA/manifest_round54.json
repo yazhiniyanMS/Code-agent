@@ -1,0 +1,56 @@
+{
+  "checkpoint": "/home/user/lmwork/loop/anchor",
+  "checkpoint_sha256": "2538b55d5aee371899a988799168042af4da27c03cafff3417a3c9925b8e8e98",
+  "checkpoint_info": {
+    "step": 72,
+    "stage": "sft",
+    "val_loss": null,
+    "params": 1523202304,
+    "config": {
+      "vocab_size": 8192,
+      "block_size": 1024,
+      "n_layer": 34,
+      "n_head": 32,
+      "n_embd": 2048,
+      "dropout": 0.0,
+      "n_kv_head": 8,
+      "qk_norm": true,
+      "arch_version": 5
+    }
+  },
+  "tokenizer_sha256": "b766ca56df3f25bda5df83cee7f69ef8505ad8dbf4ea3e8700ca2238c212d33d",
+  "vocab_size": 8192,
+  "decoding": {
+    "method": "greedy (temperature 0; top_k/top_p unused)",
+    "max_new_tokens": 200,
+    "no_repeat_ngram": 12,
+    "stop": [
+      "<|end|>",
+      "<|endoftext|>",
+      "<|user|>"
+    ],
+    "weights_dtype": "bfloat16 (LocalLM auto for >500M params)"
+  },
+  "seed": "torch.manual_seed(0) before the write problems; greedy decoding uses no randomness",
+  "evaluator": {
+    "git_commit": "170f7e346ec290e8c42e26c32b49171c5fc70733",
+    "uncommitted_changes_in_ycode": false,
+    "file_sha256_16": {
+      "evaluate.py": "79a4f445acd1761d",
+      "devset.py": "f71ecd6b26537c7a",
+      "generate.py": "6d360ee0d26c7954",
+      "cli.py": "3832e191defa7e2a",
+      "model.py": "ac01a1bdf04e46c3",
+      "basics.py": "7b5a7daa341f0de2",
+      "tokenizer.py": "831a2608309cc566"
+    },
+    "scoring": "pass@1: extracted code block must pass all unit tests (subprocess, 5 s timeout)"
+  },
+  "environment": {
+    "torch": "2.14.1+cu130",
+    "threads": 4,
+    "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+    "amx_bf16": true,
+    "python": "3.11.15"
+  }
+}

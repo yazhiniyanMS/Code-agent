@@ -1,0 +1,10 @@
+{
+  "tol_anchor": 3,
+  "tol_max": 5,
+  "note": "accept a round if its dev score is within 3 of the anchor and of the best so far (dev noise is about +-3 on 62 items); was 1 and 3 until round 22",
+  "steps": 72,
+  "note_steps": "72 steps per round from round 26 (bf16 at ~95 tok/s: ~55 min of training per round; was 48)",
+  "average_weight": 0.5,
+  "note_average": "from round 56: each finished round is averaged 50/50 with its anchor before scoring (smooths round-to-round flips)",
+  "note_tol_max": "from round 57: within 5 of the best dev ever (was 3). Dev is saturated (devC 27/32 every round) and noisy (+-3-4); the best (40, round 50) was a lucky high that blocked rounds 53, 55, 56 at dev 36."
+}
