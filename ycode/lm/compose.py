@@ -456,8 +456,14 @@ def _cases() -> list[Exercise]:
     return out
 
 
+INCLUDE_SKILLS = True  # off for ablations that measure what the skill families add
+
+
 def _skills() -> list[Exercise]:
     from ycode.lm.skills import SKILLS
+
+    if not INCLUDE_SKILLS:
+        return []
 
     return [Exercise(key, name, params, task, body, samples)
             for _family, key, name, params, tasks, body, samples in SKILLS for task in tasks]
