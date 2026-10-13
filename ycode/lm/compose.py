@@ -456,6 +456,13 @@ def _cases() -> list[Exercise]:
     return out
 
 
+def _skills() -> list[Exercise]:
+    from ycode.lm.skills import SKILLS
+
+    return [Exercise(key, name, params, task, body, samples)
+            for _family, key, name, params, tasks, body, samples in SKILLS for task in tasks]
+
+
 def base_key(key: tuple) -> tuple:
     """The concept behind a key: a loop rendering shares its concept with the one-liner."""
     return key[1:] if key and key[0] == "loop" else key
@@ -464,7 +471,7 @@ def base_key(key: tuple) -> tuple:
 def _raw_exercises(seed: int = 7) -> list[Exercise]:
     rng = random.Random(seed)
     return (_unary(rng) + _ternary() + _binary() + _predicates(rng) + _aggregations() + _list_ops(rng)
-            + _sequences(rng) + _strings(rng) + _loops(rng) + _conversions(rng) + _cases() + _whole_list(rng))
+            + _sequences(rng) + _strings(rng) + _loops(rng) + _conversions(rng) + _cases() + _whole_list(rng) + _skills())
 
 
 def all_exercises(seed: int = 7) -> list[Exercise]:

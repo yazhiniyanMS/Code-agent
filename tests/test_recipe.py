@@ -346,3 +346,17 @@ def test_loop_renderings_compute_the_same_thing():
     for ex, loop in loops[::7]:
         assert "for x in numbers:" in loop.body and loop.tests() == ex.tests()
         assert _passes(loop.source(), ex.tests()), loop.source()
+
+
+def test_skill_families_are_verified_and_held_out():
+    from ycode.lm.compose import HELD_OUT_KEYS, _skills, all_exercises, base_key
+    from ycode.lm.devset import DEV_KEYS
+
+    skills = _skills()
+    assert len({e.name for e in skills}) >= 40
+    trained = {e.name for e in all_exercises(8)}
+    for e in skills:
+        assert e.name in trained and base_key(e.key) not in HELD_OUT_KEYS | DEV_KEYS
+        assert e.tests() and _passes(e.source(), e.tests()), e.name
+    held = {"product_of_odds_up_to", "pell_number", "tribonacci", "distance_outside", "fahrenheit_to_celsius"}
+    assert not held & {e.name for e in skills}  # left out pending review
