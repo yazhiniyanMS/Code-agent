@@ -34,18 +34,50 @@ def run(cmd, logfile: Path) -> int:
 
 
 BUILD = r'''
-import sys
+import json, re, sys
+from collections import Counter
 sys.path.insert(0, "/home/user/Code-agent")
 from pathlib import Path
 import ycode.lm.compose as compose
 from ycode.lm.basics import basics_examples, write_basics_dataset
-seed, out, skills = int(sys.argv[1]), Path(sys.argv[2]), sys.argv[3] == "1"
-compose.INCLUDE_SKILLS = skills
-examples = (basics_examples(seed, write_per_concept=6, bugfix_per_concept=4)
-            + compose.compose_examples(seed, per_exercise=3) + compose.compose_bugfix_examples(seed, per_exercise=1)
+seed, out, opt = int(sys.argv[1]), Path(sys.argv[2]), json.loads(sys.argv[3])
+compose.INCLUDE_SKILLS = opt.get("skills", True)
+examples = (basics_examples(seed, write_per_concept=opt.get("basics_write", 6), bugfix_per_concept=opt.get("basics_bugfix", 4))
+            + compose.compose_examples(seed, per_exercise=opt.get("compose_write", 3))
+            + compose.compose_bugfix_examples(seed, per_exercise=opt.get("compose_bugfix", 1))
             + compose.contrast_examples(seed) + compose.novel_examples(seed))
-write_basics_dataset(out, "/home/user/lmwork/data/tokenizer.json", replay_dir="/home/user/lmwork/data", replay=200,
-                     seed=seed, examples=examples, log=print)
+n0 = len(examples)
+def task_of(p):
+    return re.sub(r"`[A-Za-z_]\w*(?=[(`])", "`F", p)
+def body_of(r):
+    lines = r.strip().strip("`").splitlines()
+    return "\n".join(l for l in lines[2:] if not l.strip().startswith('\"\"\"'))
+if opt.get("dedup"):
+    # exact duplicates, and a second answer body for the same task text (one-liner vs loop rendering)
+    seen, first_body, kept = set(), {}, []
+    for ex in examples:
+        key = (ex.prompt, ex.response)
+        if key in seen:
+            continue
+        if not ex.prompt.startswith("This function has a bug"):
+            t = task_of(ex.prompt)
+            if first_body.setdefault(t, body_of(ex.response)) != body_of(ex.response):
+                continue
+        seen.add(key)
+        kept.append(ex)
+    examples = kept
+if opt.get("cap_per_body"):
+    # at most N examples per distinct answer body: frequent bodies act as attractors the model copies
+    count, kept = Counter(), []
+    for ex in examples:
+        b = body_of(ex.response)
+        if count[b] < opt["cap_per_body"]:
+            count[b] += 1
+            kept.append(ex)
+    examples = kept
+print(f"examples: {n0} built, {len(examples)} kept")
+write_basics_dataset(out, "/home/user/lmwork/data/tokenizer.json", replay_dir="/home/user/lmwork/data",
+                     replay=opt.get("replay", 200), seed=seed, examples=examples, log=print)
 '''
 
 
@@ -57,16 +89,19 @@ def run_arm(spec: dict, arm: dict, out: Path) -> dict:
     d = out / arm["name"]
     d.mkdir(parents=True, exist_ok=True)
     data, cur = d / "data", out / "cur"
-    log(out, f"{arm['name']}: building data (seed {arm['seed']}, skills {arm.get('skills', True)})")
+    log(out, f"{arm['name']}: building data (seed {arm['seed']}, options {arm.get('data', {})})")
     shutil.rmtree(data, ignore_errors=True)
-    if run([sys.executable, "-c", BUILD, str(arm["seed"]), str(data), "1" if arm.get("skills", True) else "0"],
+    if run([sys.executable, "-c", BUILD, str(arm["seed"]), str(data), json.dumps(arm.get("data", {}))],
            d / "build.log") != 0:
         raise RuntimeError(f"{arm['name']}: data build failed")
     shutil.rmtree(cur, ignore_errors=True)
-    log(out, f"{arm['name']}: training {spec['steps']} steps from {spec['anchor']}")
+    steps, batch = arm.get("steps", spec["steps"]), arm.get("batch", 4)
+    log(out, f"{arm['name']}: training {steps} steps (batch {batch}, lr {arm.get('lr', 1.5e-5)}, "
+             f"seq {arm.get('seq_len', 1024)}) from {spec['anchor']}")
     t0 = time.time()
+    extra = ["--seq-len", str(arm["seq_len"])] if arm.get("seq_len") else []
     code = run([sys.executable, "-m", "ycode.lm.cli", "sft", "--data", str(data), "--init-from", spec["anchor"],
-                "--out", str(cur), "--steps", str(spec["steps"]), "--warmup", "2", "--batch-size", "4",
+                "--out", str(cur), "--steps", str(steps), "--warmup", "2", "--batch-size", str(batch), *extra,
                 "--optimizer", "lion", "--lr", str(arm.get("lr", 1.5e-5)), "--train-layers", "24",
                 "--grad-checkpoint", "--eval-interval", "100000", "--eval-iters", "0", "--seed", str(arm["seed"]),
                 "--init-optim", "--device", "cpu", "--precision", spec.get("precision", "bf16")], d / "train.log")

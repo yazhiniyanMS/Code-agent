@@ -1,0 +1,25 @@
+{
+  "name": "abl2",
+  "question": "Which single change to the fine-tuning data or training improves held-out (dev) performance without losing points in another error category?",
+  "anchor": "/home/user/lmwork/loop/anchor",
+  "anchor_sha256": "2538b55d5aee371899a988799168042af4da27c03cafff3417a3c9925b8e8e98",
+  "steps": 72,
+  "precision": "bf16",
+  "baseline": "base_s1",
+  "baseline_recipe": "round 54's recipe: basics 6 writes + 4 bug fixes per concept, compose 3 writes + 1 bug fix per exercise, contrast and novel examples, 200 replay rows, no skill families, no averaging; lr 1.5e-5, batch 4, rows of 1024 tokens, 72 steps",
+  "decision_rule": "keep a change if its dev score beats base_s1 by more than the seed-to-seed difference (|base_s1 - base_s2|) and no error category loses 2 or more extra points; the benchmark is reported, never used to decide",
+  "arms": [
+    {"name": "base_s1", "seed": 1101, "data": {"skills": false}},
+    {"name": "base_s2", "seed": 1102, "data": {"skills": false}},
+    {"name": "data_dedup", "seed": 1101, "data": {"skills": false, "dedup": true}, "changes": "remove exact duplicates and second answer bodies for the same task text"},
+    {"name": "data_cap_repeats", "seed": 1101, "data": {"skills": false, "cap_per_body": 3, "basics_write": 3}, "changes": "at most 3 examples per distinct answer body; 3 instead of 6 writes per hand-written concept"},
+    {"name": "data_no_replay", "seed": 1101, "data": {"skills": false, "replay": 0}, "changes": "drop the 200 replayed rows of old library-code instruction data"},
+    {"name": "data_skills", "seed": 1101, "data": {"skills": true}, "changes": "add the 49 skill-family functions"},
+    {"name": "ft_average", "seed": 1101, "data": {"skills": false}, "average": 0.5, "changes": "blend the trained weights 50/50 with the starting weights"},
+    {"name": "lr_half", "seed": 1101, "data": {"skills": false}, "lr": 7.5e-6, "changes": "learning rate 7.5e-6 (baseline 1.5e-5)"},
+    {"name": "lr_double", "seed": 1101, "data": {"skills": false}, "lr": 3e-5, "changes": "learning rate 3e-5"},
+    {"name": "steps_double", "seed": 1101, "data": {"skills": false}, "steps": 144, "changes": "144 training steps (baseline 72)"},
+    {"name": "batch_half", "seed": 1101, "data": {"skills": false}, "batch": 2, "changes": "batch of 2 rows (baseline 4)"},
+    {"name": "seq_512", "seed": 1101, "data": {"skills": false}, "batch": 8, "seq_len": 512, "changes": "rows of 512 tokens, batch 8: same tokens per step, half the unrelated packed context"}
+  ]
+}

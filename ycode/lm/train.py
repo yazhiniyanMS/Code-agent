@@ -85,6 +85,7 @@ class TrainConfig:
     save_interval: int | None = None  # checkpoint every N steps without evaluating (cheap crash safety)
     save_in_place: bool = False  # replace checkpoints in place: half the disk, no atomic swap
     init_optim: bool = False  # also start the optimizer state from init_from/optim.pt (if it matches)
+    seq_len: int | None = None  # sft: pack rows to this many tokens instead of the model's block size
     until_step: int | None = None  # stop early at this step (segmented runs); schedule still spans max_steps
     # adamw | muon (Muon for hidden matrices + AdamW for the rest) | lion (low memory: one bf16
     # state per weight, applied during backward so gradients are never all held at once)
@@ -603,6 +604,8 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
 
     block = model.cfg.block_size
     if cfg.stage == "sft":
+        if cfg.seq_len:
+            block = min(block, cfg.seq_len)
         data = SFTData(data_dir, block, cfg.batch_size, device, pad_id=tok.eot_id, pack=cfg.pack,
                        seed=cfg.seed, rank=rank, world=world)
     else:
