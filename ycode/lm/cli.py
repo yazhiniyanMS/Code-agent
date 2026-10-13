@@ -181,6 +181,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--verbose", action="store_true", help="Show each problem's result.")
     p.add_argument("--device", default="auto")
 
+    p = sub.add_parser("analyze", help="Why answers failed: categories, expected vs actual, points lost.")
+    p.add_argument("answers", type=Path, help="JSONL from `eval --answers-out`.")
+    p.add_argument("--set", default="bench", choices=("bench", "dev"), help="Which test set the answers are from.")
+    p.add_argument("--compare", type=Path, help="An earlier answers file on the same prompts: show what changed.")
+    p.add_argument("--json", type=Path, help="Write the full analysis (every failed item) as JSON.")
+
     for name, help_text in (("chat", "Interactive Q&A with your model."),
                             ("sample", "Continue a code prompt."), ("info", "Show model details.")):
         p = sub.add_parser(name, help=help_text)
@@ -348,6 +354,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "eval":
         return _eval(args)
+    if args.command == "analyze":
+        return _analyze(args)
 
     model_dir = args.model or default_model_dir()
     try:
@@ -438,6 +446,30 @@ def _autotrain(args) -> int:  # noqa: ANN001
     return 0
 
 
+# Decoding used by every coding benchmark (recorded with each answer for reproducibility).
+EVAL_SETTINGS = {"decoding": "greedy (temperature 0)", "max_new_tokens": 200, "no_repeat_ngram": 12,
+                 "seed": 0, "scoring": "extracted code must pass every unit test (subprocess, 5 s timeout)"}
+
+
+def _analyze(args) -> int:  # noqa: ANN001
+    import json
+
+    from ycode.lm.erroranalysis import analyze, compare, format_report, load_answers
+
+    result = analyze(load_answers(args.answers), args.set)
+    print(format_report(result))
+    if args.compare:
+        diff = compare(analyze(load_answers(args.compare), args.set), result)
+        print(f"\nvs {args.compare}: {diff['points'][0]} -> {diff['points'][1]}; gained {diff['gained'] or '-'}; "
+              f"lost {diff['lost'] or '-'}; identical answers {diff['identical_answers']}/{diff['items']}")
+        print("lost by category (before -> after): " + ", ".join(
+            f"{c} {a}->{b}" for c, (a, b) in diff["lost_by_category"].items() if a or b))
+        result["comparison"] = diff
+    if args.json:
+        args.json.write_text(json.dumps(result, indent=1))
+    return 0
+
+
 def _eval(args) -> int:  # noqa: ANN001
     import json
 
@@ -460,6 +492,8 @@ def _eval(args) -> int:  # noqa: ANN001
             return 1
         print(f"Evaluating {model_dir} (YCode-LM v{lm.version}, {lm.num_params / 1e6:.1f}M params) ...")
         row = {"model": str(model_dir), "version": lm.version, "params_m": round(lm.num_params / 1e6, 2)}
+        info_path = Path(model_dir) / "info.json"
+        lm_info = json.loads(info_path.read_text()) if info_path.is_file() else {}
         if texts:
             with lm.precision():
                 row["bits_per_byte"] = round(bits_per_byte(lm.model, lm.tokenizer, texts, device=lm.device), 4)
@@ -494,8 +528,11 @@ def _eval(args) -> int:  # noqa: ANN001
                           for prob in problems]
                 args.answers_out.parent.mkdir(parents=True, exist_ok=True)
                 with args.answers_out.open("a", encoding="utf-8") as f:
+                    meta = {"model": str(model_dir), "model_step": lm_info.get("step"),
+                            "averaged_with_anchor": lm_info.get("averaged_with_anchor"),
+                            "settings": EVAL_SETTINGS}
                     for item in writes + answers:
-                        f.write(json.dumps({"model": str(model_dir), **item}) + "\n")
+                        f.write(json.dumps({**meta, **item}) + "\n")
         rows.append(row)
     print()
     header = ["model", "version", "params_m", "bits_per_byte", "pass@1"] + sorted(
