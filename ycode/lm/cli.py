@@ -182,6 +182,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--no-functional", action="store_true", help="Skip the coding-problem benchmark.")
     p.add_argument("--verbose", action="store_true", help="Show each problem's result.")
     p.add_argument("--device", default="auto")
+    p.add_argument("--limit", type=int, help="Smoke tests only: score just the first N problems and N bug fixes "
+                                             "(the result is not comparable to a full run and is marked as limited).")
 
     p = sub.add_parser("analyze", help="Why answers failed: categories, expected vs actual, points lost.")
     p.add_argument("answers", type=Path, help="JSONL from `eval --answers-out`.")
@@ -531,6 +533,11 @@ def _eval(args) -> int:  # noqa: ANN001
             else:
                 problems = {"standard": PROBLEMS, "fresh": fresh_problems(),
                             "both": PROBLEMS + fresh_problems()}[args.problems]
+            if args.limit:  # smoke tests: a prefix of each list, recorded in the answers' settings
+                from ycode.lm.evaluate import _ALL_TESTS
+
+                problems = tuple(problems)[:args.limit]
+                bug_items = list(bug_items or [(s, c, _ALL_TESTS[s.split("(")[0]]) for s, c in BUGGY])[:args.limit]
             res = functional_eval(lm, samples=args.samples, problems=problems,
                                   log=print if args.verbose else None)
             row["pass@1"] = round(res.pass_at_1, 4)
@@ -553,7 +560,7 @@ def _eval(args) -> int:  # noqa: ANN001
                 with args.answers_out.open("a", encoding="utf-8") as f:
                     meta = {"model": str(model_dir), "model_step": lm_info.get("step"),
                             "averaged_with_anchor": lm_info.get("averaged_with_anchor"),
-                            "settings": EVAL_SETTINGS}
+                            "settings": {**EVAL_SETTINGS, **({"limit": args.limit} if args.limit else {})}}
                     for item in writes + answers:
                         f.write(json.dumps({**meta, **item}) + "\n")
         rows.append(row)

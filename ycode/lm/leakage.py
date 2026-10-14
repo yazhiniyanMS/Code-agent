@@ -59,6 +59,18 @@ SHARED_OPERATIONS = frozenset({
 })
 
 
+# Held-out items that had an exact behavioural equivalent in the training data of v5's fine-tuning
+# rounds up to round 56 (experiments/v51/AUDIT.md, C1). A checkpoint descended from those rounds has
+# seen them in another form, so scores are also reported without them ("clean").
+CONTAMINATED_ITEMS = frozenset({
+    ("bench", "total"), ("bench", "sum_of_cubes"), ("bench", "dict_size"),
+    ("dev", "cube"), ("dev", "is_negative"), ("dev", "double_all"), ("dev", "smaller"), ("dev", "count_uppercase"),
+    ("dev", "weeks_to_days"), ("dev", "multiply_three_numbers"), ("dev", "longer_than_three"),
+    ("dev", "smallest_positive"), ("dev", "below_two"), ("dev", "above_six"), ("dev", "keep_gt5"),
+    ("dev", "keep_negative"),  # via the novel pair "less than 3 ... also negative", drawn in 23 of 56 rounds
+})
+
+
 def normalized_body(source: str) -> str:
     """A function's body without its def line and docstring, with its own name replaced by F (so
     renamed copies and documented copies of one function compare equal)."""

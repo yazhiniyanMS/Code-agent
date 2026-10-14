@@ -283,3 +283,58 @@ def test_generalisation_check_reports_three_splits(data_dir, base_model, tmp_pat
     for split in ("train", "heldout_rows", "unseen_tasks"):
         assert out[split]["examples"] > 0 and out[split]["answer_tokens"] > 0 and out[split]["token_loss"] > 0
     assert out["unseen_tasks"]["examples"] >= 40  # every dev problem with its reference
+
+
+def test_experiment_runner_end_to_end_with_a_tiny_model(data_dir, base_model, tmp_path, monkeypatch):
+    """Two arms x two seeds through the real subprocess path (sft, eval, diagnose) on a tiny model,
+    with a fast stand-in for the round data; then the paired summary."""
+    import ycode.lm.rounddata as rounddata
+    from ycode.lm import experiment
+    from ycode.lm.basics import write_basics_dataset
+
+    def fake_round(out_dir, seed, tokenizer_path, *, replay_dir=None, options=None, log=print, **_):
+        examples = [InstructionExample(f"Write `add_{k}(x)`.", f"```python\ndef add_{k}(x):\n    return x + {k}\n```")
+                    for k in range(seed, seed + 30)]
+        info = write_basics_dataset(out_dir, tokenizer_path, examples=examples, seed=seed, log=log)
+        manifest = {"seed": seed, "options": options or {}, "removed": {}, "kept": len(examples), **info}
+        (Path(out_dir) / "manifest.json").write_text(json.dumps(manifest))
+        (Path(out_dir) / "hygiene.json").write_text("[]")
+        return manifest
+
+    from pathlib import Path
+
+    monkeypatch.setattr(rounddata, "write_round_dataset", fake_round)
+    spec = {"name": "tiny", "anchor": str(base_model), "anchor_sha256": "x", "tokenizer": str(data_dir / "tokenizer.json"),
+            "out": str(tmp_path / "exp"), "seeds": [1, 2], "metric": "dev_clean",
+            "train": {"steps": 2, "precision": "fp32", "train_layers": 2, "init_optim": False},
+            "eval": {"limit": 2, "diagnose": 4},
+            "arms": [{"name": "A"}, {"name": "B", "data": {"skills": True}}], "comparisons": [["B", "A"]]}
+    out = tmp_path / "exp"
+    for seed in spec["seeds"]:
+        for arm in spec["arms"]:
+            record = experiment.run_one(spec, arm, seed, out, log=lambda *_: None)
+            assert record["training"]["exit"] == 0 and record["training"]["steps"] == 2
+            assert record["dev"]["of"] == 4 and record["bench"]["of"] == 4  # limit 2 writes + 2 fixes
+            assert record["training"]["peak_rss_mb"] > 0 and record["diagnose"]["unseen_tasks"]["examples"] > 0
+            assert not (out / arm["name"] / str(seed) / "model").exists()  # weights deleted after scoring
+    summary = experiment.summarize(spec, out)
+    assert set(summary["arms"]) == {"A", "B"} and summary["comparisons"][0]["seeds"] == [1, 2]
+    assert "Verdict" in experiment.render(summary)
+
+
+def test_paired_comparison_needs_more_than_one_lucky_seed():
+    from ycode.lm.experiment import compare
+
+    def run(dev_clean, cats=None):
+        return {"dev": {"points": dev_clean, "clean": dev_clean,
+                        "lost_by_category": cats or {"reasoning": 5, "hallucination": 1}}}
+
+    lucky = compare({1: run(30), 2: run(25), 3: run(26)}, {1: run(25), 2: run(26), 3: run(25)}, "dev_clean")
+    assert lucky["verdict"] == "inconclusive"  # +5, -1, +1
+    steady = compare({1: run(28), 2: run(29), 3: run(28)}, {1: run(25), 2: run(26), 3: run(25)}, "dev_clean")
+    assert steady["verdict"] == "retained"
+    damaged = compare({1: run(28, {"reasoning": 5, "hallucination": 4})}, {1: run(25)}, "dev_clean")
+    assert damaged["verdict"].startswith("inconclusive")  # one seed never decides
+    damaged2 = compare({s: run(28, {"reasoning": 5, "hallucination": 4}) for s in (1, 2)}, {s: run(25) for s in (1, 2)},
+                       "dev_clean")
+    assert damaged2["verdict"] == "rejected"  # hallucinations +3 on average

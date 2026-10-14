@@ -1,0 +1,21 @@
+{
+  "name": "v51-arms",
+  "note": "Arms A-E of the v5.1 plan. Every arm starts from the round-54 checkpoint with the same training budget (72 Lion steps, lr 1.5e-5, batch 4, top 24 blocks, bf16), the same evaluation (greedy, unchanged harness) and the same seeds; each arm changes only its data options. The held-out leakage fix applies to every arm (it is a correctness fix, not a variable under test). Decision metric: dev score without the items the checkpoint saw in equivalent form (dev_clean).",
+  "anchor": "/home/user/lmwork/loop/anchor",
+  "tokenizer": "/home/user/lmwork/data/tokenizer.json",
+  "replay_dir": "/home/user/lmwork/data",
+  "average_script": "/home/user/lmwork/average.py",
+  "out": "/home/user/lmwork/v51",
+  "seeds": [1201, 1202, 1203],
+  "metric": "dev_clean",
+  "train": {"steps": 72, "lr": 1.5e-5, "batch": 4, "train_layers": 24, "warmup": 2, "precision": "bf16", "init_optim": true},
+  "eval": {"dev": true, "bench": true, "diagnose": 64},
+  "arms": [
+    {"name": "A", "data": {"skills": true}, "note": "existing production mix: skill families on, duplicates kept, 200 replay rows"},
+    {"name": "B", "data": {"skills": false}, "note": "A without automatic skill-function injection"},
+    {"name": "C", "data": {"skills": false, "dedup": true, "contradictions": true}, "note": "B with exact duplicates and contradictory answers removed"},
+    {"name": "D", "data": {"skills": false, "dedup": true, "contradictions": true, "replay": 60}, "note": "C with a small replay set (60 rows drawn like the default 200)"},
+    {"name": "E", "data": {"skills": false, "dedup": true, "contradictions": true, "replay": 0}, "note": "C without replay"}
+  ],
+  "comparisons": [["B", "A"], ["C", "B"], ["D", "C"], ["E", "C"], ["E", "D"]]
+}
