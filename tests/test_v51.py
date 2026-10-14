@@ -338,3 +338,34 @@ def test_paired_comparison_needs_more_than_one_lucky_seed():
     damaged2 = compare({s: run(28, {"reasoning": 5, "hallucination": 4}) for s in (1, 2)}, {s: run(25) for s in (1, 2)},
                        "dev_clean")
     assert damaged2["verdict"] == "rejected"  # hallucinations +3 on average
+
+
+def test_interrupted_experiment_run_resumes_training(data_dir, base_model, tmp_path, monkeypatch):
+    """A run killed after its mid-run checkpoint picks up from it (same data, same step count)."""
+    import ycode.lm.rounddata as rounddata
+    from ycode.lm import experiment
+    from ycode.lm.basics import write_basics_dataset
+    from ycode.lm.train import TrainConfig, train
+
+    def fake_round(out_dir, seed, tokenizer_path, *, options=None, log=print, **_):
+        examples = [InstructionExample(f"Write `add_{k}(x)`.", f"```python\ndef add_{k}(x):\n    return x + {k}\n```")
+                    for k in range(30)]
+        info = write_basics_dataset(out_dir, tokenizer_path, examples=examples, seed=seed, log=log)
+        (out_dir / "manifest.json").write_text(json.dumps({"seed": seed, "removed": {}, **info}))
+        (out_dir / "hygiene.json").write_text("[]")
+        return info
+
+    monkeypatch.setattr(rounddata, "write_round_dataset", fake_round)
+    spec = {"name": "t", "anchor": str(base_model), "anchor_sha256": "x", "tokenizer": str(data_dir / "tokenizer.json"),
+            "seeds": [1], "train": {"steps": 4, "precision": "fp32", "train_layers": 2, "init_optim": False},
+            "eval": {"limit": 1, "diagnose": 0, "bench": False}, "arms": [{"name": "A"}]}
+    run_dir = tmp_path / "exp" / "A" / "1"
+    fake_round(run_dir / "data", 1, data_dir / "tokenizer.json", log=lambda *_: None)
+    # the first attempt got halfway (2 of 4 steps) before the container went away
+    train(run_dir / "data", run_dir / "model", TrainConfig(stage="sft", init_from=str(base_model), max_steps=4,
+          until_step=2, batch_size=4, warmup_steps=2, eval_iters=0, eval_interval=100000, device="cpu",
+          precision="fp32", optimizer="lion", lr=1.5e-5, train_layers=2, seed=1, save_interval=2,
+          save_in_place=True), log=lambda *_: None)
+    record = experiment.run_one(spec, spec["arms"][0], 1, tmp_path / "exp", log=lambda *_: None)
+    steps = [json.loads(line)["step"] for line in (run_dir / "metrics.jsonl").read_text().splitlines()]
+    assert steps == [1, 2, 3, 4] and record["training"]["steps"] == 4

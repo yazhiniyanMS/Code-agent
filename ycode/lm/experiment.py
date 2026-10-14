@@ -127,24 +127,31 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
                     "train": train, "eval": evaluation, "anchor": spec["anchor"], "anchor_sha256": spec["anchor_sha256"]}
 
     data, cur = run_dir / "data", run_dir / "model"
-    log(f"{arm['name']} seed {seed}: building data {arm.get('data', {})}")
     t0 = time.time()
-    shutil.rmtree(data, ignore_errors=True)
-    manifest = write_round_dataset(data, seed, spec["tokenizer"], replay_dir=spec.get("replay_dir"),
-                                   options=arm.get("data", {}), log=lambda m: log(f"  {m}"))
+    if (data / "manifest.json").is_file() and (cur / "model.pt").is_file():
+        # an interrupted run (e.g. a container restart): its data is reused and training resumes
+        log(f"{arm['name']} seed {seed}: resuming from the data and checkpoint already written")
+        manifest = json.loads((data / "manifest.json").read_text())
+    else:
+        log(f"{arm['name']} seed {seed}: building data {arm.get('data', {})}")
+        shutil.rmtree(data, ignore_errors=True)
+        shutil.rmtree(cur, ignore_errors=True)
+        manifest = write_round_dataset(data, seed, spec["tokenizer"], replay_dir=spec.get("replay_dir"),
+                                       options=arm.get("data", {}), log=lambda m: log(f"  {m}"))
     record["data"] = {k: v for k, v in manifest.items() if k != "options"}
     record["data"]["minutes"] = round((time.time() - t0) / 60, 2)
     shutil.copy(data / "hygiene.json", run_dir / "hygiene.json")
     shutil.copy(data / "manifest.json", run_dir / "manifest.json")
 
     log(f"{arm['name']} seed {seed}: training {train['steps']} steps")
-    shutil.rmtree(cur, ignore_errors=True)
     cmd = [sys.executable, "-m", "ycode.lm.cli", "sft", "--data", str(data), "--init-from", spec["anchor"],
            "--out", str(cur), "--steps", str(train["steps"]), "--warmup", str(train["warmup"]),
            "--batch-size", str(train["batch"]), "--optimizer", "lion", "--lr", str(train["lr"]),
            "--train-layers", str(train["train_layers"]), "--grad-checkpoint", "--eval-interval", "100000",
            "--eval-iters", "0", "--seed", str(seed), "--device", "cpu", "--precision", train["precision"]]
     cmd += ["--init-optim"] if train["init_optim"] else []
+    # checkpoint halfway (in place: one copy on disk) so a restart costs at most half a run
+    cmd += ["--resume", "--save-interval", str(max(1, train["steps"] // 2)), "--save-in-place"]
     cmd += ["--seq-len", str(train["seq_len"])] if train["seq_len"] else []
     record["training"] = run_measured(cmd, run_dir / "train.log")
     if record["training"]["exit"] != 0:
@@ -303,6 +310,19 @@ def render(summary: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _anchor_hash(anchor: Path, out: Path, verify) -> str:
+    """The starting checkpoint's SHA-256, cached next to the results (hashing 7 GB takes minutes);
+    recomputed if the file's size or modification time changed."""
+    stat = (anchor / "model.pt").stat()
+    key = f"{anchor.resolve()}:{stat.st_size}:{stat.st_mtime_ns}"
+    cache = out / "anchor.sha256.json"
+    if cache.is_file() and (cached := json.loads(cache.read_text())).get("key") == key:
+        return cached["sha256"]
+    digest = verify(anchor)
+    cache.write_text(json.dumps({"key": key, "sha256": digest}))
+    return digest
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Run or summarize a controlled fine-tuning experiment.")
     ap.add_argument("spec", type=Path)
@@ -323,7 +343,7 @@ def main(argv: list[str] | None = None) -> int:
     if not args.summarize:
         from ycode.lm.train import verify_checkpoint
 
-        spec.setdefault("anchor_sha256", verify_checkpoint(Path(spec["anchor"])))
+        spec.setdefault("anchor_sha256", _anchor_hash(Path(spec["anchor"]), out, verify_checkpoint))
         wanted = set(args.arms.split(",")) if args.arms else None
         seeds = spec["seeds"][:1] if args.smoke else spec["seeds"]
         # seed-major order: every arm gets its first seed before any arm gets a second
