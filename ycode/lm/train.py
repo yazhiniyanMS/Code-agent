@@ -148,9 +148,57 @@ def save_checkpoint(out_dir: Path, model: GPT, tok: BPETokenizer, *, step: int, 
         os.replace(optim_tmp, out_dir / "optim.pt")
     (out_dir / "info.json").write_text(json.dumps({
         "step": step, "stage": stage, "val_loss": val_loss, "params": model.num_params(),
-        "config": model.cfg.to_dict(),
+        "config": model.cfg.to_dict(), "sha256": file_sha256(path),
     }, indent=2))
     return path
+
+
+def file_sha256(path: Path) -> str:
+    import hashlib
+
+    h = hashlib.sha256()
+    with Path(path).open("rb") as f:
+        for chunk in iter(lambda: f.read(1 << 22), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def verify_checkpoint(model_dir: Path) -> str:
+    """Check model.pt against the SHA-256 recorded in info.json when it was saved. Returns the hash;
+    raises if it differs (a truncated or overwritten file). Checkpoints saved before hashes were
+    recorded return their hash unchecked."""
+    model_dir = Path(model_dir)
+    digest = file_sha256(model_dir / CHECKPOINT_NAME)
+    info_path = model_dir / "info.json"
+    recorded = json.loads(info_path.read_text()).get("sha256") if info_path.is_file() else None
+    if recorded and recorded != digest:
+        raise ValueError(f"{model_dir / CHECKPOINT_NAME} does not match the hash recorded at save time")
+    return digest
+
+
+def assert_finite_weights(model: GPT) -> None:
+    """Raise if any weight is NaN or Inf (a corrupted checkpoint or a diverged run)."""
+    for name, t in model.state_dict().items():
+        if t.is_floating_point() and not torch.isfinite(t).all():
+            raise ValueError(f"non-finite values in weight {name}")
+
+
+def check_batch(x: torch.Tensor, y: torch.Tensor, m: torch.Tensor | None, vocab_size: int) -> bool:
+    """Reject malformed batches before they reach the model: shape mismatches, token ids outside
+    the vocabulary, negative loss weights. Returns False for a well-formed SFT batch with nothing to
+    learn (every weight 0: e.g. rows that hold only prompt tokens), which trains nothing."""
+    if x.shape != y.shape or (m is not None and m.shape != y.shape):
+        raise ValueError(f"batch shapes differ: x {tuple(x.shape)}, y {tuple(y.shape)}"
+                         f"{'' if m is None else f', mask {tuple(m.shape)}'}")
+    for name, t in (("inputs", x), ("targets", y)):
+        if t.numel() and (int(t.min()) < 0 or int(t.max()) >= vocab_size):
+            raise ValueError(f"{name} hold token ids outside [0, {vocab_size})")
+    if m is not None:
+        if int(m.min()) < 0:
+            raise ValueError("negative loss weights in batch")
+        if int(m.sum()) == 0:
+            return False
+    return True
 
 
 def load_checkpoint(path: Path, device: str = "cpu", *,
@@ -706,7 +754,12 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
             tmp.write_text(json.dumps(data.state_dict()))
             os.replace(tmp, sampler_path)
     t0 = time.time()
-    tokens_seen = 0
+    tokens_seen = answer_tokens = empty_batches = 0
+    # One line per optimizer step (loss, lr, gradient norm, tokens, speed); appended across resumes.
+    metrics = None
+    if main:
+        out_dir.mkdir(parents=True, exist_ok=True)
+        metrics = (out_dir / "metrics.jsonl").open("a")
     best_val = None
     history = []
     step = start_step
@@ -740,18 +793,36 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
             # DDP: all-reduce gradients only after the last micro-batch. (FSDP reduce-scatters every
             # micro-batch; keeping unsharded gradients around would defeat the point of sharding.)
             sync = contextlib.nullcontext() if (last or not distributed or shard) else train_model.no_sync()
+            if not check_batch(x, y, m, model.cfg.vocab_size):
+                if not empty_batches:
+                    log(f"step {step + 1}: a batch with no answer tokens (it trains nothing); counted in the summary")
+                empty_batches += 1
             with sync:
                 with autocast:
                     _, loss = train_model(x, y, loss_mask=m)
+                if not torch.isfinite(loss.detach()):
+                    # Before backward: Lion would apply the update during backward itself.
+                    raise FloatingPointError(f"non-finite loss ({loss.item()}) at step {step + 1}; "
+                                             "nothing was updated or saved for this step")
                 (loss * (loss_scale / cfg.grad_accum)).backward()
             loss_total += loss.item() / cfg.grad_accum
             tokens_seen += x.numel() * world
+            answer_tokens += int((m > 0).sum()) * world if m is not None else x.numel() * world
         finite = (scaler.unscale_and_check(model.parameters(), all_ranks_finite if shard else None)
                   if scaler else True)
+        grad_norm = None
         if in_backward:
-            pass  # Lion already updated every weight during backward (sign-based, so no clipping)
+            # Lion already updated every weight during backward (sign-based, so no clipping).
+            lion = optimizer.optimizers[0]
+            grad_norm = math.sqrt(lion.grad_sq)
+            if lion.nonfinite:
+                raise FloatingPointError(f"NaN/Inf gradients in {lion.nonfinite} tensors at step {step + 1}; "
+                                         "those updates were skipped and the run stops without saving")
+            lion.reset_stats()
         elif finite:
-            torch.nn.utils.clip_grad_norm_(model.parameters(), cfg.grad_clip)
+            grad_norm = float(torch.nn.utils.clip_grad_norm_(model.parameters(), cfg.grad_clip))
+            if not math.isfinite(grad_norm) and scaler is None:
+                raise FloatingPointError(f"non-finite gradient norm at step {step + 1}")
             optimizer.step()
         else:
             log(f"step {step + 1}: fp16 gradient overflow, skipping update (loss scale {loss_scale:g})")
@@ -760,10 +831,18 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
         optimizer.zero_grad(set_to_none=True)
         step += 1
 
+        elapsed = time.time() - t0
+        if main:
+            metrics.write(json.dumps({"step": step, "loss": round(loss_total, 6), "lr": lr,
+                                      "grad_norm": None if grad_norm is None else round(grad_norm, 6),
+                                      "tokens": tokens_seen, "answer_tokens": answer_tokens,
+                                      "elapsed_s": round(elapsed, 1),
+                                      "tok_per_s": round(tokens_seen / max(elapsed, 1e-9), 1)}) + "\n")
+            metrics.flush()
         if step % cfg.log_interval == 0:
-            elapsed = time.time() - t0
             log(f"step {step:>6} | loss {loss_total:.3f} | lr {lr:.2e} | "
-                f"{tokens_seen / max(elapsed, 1e-9):,.0f} tok/s | {elapsed / 60:.1f} min")
+                + (f"gnorm {grad_norm:.3f} | " if grad_norm is not None else "")
+                + f"{tokens_seen / max(elapsed, 1e-9):,.0f} tok/s | {elapsed / 60:.1f} min")
         # Sharded models need every rank for a forward pass or a save; replicated ones only rank 0.
         acting = main or shard
         if acting and cfg.eval_iters and (step % cfg.eval_interval == 0 or step == cfg.max_steps):
@@ -790,10 +869,27 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
             history.append({"step": step})
             checkpoint(None)
     if main:
+        import resource
+        from dataclasses import asdict
+
+        metrics.close()
+        init_info = Path(cfg.init_from) / "info.json" if cfg.init_from else None
+        data_manifest = data_dir / "manifest.json"
         summary = {"steps": step, "minutes": (time.time() - t0) / 60, "tokens": tokens_seen,
+                   "answer_tokens": answer_tokens, "empty_batches": empty_batches,
                    "final": history[-1], "params": model.num_params(), "out_dir": str(out_dir),
                    "world_size": world, "precision": precision,
-                   "fp16_skipped_steps": scaler.skipped if scaler else 0}
+                   "fp16_skipped_steps": scaler.skipped if scaler else 0,
+                   # what this run was: config, starting weights, data, result, cost
+                   "config": asdict(cfg),
+                   "init_sha256": (json.loads(init_info.read_text()).get("sha256")
+                                   if init_info is not None and init_info.is_file() else None),
+                   "data_files": (json.loads(data_manifest.read_text()).get("files")
+                                  if data_manifest.is_file() else None),
+                   "checkpoint_sha256": (json.loads((out_dir / "info.json").read_text()).get("sha256")
+                                         if (out_dir / "info.json").is_file() else None),
+                   "peak_rss_mb": round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024),
+                   "torch": torch.__version__, "threads": torch.get_num_threads()}
         (out_dir / "train_log.json").write_text(json.dumps({"summary": summary, "history": history}, indent=2))
     if distributed:
         dist.barrier()

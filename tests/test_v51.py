@@ -163,3 +163,123 @@ def test_round_dataset_writes_manifest_and_hygiene(data_dir, tmp_path, monkeypat
     assert {r["reason"] for r in json.loads((tmp_path / "hygiene.json").read_text())} == {"held-out equivalent", "duplicate"}
     with pytest.raises(ValueError):
         rounddata.write_round_dataset(tmp_path, 5, data_dir / "tokenizer.json", options={"replay_size": 3})
+
+
+# ------------------------------------------------------------ training health (phase 4)
+
+
+def _cfg(**kw):
+    from ycode.lm.train import TrainConfig
+
+    base = dict(preset="v2-tiny", model_overrides={"block_size": 64}, batch_size=4, max_steps=4, warmup_steps=1,
+                eval_interval=1000, eval_iters=0, log_interval=1000, device="cpu", precision="fp32")
+    base.update(kw)
+    return TrainConfig(**base)
+
+
+@pytest.fixture
+def base_model(data_dir, tmp_path):
+    from ycode.lm.train import train
+
+    train(data_dir, tmp_path / "base", _cfg(max_steps=2), log=lambda *_: None)
+    return tmp_path / "base"
+
+
+def test_tiny_model_overfits_a_tiny_dataset(data_dir, base_model, tmp_path):
+    """The training path can learn known examples: a tiny model fine-tuned on three examples must
+    drive their loss near zero and answer them verbatim."""
+    from ycode.lm.basics import write_basics_dataset
+    from ycode.lm.generate import LocalLM
+    from ycode.lm.train import train
+
+    examples = [InstructionExample("Write `neg(x)`.", "```python\ndef neg(x):\n    return -x\n```"),
+                InstructionExample("Write `twice(x)`.", "```python\ndef twice(x):\n    return 2 * x\n```"),
+                InstructionExample("Write `head(s)`.", "```python\ndef head(s):\n    return s[0]\n```")]
+    sft = tmp_path / "sft"
+    write_basics_dataset(sft, data_dir / "tokenizer.json", examples=examples * 8, seed=0, log=lambda *_: None)
+    out = tmp_path / "chat"
+    train(sft, out, _cfg(stage="sft", init_from=str(base_model), max_steps=150, lr=3e-3, optimizer="adamw",
+                         weight_decay=0.0), log=lambda *_: None)
+    rows = [json.loads(line) for line in (out / "metrics.jsonl").read_text().splitlines()]
+    assert sum(r["loss"] for r in rows[-10:]) / 10 < 0.05, rows[-10:]
+    lm = LocalLM(out, device="cpu")
+    for ex in examples:
+        assert lm.chat([("user", ex.prompt)], max_new_tokens=40, temperature=0) == ex.response
+
+
+def test_metrics_and_run_record(data_dir, base_model, tmp_path):
+    from ycode.lm.train import file_sha256, train, verify_checkpoint
+
+    out = tmp_path / "chat"
+    summary = train(data_dir, out, _cfg(stage="sft", init_from=str(base_model), optimizer="lion", lr=1e-4),
+                    log=lambda *_: None)
+    rows = [json.loads(line) for line in (out / "metrics.jsonl").read_text().splitlines()]
+    assert [r["step"] for r in rows] == [1, 2, 3, 4]
+    assert all(r["grad_norm"] > 0 and r["tokens"] > 0 and r["answer_tokens"] > 0 for r in rows)
+    record = json.loads((out / "train_log.json").read_text())["summary"]
+    assert record["checkpoint_sha256"] == file_sha256(out / "model.pt") == verify_checkpoint(out)
+    assert record["init_sha256"] == json.loads((base_model / "info.json").read_text())["sha256"]
+    assert record["config"]["optimizer"] == "lion" and record["peak_rss_mb"] > 0
+    assert summary["empty_batches"] == 0
+    with (out / "model.pt").open("r+b") as f:  # flip one byte: the recorded hash catches it
+        f.seek(100)
+        byte = f.read(1)
+        f.seek(100)
+        f.write(bytes([byte[0] ^ 0xFF]))
+    with pytest.raises(ValueError):
+        verify_checkpoint(out)
+
+
+def test_nan_loss_stops_before_any_update(data_dir, base_model, tmp_path):
+    from ycode.lm.train import assert_finite_weights, load_checkpoint, save_checkpoint, train
+
+    model, tok, _ = load_checkpoint(base_model)
+    with torch.no_grad():
+        model.blocks[0].mlp.down.weight[0, 0] = float("nan")
+    with pytest.raises(ValueError):
+        assert_finite_weights(model)
+    save_checkpoint(tmp_path / "broken", model, tok, step=2, stage="pretrain", val_loss=None)
+    with pytest.raises(FloatingPointError, match="non-finite loss"):
+        train(data_dir, tmp_path / "chat", _cfg(stage="sft", init_from=str(tmp_path / "broken"), optimizer="lion"),
+              log=lambda *_: None)
+    assert not (tmp_path / "chat" / "model.pt").exists()  # nothing was saved
+
+
+def test_lion_never_applies_a_nonfinite_gradient():
+    from ycode.lm.optim import build_optimizer
+
+    lin = torch.nn.Linear(4, 4, bias=False)
+    before = lin.weight.detach().clone()
+    opt = build_optimizer(lin, kind="lion", lr=0.1, muon_lr=0.0, weight_decay=0.0)
+    lion = opt.optimizers[0]
+    lion.attach()
+    (lin(torch.full((1, 4), float("inf"))).sum()).backward()
+    assert lion.nonfinite == 1 and torch.equal(lin.weight, before)
+    lion.reset_stats()
+    (lin(torch.ones(1, 4)).sum()).backward()
+    assert lion.nonfinite == 0 and lion.grad_sq > 0 and not torch.equal(lin.weight, before)
+
+
+def test_check_batch_rejects_malformed_batches():
+    from ycode.lm.train import check_batch
+
+    x = torch.tensor([[1, 2, 3]])
+    m = torch.tensor([[0, 1, 1]])
+    assert check_batch(x, x, m, 10) is True
+    assert check_batch(x, x, torch.zeros_like(m), 10) is False  # well-formed, nothing to learn
+    for bad in ((x, x[:, :2], m), (x, torch.tensor([[1, 2, 10]]), m), (x, x, torch.tensor([[0, -1, 1]]))):
+        with pytest.raises(ValueError):
+            check_batch(*bad, 10)
+
+
+def test_generalisation_check_reports_three_splits(data_dir, base_model, tmp_path):
+    from ycode.lm.basics import write_basics_dataset
+    from ycode.lm.diagnose import split_losses
+
+    examples = [InstructionExample(f"Write `add_{k}(x)`.", f"```python\ndef add_{k}(x):\n    return x + {k}\n```")
+                for k in range(40)]
+    write_basics_dataset(tmp_path / "d", data_dir / "tokenizer.json", examples=examples, seed=0, log=lambda *_: None)
+    out = split_losses(base_model, tmp_path / "d", n=8)
+    for split in ("train", "heldout_rows", "unseen_tasks"):
+        assert out[split]["examples"] > 0 and out[split]["answer_tokens"] > 0 and out[split]["token_loss"] > 0
+    assert out["unseen_tasks"]["examples"] >= 40  # every dev problem with its reference

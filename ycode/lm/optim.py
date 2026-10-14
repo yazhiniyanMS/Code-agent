@@ -12,6 +12,8 @@ neural networks" (2024).
 
 from __future__ import annotations
 
+import math
+
 import torch
 
 try:
@@ -112,6 +114,13 @@ class Lion(torch.optim.Optimizer):
         super().__init__(params, dict(lr=lr, betas=betas, weight_decay=weight_decay))
         self.state_dtype = state_dtype
         self._hooks: list = []
+        # Per-step health, filled during backward (gradients are freed right after use, so this is
+        # the only place to see them): squared gradient norm and parameters with NaN/Inf gradients.
+        self.grad_sq = 0.0
+        self.nonfinite = 0
+
+    def reset_stats(self) -> None:
+        self.grad_sq, self.nonfinite = 0.0, 0
 
     @torch.no_grad()
     def _update(self, p: torch.Tensor, group: dict) -> None:
@@ -157,7 +166,12 @@ class Lion(torch.optim.Optimizer):
         for group in self.param_groups:
             for p in group["params"]:
                 def hook(param, group=group):
-                    self._update(param, group)
+                    sq = float(torch.linalg.vector_norm(param.grad, dtype=torch.float32)) ** 2
+                    if math.isfinite(sq):
+                        self.grad_sq += sq
+                        self._update(param, group)
+                    else:  # never apply a NaN/Inf update; the training loop stops on this
+                        self.nonfinite += 1
                     param.grad = None
                 self._hooks.append(p.register_post_accumulate_grad_hook(hook))
 
