@@ -619,6 +619,8 @@ def compose_bugfix_examples(seed: int = 7, per_exercise: int = 1):
 
 _ORDINALS = {5: "sixth", 6: "seventh", 7: "eighth", 8: "ninth", 9: "tenth", -3: "third to last",
              -4: "fourth to last", -5: "fifth to last"}
+NOVEL_DRAWS = 6  # constants k drawn per round; each gives eight exercises (add, minus, times, ...)
+NOVEL_ORDINALS = 4  # ordinal-index exercises per round, out of len(_ORDINALS)
 
 
 def novel_exercises(seed: int) -> list[Exercise]:
@@ -628,7 +630,7 @@ def novel_exercises(seed: int) -> list[Exercise]:
     and middle items, plain max/min/sum of a list, sum of evens, counting zeros."""
     rng = random.Random(seed * 7919 + 13)
     out = []
-    for _ in range(6):
+    for _ in range(NOVEL_DRAWS):
         k = rng.randint(11, 60)
         word = _num(k, rng)
         out += [
@@ -651,7 +653,7 @@ def novel_exercises(seed: int) -> list[Exercise]:
                      f"total = 0\nfor i in range(n):\n    if i % {k} == 0:\n        total += i\nreturn total",
                      ((100,), (k,), (3 * k + 1,))),
         ]
-    for i, nth in rng.sample(sorted(_ORDINALS.items()), 4):
+    for i, nth in rng.sample(sorted(_ORDINALS.items()), min(NOVEL_ORDINALS, len(_ORDINALS))):
         out.append(Exercise(("novel", "index", i), f"{nth.replace(' ', '_')}_item", "items",
                             f"returns the {nth} item of a list with at least ten items.", f"return items[{i}]",
                             ((list(range(10, 22)),), (list("abcdefghij"),))))

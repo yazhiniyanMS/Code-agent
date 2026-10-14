@@ -337,6 +337,20 @@ def test_novel_exercises_change_every_round_and_stay_held_out():
     assert len(novel_examples(30)) > 60
 
 
+def test_more_novel_draws_stay_held_out(monkeypatch):
+    import ycode.lm.compose as compose
+
+    default = len(compose.novel_examples(30))
+    monkeypatch.setattr(compose, "NOVEL_DRAWS", 30)
+    monkeypatch.setattr(compose, "NOVEL_ORDINALS", 99)
+    more = compose.novel_exercises(30)
+    assert sum(1 for e in more if e.key[1] == "index") == len(compose._ORDINALS)
+    for e in more:
+        assert compose.base_key(e.key) not in compose.HELD_OUT_KEYS and _passes(e.source(), e.tests()), e.name
+    assert not {e.name for e in more} & held_out_names()
+    assert len(compose.novel_examples(30)) > 3 * default
+
+
 def test_loop_renderings_compute_the_same_thing():
     from ycode.lm.compose import all_exercises, loop_rendering
 
