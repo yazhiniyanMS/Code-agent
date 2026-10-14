@@ -1,0 +1,157 @@
+{
+ "arm": {
+  "name": "novel_x5_s1",
+  "group": "novel_x5",
+  "seed": 1101,
+  "data": {
+   "skills": false,
+   "novel_draws": 30,
+   "novel_ordinals": 8
+  },
+  "changes": "five times as many fresh-constant exercises (30 constants instead of 6, all 8 ordinals): the model must read the number or ordinal instead of recalling a memorised body"
+ },
+ "train_minutes": 62.8,
+ "dev": {
+  "points": 35,
+  "of": 62,
+  "groups": {
+   "dev_concept": {
+    "passed": 3,
+    "total": 15,
+    "lost": {
+     "instruction_following": 6,
+     "formatting": 1,
+     "reasoning": 5
+    }
+   },
+   "dev_fix": {
+    "passed": 5,
+    "total": 15,
+    "lost": {
+     "instruction_following": 6,
+     "reasoning": 4
+    }
+   },
+   "dev_slot": {
+    "passed": 27,
+    "total": 32,
+    "lost": {
+     "reasoning": 2,
+     "instruction_following": 3
+    }
+   }
+  },
+  "lost_by_category": {
+   "formatting": 1,
+   "instruction_following": 15,
+   "hallucination": 0,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 11
+  },
+  "passed": [
+   "bugfix:count_greater",
+   "bugfix:count_uppercase",
+   "bugfix:is_negative",
+   "bugfix:longest_word",
+   "bugfix:sum_of_squares",
+   "write:above_six",
+   "write:add_seven",
+   "write:all_odd",
+   "write:any_zero",
+   "write:below_two",
+   "write:count_greater",
+   "write:count_o",
+   "write:count_odd",
+   "write:count_uppercase",
+   "write:divisible_by_five",
+   "write:ends_with_ing",
+   "write:floor_div_four",
+   "write:has_two_items",
+   "write:has_x",
+   "write:is_negative",
+   "write:keep_gt5",
+   "write:keep_negative",
+   "write:largest_even",
+   "write:longer_than_three",
+   "write:not_three",
+   "write:remainder_three",
+   "write:scale_each_by_three",
+   "write:smallest_positive",
+   "write:starts_with_the",
+   "write:subtract_five",
+   "write:subtract_three_each",
+   "write:sum_multiples_of_five",
+   "write:sum_odd",
+   "write:sum_positive_square",
+   "write:times_four"
+  ]
+ },
+ "bench": {
+  "points": 22,
+  "of": 65,
+  "groups": {
+   "fixed": {
+    "passed": 6,
+    "total": 15,
+    "lost": {
+     "reasoning": 3,
+     "factual": 1,
+     "instruction_following": 5
+    }
+   },
+   "fresh": {
+    "passed": 9,
+    "total": 20,
+    "lost": {
+     "hallucination": 1,
+     "reasoning": 3,
+     "instruction_following": 5,
+     "factual": 2
+    }
+   },
+   "standard": {
+    "passed": 7,
+    "total": 30,
+    "lost": {
+     "instruction_following": 10,
+     "reasoning": 8,
+     "hallucination": 3,
+     "factual": 2
+    }
+   }
+  },
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 20,
+   "hallucination": 4,
+   "coding": 0,
+   "factual": 5,
+   "reasoning": 14
+  },
+  "passed": [
+   "bugfix:add",
+   "bugfix:is_even",
+   "bugfix:is_sorted",
+   "bugfix:maximum",
+   "bugfix:square",
+   "bugfix:subtract",
+   "write:add",
+   "write:add_one",
+   "write:char_count",
+   "write:count_letter_a",
+   "write:count_spaces",
+   "write:count_zeros",
+   "write:dict_size",
+   "write:filter_even",
+   "write:first_word",
+   "write:halve_all",
+   "write:is_even",
+   "write:is_zero",
+   "write:square",
+   "write:subtract",
+   "write:sum_of_evens",
+   "write:triple"
+  ]
+ }
+}
