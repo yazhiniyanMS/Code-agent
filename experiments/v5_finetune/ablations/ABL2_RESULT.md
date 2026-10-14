@@ -29,7 +29,8 @@ full table: `abl2/summary.txt`.
 2. **No data-cleaning or training-setting change helps beyond the noise.** All ten changes land
    at 34-37 on dev, between the two baseline seeds. Learning rate, steps, batch size and sequence
    length do not matter at this point.
-3. **The model has memorised its fine-tuning data.** The training loss at steps 50/60/70 is the
+3. **(Withdrawn, see `../../v51/AUDIT.md` C6.)** ~~The model has memorised its fine-tuning data.~~ The logged
+   loss is one weighted batch, and no validation loss was measured, so this does not follow. The training loss at steps 50/60/70 is the
    same with the learning rate doubled (0.077/0.177/0.181 vs 0.076/0.177/0.181): it follows which
    batches come up, not the setting. Doubling the steps adds nothing.
 4. **The skill families hurt.** Adding them raised hallucinations on dev from 1 to 4 (the

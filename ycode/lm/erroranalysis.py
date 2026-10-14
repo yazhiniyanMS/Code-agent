@@ -142,13 +142,15 @@ def training_bodies() -> dict[str, str]:
     global _TRAINING_BODIES
     if _TRAINING_BODIES is None:
         from ycode.lm.basics import training_concepts
-        from ycode.lm.compose import all_exercises
+        from ycode.lm.compose import all_exercises, skill_exercises
 
         bodies: dict[str, str] = {}
         for c in training_concepts():
             if key := _body_key(c.source()):
                 bodies.setdefault(key, c.name)
-        for e in all_exercises(7):
+        # Skill bodies count whether or not today's runs include them: the checkpoints being
+        # analysed were trained on them up to round 56.
+        for e in all_exercises(7) + skill_exercises():
             if key := _body_key(e.source()):
                 bodies.setdefault(key, e.name)
         _TRAINING_BODIES = bodies

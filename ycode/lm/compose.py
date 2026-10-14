@@ -456,17 +456,25 @@ def _cases() -> list[Exercise]:
     return out
 
 
-INCLUDE_SKILLS = True  # off for ablations that measure what the skill families add
+# The skill families (ycode.lm.skills) are off unless a run opts in (compose.INCLUDE_SKILLS = True,
+# or the "skills" data option of an ablation). They were on in every production round up to v5's
+# round 56; in a single-seed ablation they raised dev hallucinations from 1 to 4 and cost 5
+# benchmark points (experiments/v51/AUDIT.md, C8), so they stay out until a multi-seed test says
+# otherwise.
+INCLUDE_SKILLS = False
 
 
-def _skills() -> list[Exercise]:
+def skill_exercises() -> list[Exercise]:
+    """Every skill-family exercise, whatever INCLUDE_SKILLS says (the error analysis needs to
+    recognise their bodies, which earlier rounds trained on)."""
     from ycode.lm.skills import SKILLS
-
-    if not INCLUDE_SKILLS:
-        return []
 
     return [Exercise(key, name, params, task, body, samples)
             for _family, key, name, params, tasks, body, samples in SKILLS for task in tasks]
+
+
+def _skills() -> list[Exercise]:
+    return skill_exercises() if INCLUDE_SKILLS else []
 
 
 def base_key(key: tuple) -> tuple:
@@ -480,14 +488,33 @@ def _raw_exercises(seed: int = 7) -> list[Exercise]:
             + _sequences(rng) + _strings(rng) + _loops(rng) + _conversions(rng) + _cases() + _whole_list(rng) + _skills())
 
 
+# Concepts that compute a benchmark or dev item under other words (found by running every training
+# function against the held-out items' tests and reference solutions: ycode.lm.leakage). Their keys
+# differ from the held-out keys, so HELD_OUT_KEYS and DEV_KEYS alone let them through.
+EQUIVALENT_KEYS = {
+    ("agg", "sum", "nonzero", "id"): "bench total (adding zeros changes no sum)",
+    ("agg", "sum", "nonzero", "cube"): "bench sum_of_cubes",
+    ("agg", "min", "positive", "abs"): "dev smallest_positive (abs of a positive number is itself)",
+    ("bin", "min"): "dev smaller ('the lesser of x and y')",
+    ("list", "all", "mul", 2): "dev double_all ('every number multiplied by 2')",
+    ("pred", "ge", 7): "dev above_six (n >= 7 is n > 6 on integers)",
+    ("pred", "le", 1): "dev below_two (n <= 1 is n < 2 on integers)",
+    ("pred", "lt", 0): "dev is_negative ('less than zero')",
+    ("str_count", "upper"): "dev count_uppercase (same wording)",
+    ("unary", "pow", 3): "dev cube ('raised to the power 3')",
+}
+
+
 def all_exercises(seed: int = 7) -> list[Exercise]:
-    """Training exercises: never a benchmark concept or name, a basics concept's name, or a dev item."""
+    """Training exercises: never a benchmark concept or name, a basics concept's name, a dev item, or
+    a concept that computes one of them (EQUIVALENT_KEYS)."""
     from ycode.lm.basics import CONCEPTS, held_out_names
     from ycode.lm.devset import DEV_KEYS
 
     basics_names = {n for c in CONCEPTS for n in (c.name, *c.aliases)}
     exercises = [e for e in _raw_exercises(seed)
-                 if base_key(e.key) not in DEV_KEYS and e.name not in basics_names]
+                 if base_key(e.key) not in DEV_KEYS and base_key(e.key) not in EQUIVALENT_KEYS
+                 and e.name not in basics_names]
     clash = [e for e in exercises if base_key(e.key) in HELD_OUT_KEYS]
     if clash:
         raise AssertionError(f"held-out concepts generated: {sorted({e.key for e in clash})}")
@@ -619,6 +646,11 @@ def compose_bugfix_examples(seed: int = 7, per_exercise: int = 1):
 
 _ORDINALS = {5: "sixth", 6: "seventh", 7: "eighth", 8: "ninth", 9: "tenth", -3: "third to last",
              -4: "fourth to last", -5: "fifth to last"}
+# Condition pairs that make a degenerate task: one implies the other ("greater than 5 that are also
+# positive" is just "greater than 5", a dev item; "negative ... less than 3" is just "negative"), or
+# they never hold together (positive and negative), so the answer is always empty.
+_DEGENERATE_PAIRS = frozenset({("gt5", "positive"), ("lt3", "negative"), ("negative", "positive"),
+                               ("gt5", "lt3"), ("gt5", "negative")})
 NOVEL_DRAWS = 6  # constants k drawn per round; each gives eight exercises (add, minus, times, ...)
 NOVEL_ORDINALS = 4  # ordinal-index exercises per round, out of len(_ORDINALS)
 
@@ -660,6 +692,8 @@ def novel_exercises(seed: int) -> list[Exercise]:
     conds = {"positive": "x > 0", "odd": "x % 2 == 1", "gt5": "x > 5", "lt3": "x < 3", "mult3": "x % 3 == 0",
              "negative": "x < 0"}
     for a, b in rng.sample([(a, b) for a in conds for b in conds if a < b], 6):
+        if (a, b) in _DEGENERATE_PAIRS:
+            continue  # one condition implies the other, or both can never hold
         cond = f"{conds[a]} and {conds[b]}"
         what = f"{_FILTERS[a][1]} that are also {_FILTERS[b][1].replace('the ', '')}"
         out.append(Exercise(("novel", "count2", a, b), f"count_{a}_{b}", "numbers",

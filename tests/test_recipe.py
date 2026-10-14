@@ -362,10 +362,12 @@ def test_loop_renderings_compute_the_same_thing():
         assert _passes(loop.source(), ex.tests()), loop.source()
 
 
-def test_skill_families_are_verified_and_held_out():
+def test_skill_families_are_verified_and_held_out(monkeypatch):
+    import ycode.lm.compose as compose
     from ycode.lm.compose import HELD_OUT_KEYS, _skills, all_exercises, base_key
     from ycode.lm.devset import DEV_KEYS
 
+    monkeypatch.setattr(compose, "INCLUDE_SKILLS", True)
     skills = _skills()
     assert len({e.name for e in skills}) >= 40
     trained = {e.name for e in all_exercises(8)}
