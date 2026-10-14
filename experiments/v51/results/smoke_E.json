@@ -1,0 +1,168 @@
+{
+ "arm": "E",
+ "seed": 1201,
+ "smoke": true,
+ "data_options": {
+  "skills": false,
+  "dedup": true,
+  "contradictions": true,
+  "replay": 0
+ },
+ "train": {
+  "steps": 2,
+  "lr": 1.5e-05,
+  "batch": 4,
+  "train_layers": 24,
+  "warmup": 2,
+  "precision": "bf16",
+  "init_optim": true,
+  "seq_len": null,
+  "average": null
+ },
+ "eval": {
+  "dev": true,
+  "bench": true,
+  "limit": 4,
+  "diagnose": 4
+ },
+ "anchor": "/home/user/lmwork/loop/anchor",
+ "anchor_sha256": "2538b55d5aee371899a988799168042af4da27c03cafff3417a3c9925b8e8e98",
+ "data": {
+  "seed": 1201,
+  "code_version": "26c375518ed93e0276cf6b7b6d569b25b3763678",
+  "generated": 4380,
+  "removed": {
+   "duplicate": 524
+  },
+  "kept": 3856,
+  "basics": 3856,
+  "replay": 0,
+  "tokens": 300852,
+  "files": {
+   "sft_tokens.bin": "d1be50283251d034476d85e3db0f935179bbb8037d3b38c23ad79631f6fa0a17",
+   "sft_mask.bin": "286b94d587ccb9a468010c02e463a56e44586578c63dfe2145e26e77c3474dff",
+   "sft_index.npy": "ababb53a0bbd16819a0dfdc6baf27e490f5073c8c44531442ed65776609b7a94",
+   "tokenizer.json": "7079ff7b8546a23c5416f8ae08adcb636ec69da4c14cd964114f12cee9745341"
+  },
+  "minutes": 1.42
+ },
+ "training": {
+  "exit": 0,
+  "minutes": 3.17,
+  "peak_rss_mb": 11317,
+  "steps": 2,
+  "loss_last10_mean": 0.0056,
+  "loss_first": 0.005251,
+  "grad_norm_last10_mean": 0.0138,
+  "tok_per_s": 70.6,
+  "answer_tokens": 3613,
+  "empty_batches": 0,
+  "checkpoint_sha256": "cfd01f825f091c0dfe5a5980bf90c1efc9e3fe16fee45d02ea5584b9b31cec65",
+  "init_sha256": null
+ },
+ "dev_run": {
+  "exit": 0,
+  "minutes": 0.97,
+  "peak_rss_mb": 7655
+ },
+ "dev": {
+  "points": 6,
+  "of": 8,
+  "clean": 2,
+  "clean_of": 2,
+  "robust": 6,
+  "weak_passes": [],
+  "groups": {
+   "dev_concept": 3,
+   "dev_fix": 3
+  },
+  "lost_by_category": {
+   "formatting": 2,
+   "instruction_following": 0,
+   "hallucination": 0,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 0
+  },
+  "hallucinations": 0,
+  "invalid_outputs": 2,
+  "passed": [
+   "bugfix:count_greater",
+   "bugfix:count_uppercase",
+   "bugfix:cube",
+   "write:count_greater",
+   "write:count_uppercase",
+   "write:cube"
+  ]
+ },
+ "bench_run": {
+  "exit": 0,
+  "minutes": 0.77,
+  "peak_rss_mb": 7654
+ },
+ "bench": {
+  "points": 7,
+  "of": 8,
+  "clean": 7,
+  "clean_of": 8,
+  "robust": 7,
+  "weak_passes": [],
+  "groups": {
+   "fixed": 4,
+   "standard": 3
+  },
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 1,
+   "hallucination": 0,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 0
+  },
+  "hallucinations": 0,
+  "invalid_outputs": 0,
+  "passed": [
+   "bugfix:add",
+   "bugfix:is_even",
+   "bugfix:square",
+   "bugfix:subtract",
+   "write:add",
+   "write:square",
+   "write:subtract"
+  ]
+ },
+ "diagnose_run": {
+  "exit": 0,
+  "minutes": 0.43,
+  "peak_rss_mb": 7754
+ },
+ "diagnose": {
+  "model": "/home/user/lmwork/v51/smoke/E/1201/model",
+  "data": "/home/user/lmwork/v51/smoke/E/1201/data",
+  "seed": 0,
+  "train": {
+   "examples": 4,
+   "answer_tokens": 124,
+   "token_loss": 0.0079,
+   "example_loss_mean": 0.0059,
+   "example_loss_sd": 0.0108
+  },
+  "heldout_rows": {
+   "examples": 4,
+   "answer_tokens": 186,
+   "token_loss": 0.0006,
+   "example_loss_mean": 0.0007,
+   "example_loss_sd": 0.0004
+  },
+  "unseen_tasks": {
+   "examples": 47,
+   "answer_tokens": 1322,
+   "token_loss": 0.2173,
+   "example_loss_mean": 0.1994,
+   "example_loss_sd": 0.3208
+  },
+  "gap_train_to_heldout": -0.0073,
+  "gap_heldout_to_unseen": 0.2167
+ },
+ "minutes_total": 6.8
+}

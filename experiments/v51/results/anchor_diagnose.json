@@ -1,0 +1,28 @@
+{
+ "model": "/home/user/lmwork/loop/anchor",
+ "data": "/home/user/lmwork/v51/anchor_diag/data",
+ "seed": 0,
+ "train": {
+  "examples": 64,
+  "answer_tokens": 2103,
+  "token_loss": 0.0938,
+  "example_loss_mean": 0.0826,
+  "example_loss_sd": 0.2964
+ },
+ "heldout_rows": {
+  "examples": 64,
+  "answer_tokens": 2106,
+  "token_loss": 0.0347,
+  "example_loss_mean": 0.0138,
+  "example_loss_sd": 0.0676
+ },
+ "unseen_tasks": {
+  "examples": 47,
+  "answer_tokens": 1322,
+  "token_loss": 0.22,
+  "example_loss_mean": 0.2018,
+  "example_loss_sd": 0.3236
+ },
+ "gap_train_to_heldout": -0.0591,
+ "gap_heldout_to_unseen": 0.1853
+}
