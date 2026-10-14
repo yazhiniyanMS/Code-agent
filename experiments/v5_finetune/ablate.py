@@ -42,10 +42,13 @@ import ycode.lm.compose as compose
 from ycode.lm.basics import basics_examples, write_basics_dataset
 seed, out, opt = int(sys.argv[1]), Path(sys.argv[2]), json.loads(sys.argv[3])
 compose.INCLUDE_SKILLS = opt.get("skills", True)
+compose.NOVEL_DRAWS = opt.get("novel_draws", compose.NOVEL_DRAWS)
+compose.NOVEL_ORDINALS = opt.get("novel_ordinals", compose.NOVEL_ORDINALS)
 examples = (basics_examples(seed, write_per_concept=opt.get("basics_write", 6), bugfix_per_concept=opt.get("basics_bugfix", 4))
             + compose.compose_examples(seed, per_exercise=opt.get("compose_write", 3))
             + compose.compose_bugfix_examples(seed, per_exercise=opt.get("compose_bugfix", 1))
-            + compose.contrast_examples(seed) + compose.novel_examples(seed))
+            + compose.contrast_examples(seed, per_exercise=opt.get("contrast", 1))
+            + compose.novel_examples(seed, per_exercise=opt.get("novel_write", 1)))
 n0 = len(examples)
 def task_of(p):
     return re.sub(r"`[A-Za-z_]\w*(?=[(`])", "`F", p)
@@ -164,6 +167,51 @@ def summarize(spec: dict, out: Path) -> str:
     return "\n".join(lines)
 
 
+def summarize_paired(spec: dict, out: Path) -> str:
+    """Arms share a "group" and differ only in seed; each group is compared with the baseline group seed by
+    seed (same seed, same data order apart from the change). A change is kept when its mean dev gain beats
+    the noise floor of a mean over n seeds (floor / sqrt(n)), no seed does worse than its paired baseline,
+    and no category loses 2 or more extra points on average."""
+    results = {a["name"]: json.loads((out / a["name"] / "result.json").read_text())
+               for a in spec["arms"] if arm_done(out / a["name"])}
+    by_group = {}
+    for a in spec["arms"]:
+        if a["name"] in results:
+            by_group.setdefault(a["group"], {})[a["seed"]] = results[a["name"]]
+    base = by_group.get(spec["baseline"], {})
+    floor = spec["floor"]
+    lines = [f"Ablation {spec['name']} (anchor {spec['anchor']}, {spec['steps']} steps per arm, paired seeds; "
+             f"single-seed noise floor {floor} dev points)", "",
+             f"{'group':16} {'seeds':>5} {'dev':>14} {'bench':>14}"]
+    for g, runs in by_group.items():
+        dev = [runs[s]["dev"]["points"] for s in sorted(runs)]
+        bench = [runs[s]["bench"]["points"] for s in sorted(runs)]
+        lines.append(f"{g:16} {len(runs):>5} {str(dev) + ' mean ' + format(sum(dev) / len(dev), '.1f'):>14} "
+                     f"{str(bench) + ' mean ' + format(sum(bench) / len(bench), '.1f'):>14}")
+    lines.append("")
+    for g, runs in by_group.items():
+        if g == spec["baseline"]:
+            continue
+        seeds = sorted(s for s in runs if s in base)
+        if not seeds:
+            continue
+        n = len(seeds)
+        diffs = [runs[s]["dev"]["points"] - base[s]["dev"]["points"] for s in seeds]
+        gain = sum(diffs) / n
+        cats = runs[seeds[0]]["dev"]["lost_by_category"]
+        worse = {c: round(sum(runs[s]["dev"]["lost_by_category"][c] - base[s]["dev"]["lost_by_category"][c]
+                              for s in seeds) / n, 1) for c in cats}
+        worse = {c: v for c, v in worse.items() if v > 0}
+        need = floor / n ** 0.5
+        complete = n == len(base)
+        keep = complete and gain > need and min(diffs) >= 0 and not any(v >= 2 for v in worse.values())
+        bench_gain = sum(runs[s]["bench"]["points"] - base[s]["bench"]["points"] for s in seeds) / n
+        verdict = "KEEP" if keep else ("incomplete" if not complete else "do not keep")
+        lines.append(f"{g}: dev {diffs} per seed, mean {gain:+.1f} (needs > {need:.1f}); bench mean {bench_gain:+.1f} "
+                     f"(reported only); categories losing more points: {worse or 'none'}; {verdict}")
+    return "\n".join(lines)
+
+
 def main() -> None:
     spec = json.loads(Path(sys.argv[1]).read_text())
     out = W / "ablations" / spec["name"]
@@ -171,7 +219,7 @@ def main() -> None:
     for arm in spec["arms"]:
         if not arm_done(out / arm["name"]):
             run_arm(spec, arm, out)
-    report = summarize(spec, out)
+    report = summarize_paired(spec, out) if spec.get("paired") else summarize(spec, out)
     (out / "summary.txt").write_text(report)
     log(out, "DONE\n" + report)
 

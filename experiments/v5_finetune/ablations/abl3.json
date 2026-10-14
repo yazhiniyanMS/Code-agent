@@ -1,0 +1,20 @@
+{
+  "name": "abl3",
+  "anchor": "/home/user/lmwork/loop/anchor",
+  "steps": 72,
+  "precision": "bf16",
+  "paired": true,
+  "baseline": "base",
+  "floor": 3,
+  "notes": "Targeted data for the largest error class (instruction following: copying a neighbouring function's body). Each change runs with both baseline seeds and is compared seed by seed. base_s1 and base_s2 are the abl2 baseline runs (identical configuration and code; default data verified byte-identical after the NOVEL_DRAWS change).",
+  "arms": [
+    {"name": "base_s1", "group": "base", "seed": 1101, "data": {"skills": false}},
+    {"name": "base_s2", "group": "base", "seed": 1102, "data": {"skills": false}},
+    {"name": "novel_x5_s1", "group": "novel_x5", "seed": 1101, "data": {"skills": false, "novel_draws": 30, "novel_ordinals": 8},
+     "changes": "five times as many fresh-constant exercises (30 constants instead of 6, all 8 ordinals): the model must read the number or ordinal instead of recalling a memorised body"},
+    {"name": "novel_x5_s2", "group": "novel_x5", "seed": 1102, "data": {"skills": false, "novel_draws": 30, "novel_ordinals": 8}},
+    {"name": "contrast_x3_s1", "group": "contrast_x3", "seed": 1101, "data": {"skills": false, "contrast": 3},
+     "changes": "three contrast bug fixes per exercise instead of one (the buggy body is a one-word neighbour's correct code)"},
+    {"name": "contrast_x3_s2", "group": "contrast_x3", "seed": 1102, "data": {"skills": false, "contrast": 3}}
+  ]
+}
