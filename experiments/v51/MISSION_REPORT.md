@@ -44,7 +44,29 @@ solution, generated answer, test outcome, group, class and evidence. Ranking:
 
 ## 3. Controlled experiment (phase 3)
 
-Running: `m3_spec_first.json`.
+`m3_spec_first.json`, run with `python -m ycode.lm.experiment experiments/v51/m3_spec_first.json`.
+
+| | Control A | Treatment B |
+| --- | --- | --- |
+| Data | Current clean pipeline: leak-free, skills off, 200 replay rows; written functions answered as bare code. | Identical examples and code. Each written function first restates the task from the prompt in a docstring (`spec_first`). |
+| Everything else | Same round-54 checkpoint, token budget, optimizer (Lion, lr 1.5e-5, warmup-stable-decay schedule), trained layers (top 24), evaluation (greedy, unchanged harness), matched seeds. | Same |
+
+- **Why this intervention:** two-thirds of clean failures are the nearest trained body with the
+  distinguishing word ignored. Restating the task makes the model copy that word ("seconds",
+  "middle", "fourth") into its answer just before writing the code. It changes one thing (the
+  answer format) and adds no new concepts, so it cannot leak a held-out item. The data-mix
+  changes tried in abl2 and abl3 (more constants, contrast bug fixes, dedup, replay) did not
+  move unseen performance.
+- **Hardware constraint (measured):** after a container restart this host has no AMX or
+  AVX512-BF16. Emulated bf16 training ran at 11 tokens/s. fp32 is 3× faster here (block forward
+  and backward 3.61 s vs 11.07 s), but still 2.9× slower than the AMX host v5 trained on, so a
+  production 72-step run would take about 3.3 hours. To fit matched seed pairs into the mission,
+  **both arms use 24 steps (a third of the production budget), fp32 training and 2 seeds each.
+  These results are preliminary and not directly comparable with 72-step runs.** Generation stays
+  bf16: same answers as fp32 on a sample, at similar speed.
+- **Smoke tests:** treatment B (bf16, 2 steps) passed every stage, including the unseen
+  evaluation, scoring with denominators, failure classes and the diagnostic. Control A in fp32
+  checks per-step time and peak memory.
 
 ## 4. Results
 
