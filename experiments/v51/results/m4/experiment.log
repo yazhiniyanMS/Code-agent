@@ -1,0 +1,46 @@
+[2026-10-15 03:44:03] A seed 1301: building data {}
+[2026-10-15 03:45:43]   Generated 4388 examples; removed none; kept 4388
+[2026-10-15 03:50:14]   Replay: kept 200 (112 written functions re-encoded), dropped {'benchmark name': 6, 'prose bug fix': 222, 'garbled prompt': 26, 'prose over cap': 303}, mix {'docstring': 11, 'explain': 38, 'class': 11, 'write': 75, 'complete': 65}
+[2026-10-15 03:50:14]   Wrote 4588 examples (4388 basics + 200 replay), 366,095 tokens, to /home/user/lmwork/v51m3/A/1301/data
+[2026-10-15 03:50:14] A seed 1301: training 24 steps
+[2026-10-15 04:32:09] A seed 1301: building data {}
+[2026-10-15 04:33:50]   Generated 4388 examples; removed none; kept 4388
+[2026-10-15 04:38:42]   Replay: kept 200 (112 written functions re-encoded), dropped {'benchmark name': 6, 'prose bug fix': 222, 'garbled prompt': 26, 'prose over cap': 303}, mix {'docstring': 11, 'explain': 38, 'class': 11, 'write': 75, 'complete': 65}
+[2026-10-15 04:38:42]   Wrote 4588 examples (4388 basics + 200 replay), 366,095 tokens, to /home/user/lmwork/v51m3/A/1301/data
+[2026-10-15 04:38:42] A seed 1301: training 24 steps
+[2026-10-15 05:32:15] A seed 1301: evaluating dev
+[2026-10-15 05:43:05] A seed 1301: evaluating unseen
+[2026-10-15 05:55:01] A seed 1301: evaluating bench
+[2026-10-15 06:03:33] A seed 1301: answer loss on train / held-out / unseen
+[2026-10-15 06:06:17] A seed 1301: dev 37/62 (clean 25/44), bench 25, 88.2 min
+[2026-10-15 06:06:17] B seed 1301: building data {'spec_first': True}
+[2026-10-15 06:07:33]   Generated 4388 examples; removed none; kept 4388
+[2026-10-15 06:12:45]   Replay: kept 200 (112 written functions re-encoded), dropped {'benchmark name': 6, 'prose bug fix': 222, 'garbled prompt': 26, 'prose over cap': 303}, mix {'docstring': 11, 'explain': 38, 'class': 11, 'write': 75, 'complete': 65}
+[2026-10-15 06:12:46]   Wrote 4588 examples (4388 basics + 200 replay), 410,184 tokens, to /home/user/lmwork/v51m3/B/1301/data
+[2026-10-15 06:12:46] B seed 1301: training 24 steps
+[2026-10-15 07:14:26] B seed 1301: evaluating dev
+[2026-10-15 07:26:39] B seed 1301: evaluating unseen
+[2026-10-15 07:39:56] B seed 1301: evaluating bench
+[2026-10-15 07:52:09] B seed 1301: answer loss on train / held-out / unseen
+[2026-10-15 07:54:53] B seed 1301: dev 39/62 (clean 27/44), bench 24, 104.6 min
+[2026-10-15 07:54:53] A seed 1302: building data {}
+[2026-10-15 07:56:35]   Generated 4378 examples; removed none; kept 4378
+[2026-10-15 08:05:21]   Replay: kept 200 (112 written functions re-encoded), dropped {'benchmark name': 3, 'prose bug fix': 210, 'garbled prompt': 37, 'prose over cap': 333}, mix {'write': 78, 'explain': 38, 'class': 7, 'docstring': 15, 'complete': 62}
+[2026-10-15 08:05:21]   Wrote 4578 examples (4378 basics + 200 replay), 364,714 tokens, to /home/user/lmwork/v51m3/A/1302/data
+[2026-10-15 08:05:21] A seed 1302: training 24 steps
+[2026-10-15 09:02:40] A seed 1302: evaluating dev
+[2026-10-15 09:13:49] A seed 1302: evaluating unseen
+[2026-10-15 09:25:26] A seed 1302: evaluating bench
+[2026-10-15 09:34:22] A seed 1302: answer loss on train / held-out / unseen
+[2026-10-15 09:39:58] A seed 1302: dev 38/62 (clean 26/44), bench 23, 98.1 min
+[2026-10-15 09:39:58] B seed 1302: building data {'spec_first': True}
+[2026-10-15 09:41:24]   Generated 4378 examples; removed none; kept 4378
+[2026-10-15 09:49:59]   Replay: kept 200 (112 written functions re-encoded), dropped {'benchmark name': 3, 'prose bug fix': 210, 'garbled prompt': 37, 'prose over cap': 333}, mix {'write': 78, 'explain': 38, 'class': 7, 'docstring': 15, 'complete': 62}
+[2026-10-15 09:49:59]   Wrote 4578 examples (4378 basics + 200 replay), 408,758 tokens, to /home/user/lmwork/v51m3/B/1302/data
+[2026-10-15 09:49:59] B seed 1302: training 24 steps
+[2026-10-15 10:47:33] B seed 1302: evaluating dev
+[2026-10-15 10:59:36] B seed 1302: evaluating unseen
+[2026-10-15 11:14:05] B seed 1302: evaluating bench
+[2026-10-15 11:25:28] B seed 1302: answer loss on train / held-out / unseen
+[2026-10-15 11:31:18] B seed 1302: dev 38/62 (clean 26/44), bench 21, 105.5 min
+[2026-10-15 11:31:18] summary written to /home/user/lmwork/v51m3/summary.md

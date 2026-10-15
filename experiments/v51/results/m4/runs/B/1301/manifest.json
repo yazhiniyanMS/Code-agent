@@ -1,0 +1,44 @@
+{
+ "seed": 1301,
+ "options": {
+  "skills": false,
+  "basics_write": 6,
+  "basics_bugfix": 4,
+  "compose_write": 3,
+  "compose_bugfix": 1,
+  "contrast": 1,
+  "novel_write": 1,
+  "novel_draws": 6,
+  "novel_ordinals": 4,
+  "replay": 200,
+  "dedup": false,
+  "contradictions": false,
+  "spec_first": true
+ },
+ "code_version": "bba638e9481ca9e036d434da0d76ba8064bc8901",
+ "generated": 4388,
+ "removed": {},
+ "kept": 4388,
+ "basics": 4388,
+ "replay": 200,
+ "tokens": 410184,
+ "replay_dropped": {
+  "benchmark name": 6,
+  "prose bug fix": 222,
+  "garbled prompt": 26,
+  "prose over cap": 303
+ },
+ "replay_kinds": {
+  "docstring": 11,
+  "explain": 38,
+  "class": 11,
+  "write": 75,
+  "complete": 65
+ },
+ "files": {
+  "sft_tokens.bin": "7afeb1d501702948b72d3f1b7d698f5a8ad5eb38c5e793896e91d402f52548ac",
+  "sft_mask.bin": "c28171732ddadb4cca1441de27c29ba2c2cf6ff2b8c3c745089426c65a56117f",
+  "sft_index.npy": "789e3607c93cb24d61eaa5b9b26c48781fe7c84ce8ab5ca93e14da8abbebed9b",
+  "tokenizer.json": "7079ff7b8546a23c5416f8ae08adcb636ec69da4c14cd964114f12cee9745341"
+ }
+}
