@@ -136,9 +136,10 @@ def _arity(params: str) -> int:
     return 0 if not params else len([p for p in params.split(",") if p.strip()])
 
 
-def held_out_items() -> list[HeldOutItem]:
+def held_out_items(include_unseen: bool = True) -> list[HeldOutItem]:
     """Every benchmark write problem (standard 30, fresh 20; the 15 benchmark bug fixes reuse the
-    standard functions) and every dev item, with its reference solution."""
+    standard functions), every dev item and every unseen-concept item (ycode.lm.unseen), with its
+    reference solution."""
     from ycode.lm.basics import CONCEPTS
     from ycode.lm.compose import _raw_exercises, base_key
     from ycode.lm.devset import DEV_KEYS, dev_problems
@@ -150,8 +151,13 @@ def held_out_items() -> list[HeldOutItem]:
     for ex in _raw_exercises(seed=0):  # the same rendering devset.dev_problems uses
         if base_key(ex.key) in DEV_KEYS:
             dev_refs.setdefault(ex.name, ex.source())
+    sets = [("bench", PROBLEMS + fresh_problems(), refs), ("dev", dev_problems(), dev_refs)]
+    if include_unseen:
+        from ycode.lm.unseen import unseen_problems, unseen_references
+
+        sets.append(("unseen", unseen_problems(), unseen_references()))
     items = []
-    for split, problems, sources in (("bench", PROBLEMS + fresh_problems(), refs), ("dev", dev_problems(), dev_refs)):
+    for split, problems, sources in sets:
         for p in problems:
             m = _SIG.search(p.prompt)
             if m and p.name in sources:

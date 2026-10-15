@@ -564,10 +564,13 @@ def verify_concepts(concepts=CONCEPTS) -> None:
 
 
 def held_out_names() -> set[str]:
-    """Function names of every benchmark item (standard 30, the 15 bug fixes, fresh 20)."""
+    """Function names of every benchmark item (standard 30, the 15 bug fixes, fresh 20) and of the
+    unseen-concept set (ycode.lm.unseen)."""
     from ycode.lm.evaluate import BUGGY, PROBLEMS
+    from ycode.lm.unseen import unseen_names
 
-    return {p.name for p in PROBLEMS} | {sig.split("(")[0] for sig, _ in BUGGY} | {p[0] for p in FRESH_PROBLEMS}
+    return ({p.name for p in PROBLEMS} | {sig.split("(")[0] for sig, _ in BUGGY} | {p[0] for p in FRESH_PROBLEMS}
+            | unseen_names())
 
 
 def dev_names() -> set[str]:

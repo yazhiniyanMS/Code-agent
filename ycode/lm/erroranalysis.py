@@ -201,11 +201,18 @@ def classify(name: str, code: str, diag: dict, *, buggy: str | None = None) -> t
 
 
 def _test_sets(which: str) -> dict[tuple[str, str], tuple[str, str | None, str | None]]:
-    """(suite, name) -> (tests, reference, buggy code) for the benchmark or the dev set."""
+    """(suite, name) -> (tests, reference, buggy code) for the benchmark, the dev set or the unseen set."""
     from ycode.lm.evaluate import BUGGY, PROBLEMS, fresh_problems
     from ycode.lm.references import FRESH_REFERENCE, REFERENCE
 
     out: dict = {}
+    if which == "unseen":
+        from ycode.lm.unseen import unseen_problems, unseen_references
+
+        refs = unseen_references()
+        for p in unseen_problems():
+            out[("write", p.name)] = (p.tests, refs[p.name], None)
+        return out
     if which == "dev":
         from ycode.lm.devset import dev_bugs, dev_problems
 
@@ -225,6 +232,8 @@ def _test_sets(which: str) -> dict[tuple[str, str], tuple[str, str | None, str |
 
 
 def _group(which: str, suite: str, name: str) -> str:
+    if which == "unseen":
+        return "unseen"
     if which == "dev":
         from ycode.lm.devset import DEV_CONCEPT_NAMES
 

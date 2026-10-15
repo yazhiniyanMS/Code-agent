@@ -175,7 +175,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--heldout", action="append", type=Path, default=[],
                    help="Code the models never trained on, for bits-per-byte (repeatable).")
     p.add_argument("--samples", type=int, default=1, help="Samples per problem for pass@k (default 1 = greedy).")
-    p.add_argument("--problems", default="standard", choices=("standard", "fresh", "both", "dev"),
+    p.add_argument("--problems", default="standard", choices=("standard", "fresh", "both", "dev", "unseen"),
                    help="Coding problems: the standard 30, 20 fresh ones, both, or the held-out dev set "
                         "used to pick fine-tuning checkpoints (its own bug fixes too).")
     p.add_argument("--answers-out", type=Path, help="Write every answer (prompt, answer, code, pass) as JSONL.")
@@ -187,7 +187,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = sub.add_parser("analyze", help="Why answers failed: categories, expected vs actual, points lost.")
     p.add_argument("answers", type=Path, help="JSONL from `eval --answers-out`.")
-    p.add_argument("--set", default="bench", choices=("bench", "dev"), help="Which test set the answers are from.")
+    p.add_argument("--set", default="bench", choices=("bench", "dev", "unseen"),
+                   help="Which test set the answers are from.")
     p.add_argument("--compare", type=Path, help="An earlier answers file on the same prompts: show what changed.")
     p.add_argument("--json", type=Path, help="Write the full analysis (every failed item) as JSON.")
     p.add_argument("--store", type=Path,
@@ -530,6 +531,10 @@ def _eval(args) -> int:  # noqa: ANN001
                 from ycode.lm.devset import dev_bugs, dev_problems
 
                 problems, bug_items = dev_problems(), dev_bugs()
+            elif args.problems == "unseen":  # unseen-concept writes only (ycode.lm.unseen)
+                from ycode.lm.unseen import unseen_problems
+
+                problems, bug_items = unseen_problems(), []
             else:
                 problems = {"standard": PROBLEMS, "fresh": fresh_problems(),
                             "both": PROBLEMS + fresh_problems()}[args.problems]
@@ -537,7 +542,8 @@ def _eval(args) -> int:  # noqa: ANN001
                 from ycode.lm.evaluate import _ALL_TESTS
 
                 problems = tuple(problems)[:args.limit]
-                bug_items = list(bug_items or [(s, c, _ALL_TESTS[s.split("(")[0]]) for s, c in BUGGY])[:args.limit]
+                default = [(s, c, _ALL_TESTS[s.split("(")[0]]) for s, c in BUGGY]
+                bug_items = list(default if bug_items is None else bug_items)[:args.limit]
             res = functional_eval(lm, samples=args.samples, problems=problems,
                                   log=print if args.verbose else None)
             row["pass@1"] = round(res.pass_at_1, 4)
@@ -548,7 +554,7 @@ def _eval(args) -> int:  # noqa: ANN001
             fix_rate, fixed = bugfix_eval(lm, items=bug_items, answers=answers, log=print if args.verbose else None)
             row["fix@1"] = round(fix_rate, 4)
             row["fixed"] = fixed
-            row["n_problems"], row["n_bugs"] = len(problems), len(bug_items or BUGGY)
+            row["n_problems"], row["n_bugs"] = len(problems), len(BUGGY if bug_items is None else bug_items)
             if args.answers_out:
                 from ycode.lm.evaluate import extract_code
 

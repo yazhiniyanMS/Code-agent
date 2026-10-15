@@ -369,3 +369,158 @@ def test_interrupted_experiment_run_resumes_training(data_dir, base_model, tmp_p
     record = experiment.run_one(spec, spec["arms"][0], 1, tmp_path / "exp", log=lambda *_: None)
     steps = [json.loads(line)["step"] for line in (run_dir / "metrics.jsonl").read_text().splitlines()]
     assert steps == [1, 2, 3, 4] and record["training"]["steps"] == 4
+
+
+# ------------------------------------------------------- evaluation reliability (v5.1 mission)
+
+KNOWN_WRONG = [  # answers the official tests accepted in v5 runs although they are wrong
+    ("bench", "write", "fibonacci", "def fibonacci(n):\n    return n * (n + 1) // 2"),
+    ("bench", "write", "first_word", "def first_word(text):\n    return text.split()[-2]"),
+    ("bench", "bugfix", "maximum", "def maximum(items):\n    best = items[1]\n    for x in items:\n        if x > best:\n"
+                                   "            best = x\n    return best"),
+    ("bench", "bugfix", "minimum", "def minimum(items):\n    best = items[0]\n    for x in items:\n        if x % 2 == 0:\n"
+                                   "            return x\n    return best"),
+    ("dev", "write", "first_negative", "def first_negative(numbers):\n    best = None\n    for x in numbers:\n"
+                                       "        if x < 0 and (best is None or x > best):\n            best = x\n    return best"),
+    ("dev", "bugfix", "is_between", "def is_between(x, low, high):\n    return x < high"),
+    ("dev", "bugfix", "longest_word", "def longest_word(text):\n    return text.split()[-2]"),
+]
+KNOWN_RIGHT = [  # different but correct implementations: the robust suite must not fail them
+    ("bench", "bugfix", "maximum", "def maximum(items):\n    best = items[0]\n    for x in items:\n        if x > best:\n"
+                                   "            best = x\n    return best"),
+    ("dev", "write", "longest_word", "def longest_word(text):\n    best = ''\n    for word in text.split():\n"
+                                     "        if len(word) > len(best):\n            best = word\n    return best"),
+    ("dev", "write", "longest_word", "def longest_word(text):\n    return max(text.split(), key=len)"),
+    ("bench", "write", "fibonacci", "def fibonacci(n):\n    if n < 2:\n        return n\n    return fibonacci(n - 1) + fibonacci(n - 2)"),
+    ("bench", "write", "factorial", "def factorial(n):\n    import math\n    return math.factorial(n)"),
+]
+
+
+def _item(split, suite, name):
+    from ycode.lm.evalsets import eval_items
+
+    return next(i for i in eval_items(split) if i.suite == suite and i.name == name)
+
+
+@pytest.mark.parametrize("split,suite,name,code", KNOWN_WRONG)
+def test_robust_tests_reject_known_wrong_answers_the_official_tests_accept(split, suite, name, code):
+    from ycode.lm.evalsets import robust_pass
+    from ycode.lm.evaluate import run_tests
+
+    item = _item(split, suite, name)
+    assert run_tests(code, item.tests)  # the official verdict stays as it was
+    assert not robust_pass(item, code)
+
+
+@pytest.mark.parametrize("split,suite,name,code", KNOWN_RIGHT)
+def test_robust_tests_accept_other_correct_implementations(split, suite, name, code):
+    from ycode.lm.evalsets import robust_pass
+
+    assert robust_pass(_item(split, suite, name), code)
+
+
+def test_every_reference_passes_official_and_robust_tests():
+    from ycode.lm.evalsets import eval_items
+    from ycode.lm.evaluate import run_tests
+    from ycode.lm.leakage import held_out_items
+
+    refs = {(i.split, i.name): i.reference for i in held_out_items()}
+    for split in ("bench", "dev", "unseen"):
+        for item in eval_items(split):
+            if item.suite == "write":
+                ref = refs[(split, item.name)]
+                assert run_tests(ref, item.tests + "\n" + item.robust_tests), (split, item.name)
+
+
+def test_eval_sets_have_explicit_denominators_and_stable_fingerprints():
+    from ycode.lm.evalsets import eval_items, fingerprint, manifest
+    from ycode.lm.unseen import unseen_problems
+
+    m = manifest()
+    assert (m["bench"]["items"], m["bench"]["clean_items"]) == (65, 61)
+    assert (m["dev"]["items"], m["dev"]["clean_items"]) == (62, 44)
+    assert m["unseen"]["items"] == m["unseen"]["clean_items"] == len(unseen_problems()) >= 40
+    assert fingerprint(eval_items("dev")) == m["dev"]["fingerprint"] == manifest()["dev"]["fingerprint"]
+    with pytest.raises(ValueError):
+        eval_items("train")
+
+
+def test_robust_test_module_is_reproducible(tmp_path, monkeypatch):
+    """The committed robust tests are exactly what the generator writes (no hand edits, no drift)."""
+    import importlib.util
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    committed = (root / "ycode" / "lm" / "robust_tests_v1.py").read_text()
+    spec = importlib.util.spec_from_file_location("make_robust_tests", root / "experiments" / "v51" / "make_robust_tests.py")
+    gen = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(gen)
+    monkeypatch.setattr(gen, "ROOT", tmp_path)
+    (tmp_path / "ycode" / "lm").mkdir(parents=True)
+    gen.main()
+    assert (tmp_path / "ycode" / "lm" / "robust_tests_v1.py").read_text() == committed
+
+
+def test_scores_report_official_clean_and_robust_with_denominators():
+    from ycode.lm.evalsets import eval_items, score
+
+    items = eval_items("bench")
+    answers = [{"suite": i.suite, "name": i.name, "pass": False, "code": ""} for i in items]
+    for a in answers:
+        if (a["suite"], a["name"]) == ("write", "first_word"):
+            a.update({"pass": True, "code": "def first_word(text):\n    return text.split()[-2]"})
+        if (a["suite"], a["name"]) == ("write", "total"):  # contaminated: counts officially, not clean
+            a.update({"pass": True, "code": "def total(numbers):\n    return sum(numbers)"})
+    s = score(answers, "bench")
+    assert (s["official"], s["official_of"]) == (2, 65)
+    assert (s["clean"], s["clean_of"]) == (1, 61)
+    assert (s["robust"], s["robust_of"]) == (1, 65) and s["weak_passes"] == ["write:first_word"]
+
+
+def test_unseen_set_is_held_out_of_every_generator():
+    from ycode.lm.basics import _passes, held_out_names
+    from ycode.lm.unseen import unseen_names, unseen_problems, unseen_references
+
+    refs = unseen_references()
+    for p in unseen_problems():
+        assert _passes(refs[p.name], p.tests), p.name
+        assert p.tests.count("assert") >= 3, p.name  # strong tests from the start
+    assert unseen_names() <= held_out_names()
+
+
+def test_failure_classes_follow_the_rules():
+    from ycode.lm.failures import _candidates_by_arity, classify_failure
+    from ycode.lm.leakage import held_out_items
+
+    items = {(i.split, i.name): i for i in held_out_items()}
+    cands = _candidates_by_arity()
+    fourth = items[("dev", "fourth_item")]
+    cases = [
+        ("def fourth_item(items)\n    return items[3]", "formatting_or_parsing"),
+        ("def fourth_item(items):\n    return helper(items)", "incorrect_code_generation"),
+        ("def fourth_item(items):\n    return items[4]", "incorrect_task_interpretation"),  # = fifth_item
+        ("def fourth_item(items):\n    return items", "algorithmic_or_logic_error"),  # returns its input
+    ]
+    for code, expected in cases:
+        category = "hallucination" if "helper" in code else "reasoning"
+        reason = "NameError: name 'helper' is not defined" if "helper" in code else "wrong value"
+        got, _ = classify_failure({"code": code}, fourth, category, reason, cands)
+        assert got == expected, (code, got)
+    between = items[("dev", "is_between")]  # exclusive bounds: right on most inputs, wrong at the edges
+    got, _ = classify_failure({"code": "def is_between(x, low, high):\n    return low < x < high"}, between, "reasoning",
+                              "is_between(1, 1, 3) gave False", cands)
+    assert got == "edge_case_failure"
+
+
+def test_diagnose_labels_whether_rows_were_trained_on(data_dir, base_model, tmp_path):
+    from ycode.lm.basics import write_basics_dataset
+    from ycode.lm.diagnose import split_losses
+
+    examples = [InstructionExample(f"Write `add_{k}(x)`.", f"```python\ndef add_{k}(x):\n    return x + {k}\n```")
+                for k in range(40)]
+    write_basics_dataset(tmp_path / "d", data_dir / "tokenizer.json", examples=examples, seed=0, log=lambda *_: None)
+    out = split_losses(base_model, tmp_path / "d", n=6)
+    assert out["trained_on"] is False and out["note"]
+    assert out["train"]["token_loss_ci95"][0] <= out["train"]["token_loss"] <= out["train"]["token_loss_ci95"][1]
+    assert out["train"]["by_kind"] and out["unseen_new"]["examples"] >= 40
+    assert out["unseen_dev_clean"]["examples"] < out["unseen_tasks"]["examples"]

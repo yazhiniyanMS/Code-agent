@@ -191,7 +191,7 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
         log(f"{arm['name']} seed {seed}: answer loss on train / held-out / unseen")
         diag = run_dir / "diagnose.json"
         record["diagnose_run"] = run_measured([sys.executable, "-m", "ycode.lm.diagnose", str(cur), str(data),
-                                               "--n", str(evaluation["diagnose"]), "--json", str(diag)],
+                                               "--n", str(evaluation["diagnose"]), "--trained-on", "--json", str(diag)],
                                               run_dir / "diagnose.log")
         if diag.is_file():
             record["diagnose"] = json.loads(diag.read_text())

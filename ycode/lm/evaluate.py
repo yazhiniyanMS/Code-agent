@@ -174,7 +174,7 @@ def bugfix_eval(lm, *, items=None, answers: list | None = None, max_new_tokens: 
                             "pass": ok, "copied": candidate.strip() == code.strip()})
         if log:
             log(f"  {'FIXED' if ok else 'fail '}  {name}")
-    return len(fixed) / len(items), fixed
+    return (len(fixed) / len(items) if items else 0.0), fixed  # a set may have no bug fixes (unseen)
 
 
 _CODE_BLOCK = re.compile(r"```(?:python|py)?\s*\n(.*?)(?:```|$)", re.DOTALL)
