@@ -208,6 +208,11 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
     record["minutes_total"] = round(sum(record.get(k, {}).get("minutes", 0) for k in
                                         ("data", "training", "dev_run", "unseen_run", "unseen2_run", "bench_run",
                                          "diagnose_run")), 1)
+    if spec.get("keep_models"):  # a bf16 inference copy (~3 GB; evaluation runs in bf16 too) survives the cleanup
+        from ycode.lm.train import export_checkpoint, file_sha256
+
+        kept = export_checkpoint(cur, run_dir / "model_bf16", dtype="bf16")
+        record["kept_model"] = {"path": str(kept), "sha256": file_sha256(kept)}
     result_path.write_text(json.dumps(record, indent=1))
     shutil.rmtree(cur, ignore_errors=True)  # 7 GB per checkpoint: kept only while scoring
     shutil.rmtree(data, ignore_errors=True)

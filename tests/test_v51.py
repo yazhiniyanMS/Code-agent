@@ -323,6 +323,39 @@ def test_experiment_runner_end_to_end_with_a_tiny_model(data_dir, base_model, tm
     assert "Verdict" in experiment.render(summary)
 
 
+def test_v6_runner_path_scores_unseen2_and_keeps_a_bf16_model(data_dir, base_model, tmp_path, monkeypatch):
+    """V6 options on a tiny model: unseen-v2 evaluation, the all_clean metric and a kept bf16 copy."""
+    import json
+    from pathlib import Path
+
+    from ycode.lm import experiment, rounddata
+    from ycode.lm.train import file_sha256
+
+    def fake_round(out_dir, seed, tokenizer_path, **kwargs):
+        import shutil
+
+        shutil.copytree(data_dir, out_dir, dirs_exist_ok=True)
+        manifest = {"seed": seed, "options": kwargs.get("options") or {}}
+        (Path(out_dir) / "manifest.json").write_text(json.dumps(manifest))
+        (Path(out_dir) / "hygiene.json").write_text("[]")
+        return manifest
+
+    monkeypatch.setattr(rounddata, "write_round_dataset", fake_round)
+    spec = {"name": "tiny6", "anchor": str(base_model), "anchor_sha256": "x", "tokenizer": str(data_dir / "tokenizer.json"),
+            "out": str(tmp_path / "exp"), "seeds": [1], "metric": "all_clean", "category_rule": "items_lost",
+            "keep_models": True, "train": {"steps": 1, "precision": "fp32", "train_layers": 2, "init_optim": False},
+            "eval": {"limit": 2, "diagnose": 0, "unseen2": True}, "arms": [{"name": "C"}], "comparisons": []}
+    record = experiment.run_one(spec, spec["arms"][0], 1, tmp_path / "exp", log=lambda *_: None)
+    assert record["unseen2"]["of"] == 2 and "failure_classes" in record["unseen2"]
+    assert "categories" in record["dev"] and "contaminated" in record["dev"]
+    kept = Path(record["kept_model"]["path"])
+    assert kept.is_file() and file_sha256(kept) == record["kept_model"]["sha256"]
+    assert not (tmp_path / "exp" / "C" / "1" / "model").exists()  # the full checkpoint is still deleted
+    summary = experiment.summarize(spec, tmp_path / "exp")
+    assert summary["arms"]["C"]["all_clean"]["values"] == [record["dev"]["clean"] + record["unseen"]["clean"]
+                                                           + record["unseen2"]["clean"]]
+
+
 def test_paired_comparison_needs_more_than_one_lucky_seed():
     from ycode.lm.experiment import compare
 
