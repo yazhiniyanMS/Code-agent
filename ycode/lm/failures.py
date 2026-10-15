@@ -130,6 +130,40 @@ def classify_failure(row: dict, item, diag_category: str, diag_reason: str, cand
     return "algorithmic_or_logic_error", f"agreement with the reference {score:.0%} ({diag_reason})"
 
 
+ROOT_CAUSES = ("misunderstood_prompt", "incorrect_logic", "edge_cases", "syntax", "incomplete_implementation",
+               "evaluation")
+
+
+def root_cause(failure: dict) -> str:
+    """The V6 root cause of a classified failure (an item of ``classify_answers``):
+
+    * ``incomplete_implementation``: the answer stops before its code block closes (the token limit),
+      the function has no ``return``, or its body is only ``pass``/``...``, or it calls a helper or
+      name that does not exist (``incorrect_code_generation``);
+    * ``syntax``: any other formatting or parsing failure;
+    * ``misunderstood_prompt``, ``incorrect_logic``, ``edge_cases``, ``evaluation``: the task-
+      interpretation, logic, edge-case and evaluation classes."""
+    answer = failure.get("answer") or ""
+    code = failure.get("code") or ""
+    cls = failure["class"]
+    opened = answer.find("```")
+    truncated = opened >= 0 and answer.find("```", opened + 3) < 0
+    if cls == "formatting_or_parsing":
+        return "incomplete_implementation" if truncated else "syntax"
+    if cls == "incorrect_code_generation":
+        return "incomplete_implementation"
+    try:
+        fn = next((n for n in ast.parse(code).body if isinstance(n, ast.FunctionDef)), None)
+    except SyntaxError:
+        fn = None
+    if fn is not None:
+        body = [n for n in fn.body if not (isinstance(n, ast.Expr) and isinstance(getattr(n, "value", None), ast.Constant))]
+        if not body or all(isinstance(n, ast.Pass) for n in body) or not any(isinstance(n, ast.Return) for n in ast.walk(fn)):
+            return "incomplete_implementation"
+    return {"incorrect_task_interpretation": "misunderstood_prompt", "algorithmic_or_logic_error": "incorrect_logic",
+            "edge_case_failure": "edge_cases", "evaluation_failure": "evaluation"}[cls]
+
+
 def classify_answers(answers: list[dict], split: str) -> dict:
     """Every failure of one answers file with its class and evidence, and the classes ranked."""
     from ycode.lm.erroranalysis import analyze
@@ -151,8 +185,10 @@ def classify_answers(answers: list[dict], split: str) -> dict:
                          "expected": item.reference, "answer": it["answer"], "code": it["code"],
                          "test_outcome": it.get("reason"), "failed_asserts": it.get("failed_asserts"),
                          "class": cls, "evidence": evidence, "v5_category": it.get("category")})
+        failures[-1]["root_cause"] = root_cause(failures[-1])
     ranked = Counter(f["class"] for f in failures)
     clean = Counter(f["class"] for f in failures if not f["contaminated"])
     return {"split": split, "answered": len(result["items"]), "failures": len(failures),
             "ranked": ranked.most_common(), "ranked_clean": clean.most_common(),
+            "root_causes_clean": Counter(f["root_cause"] for f in failures if not f["contaminated"]).most_common(),
             "items": failures}

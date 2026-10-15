@@ -1,0 +1,28 @@
+{
+ "model": "/home/user/lmwork/loop/anchor",
+ "trained": {
+  "items": 125,
+  "code_token_loss": 1.0599,
+  "item_loss_median": 0.9843
+ },
+ "family_new": {
+  "items": 28,
+  "code_token_loss": 1.3198,
+  "item_loss_median": 1.4778
+ },
+ "dev_clean": {
+  "items": 34,
+  "code_token_loss": 0.2753,
+  "item_loss_median": 0.0185
+ },
+ "unseen_v1": {
+  "items": 53,
+  "code_token_loss": 1.1644,
+  "item_loss_median": 1.1274
+ },
+ "unseen_v2": {
+  "items": 71,
+  "code_token_loss": 1.279,
+  "item_loss_median": 1.2305
+ }
+}

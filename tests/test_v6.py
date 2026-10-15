@@ -160,3 +160,58 @@ def test_worked_examples_in_prompts_are_correct(kept):
 def test_probe_sets_stay_on_curriculum_v1():
     assert len(idioms.FAMILIES_V1) == 76 and len(idioms.FAMILIES) > 76
     assert all(f.key in idioms.FAMILIES_V1 for f in idioms.FAMILIES[:76])
+
+
+def test_root_causes_separate_truncated_and_empty_answers_from_syntax():
+    from ycode.lm.failures import root_cause
+
+    def f(cls, answer, code=""):
+        return {"class": cls, "answer": answer, "code": code}
+
+    assert root_cause(f("formatting_or_parsing", "```python\ndef f(x):\n    return (x")) == "incomplete_implementation"
+    assert root_cause(f("formatting_or_parsing", "```python\ndef f(x):\n    return x]\n```")) == "syntax"
+    assert root_cause(f("algorithmic_or_logic_error", "```python\n```", "def f(x):\n    y = x + 1")) == "incomplete_implementation"
+    assert root_cause(f("algorithmic_or_logic_error", "```python\n```", "def f(x):\n    return x + 1")) == "incorrect_logic"
+    assert root_cause(f("incorrect_task_interpretation", "```python\n```", "def f(x):\n    return 2 * x")) == "misunderstood_prompt"
+    assert root_cause(f("incorrect_code_generation", "```python\n```", "def f(x):\n    return g(x)")) == "incomplete_implementation"
+
+
+def test_one_sft_step_updates_only_trained_layers_and_ignores_masked_tokens():
+    """The fine-tuning step as run (top layers trainable, Lion inside backward, answer-only mask):
+    frozen weights never move, every trained block moves, and tokens with mask 0 add no gradient."""
+    import copy
+
+    import torch
+
+    from ycode.lm.model import GPT, PRESETS, GPTConfig
+    from ycode.lm.optim import build_optimizer
+    from ycode.lm.train import freeze_below
+
+    torch.manual_seed(0)
+    model = GPT(GPTConfig(vocab_size=100, **{**PRESETS["v5-tiny"], "block_size": 32}))
+    freeze_below(model, 1)
+    before = copy.deepcopy(model.state_dict())
+    x, y = torch.randint(0, 100, (2, 32)), torch.randint(0, 100, (2, 32))
+    mask = torch.zeros(2, 32, dtype=torch.long)
+    mask[:, 20:] = 3  # an answer with weight 3 after a 20-token prompt
+    opt = build_optimizer(model, kind="lion", lr=1e-3, muon_lr=0, weight_decay=0.0)
+    opt.optimizers[0].attach()
+    model(x, y, loss_mask=mask)[1].backward()  # the update happens inside backward
+    trained = {n for n, p in model.named_parameters() if p.requires_grad}
+    assert trained and all(n.startswith((f"blocks.{len(model.blocks) - 1}.", "norm.")) for n in trained)
+    params = dict(model.named_parameters())
+    for name, value in params.items():
+        moved = not torch.equal(value.detach(), before[name])
+        assert moved if name in trained else not moved, name
+
+    # masked prompt tokens: changing their targets changes nothing
+    torch.manual_seed(0)
+    probe = GPT(GPTConfig(vocab_size=100, **{**PRESETS["v5-tiny"], "block_size": 32}))
+    y2 = y.clone()
+    y2[:, :20] = (y2[:, :20] + 1) % 100
+    g = []
+    for targets in (y, y2):
+        probe.zero_grad()
+        probe(x, targets, loss_mask=mask)[1].backward()
+        g.append([p.grad.clone() for p in probe.parameters() if p.grad is not None])
+    assert all(torch.equal(a, b) for a, b in zip(*g))
