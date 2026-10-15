@@ -96,7 +96,11 @@ def split_losses(model_dir, data_dir, *, n: int = 64, seed: int = 0, device: str
 
     from ycode.lm.generate import LocalLM
 
-    lm = LocalLM(model_dir, device=device)
+    from ycode.lm.train import cpu_supports_bf16
+
+    # Full-sequence forwards are compute-bound: on a CPU without bf16 units, fp32 is ~3x faster than
+    # emulated bf16 (the loss differs only by rounding; within one experiment every run uses the same host).
+    lm = LocalLM(model_dir, device=device, dtype="auto" if device != "cpu" or cpu_supports_bf16() else "fp32")
     data_dir = Path(data_dir)
     tokens = np.memmap(data_dir / "sft_tokens.bin", dtype=np.uint16, mode="r")
     mask = np.memmap(data_dir / "sft_mask.bin", dtype=np.uint8, mode="r")
@@ -116,6 +120,7 @@ def split_losses(model_dir, data_dir, *, n: int = 64, seed: int = 0, device: str
     for name, split, clean in unseen_sets:
         sets[name] = [(ids[:block], w[:block]) for ids, w in unseen_task_rows(lm.tokenizer, split, clean=clean)]
     out = {"model": str(model_dir), "data": str(data_dir), "seed": seed, "trained_on": trained_on,
+           "weights_dtype": "fp32" if lm.dtype is None else str(lm.dtype).replace("torch.", ""),
            "note": None if trained_on else "the checkpoint was not trained on this data: 'train' rows are unseen rows too"}
     for name, examples in sets.items():
         pairs = [_example_loss(lm.model, ids, w, lm.device, lm.precision()) for ids, w in examples]
