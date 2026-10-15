@@ -1,0 +1,47 @@
+Ablation abl2 (anchor /home/user/lmwork/loop/anchor, 72 steps per arm)
+
+arm               dev  bench  dev groups / bench groups
+base_s1            35     22  dev_concept 3/15 dev_fix 5/15 dev_slot 27/32 | fixed 6/15 fresh 9/20 standard 7/30
+base_s2            38     22  dev_concept 4/15 dev_fix 7/15 dev_slot 27/32 | fixed 6/15 fresh 9/20 standard 7/30
+data_dedup         36     23  dev_concept 3/15 dev_fix 6/15 dev_slot 27/32 | fixed 6/15 fresh 9/20 standard 8/30
+data_cap_repeats     36     24  dev_concept 3/15 dev_fix 6/15 dev_slot 27/32 | fixed 6/15 fresh 10/20 standard 8/30
+data_no_replay     37     24  dev_concept 4/15 dev_fix 6/15 dev_slot 27/32 | fixed 6/15 fresh 10/20 standard 8/30
+data_skills        34     17  dev_concept 3/15 dev_fix 4/15 dev_slot 27/32 | fixed 3/15 fresh 9/20 standard 5/30
+ft_average         36     24  dev_concept 4/15 dev_fix 5/15 dev_slot 27/32 | fixed 8/15 fresh 9/20 standard 7/30
+lr_half            37     25  dev_concept 4/15 dev_fix 6/15 dev_slot 27/32 | fixed 8/15 fresh 9/20 standard 8/30
+lr_double          35     24  dev_concept 3/15 dev_fix 5/15 dev_slot 27/32 | fixed 6/15 fresh 9/20 standard 9/30
+steps_double       36     23  dev_concept 3/15 dev_fix 6/15 dev_slot 27/32 | fixed 7/15 fresh 8/20 standard 8/30
+batch_half         36     19  dev_concept 6/15 dev_fix 3/15 dev_slot 27/32 | fixed 5/15 fresh 8/20 standard 6/30
+seq_512            36     22  dev_concept 4/15 dev_fix 5/15 dev_slot 27/32 | fixed 6/15 fresh 9/20 standard 7/30
+
+noise floor (dev, baseline seed vs seed): 3
+data_dedup: dev +1 vs baseline; categories losing more points: none; do not keep
+   dev gained ['bugfix:count_greater', 'bugfix:sum_of_squares']
+   dev lost   ['bugfix:cube']
+data_cap_repeats: dev +1 vs baseline; categories losing more points: none; do not keep
+   dev gained ['bugfix:count_greater', 'bugfix:sum_of_squares']
+   dev lost   ['bugfix:cube']
+data_no_replay: dev +2 vs baseline; categories losing more points: {'instruction_following': 1}; do not keep
+   dev gained ['bugfix:count_greater', 'bugfix:sum_of_squares', 'write:cube']
+   dev lost   ['bugfix:cube']
+data_skills: dev -1 vs baseline; categories losing more points: {'hallucination': 3, 'coding': 1}; do not keep
+   dev gained ['bugfix:count_greater', 'bugfix:double_all']
+   dev lost   ['bugfix:cube', 'bugfix:index_of_min', 'bugfix:longest_word']
+ft_average: dev +1 vs baseline; categories losing more points: none; do not keep
+   dev gained ['bugfix:sum_of_squares', 'write:cube']
+   dev lost   ['bugfix:index_of_min']
+lr_half: dev +2 vs baseline; categories losing more points: none; do not keep
+   dev gained ['bugfix:count_greater', 'bugfix:sum_of_squares', 'write:index_of_min']
+   dev lost   ['bugfix:longest_word']
+lr_double: dev +0 vs baseline; categories losing more points: {'instruction_following': 2, 'coding': 1}; do not keep
+   dev gained ['bugfix:count_greater']
+   dev lost   ['bugfix:index_of_min']
+steps_double: dev +1 vs baseline; categories losing more points: {'reasoning': 1}; do not keep
+   dev gained ['bugfix:count_greater', 'bugfix:sum_of_squares']
+   dev lost   ['bugfix:index_of_min']
+batch_half: dev +1 vs baseline; categories losing more points: none; do not keep
+   dev gained ['write:cube', 'write:index_of_min', 'write:longest_word']
+   dev lost   ['bugfix:cube', 'bugfix:longest_word']
+seq_512: dev +1 vs baseline; categories losing more points: none; do not keep
+   dev gained ['write:index_of_min']
+   dev lost   []

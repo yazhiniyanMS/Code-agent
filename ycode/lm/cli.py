@@ -60,6 +60,8 @@ def _train_args(p: argparse.ArgumentParser, *, sft: bool) -> None:
                    help="Delete the previous checkpoint before saving: half the disk, but a crash mid-save loses it.")
     p.add_argument("--init-optim", action="store_true",
                    help="With --init-from: also continue that run's optimizer state (optim.pt) if it matches.")
+    p.add_argument("--seq-len", type=int, default=None,
+                   help="SFT: pack examples into rows of this many tokens (default: the model's context).")
     p.add_argument("--device", default="auto", help="auto, cpu, cuda or mps.")
     p.add_argument("--precision", default="auto", choices=("auto", "fp32", "bf16", "fp16"))
     p.add_argument("--grad-checkpoint", action="store_true",
@@ -173,19 +175,27 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--heldout", action="append", type=Path, default=[],
                    help="Code the models never trained on, for bits-per-byte (repeatable).")
     p.add_argument("--samples", type=int, default=1, help="Samples per problem for pass@k (default 1 = greedy).")
-    p.add_argument("--problems", default="standard", choices=("standard", "fresh", "both", "dev"),
+    p.add_argument("--problems", default="standard", choices=("standard", "fresh", "both", "dev", "unseen"),
                    help="Coding problems: the standard 30, 20 fresh ones, both, or the held-out dev set "
                         "used to pick fine-tuning checkpoints (its own bug fixes too).")
     p.add_argument("--answers-out", type=Path, help="Write every answer (prompt, answer, code, pass) as JSONL.")
     p.add_argument("--no-functional", action="store_true", help="Skip the coding-problem benchmark.")
     p.add_argument("--verbose", action="store_true", help="Show each problem's result.")
     p.add_argument("--device", default="auto")
+    p.add_argument("--limit", type=int, help="Smoke tests only: score just the first N problems and N bug fixes "
+                                             "(the result is not comparable to a full run and is marked as limited).")
 
     p = sub.add_parser("analyze", help="Why answers failed: categories, expected vs actual, points lost.")
     p.add_argument("answers", type=Path, help="JSONL from `eval --answers-out`.")
-    p.add_argument("--set", default="bench", choices=("bench", "dev"), help="Which test set the answers are from.")
+    p.add_argument("--set", default="bench", choices=("bench", "dev", "unseen"),
+                   help="Which test set the answers are from.")
     p.add_argument("--compare", type=Path, help="An earlier answers file on the same prompts: show what changed.")
     p.add_argument("--json", type=Path, help="Write the full analysis (every failed item) as JSON.")
+    p.add_argument("--store", type=Path,
+                   help="Append one record per failed item (prompt, expected, actual, category, model, settings) "
+                        "to this JSONL failure store.")
+    p.add_argument("--model", type=Path, help="Checkpoint the answers came from (recorded with its SHA-256).")
+    p.add_argument("--run", help="A label for this evaluation run in the failure store (e.g. round54-bench).")
 
     for name, help_text in (("chat", "Interactive Q&A with your model."),
                             ("sample", "Continue a code prompt."), ("info", "Show model details.")):
@@ -271,6 +281,7 @@ def main(argv: list[str] | None = None) -> int:
             save_interval=args.save_interval,
             save_in_place=args.save_in_place,
             init_optim=args.init_optim,
+            seq_len=args.seq_len,
         )
         out = args.out or default_local_model_dir()
         try:
@@ -467,6 +478,21 @@ def _analyze(args) -> int:  # noqa: ANN001
         result["comparison"] = diff
     if args.json:
         args.json.write_text(json.dumps(result, indent=1))
+    if args.store:
+        from ycode.lm.erroranalysis import failure_rows, model_fingerprint
+
+        first = load_answers(args.answers)[0] if args.answers.stat().st_size else {}
+        model = args.model or (Path(first["model"]) if first.get("model") else None)
+        meta = {"run": args.run or args.answers.stem, "answers_file": str(args.answers),
+                "model": str(model) if model else None, "model_step": first.get("model_step"),
+                "model_sha256": model_fingerprint(model) if args.model else None,
+                "settings": first.get("settings", EVAL_SETTINGS)}
+        rows = failure_rows(result, meta)
+        args.store.parent.mkdir(parents=True, exist_ok=True)
+        with args.store.open("a", encoding="utf-8") as f:
+            for row in rows:
+                f.write(json.dumps(row) + "\n")
+        print(f"\n{len(rows)} failure records appended to {args.store}")
     return 0
 
 
@@ -505,9 +531,19 @@ def _eval(args) -> int:  # noqa: ANN001
                 from ycode.lm.devset import dev_bugs, dev_problems
 
                 problems, bug_items = dev_problems(), dev_bugs()
+            elif args.problems == "unseen":  # unseen-concept writes only (ycode.lm.unseen)
+                from ycode.lm.unseen import unseen_problems
+
+                problems, bug_items = unseen_problems(), []
             else:
                 problems = {"standard": PROBLEMS, "fresh": fresh_problems(),
                             "both": PROBLEMS + fresh_problems()}[args.problems]
+            if args.limit:  # smoke tests: a prefix of each list, recorded in the answers' settings
+                from ycode.lm.evaluate import _ALL_TESTS
+
+                problems = tuple(problems)[:args.limit]
+                default = [(s, c, _ALL_TESTS[s.split("(")[0]]) for s, c in BUGGY]
+                bug_items = list(default if bug_items is None else bug_items)[:args.limit]
             res = functional_eval(lm, samples=args.samples, problems=problems,
                                   log=print if args.verbose else None)
             row["pass@1"] = round(res.pass_at_1, 4)
@@ -518,7 +554,7 @@ def _eval(args) -> int:  # noqa: ANN001
             fix_rate, fixed = bugfix_eval(lm, items=bug_items, answers=answers, log=print if args.verbose else None)
             row["fix@1"] = round(fix_rate, 4)
             row["fixed"] = fixed
-            row["n_problems"], row["n_bugs"] = len(problems), len(bug_items or BUGGY)
+            row["n_problems"], row["n_bugs"] = len(problems), len(BUGGY if bug_items is None else bug_items)
             if args.answers_out:
                 from ycode.lm.evaluate import extract_code
 
@@ -530,7 +566,7 @@ def _eval(args) -> int:  # noqa: ANN001
                 with args.answers_out.open("a", encoding="utf-8") as f:
                     meta = {"model": str(model_dir), "model_step": lm_info.get("step"),
                             "averaged_with_anchor": lm_info.get("averaged_with_anchor"),
-                            "settings": EVAL_SETTINGS}
+                            "settings": {**EVAL_SETTINGS, **({"limit": args.limit} if args.limit else {})}}
                     for item in writes + answers:
                         f.write(json.dumps({**meta, **item}) + "\n")
         rows.append(row)

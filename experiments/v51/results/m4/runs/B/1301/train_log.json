@@ -1,0 +1,70 @@
+{
+  "summary": {
+    "steps": 24,
+    "minutes": 60.351848630110425,
+    "tokens": 98304,
+    "answer_tokens": 49446,
+    "empty_batches": 0,
+    "final": {
+      "step": 24
+    },
+    "params": 1523202304,
+    "out_dir": "/home/user/lmwork/v51m3/B/1301/model",
+    "world_size": 1,
+    "precision": "fp32",
+    "fp16_skipped_steps": 0,
+    "config": {
+      "stage": "sft",
+      "preset": "v2-small",
+      "model_overrides": {},
+      "batch_size": 4,
+      "grad_accum": 1,
+      "lr": 1.5e-05,
+      "min_lr": 1.5e-06,
+      "warmup_steps": 2,
+      "max_steps": 24,
+      "max_minutes": null,
+      "weight_decay": 0.1,
+      "grad_clip": 1.0,
+      "eval_interval": 100000,
+      "eval_iters": 0,
+      "log_interval": 10,
+      "device": "cpu",
+      "precision": "fp32",
+      "seed": 1301,
+      "init_from": "/home/user/lmwork/loop/anchor",
+      "resume": true,
+      "schedule": "wsd",
+      "decay_frac": 0.2,
+      "anneal_mix": 0.0,
+      "pack": true,
+      "compile": false,
+      "grad_checkpoint": true,
+      "save_interval": 12,
+      "save_in_place": true,
+      "init_optim": true,
+      "seq_len": null,
+      "until_step": null,
+      "optimizer": "lion",
+      "muon_lr": 0.02,
+      "shard": false,
+      "train_layers": 24
+    },
+    "init_sha256": null,
+    "data_files": {
+      "sft_tokens.bin": "7afeb1d501702948b72d3f1b7d698f5a8ad5eb38c5e793896e91d402f52548ac",
+      "sft_mask.bin": "c28171732ddadb4cca1441de27c29ba2c2cf6ff2b8c3c745089426c65a56117f",
+      "sft_index.npy": "789e3607c93cb24d61eaa5b9b26c48781fe7c84ce8ab5ca93e14da8abbebed9b",
+      "tokenizer.json": "7079ff7b8546a23c5416f8ae08adcb636ec69da4c14cd964114f12cee9745341"
+    },
+    "checkpoint_sha256": "699e35307ff720475b1eb1a9c31faaf0d4e8d93c03a23247717b36c2a9d06ddd",
+    "peak_rss_mb": 11315,
+    "torch": "2.14.1+cu130",
+    "threads": 4
+  },
+  "history": [
+    {
+      "step": 24
+    }
+  ]
+}

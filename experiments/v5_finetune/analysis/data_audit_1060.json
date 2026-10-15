@@ -1,0 +1,131 @@
+{
+ "seed": 1060,
+ "examples": {
+  "basics": 1355,
+  "compose_write": 2004,
+  "compose_bugfix": 599,
+  "contrast": 588,
+  "novel": 136
+ },
+ "total": 4682,
+ "exact_duplicates": 585,
+ "write_tasks": 1622,
+ "contradictory_tasks": 94,
+ "contradiction_examples": [
+  {
+   "task": "Write a Python function `F(s)` that returns only the letters of s, in order.",
+   "bodies": [
+    "result = ''\n    for c in s:\n        if c.isalpha():\n            result += c\n    return result",
+    "return ''.join(c for c in s if c.isalpha())"
+   ]
+  },
+  {
+   "task": "Write a Python function `F(lists)` that returns the longest list in a non-empty list of lists (the first one if tied).",
+   "bodies": [
+    "best = lists[0]\n    for x in lists:\n        if len(x) > len(best):\n            best = x\n    return best",
+    "return max(lists, key=len)"
+   ]
+  },
+  {
+   "task": "Implement `F(s)`, which returns only the letters of s, in order.",
+   "bodies": [
+    "result = ''\n    for c in s:\n        if c.isalpha():\n            result += c\n    return result",
+    "return ''.join(c for c in s if c.isalpha())"
+   ]
+  },
+  {
+   "task": "Write a Python function `F(numbers)` that returns a new list with every number divided by four.",
+   "bodies": [
+    "result = []\n    for x in numbers:\n        result.append(x / 4)\n    return result",
+    "return [x / 4 for x in numbers]"
+   ]
+  },
+  {
+   "task": "Write a Python function `F(numbers)` that returns a new list with 10 added to every number.",
+   "bodies": [
+    "result = []\n    for x in numbers:\n        result.append(x + 10)\n    return result",
+    "return [x + 10 for x in numbers]"
+   ]
+  },
+  {
+   "task": "Write a Python function `F(numbers)` that returns the sum of twice the non-zero numbers in the list.",
+   "bodies": [
+    "return sum(2 * x for x in numbers if x != 0)",
+    "total = 0\n    for x in numbers:\n        if x != 0:\n            total += 2 * x\n    return total"
+   ]
+  },
+  {
+   "task": "Write a Python function `F(numbers)` that returns the sum of twice the multiples of 3 in the list.",
+   "bodies": [
+    "return sum(2 * x for x in numbers if x % 3 == 0)",
+    "total = 0\n    for x in numbers:\n        if x % 3 == 0:\n            total += 2 * x\n    return total"
+   ]
+  },
+  {
+   "task": "Write a Python function `F(numbers)` that returns the largest of twice the non-zero numbers in the list.",
+   "bodies": [
+    "best = None\n    for x in numbers:\n        if x != 0:\n            if best is None or 2 * x > best:\n                best = 2 * x\n    return best",
+    "return max(2 * x for x in numbers if x != 0)"
+   ]
+  }
+ ],
+ "answers_checked": 2873,
+ "answers_failing_own_tests": 0,
+ "wrong_examples": [],
+ "distinct_answer_bodies": 844,
+ "most_repeated_bodies": [
+  {
+   "body": "return 2 * x",
+   "examples": 20
+  },
+  {
+   "body": "return x / 2",
+   "examples": 20
+  },
+  {
+   "body": "return n % 3 == 0",
+   "examples": 20
+  },
+  {
+   "body": "return x - 2",
+   "examples": 15
+  },
+  {
+   "body": "return x - 10",
+   "examples": 15
+  },
+  {
+   "body": "return x - 4",
+   "examples": 15
+  },
+  {
+   "body": "return 6 * x",
+   "examples": 15
+  },
+  {
+   "body": "return x - 6",
+   "examples": 15
+  },
+  {
+   "body": "return 8 * x",
+   "examples": 15
+  },
+  {
+   "body": "return x - 3",
+   "examples": 15
+  },
+  {
+   "body": "return x - 8",
+   "examples": 15
+  },
+  {
+   "body": "return x + 9",
+   "examples": 15
+  }
+ ],
+ "basics_examples_per_concept": {
+  "mean": 5.0,
+  "max": 10
+ },
+ "one_line_answers_share": 0.783
+}

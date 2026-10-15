@@ -337,6 +337,20 @@ def test_novel_exercises_change_every_round_and_stay_held_out():
     assert len(novel_examples(30)) > 60
 
 
+def test_more_novel_draws_stay_held_out(monkeypatch):
+    import ycode.lm.compose as compose
+
+    default = len(compose.novel_examples(30))
+    monkeypatch.setattr(compose, "NOVEL_DRAWS", 30)
+    monkeypatch.setattr(compose, "NOVEL_ORDINALS", 99)
+    more = compose.novel_exercises(30)
+    assert sum(1 for e in more if e.key[1] == "index") == len(compose._ORDINALS)
+    for e in more:
+        assert compose.base_key(e.key) not in compose.HELD_OUT_KEYS and _passes(e.source(), e.tests()), e.name
+    assert not {e.name for e in more} & held_out_names()
+    assert len(compose.novel_examples(30)) > 3 * default
+
+
 def test_loop_renderings_compute_the_same_thing():
     from ycode.lm.compose import all_exercises, loop_rendering
 
@@ -348,10 +362,12 @@ def test_loop_renderings_compute_the_same_thing():
         assert _passes(loop.source(), ex.tests()), loop.source()
 
 
-def test_skill_families_are_verified_and_held_out():
+def test_skill_families_are_verified_and_held_out(monkeypatch):
+    import ycode.lm.compose as compose
     from ycode.lm.compose import HELD_OUT_KEYS, _skills, all_exercises, base_key
     from ycode.lm.devset import DEV_KEYS
 
+    monkeypatch.setattr(compose, "INCLUDE_SKILLS", True)
     skills = _skills()
     assert len({e.name for e in skills}) >= 40
     trained = {e.name for e in all_exercises(8)}
@@ -360,3 +376,27 @@ def test_skill_families_are_verified_and_held_out():
         assert e.tests() and _passes(e.source(), e.tests()), e.name
     held = {"product_of_odds_up_to", "pell_number", "tribonacci", "distance_outside", "fahrenheit_to_celsius"}
     assert not held & {e.name for e in skills}  # left out pending review
+
+
+def test_sft_rows_can_be_shorter_than_the_context(data_dir, tmp_path):
+    from ycode.lm.train import TrainConfig, train
+
+    base = dict(preset="v2-tiny", model_overrides={"block_size": 64}, batch_size=2, warmup_steps=1, eval_interval=100,
+                eval_iters=0, log_interval=1000, device="cpu", precision="fp32")
+    train(data_dir, tmp_path / "base", TrainConfig(stage="pretrain", max_steps=1, **base), log=lambda *_: None)
+    seen = []
+    import ycode.lm.train as tr
+
+    original = tr.SFTData.__init__
+
+    def spy(self, data_dir, block_size, *args, **kwargs):
+        seen.append(block_size)
+        original(self, data_dir, block_size, *args, **kwargs)
+
+    tr.SFTData.__init__ = spy
+    try:
+        train(data_dir, tmp_path / "sft", TrainConfig(stage="sft", max_steps=1, init_from=str(tmp_path / "base"),
+                                                      seq_len=16, **base), log=lambda *_: None)
+    finally:
+        tr.SFTData.__init__ = original
+    assert seen == [16]

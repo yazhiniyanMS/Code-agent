@@ -1,5 +1,9 @@
 """Build one round's fine-tuning data. Run in a fresh process each round, so edits to the
-generators (and to this mix) take effect without restarting the loop driver."""
+generators (and to this mix) take effect without restarting the loop driver.
+
+v5.1: the round data comes from ycode.lm.rounddata (the same production mix, with held-out
+equivalents removed, skill families off by default, and a manifest + hygiene report per round).
+The v5 version of this file is build_round.py.bak_v5."""
 
 import sys
 import time
@@ -15,19 +19,9 @@ def log(msg: str) -> None:
 
 
 def main(r: int, out: Path) -> None:
-    from ycode.lm import compose
-    from ycode.lm.basics import basics_examples, write_basics_dataset
+    from ycode.lm.rounddata import write_round_dataset
 
-    seed = 1000 + r
-    # Mix from round 22 on: more written functions, fewer repeated bug fixes (bug fixes held ~59% of
-    # the loss weight while writing scores lagged), and half the old replay data.
-    examples = (basics_examples(seed, write_per_concept=6, bugfix_per_concept=4)
-                + compose.compose_examples(seed, per_exercise=3)
-                + compose.compose_bugfix_examples(seed, per_exercise=1)
-                + compose.contrast_examples(seed)
-                + compose.novel_examples(seed))
-    write_basics_dataset(out, W / "data" / "tokenizer.json", replay_dir=W / "data", replay=200, seed=seed,
-                         examples=examples, log=log)
+    write_round_dataset(out, 1000 + r, W / "data" / "tokenizer.json", replay_dir=W / "data", log=log)
 
 
 if __name__ == "__main__":

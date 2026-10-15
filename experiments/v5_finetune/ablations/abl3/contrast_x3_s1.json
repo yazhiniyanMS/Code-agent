@@ -1,0 +1,159 @@
+{
+ "arm": {
+  "name": "contrast_x3_s1",
+  "group": "contrast_x3",
+  "seed": 1101,
+  "data": {
+   "skills": false,
+   "contrast": 3
+  },
+  "changes": "three contrast bug fixes per exercise instead of one (the buggy body is a one-word neighbour's correct code)"
+ },
+ "train_minutes": 68.1,
+ "dev": {
+  "points": 35,
+  "of": 62,
+  "groups": {
+   "dev_concept": {
+    "passed": 4,
+    "total": 15,
+    "lost": {
+     "instruction_following": 7,
+     "reasoning": 4
+    }
+   },
+   "dev_fix": {
+    "passed": 4,
+    "total": 15,
+    "lost": {
+     "instruction_following": 7,
+     "reasoning": 4
+    }
+   },
+   "dev_slot": {
+    "passed": 27,
+    "total": 32,
+    "lost": {
+     "reasoning": 2,
+     "instruction_following": 3
+    }
+   }
+  },
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 17,
+   "hallucination": 0,
+   "coding": 0,
+   "factual": 0,
+   "reasoning": 10
+  },
+  "passed": [
+   "bugfix:count_uppercase",
+   "bugfix:index_of_min",
+   "bugfix:is_negative",
+   "bugfix:sum_of_squares",
+   "write:above_six",
+   "write:add_seven",
+   "write:all_odd",
+   "write:any_zero",
+   "write:below_two",
+   "write:count_greater",
+   "write:count_o",
+   "write:count_odd",
+   "write:count_uppercase",
+   "write:divisible_by_five",
+   "write:ends_with_ing",
+   "write:floor_div_four",
+   "write:has_two_items",
+   "write:has_x",
+   "write:index_of_min",
+   "write:is_negative",
+   "write:keep_gt5",
+   "write:keep_negative",
+   "write:largest_even",
+   "write:longer_than_three",
+   "write:not_three",
+   "write:remainder_three",
+   "write:scale_each_by_three",
+   "write:smallest_positive",
+   "write:starts_with_the",
+   "write:subtract_five",
+   "write:subtract_three_each",
+   "write:sum_multiples_of_five",
+   "write:sum_odd",
+   "write:sum_positive_square",
+   "write:times_four"
+  ]
+ },
+ "bench": {
+  "points": 25,
+  "of": 65,
+  "groups": {
+   "fixed": {
+    "passed": 8,
+    "total": 15,
+    "lost": {
+     "factual": 1,
+     "instruction_following": 3,
+     "coding": 1,
+     "reasoning": 2
+    }
+   },
+   "fresh": {
+    "passed": 9,
+    "total": 20,
+    "lost": {
+     "hallucination": 1,
+     "instruction_following": 6,
+     "reasoning": 2,
+     "factual": 2
+    }
+   },
+   "standard": {
+    "passed": 8,
+    "total": 30,
+    "lost": {
+     "instruction_following": 12,
+     "reasoning": 7,
+     "factual": 2,
+     "hallucination": 1
+    }
+   }
+  },
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 21,
+   "hallucination": 2,
+   "coding": 1,
+   "factual": 5,
+   "reasoning": 11
+  },
+  "passed": [
+   "bugfix:add",
+   "bugfix:filter_even",
+   "bugfix:is_even",
+   "bugfix:maximum",
+   "bugfix:minimum",
+   "bugfix:square",
+   "bugfix:subtract",
+   "bugfix:total",
+   "write:add",
+   "write:add_one",
+   "write:char_count",
+   "write:count_letter_a",
+   "write:count_zeros",
+   "write:dict_size",
+   "write:filter_even",
+   "write:first_word",
+   "write:halve_all",
+   "write:is_even",
+   "write:is_zero",
+   "write:square",
+   "write:subtract",
+   "write:sum_of_cubes",
+   "write:sum_of_evens",
+   "write:total",
+   "write:triple"
+  ]
+ }
+}

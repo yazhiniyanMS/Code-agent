@@ -564,10 +564,13 @@ def verify_concepts(concepts=CONCEPTS) -> None:
 
 
 def held_out_names() -> set[str]:
-    """Function names of every benchmark item (standard 30, the 15 bug fixes, fresh 20)."""
+    """Function names of every benchmark item (standard 30, the 15 bug fixes, fresh 20) and of the
+    unseen-concept set (ycode.lm.unseen)."""
     from ycode.lm.evaluate import BUGGY, PROBLEMS
+    from ycode.lm.unseen import unseen_names
 
-    return {p.name for p in PROBLEMS} | {sig.split("(")[0] for sig, _ in BUGGY} | {p[0] for p in FRESH_PROBLEMS}
+    return ({p.name for p in PROBLEMS} | {sig.split("(")[0] for sig, _ in BUGGY} | {p[0] for p in FRESH_PROBLEMS}
+            | unseen_names())
 
 
 def dev_names() -> set[str]:
@@ -634,6 +637,13 @@ def _with_doc(c: Concept, name: str, body: str) -> str:
     return f'def {name}({c.params}):\n    """{doc}"""\n{body}'
 
 
+# Spec-first answers (a v5.1 experiment arm, off by default): every written function starts with a
+# docstring that restates the task from the prompt, then the code. Failures on unseen tasks are
+# mostly a neighbouring trained body with the one differing word ignored (fifth_item's body for
+# fourth_item); restating the task puts that word right above the code the model writes next.
+SPEC_FIRST = False
+
+
 def write_examples(rng: random.Random, per_concept: int = 6) -> list[InstructionExample]:
     out = []
     for c in training_concepts():
@@ -642,7 +652,8 @@ def write_examples(rng: random.Random, per_concept: int = 6) -> list[Instruction
             template = rng.choice(_WRITE_TEMPLATES)
             prompt = template.format(sig=f"{name}({c.params})", task=c.task, name=name,
                                      params=c.params.replace(", ", " and ") or "no arguments")
-            out.append(neutralize(InstructionExample(prompt, f"```python\n{c.source(name)}\n```"), name, rng))
+            code = _with_doc(c, name, c.body) if SPEC_FIRST else c.source(name)
+            out.append(neutralize(InstructionExample(prompt, f"```python\n{code}\n```"), name, rng))
     rng.shuffle(out)
     return out
 
@@ -725,10 +736,28 @@ _PROSE_PROMPTS = ("What does this Python function do?", "Explain this code:", "E
                   "class for?", "Write a docstring for this function:", "Document this Python function")
 
 
+def replay_kind(prompt: str) -> str:
+    """The task type of a replayed row, from its prompt template (for reporting the replay mix)."""
+    if any(p in prompt for p in ("Write a docstring", "Document this Python function")):
+        return "docstring"
+    if any(p in prompt for p in ("Explain this class", "class for?")):
+        return "class"
+    if any(p in prompt for p in ("What does this Python function do?", "Explain this code")):
+        return "explain"
+    if any(p in prompt for p in ("Complete this Python function", "Fill in the body")):
+        return "complete"
+    if prompt.startswith(("This function has a bug", "Fix the bug", "Why is this function wrong")):
+        return "bugfix"
+    return "write"
+
+
 def write_basics_dataset(out_dir, tokenizer_path, *, replay_dir=None, replay: int = 0, seed: int = 1337,
-                         examples=None, log=print) -> dict:
+                         examples=None, log=print, replay_filter=None) -> dict:
     """Write an SFT dataset of basics examples, optionally mixed with ``replay`` examples drawn from
-    an earlier SFT dataset (so fine-tuning does not erase what the model already learned)."""
+    an earlier SFT dataset (so fine-tuning does not erase what the model already learned).
+
+    ``replay_filter(prompt, answer)`` may return a reason to drop a replay row (it is counted under
+    that reason); the returned info includes the replay mix by task type."""
     from pathlib import Path
 
     import numpy as np
@@ -756,6 +785,7 @@ def write_basics_dataset(out_dir, tokenizer_path, *, replay_dir=None, replay: in
         names = "|".join(sorted(map(re.escape, held_out_names() | dev_names())))
         leak = re.compile(rf"(?:\bdef |`)({names})\(")
         dropped = {"benchmark name": 0, "prose bug fix": 0, "garbled prompt": 0, "prose over cap": 0}
+        kinds: dict[str, int] = {}
         kept = rewritten = prose = 0
         max_prose = replay * 3 // 10  # explanations/docstrings: kept, but no more than 30% of replay
         for i in rng.sample(range(len(index)), len(index)):
@@ -775,12 +805,17 @@ def write_basics_dataset(out_dir, tokenizer_path, *, replay_dir=None, replay: in
             if "How would I write a Python function to" in text:
                 dropped["garbled prompt"] += 1  # "... to returns the ...": ungrammatical task text
                 continue
+            prompt, _, answer = text.partition(f"\n{END}\n{ASSISTANT}\n")
+            if replay_filter is not None and (reason := replay_filter(prompt, answer.rsplit(f"\n{END}", 1)[0])):
+                dropped[reason] = dropped.get(reason, 0) + 1
+                continue
             if any(p in text for p in _PROSE_PROMPTS):
                 if prose >= max_prose:
                     dropped["prose over cap"] += 1
                     continue
                 prose += 1
-            prompt, _, answer = text.partition(f"\n{END}\n{ASSISTANT}\n")
+            kind = replay_kind(prompt)
+            kinds[kind] = kinds.get(kind, 0) + 1
             if answer.startswith("```python\ndef ") and prompt.startswith(USER + "\n"):
                 # Re-encode written functions like the new examples (def-line tokens, weights).
                 answer = answer.rsplit(f"\n{END}", 1)[0]
@@ -789,7 +824,7 @@ def write_basics_dataset(out_dir, tokenizer_path, *, replay_dir=None, replay: in
             else:
                 rows.append((t, mask[start:start + length].tolist()))
             kept += 1
-        log(f"Replay: kept {kept} ({rewritten} written functions re-encoded), dropped {dropped}")
+        log(f"Replay: kept {kept} ({rewritten} written functions re-encoded), dropped {dropped}, mix {kinds}")
     rng.shuffle(rows)
     all_tokens, all_mask, idx = [], [], []
     for t, m in rows:
@@ -800,6 +835,8 @@ def write_basics_dataset(out_dir, tokenizer_path, *, replay_dir=None, replay: in
     np.asarray(all_mask, dtype=np.uint8).tofile(out_dir / "sft_mask.bin")
     np.save(out_dir / "sft_index.npy", np.asarray(idx, dtype=np.int64).reshape(-1, 2))
     info = {"basics": n_basics, "replay": len(rows) - n_basics, "tokens": len(all_tokens)}
+    if replay_dir and replay:
+        info["replay_dropped"], info["replay_kinds"] = dropped, kinds
     log(f"Wrote {len(rows)} examples ({n_basics} basics + {len(rows) - n_basics} replay), "
         f"{len(all_tokens):,} tokens, to {out_dir}")
     return info

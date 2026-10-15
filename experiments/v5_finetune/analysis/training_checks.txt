@@ -1,0 +1,38 @@
+== tokenizer: vocab 8192
+task prompts: 3.87 characters per token
+reference code: 2.99 characters per token
+  'upper'        -> [' upper']
+  'lower'        -> [' lower']
+  'vowels'       -> [' v', 'ow', 'el', 's']
+  'Fahrenheit'   -> [' F', 'a', 'h', 'ren', 'he', 'it']
+  'Celsius'      -> [' C', 'el', 'si', 'us']
+  'factorial'    -> [' factorial']
+  'palindrome'   -> [' p', 'al', 'ind', 'ro', 'me']
+  'anagram'      -> [' an', 'ag', 'ram']
+  'second'       -> [' second']
+  'third'        -> [' third']
+  'middle'       -> [' m', 'id', 'd', 'le']
+  'empty'        -> [' empty']
+  'minutes'      -> [' min', 'utes']
+  'seconds'      -> [' se', 'conds']
+  'largest'      -> [' l', 'ar', 'gest']
+  'smallest'     -> [' s', 'm', 'alle', 'st']
+  'flatten'      -> [' flatten']
+  'unique'       -> [' unique']
+  'prime'        -> [' prime']
+  'divisor'      -> [' divisor']
+
+== training loss by round (train.log): first and last logged step of each run
+  s10:0.114  s20:0.010  s30:0.032  s40:0.044  s50:0.089  s60:0.225  s70:0.117
+  s10:0.091  s20:0.128  s30:0.194  s40:0.177  s50:0.229  s60:0.219  s70:0.083
+  s10:0.038  s20:0.358  s30:0.022  s40:0.187  s50:0.024  s60:0.061  s70:0.158
+  s10:0.021  s20:0.007  s30:0.029  s40:0.169  s50:0.146  s60:0.081  s70:0.044
+  s10:0.065  s20:0.289  s30:0.078  s40:0.141  s50:0.024  s60:0.025  s70:0.247
+  s10:0.020  s20:0.067  s30:0.039  s40:0.206  s50:0.098  s60:0.008  s70:0.063
+  s10:0.291  s20:0.062  s30:0.235  s40:0.097  s50:0.084  s60:0.245  s70:0.003
+  s10:0.099  s20:0.016  s30:0.236  s40:0.007  s50:0.378  s60:0.134  s70:0.108
+  s10:0.178  s20:0.094  s30:0.070  s40:0.144  s50:0.229  s60:0.003  s70:0.282
+  s10:0.072  s20:0.252  s30:0.304  s40:0.045  s50:0.085  s60:0.029  s70:0.163
+loss at steps 40-70 over the last 10 rounds: mean 0.123, min 0.003, max 0.378
+
+== pretraining: corpus 53,318,451 tokens of library code; v5 continued pretraining saw ~2.5M of them (~0.0016 tokens per parameter; compute-optimal is ~20)

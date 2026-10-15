@@ -1,0 +1,90 @@
+{
+ "model": "/home/user/lmwork/v51m3/A/1301/model",
+ "data": "/home/user/lmwork/v51m3/A/1301/data",
+ "seed": 0,
+ "trained_on": true,
+ "weights_dtype": "fp32",
+ "note": null,
+ "train": {
+  "examples": 16,
+  "answer_tokens": 752,
+  "token_loss": 0.3289,
+  "token_loss_ci95": [
+   0.0006,
+   0.6642
+  ],
+  "example_loss_mean": 0.0971,
+  "example_loss_sd": 0.2928,
+  "by_kind": {
+   "bugfix": {
+    "examples": 4,
+    "token_loss": 0.0006
+   },
+   "complete": {
+    "examples": 1,
+    "token_loss": 0.4201
+   },
+   "write": {
+    "examples": 11,
+    "token_loss": 0.4562
+   }
+  }
+ },
+ "heldout_rows": {
+  "examples": 16,
+  "answer_tokens": 580,
+  "token_loss": 0.009,
+  "token_loss_ci95": [
+   0.0016,
+   0.0227
+  ],
+  "example_loss_mean": 0.0075,
+  "example_loss_sd": 0.0199,
+  "by_kind": {
+   "bugfix": {
+    "examples": 6,
+    "token_loss": 0.0012
+   },
+   "write": {
+    "examples": 10,
+    "token_loss": 0.0157
+   }
+  }
+ },
+ "unseen_dev_clean": {
+  "examples": 34,
+  "answer_tokens": 988,
+  "token_loss": 0.2327,
+  "token_loss_ci95": [
+   0.1155,
+   0.3693
+  ],
+  "example_loss_mean": 0.204,
+  "example_loss_sd": 0.3537,
+  "by_kind": {
+   "write": {
+    "examples": 34,
+    "token_loss": 0.2327
+   }
+  }
+ },
+ "unseen_new": {
+  "examples": 53,
+  "answer_tokens": 1766,
+  "token_loss": 0.9766,
+  "token_loss_ci95": [
+   0.8416,
+   1.1212
+  ],
+  "example_loss_mean": 0.9526,
+  "example_loss_sd": 0.4869,
+  "by_kind": {
+   "write": {
+    "examples": 53,
+    "token_loss": 0.9766
+   }
+  }
+ },
+ "gap_train_to_heldout": -0.3199,
+ "gap_heldout_to_unseen": 0.2237
+}

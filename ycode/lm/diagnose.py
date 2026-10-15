@@ -1,0 +1,186 @@
+"""Generalisation check for a checkpoint: answer loss on training rows, held-out rows, unseen tasks.
+
+Low training loss alone says nothing about memorisation. This compares, for one checkpoint, the
+mean per-token loss on answer tokens (every answer token counts once: the training weights are
+not applied) of:
+
+* ``train``: rows from the train split of a data directory (``SFTData``'s split). They are rows the
+  checkpoint trained on **only if** it was trained on this data directory: pass ``trained_on``,
+  which is recorded in the output; otherwise they are just more unseen rows of the same
+  generators;
+* ``heldout_rows``: that data's validation split: never trained on, drawn from the same generators,
+  so it measures fit to the training distribution;
+* ``unseen_tasks``: every dev problem with its reference solution (concepts the generators never
+  produce); ``unseen_dev_clean`` leaves out the dev items v5's checkpoints saw in equivalent form;
+  ``unseen_new``: the unseen-concept set (``ycode.lm.unseen``).
+
+All splits are encoded the same way (``encode_example`` for unseen tasks, the stored encoding for
+data rows), use the same target shift and answer mask, and report the token-weighted mean
+(``token_loss``) with a bootstrap 95% interval over examples, the per-example mean, and the loss
+per row type (write, bug fix, explain, docstring, ...), because a split's mix of row types moves
+its loss: prose answers (explanations of library code) cost far more than code answers.
+
+usage: python -m ycode.lm.diagnose MODEL_DIR DATA_DIR [--n 64] [--trained-on] [--json OUT]
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import math
+import random
+from pathlib import Path
+
+
+def _example_loss(model, ids: list[int], weights: list[int], device: str, autocast,
+                  only_weight: int | None = None) -> tuple[float, int]:
+    """Summed token loss over answer tokens (weight > 0, counted as 1) and their number; with
+    ``only_weight``, over the tokens of that training weight only (e.g. the code lines of a written
+    function, which carry BODY_WEIGHT, without its fences and docstring)."""
+    import torch
+    import torch.nn.functional as F
+
+    x = torch.tensor([ids[:-1]], device=device)
+    y = torch.tensor([ids[1:]], device=device)
+    keep = [(w == only_weight) if only_weight is not None else (w > 0) for w in weights[1:]]
+    mask = torch.tensor([[1.0 if k else 0.0 for k in keep]], device=device)
+    with torch.no_grad(), autocast:
+        logits, _ = model(x, y)
+    losses = F.cross_entropy(logits.float().view(-1, logits.size(-1)), y.view(-1), reduction="none")
+    return float((losses * mask.view(-1)).sum()), int(mask.sum())
+
+
+def _token_loss(pairs) -> float:
+    tokens = sum(n for _, n in pairs)
+    return sum(s for s, _ in pairs) / max(1, tokens)
+
+
+def _summary(pairs: list[tuple[float, int]], kinds: list[str] | None = None, *, seed: int = 0) -> dict:
+    per_example = [s / n for s, n in pairs if n]
+    mean = sum(per_example) / max(1, len(per_example))
+    sd = math.sqrt(sum((v - mean) ** 2 for v in per_example) / max(1, len(per_example) - 1)) if per_example else 0.0
+    rng = random.Random(seed)
+    boots = sorted(_token_loss([pairs[rng.randrange(len(pairs))] for _ in pairs]) for _ in range(1000)) if pairs else []
+    out = {"examples": len(pairs), "answer_tokens": sum(n for _, n in pairs), "token_loss": round(_token_loss(pairs), 4),
+           "token_loss_ci95": [round(boots[25], 4), round(boots[974], 4)] if boots else None,
+           "example_loss_mean": round(mean, 4), "example_loss_sd": round(sd, 4)}
+    if kinds:
+        by_kind: dict[str, list] = {}
+        for k, p in zip(kinds, pairs):
+            by_kind.setdefault(k, []).append(p)
+        out["by_kind"] = {k: {"examples": len(v), "token_loss": round(_token_loss(v), 4)} for k, v in sorted(by_kind.items())}
+    return out
+
+
+def _restated(prompt: str, reference: str) -> str:
+    """The reference with a docstring restating the prompt's task after its def line (the answer
+    format of the spec-first training arm)."""
+    task = prompt.split("` that ", 1)[-1].strip()
+    doc = task[0].upper() + task[1:]
+    for verb in ("Returns", "Converts", "Splits", "Merges", "Builds", "Flattens"):
+        if doc.startswith(verb + " "):
+            doc = verb[:-1] + doc[len(verb):]
+    head, _, body = reference.partition("\n")
+    return f'{head}\n    """{doc}"""\n{body}'
+
+
+def unseen_task_rows(tok, split: str = "dev", *, clean: bool = False,
+                     spec_first: bool = False) -> list[tuple[list[int], list[int]]]:
+    """Held-out problems of ``split`` ("dev" or "unseen"), each answered with its reference
+    solution, encoded like training rows. ``clean`` drops the contaminated items; ``spec_first``
+    renders each reference with a docstring restating the task (the spec-first answer format)."""
+    from ycode.lm.data import InstructionExample, encode_example
+    from ycode.lm.devset import dev_problems
+    from ycode.lm.leakage import CONTAMINATED_ITEMS, held_out_items
+    from ycode.lm.unseen import unseen_problems
+
+    refs = {i.name: i.reference for i in held_out_items() if i.split == split}
+    problems = dev_problems() if split == "dev" else unseen_problems()
+    def answer(p) -> str:
+        code = _restated(p.prompt, refs[p.name]) if spec_first else refs[p.name]
+        return f"```python\n{code}\n```"
+
+    return [encode_example(tok, InstructionExample(p.prompt, answer(p)), weighted=True)
+            for p in problems if p.name in refs and not (clean and (split, p.name) in CONTAMINATED_ITEMS)]
+
+
+def _row_kind(tok, ids: list[int]) -> str:
+    from ycode.lm.basics import replay_kind
+    from ycode.lm.tokenizer import ASSISTANT, USER
+
+    prompt = tok.decode(ids).split(ASSISTANT, 1)[0].replace(USER, "").strip()
+    return replay_kind(prompt)
+
+
+def split_losses(model_dir, data_dir, *, n: int = 64, seed: int = 0, device: str = "cpu",
+                 val_fraction: float = 0.05, trained_on: bool = False, all_dev: bool = True) -> dict:
+    import numpy as np
+
+    from ycode.lm.generate import LocalLM
+
+    from ycode.lm.train import cpu_supports_bf16
+
+    # Full-sequence forwards are compute-bound: on a CPU without bf16 units, fp32 is ~3x faster than
+    # emulated bf16 (the loss differs only by rounding; within one experiment every run uses the same host).
+    lm = LocalLM(model_dir, device=device, dtype="auto" if device != "cpu" or cpu_supports_bf16() else "fp32")
+    data_dir = Path(data_dir)
+    tokens = np.memmap(data_dir / "sft_tokens.bin", dtype=np.uint16, mode="r")
+    mask = np.memmap(data_dir / "sft_mask.bin", dtype=np.uint8, mode="r")
+    index = np.load(data_dir / "sft_index.npy")
+    n_val = max(1, int(len(index) * val_fraction))  # the same split SFTData uses
+    rng = random.Random(seed)
+    block = lm.model.cfg.block_size
+
+    def rows(idx) -> list[tuple[list[int], list[int]]]:
+        chosen = rng.sample(list(idx), min(n, len(idx)))
+        return [(tokens[s:s + length].tolist()[:block], mask[s:s + length].tolist()[:block]) for s, length in chosen]
+
+    sets = {"train": rows(index[n_val:]), "heldout_rows": rows(index[:n_val])}
+    unseen_sets = [("unseen_dev_clean", "dev", True), ("unseen_new", "unseen", False)]
+    if all_dev:  # every dev item, contaminated ones included (comparable with v5 reports)
+        unseen_sets.insert(0, ("unseen_tasks", "dev", False))
+    for name, split, clean in unseen_sets:
+        sets[name] = [(ids[:block], w[:block]) for ids, w in unseen_task_rows(lm.tokenizer, split, clean=clean)]
+    out = {"model": str(model_dir), "data": str(data_dir), "seed": seed, "trained_on": trained_on,
+           "weights_dtype": "fp32" if lm.dtype is None else str(lm.dtype).replace("torch.", ""),
+           "note": None if trained_on else "the checkpoint was not trained on this data: 'train' rows are unseen rows too"}
+    for name, examples in sets.items():
+        pairs = [_example_loss(lm.model, ids, w, lm.device, lm.precision()) for ids, w in examples]
+        out[name] = _summary(pairs, [_row_kind(lm.tokenizer, ids) for ids, _ in examples], seed=seed)
+    # Code-only loss on unseen tasks, with references in both answer formats: an arm trained on one
+    # format pays for the other format's first tokens (a docstring or not) in ``token_loss``, so
+    # arms with different answer formats are compared on the code lines given the task.
+    from ycode.lm.data import BODY_WEIGHT
+
+    for name, split, clean in [s for s in unseen_sets if s[0] != "unseen_tasks"]:
+        for fmt, spec in (("plain", False), ("spec_first", True)):
+            rows = [(ids[:block], w[:block]) for ids, w in unseen_task_rows(lm.tokenizer, split, clean=clean, spec_first=spec)]
+            pairs = [_example_loss(lm.model, ids, w, lm.device, lm.precision(), only_weight=BODY_WEIGHT) for ids, w in rows]
+            out[name][f"code_token_loss_{fmt}"] = round(_token_loss(pairs), 4)
+    out["gap_train_to_heldout"] = round(out["heldout_rows"]["token_loss"] - out["train"]["token_loss"], 4)
+    out["gap_heldout_to_unseen"] = round(out["unseen_dev_clean"]["token_loss"] - out["heldout_rows"]["token_loss"], 4)
+    return out
+
+
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("model")
+    ap.add_argument("data")
+    ap.add_argument("--n", type=int, default=64)
+    ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--device", default="cpu")
+    ap.add_argument("--trained-on", action="store_true", help="the checkpoint was trained on DATA's train split")
+    ap.add_argument("--no-all-dev", action="store_true", help="skip the all-dev split (clean dev and unseen only)")
+    ap.add_argument("--json", type=Path)
+    args = ap.parse_args(argv)
+    result = split_losses(args.model, args.data, n=args.n, seed=args.seed, device=args.device, trained_on=args.trained_on,
+                          all_dev=not args.no_all_dev)
+    text = json.dumps(result, indent=1)
+    if args.json:
+        args.json.write_text(text)
+    print(text)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

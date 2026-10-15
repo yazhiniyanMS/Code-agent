@@ -34,18 +34,53 @@ def run(cmd, logfile: Path) -> int:
 
 
 BUILD = r'''
-import sys
+import json, re, sys
+from collections import Counter
 sys.path.insert(0, "/home/user/Code-agent")
 from pathlib import Path
 import ycode.lm.compose as compose
 from ycode.lm.basics import basics_examples, write_basics_dataset
-seed, out, skills = int(sys.argv[1]), Path(sys.argv[2]), sys.argv[3] == "1"
-compose.INCLUDE_SKILLS = skills
-examples = (basics_examples(seed, write_per_concept=6, bugfix_per_concept=4)
-            + compose.compose_examples(seed, per_exercise=3) + compose.compose_bugfix_examples(seed, per_exercise=1)
-            + compose.contrast_examples(seed) + compose.novel_examples(seed))
-write_basics_dataset(out, "/home/user/lmwork/data/tokenizer.json", replay_dir="/home/user/lmwork/data", replay=200,
-                     seed=seed, examples=examples, log=print)
+seed, out, opt = int(sys.argv[1]), Path(sys.argv[2]), json.loads(sys.argv[3])
+compose.INCLUDE_SKILLS = opt.get("skills", True)
+compose.NOVEL_DRAWS = opt.get("novel_draws", compose.NOVEL_DRAWS)
+compose.NOVEL_ORDINALS = opt.get("novel_ordinals", compose.NOVEL_ORDINALS)
+examples = (basics_examples(seed, write_per_concept=opt.get("basics_write", 6), bugfix_per_concept=opt.get("basics_bugfix", 4))
+            + compose.compose_examples(seed, per_exercise=opt.get("compose_write", 3))
+            + compose.compose_bugfix_examples(seed, per_exercise=opt.get("compose_bugfix", 1))
+            + compose.contrast_examples(seed, per_exercise=opt.get("contrast", 1))
+            + compose.novel_examples(seed, per_exercise=opt.get("novel_write", 1)))
+n0 = len(examples)
+def task_of(p):
+    return re.sub(r"`[A-Za-z_]\w*(?=[(`])", "`F", p)
+def body_of(r):
+    lines = r.strip().strip("`").splitlines()
+    return "\n".join(l for l in lines[2:] if not l.strip().startswith('\"\"\"'))
+if opt.get("dedup"):
+    # exact duplicates, and a second answer body for the same task text (one-liner vs loop rendering)
+    seen, first_body, kept = set(), {}, []
+    for ex in examples:
+        key = (ex.prompt, ex.response)
+        if key in seen:
+            continue
+        if not ex.prompt.startswith("This function has a bug"):
+            t = task_of(ex.prompt)
+            if first_body.setdefault(t, body_of(ex.response)) != body_of(ex.response):
+                continue
+        seen.add(key)
+        kept.append(ex)
+    examples = kept
+if opt.get("cap_per_body"):
+    # at most N examples per distinct answer body: frequent bodies act as attractors the model copies
+    count, kept = Counter(), []
+    for ex in examples:
+        b = body_of(ex.response)
+        if count[b] < opt["cap_per_body"]:
+            count[b] += 1
+            kept.append(ex)
+    examples = kept
+print(f"examples: {n0} built, {len(examples)} kept")
+write_basics_dataset(out, "/home/user/lmwork/data/tokenizer.json", replay_dir="/home/user/lmwork/data",
+                     replay=opt.get("replay", 200), seed=seed, examples=examples, log=print)
 '''
 
 
@@ -57,16 +92,19 @@ def run_arm(spec: dict, arm: dict, out: Path) -> dict:
     d = out / arm["name"]
     d.mkdir(parents=True, exist_ok=True)
     data, cur = d / "data", out / "cur"
-    log(out, f"{arm['name']}: building data (seed {arm['seed']}, skills {arm.get('skills', True)})")
+    log(out, f"{arm['name']}: building data (seed {arm['seed']}, options {arm.get('data', {})})")
     shutil.rmtree(data, ignore_errors=True)
-    if run([sys.executable, "-c", BUILD, str(arm["seed"]), str(data), "1" if arm.get("skills", True) else "0"],
+    if run([sys.executable, "-c", BUILD, str(arm["seed"]), str(data), json.dumps(arm.get("data", {}))],
            d / "build.log") != 0:
         raise RuntimeError(f"{arm['name']}: data build failed")
     shutil.rmtree(cur, ignore_errors=True)
-    log(out, f"{arm['name']}: training {spec['steps']} steps from {spec['anchor']}")
+    steps, batch = arm.get("steps", spec["steps"]), arm.get("batch", 4)
+    log(out, f"{arm['name']}: training {steps} steps (batch {batch}, lr {arm.get('lr', 1.5e-5)}, "
+             f"seq {arm.get('seq_len', 1024)}) from {spec['anchor']}")
     t0 = time.time()
+    extra = ["--seq-len", str(arm["seq_len"])] if arm.get("seq_len") else []
     code = run([sys.executable, "-m", "ycode.lm.cli", "sft", "--data", str(data), "--init-from", spec["anchor"],
-                "--out", str(cur), "--steps", str(spec["steps"]), "--warmup", "2", "--batch-size", "4",
+                "--out", str(cur), "--steps", str(steps), "--warmup", "2", "--batch-size", str(batch), *extra,
                 "--optimizer", "lion", "--lr", str(arm.get("lr", 1.5e-5)), "--train-layers", "24",
                 "--grad-checkpoint", "--eval-interval", "100000", "--eval-iters", "0", "--seed", str(arm["seed"]),
                 "--init-optim", "--device", "cpu", "--precision", spec.get("precision", "bf16")], d / "train.log")
@@ -129,6 +167,51 @@ def summarize(spec: dict, out: Path) -> str:
     return "\n".join(lines)
 
 
+def summarize_paired(spec: dict, out: Path) -> str:
+    """Arms share a "group" and differ only in seed; each group is compared with the baseline group seed by
+    seed (same seed, same data order apart from the change). A change is kept when its mean dev gain beats
+    the noise floor of a mean over n seeds (floor / sqrt(n)), no seed does worse than its paired baseline,
+    and no category loses 2 or more extra points on average."""
+    results = {a["name"]: json.loads((out / a["name"] / "result.json").read_text())
+               for a in spec["arms"] if arm_done(out / a["name"])}
+    by_group = {}
+    for a in spec["arms"]:
+        if a["name"] in results:
+            by_group.setdefault(a["group"], {})[a["seed"]] = results[a["name"]]
+    base = by_group.get(spec["baseline"], {})
+    floor = spec["floor"]
+    lines = [f"Ablation {spec['name']} (anchor {spec['anchor']}, {spec['steps']} steps per arm, paired seeds; "
+             f"single-seed noise floor {floor} dev points)", "",
+             f"{'group':16} {'seeds':>5} {'dev':>14} {'bench':>14}"]
+    for g, runs in by_group.items():
+        dev = [runs[s]["dev"]["points"] for s in sorted(runs)]
+        bench = [runs[s]["bench"]["points"] for s in sorted(runs)]
+        lines.append(f"{g:16} {len(runs):>5} {str(dev) + ' mean ' + format(sum(dev) / len(dev), '.1f'):>14} "
+                     f"{str(bench) + ' mean ' + format(sum(bench) / len(bench), '.1f'):>14}")
+    lines.append("")
+    for g, runs in by_group.items():
+        if g == spec["baseline"]:
+            continue
+        seeds = sorted(s for s in runs if s in base)
+        if not seeds:
+            continue
+        n = len(seeds)
+        diffs = [runs[s]["dev"]["points"] - base[s]["dev"]["points"] for s in seeds]
+        gain = sum(diffs) / n
+        cats = runs[seeds[0]]["dev"]["lost_by_category"]
+        worse = {c: round(sum(runs[s]["dev"]["lost_by_category"][c] - base[s]["dev"]["lost_by_category"][c]
+                              for s in seeds) / n, 1) for c in cats}
+        worse = {c: v for c, v in worse.items() if v > 0}
+        need = floor / n ** 0.5
+        complete = n == len(base)
+        keep = complete and gain > need and min(diffs) >= 0 and not any(v >= 2 for v in worse.values())
+        bench_gain = sum(runs[s]["bench"]["points"] - base[s]["bench"]["points"] for s in seeds) / n
+        verdict = "KEEP" if keep else ("incomplete" if not complete else "do not keep")
+        lines.append(f"{g}: dev {diffs} per seed, mean {gain:+.1f} (needs > {need:.1f}); bench mean {bench_gain:+.1f} "
+                     f"(reported only); categories losing more points: {worse or 'none'}; {verdict}")
+    return "\n".join(lines)
+
+
 def main() -> None:
     spec = json.loads(Path(sys.argv[1]).read_text())
     out = W / "ablations" / spec["name"]
@@ -136,7 +219,7 @@ def main() -> None:
     for arm in spec["arms"]:
         if not arm_done(out / arm["name"]):
             run_arm(spec, arm, out)
-    report = summarize(spec, out)
+    report = summarize_paired(spec, out) if spec.get("paired") else summarize(spec, out)
     (out / "summary.txt").write_text(report)
     log(out, "DONE\n" + report)
 

@@ -1,0 +1,9 @@
+Ablation abl3 (anchor /home/user/lmwork/loop/anchor, 72 steps per arm, paired seeds; single-seed noise floor 3 dev points)
+
+group            seeds            dev          bench
+base                 2 [35, 38] mean 36.5 [22, 22] mean 22.0
+novel_x5             2 [35, 37] mean 36.0 [22, 21] mean 21.5
+contrast_x3          2 [35, 37] mean 36.0 [25, 24] mean 24.5
+
+novel_x5: dev [0, -1] per seed, mean -0.5 (needs > 2.1); bench mean -0.5 (reported only); categories losing more points: {'reasoning': 0.5}; do not keep
+contrast_x3: dev [0, -1] per seed, mean -0.5 (needs > 2.1); bench mean +2.5 (reported only); categories losing more points: {'instruction_following': 1.5}; do not keep

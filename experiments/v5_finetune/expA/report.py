@@ -27,7 +27,7 @@ for which, tag in (("dev", "dev"), ("bench", "both")):
     }
     (E / f"analysis_{which}_run1.json").write_text(json.dumps(analyses[0], indent=1))
 hist = json.loads(Path("/home/user/lmwork/loop/state2.json").read_text())["history"]
-rej = [h for h in hist if not h["accepted"]]
+rej = [h for h in hist if not h.get("accepted", h.get("kept"))]
 out["rejection_rate"] = {"rounds": len(hist), "rejected": len(rej), "rate": round(len(rej) / len(hist), 3),
                          "rejected_rounds": [h["round"] for h in rej]}
 (E / "report.json").write_text(json.dumps(out, indent=1))
