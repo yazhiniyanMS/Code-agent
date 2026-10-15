@@ -44,6 +44,29 @@ def run_passes(run_dir: Path, split: str) -> tuple[set, set] | None:
             {(i["suite"], i["name"]) for i in s["items"] if i["answered"]})
 
 
+def clean_outcomes(run_dir: Path) -> dict[tuple, bool] | None:
+    """Official pass or fail of every clean dev and unseen item (the primary metric's items) a run answered."""
+    out = {}
+    for split in ("dev", "unseen"):
+        path = run_dir / f"{split}.jsonl"
+        if not path.is_file():
+            return None
+        for i in score(load_answers(path), split)["items"]:
+            if i["answered"] and not i["contaminated"]:
+                out[(split, i["suite"], i["name"])] = i["official"]
+    return out
+
+
+def exact_p(gained: int, lost: int) -> float:
+    """Two-sided exact binomial p-value of gained against lost items (McNemar's exact test)."""
+    from math import comb
+
+    n, k = gained + lost, min(gained, lost)
+    if n == 0:
+        return 1.0
+    return min(1.0, 2 * sum(comb(n, i) for i in range(k + 1)) / 2 ** n)
+
+
 def fmt(values: list[float], digits: int = 1) -> str:
     values = [v for v in values if v is not None]
     if not values:
@@ -118,8 +141,9 @@ def main() -> None:
             f"{x['total_min']:.0f} | {x['train_rss']} / {x['eval_rss']} |")
     lines += ["", "### Per arm (mean ± standard deviation over seeds)", "",
               "| Arm | Seeds | Primary /97 | Dev clean /44 | Unseen /53 | Unseen robust | Bench /65 | Bench robust | "
-              "Loss unseen new | Val loss | Halluc. | Invalid | Regression vs start (dev / unseen / bench) |",
-              "| " + " | ".join(["---"] * 13) + " |"]
+              "Loss unseen new | Code loss unseen new (own format) | Val loss | Halluc. | Invalid | "
+              "Regression vs start (dev / unseen / bench) |",
+              "| " + " | ".join(["---"] * 14) + " |"]
     for arm in spec["arms"]:
         xs = [x for x in rows if x["arm"] == arm["name"]]
         if not xs:
@@ -129,6 +153,7 @@ def main() -> None:
             f"| {arm['name']} | {len(xs)} | {fmt([x['primary'] for x in xs])} | {fmt([x['dev_clean'][0] for x in xs])} | "
             f"{fmt([x['unseen'][0] for x in xs])} | {fmt([x['unseen_robust'][0] for x in xs])} | {fmt([x['bench'][0] for x in xs])} | "
             f"{fmt([x['bench_robust'][0] for x in xs])} | {fmt([x['loss_unseen_new'] for x in xs], 3)} | "
+            f"{fmt([x['code_loss_unseen_new'] for x in xs], 3)} | "
             f"{fmt([x['loss_val_rows'] for x in xs], 3)} | {fmt([x['hallucinations'] for x in xs])} | "
             f"{fmt([x['invalid'] for x in xs])} | {fmt(reg['dev'], 2)} / {fmt(reg['unseen'], 2)} / {fmt(reg['bench'], 2)} |")
     lines += ["", "### Paired comparison", "",
@@ -138,6 +163,26 @@ def main() -> None:
         changed = {k: v for k, v in c["category_change"].items() if v}
         lines.append(f"| {c['arm']} vs {c['against']} | {c['diffs']} | {c['mean']} | {c.get('ci95')} | {changed or 'none'} | "
                      f"**{c['verdict']}** |")
+    lines += ["", "### Item-level transitions (post hoc: not the pre-registered decision rule)", "",
+              "Per matched seed: clean dev and unseen items (the primary metric's 97) that the first arm passes and "
+              "the second fails (gained), and the reverse (lost). The exact test pools item x seed pairs as if "
+              "independent: it asks whether these trained checkpoints answer this fixed item set differently, not "
+              "whether another training run would; only more seeds measure run-to-run variance.", "",
+              "| Comparison | Seed | Gained | Lost | Gained items | Lost items |", "| --- | --- | --- | --- | --- | --- |"]
+    for a, b in spec.get("comparisons", []):
+        total_gained = total_lost = 0
+        for seed in spec["seeds"]:
+            got_a, got_b = clean_outcomes(root / a / str(seed)), clean_outcomes(root / b / str(seed))
+            if got_a is None or got_b is None:
+                continue
+            both = got_a.keys() & got_b.keys()
+            gained = sorted(f"{k[0]}:{k[1]}:{k[2]}" for k in both if got_a[k] and not got_b[k])
+            lost = sorted(f"{k[0]}:{k[1]}:{k[2]}" for k in both if got_b[k] and not got_a[k])
+            total_gained, total_lost = total_gained + len(gained), total_lost + len(lost)
+            lines.append(f"| {a} vs {b} | {seed} | {len(gained)} | {len(lost)} | {', '.join(gained) or '-'} | "
+                         f"{', '.join(lost) or '-'} |")
+        lines.append(f"| {a} vs {b} | pooled | {total_gained} | {total_lost} | exact two-sided p = "
+                     f"{exact_p(total_gained, total_lost):.3f} | |")
     lines += ["", "### Unseen-task failure classes (clean), per run", ""]
     for x in rows:
         lines.append(f"- {x['arm']} {x['seed']}: unseen {x['classes']}; dev {x['dev_classes']}")
