@@ -32,14 +32,18 @@ import random
 from pathlib import Path
 
 
-def _example_loss(model, ids: list[int], weights: list[int], device: str, autocast) -> tuple[float, int]:
-    """Summed token loss over answer tokens (weight > 0, counted as 1) and their number."""
+def _example_loss(model, ids: list[int], weights: list[int], device: str, autocast,
+                  only_weight: int | None = None) -> tuple[float, int]:
+    """Summed token loss over answer tokens (weight > 0, counted as 1) and their number; with
+    ``only_weight``, over the tokens of that training weight only (e.g. the code lines of a written
+    function, which carry BODY_WEIGHT, without its fences and docstring)."""
     import torch
     import torch.nn.functional as F
 
     x = torch.tensor([ids[:-1]], device=device)
     y = torch.tensor([ids[1:]], device=device)
-    mask = torch.tensor([[1.0 if w > 0 else 0.0 for w in weights[1:]]], device=device)
+    keep = [(w == only_weight) if only_weight is not None else (w > 0) for w in weights[1:]]
+    mask = torch.tensor([[1.0 if k else 0.0 for k in keep]], device=device)
     with torch.no_grad(), autocast:
         logits, _ = model(x, y)
     losses = F.cross_entropy(logits.float().view(-1, logits.size(-1)), y.view(-1), reduction="none")
@@ -68,9 +72,23 @@ def _summary(pairs: list[tuple[float, int]], kinds: list[str] | None = None, *, 
     return out
 
 
-def unseen_task_rows(tok, split: str = "dev", *, clean: bool = False) -> list[tuple[list[int], list[int]]]:
+def _restated(prompt: str, reference: str) -> str:
+    """The reference with a docstring restating the prompt's task after its def line (the answer
+    format of the spec-first training arm)."""
+    task = prompt.split("` that ", 1)[-1].strip()
+    doc = task[0].upper() + task[1:]
+    for verb in ("Returns", "Converts", "Splits", "Merges", "Builds", "Flattens"):
+        if doc.startswith(verb + " "):
+            doc = verb[:-1] + doc[len(verb):]
+    head, _, body = reference.partition("\n")
+    return f'{head}\n    """{doc}"""\n{body}'
+
+
+def unseen_task_rows(tok, split: str = "dev", *, clean: bool = False,
+                     spec_first: bool = False) -> list[tuple[list[int], list[int]]]:
     """Held-out problems of ``split`` ("dev" or "unseen"), each answered with its reference
-    solution, encoded like training rows. ``clean`` drops the contaminated items."""
+    solution, encoded like training rows. ``clean`` drops the contaminated items; ``spec_first``
+    renders each reference with a docstring restating the task (the spec-first answer format)."""
     from ycode.lm.data import InstructionExample, encode_example
     from ycode.lm.devset import dev_problems
     from ycode.lm.leakage import CONTAMINATED_ITEMS, held_out_items
@@ -78,7 +96,11 @@ def unseen_task_rows(tok, split: str = "dev", *, clean: bool = False) -> list[tu
 
     refs = {i.name: i.reference for i in held_out_items() if i.split == split}
     problems = dev_problems() if split == "dev" else unseen_problems()
-    return [encode_example(tok, InstructionExample(p.prompt, f"```python\n{refs[p.name]}\n```"), weighted=True)
+    def answer(p) -> str:
+        code = _restated(p.prompt, refs[p.name]) if spec_first else refs[p.name]
+        return f"```python\n{code}\n```"
+
+    return [encode_example(tok, InstructionExample(p.prompt, answer(p)), weighted=True)
             for p in problems if p.name in refs and not (clean and (split, p.name) in CONTAMINATED_ITEMS)]
 
 
@@ -125,6 +147,16 @@ def split_losses(model_dir, data_dir, *, n: int = 64, seed: int = 0, device: str
     for name, examples in sets.items():
         pairs = [_example_loss(lm.model, ids, w, lm.device, lm.precision()) for ids, w in examples]
         out[name] = _summary(pairs, [_row_kind(lm.tokenizer, ids) for ids, _ in examples], seed=seed)
+    # Code-only loss on unseen tasks, with references in both answer formats: an arm trained on one
+    # format pays for the other format's first tokens (a docstring or not) in ``token_loss``, so
+    # arms with different answer formats are compared on the code lines given the task.
+    from ycode.lm.data import BODY_WEIGHT
+
+    for name, split, clean in [s for s in unseen_sets if s[0] != "unseen_tasks"]:
+        for fmt, spec in (("plain", False), ("spec_first", True)):
+            rows = [(ids[:block], w[:block]) for ids, w in unseen_task_rows(lm.tokenizer, split, clean=clean, spec_first=spec)]
+            pairs = [_example_loss(lm.model, ids, w, lm.device, lm.precision(), only_weight=BODY_WEIGHT) for ids, w in rows]
+            out[name][f"code_token_loss_{fmt}"] = round(_token_loss(pairs), 4)
     out["gap_train_to_heldout"] = round(out["heldout_rows"]["token_loss"] - out["train"]["token_loss"], 4)
     out["gap_heldout_to_unseen"] = round(out["unseen_dev_clean"]["token_loss"] - out["heldout_rows"]["token_loss"], 4)
     return out

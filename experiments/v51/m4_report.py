@@ -85,6 +85,12 @@ def main() -> None:
                 "bench_robust": (r["bench"]["robust"], r["bench"]["robust_of"]),
                 "loss_unseen_dev": d.get("unseen_dev_clean", {}).get("token_loss"),
                 "loss_unseen_new": d.get("unseen_new", {}).get("token_loss"),
+                # code-only unseen loss with references in the arm's own answer format (fair across formats;
+                # recorded from runs A1302/B1302 on: earlier runs lack it)
+                "code_loss_unseen_new": d.get("unseen_new", {}).get(
+                    "code_token_loss_spec_first" if arm.get("data", {}).get("spec_first") else "code_token_loss_plain"),
+                "code_loss_unseen_dev": d.get("unseen_dev_clean", {}).get(
+                    "code_token_loss_spec_first" if arm.get("data", {}).get("spec_first") else "code_token_loss_plain"),
                 "loss_train_rows": d.get("train", {}).get("token_loss"), "loss_val_rows": d.get("heldout_rows", {}).get("token_loss"),
                 "loss_train_log": r["training"].get("loss_last10_mean"),
                 "hallucinations": sum(r[s]["hallucinations"] for s in ("dev", "unseen", "bench")),
@@ -100,14 +106,15 @@ def main() -> None:
              f"Primary = clean dev + unseen, out of {of_primary}. Losses are answer-token cross-entropy.", "",
              "| Arm | Seed | Primary /97 | Dev /62 | Dev clean /44 | Dev robust /62 | Unseen /53 | Unseen robust /53 | "
              "Bench /65 | Bench clean /61 | Bench robust /65 | Loss unseen dev / new | Loss train rows / val rows | "
-             "Train loss (last 10 steps) | Halluc. | Invalid | Train tokens | Train min | Total min | Peak MB train / eval |",
-             "| " + " | ".join(["---"] * 20) + " |"]
+             "Code loss unseen dev / new (own format) | Train loss (last 10 steps) | Halluc. | Invalid | Train tokens | "
+             "Train min | Total min | Peak MB train / eval |",
+             "| " + " | ".join(["---"] * 21) + " |"]
     for x in rows:
         lines.append(
             f"| {x['arm']} | {x['seed']} | {x['primary']} | {x['dev'][0]} | {x['dev_clean'][0]} | {x['dev_robust'][0]} | "
             f"{x['unseen'][0]} | {x['unseen_robust'][0]} | {x['bench'][0]} | {x['bench_clean'][0]} | {x['bench_robust'][0]} | "
             f"{x['loss_unseen_dev']} / {x['loss_unseen_new']} | {x['loss_train_rows']} / {x['loss_val_rows']} | "
-            f"{x['loss_train_log']} | {x['hallucinations']} | {x['invalid']} | {x['tokens']} | {x['train_min']:.0f} | "
+            f"{x['code_loss_unseen_dev']} / {x['code_loss_unseen_new']} | {x['loss_train_log']} | {x['hallucinations']} | {x['invalid']} | {x['tokens']} | {x['train_min']:.0f} | "
             f"{x['total_min']:.0f} | {x['train_rss']} / {x['eval_rss']} |")
     lines += ["", "### Per arm (mean ± standard deviation over seeds)", "",
               "| Arm | Seeds | Primary /97 | Dev clean /44 | Unseen /53 | Unseen robust | Bench /65 | Bench robust | "

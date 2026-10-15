@@ -525,6 +525,16 @@ def test_diagnose_labels_whether_rows_were_trained_on(data_dir, base_model, tmp_
     assert out["train"]["token_loss_ci95"][0] <= out["train"]["token_loss"] <= out["train"]["token_loss_ci95"][1]
     assert out["train"]["by_kind"] and out["unseen_new"]["examples"] >= 40
     assert out["unseen_dev_clean"]["examples"] < out["unseen_tasks"]["examples"]
+    for split in ("unseen_dev_clean", "unseen_new"):  # code-only loss in both answer formats
+        assert out[split]["code_token_loss_plain"] > 0 and out[split]["code_token_loss_spec_first"] > 0
+
+
+def test_restated_references_add_only_the_task_docstring():
+    from ycode.lm.diagnose import _restated
+
+    ref = "def tens_digit(n):\n    return (n // 10) % 10"
+    out = _restated("Write a Python function `tens_digit(n)` that returns the tens digit of n.", ref)
+    assert out == 'def tens_digit(n):\n    """Return the tens digit of n."""\n    return (n // 10) % 10'
 
 
 def test_spec_first_answers_restate_the_task_and_keep_the_code(monkeypatch):
