@@ -20,9 +20,13 @@ from ycode.lm.experiment import _mean_sd, summarize  # noqa: E402
 
 # The starting checkpoint's answers. The unseen set was evaluated on this run's host; the dev and
 # benchmark answers come from the AMX host (the same checkpoint and decoding; see the report).
-ANCHOR = {"dev": Path("/home/user/lmwork/expA/run1_dev.jsonl"),
-          "unseen": Path("/home/user/lmwork/v51/m2/unseen_anchor.jsonl"),
-          "bench": Path("/home/user/lmwork/loop/bench54.jsonl")}
+# Answers re-generated on this host (same checkpoint and decoding) are used when present.
+ANCHOR_OTHER_HOST = {"dev": Path("/home/user/lmwork/expA/run1_dev.jsonl"),
+                     "unseen": Path("/home/user/lmwork/v51/m2/unseen_anchor.jsonl"),
+                     "bench": Path("/home/user/lmwork/loop/bench54.jsonl")}
+SAME_HOST = Path("/home/user/lmwork/v51m3/anchor_eval")
+ANCHOR = {split: SAME_HOST / f"{split}.jsonl" if (SAME_HOST / f"{split}.jsonl").is_file() else path
+          for split, path in ANCHOR_OTHER_HOST.items()}
 
 
 def anchor_passes() -> dict[str, set]:
@@ -156,6 +160,9 @@ def main() -> None:
             f"{fmt([x['code_loss_unseen_new'] for x in xs], 3)} | "
             f"{fmt([x['loss_val_rows'] for x in xs], 3)} | {fmt([x['hallucinations'] for x in xs])} | "
             f"{fmt([x['invalid'] for x in xs])} | {fmt(reg['dev'], 2)} / {fmt(reg['unseen'], 2)} / {fmt(reg['bench'], 2)} |")
+    lines += ["", "Regression vs start: share of the items the starting checkpoint passes that a run fails, among "
+              "the items the run answered. Starting checkpoint's answers: "
+              + ", ".join(f"{k} `{v}`" for k, v in ANCHOR.items()) + "."]
     lines += ["", "### Paired comparison", "",
               "| Comparison | Paired diffs (primary) | Mean | 95% CI | Category change (dev+unseen, + = more lost) | Verdict |",
               "| --- | --- | --- | --- | --- | --- |"]
@@ -183,6 +190,19 @@ def main() -> None:
                          f"{', '.join(lost) or '-'} |")
         lines.append(f"| {a} vs {b} | pooled | {total_gained} | {total_lost} | exact two-sided p = "
                      f"{exact_p(total_gained, total_lost):.3f} | |")
+    lines += ["", "Noise floor: the same transitions between two seeds of one arm (same recipe, different seed).", "",
+              "| Arm | Seeds | Up | Down | Items up | Items down |", "| --- | --- | --- | --- | --- | --- |"]
+    for arm in spec["arms"]:
+        seeds = spec["seeds"]
+        for s1, s2 in zip(seeds, seeds[1:]):
+            got_1, got_2 = clean_outcomes(root / arm["name"] / str(s1)), clean_outcomes(root / arm["name"] / str(s2))
+            if got_1 is None or got_2 is None:
+                continue
+            both = got_1.keys() & got_2.keys()
+            up = sorted(f"{k[0]}:{k[1]}:{k[2]}" for k in both if got_2[k] and not got_1[k])
+            down = sorted(f"{k[0]}:{k[1]}:{k[2]}" for k in both if got_1[k] and not got_2[k])
+            lines.append(f"| {arm['name']} | {s2} vs {s1} | {len(up)} | {len(down)} | {', '.join(up) or '-'} | "
+                         f"{', '.join(down) or '-'} |")
     lines += ["", "### Unseen-task failure classes (clean), per run", ""]
     for x in rows:
         lines.append(f"- {x['arm']} {x['seed']}: unseen {x['classes']}; dev {x['dev_classes']}")
