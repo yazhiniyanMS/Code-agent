@@ -42,6 +42,7 @@ T95 = {1: 6.314, 2: 2.920, 3: 2.353, 4: 2.132, 5: 2.015, 6: 1.943, 7: 1.895, 8: 
 TRAIN_DEFAULTS = {"steps": 72, "lr": 1.5e-5, "batch": 4, "train_layers": 24, "warmup": 2, "precision": "bf16",
                   "init_optim": True, "seq_len": None, "average": None}
 EVAL_DEFAULTS = {"dev": True, "unseen": True, "bench": True, "limit": None, "diagnose": 32}
+DISK_NEEDED_GB = 8
 SMOKE = {"train": {"steps": 2}, "eval": {"limit": 4, "diagnose": 4}}
 
 
@@ -143,6 +144,10 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
     shutil.copy(data / "hygiene.json", run_dir / "hygiene.json")
     shutil.copy(data / "manifest.json", run_dir / "manifest.json")
 
+    free_gb = shutil.disk_usage(run_dir).free / 1e9
+    if free_gb < DISK_NEEDED_GB:  # a checkpoint is ~7 GB; failing at the first save wastes the whole run
+        raise RuntimeError(f"only {free_gb:.1f} GB free under {run_dir}; training needs {DISK_NEEDED_GB} GB "
+                           "(remove leftover checkpoints, e.g. of an interrupted smoke run)")
     log(f"{arm['name']} seed {seed}: training {train['steps']} steps")
     cmd = [sys.executable, "-m", "ycode.lm.cli", "sft", "--data", str(data), "--init-from", spec["anchor"],
            "--out", str(cur), "--steps", str(train["steps"]), "--warmup", str(train["warmup"]),
