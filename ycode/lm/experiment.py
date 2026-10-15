@@ -41,7 +41,7 @@ T975 = {1: 12.706, 2: 4.303, 3: 3.182, 4: 2.776, 5: 2.571, 6: 2.447, 7: 2.365, 8
 T95 = {1: 6.314, 2: 2.920, 3: 2.353, 4: 2.132, 5: 2.015, 6: 1.943, 7: 1.895, 8: 1.860, 9: 1.833, 10: 1.812}
 TRAIN_DEFAULTS = {"steps": 72, "lr": 1.5e-5, "batch": 4, "train_layers": 24, "warmup": 2, "precision": "bf16",
                   "init_optim": True, "seq_len": None, "average": None}
-EVAL_DEFAULTS = {"dev": True, "unseen": True, "bench": True, "limit": None, "diagnose": 32}
+EVAL_DEFAULTS = {"dev": True, "unseen": True, "unseen2": False, "bench": True, "limit": None, "diagnose": 32}
 DISK_NEEDED_GB = 8
 SMOKE = {"train": {"steps": 2}, "eval": {"limit": 4, "diagnose": 4}}
 
@@ -90,8 +90,11 @@ def scores(answers_path: Path, which: str, *, classify: bool = True) -> dict:
         "hallucinations": result["lost_by_category"].get("hallucination", 0),
         "invalid_outputs": result["lost_by_category"].get("formatting", 0),
         "passed": sorted(f"{i['suite']}:{i['name']}" for i in result["items"] if i["pass"]),
+        # v5 error category of every failed item (for the items-lost category rule)
+        "categories": {f"{i['suite']}:{i['name']}": i.get("category") for i in result["items"] if not i["pass"]},
+        "contaminated": sorted(f"{i['suite']}:{i['name']}" for i in s["items"] if i["contaminated"]),
     }
-    if classify and which in ("dev", "unseen"):
+    if classify and which in ("dev", "unseen", "unseen2"):
         from ycode.lm.failures import classify_answers
 
         failures = classify_answers(answers, which)
@@ -181,7 +184,7 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
     assert_finite_weights(model)
     del model
 
-    for which, problems in (("dev", "dev"), ("unseen", "unseen"), ("bench", "both")):
+    for which, problems in (("dev", "dev"), ("unseen", "unseen"), ("unseen2", "unseen2"), ("bench", "both")):
         if not evaluation.get(which):
             continue
         log(f"{arm['name']} seed {seed}: evaluating {which}")
@@ -203,7 +206,8 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
         if diag.is_file():
             record["diagnose"] = json.loads(diag.read_text())
     record["minutes_total"] = round(sum(record.get(k, {}).get("minutes", 0) for k in
-                                        ("data", "training", "dev_run", "unseen_run", "bench_run", "diagnose_run")), 1)
+                                        ("data", "training", "dev_run", "unseen_run", "unseen2_run", "bench_run",
+                                         "diagnose_run")), 1)
     result_path.write_text(json.dumps(record, indent=1))
     shutil.rmtree(cur, ignore_errors=True)  # 7 GB per checkpoint: kept only while scoring
     shutil.rmtree(data, ignore_errors=True)
@@ -224,11 +228,15 @@ def _mean_sd(values: list[float]) -> tuple[float, float]:
     return mean, sd
 
 
+METRIC_SETS = {"unseen_clean": ("dev", "unseen"),  # v5.1 primary: clean dev (/44) + unseen-v1 (/53)
+               "all_clean": ("dev", "unseen", "unseen2")}  # V6 primary: + unseen-v2 (/71), out of 168
+
+
 def _metric(record: dict, metric: str) -> float | None:
-    if metric == "unseen_clean":  # the primary metric: clean dev + unseen-concept set
-        if not record.get("dev") or not record.get("unseen"):
+    if metric in METRIC_SETS:
+        if not all(record.get(w) for w in METRIC_SETS[metric]):
             return None
-        return record["dev"]["clean"] + record["unseen"]["clean"]
+        return sum(record[w]["clean"] for w in METRIC_SETS[metric])
     which, _, kind = metric.partition("_")
     block = record.get(which)
     if not block:
@@ -236,24 +244,42 @@ def _metric(record: dict, metric: str) -> float | None:
     return block["points"] if not kind else block[kind]
 
 
-def compare(a_runs: dict[int, dict], b_runs: dict[int, dict], metric: str) -> dict:
+ITEMS_LOST_LIMIT = 3  # mean clean items lost per category (items_lost rule); seed-to-seed churn is ~1 item
+
+
+def compare(a_runs: dict[int, dict], b_runs: dict[int, dict], metric: str,
+            category_rule: str = "failure_counts") -> dict:
     """Arm A against arm B, seed by seed, on ``metric`` (e.g. "dev_clean")."""
     seeds = sorted(set(a_runs) & set(b_runs))
     diffs = [_metric(a_runs[s], metric) - _metric(b_runs[s], metric) for s in seeds]
     n = len(diffs)
     mean, sd = _mean_sd(diffs)
-    whiches = ("dev", "unseen") if metric == "unseen_clean" else (metric.split("_")[0],)
-
-    def lost(run: dict, c: str) -> int:
-        return sum(run[w]["lost_by_category"][c] for w in whiches)
-
+    whiches = METRIC_SETS.get(metric, (metric.split("_")[0],))
     cats = a_runs[seeds[0]][whiches[0]]["lost_by_category"] if seeds else {}
-    damage = {c: round(sum(lost(a_runs[s], c) - lost(b_runs[s], c) for s in seeds) / n, 2) for c in cats} if n else {}
+    if category_rule == "items_lost":
+        # per category: clean items the baseline (b) passes and the candidate (a) fails, by the
+        # candidate's failure category; failures that only change type do not count
+        def lost_items(a: dict, b: dict, c: str) -> int:
+            count = 0
+            for w in whiches:
+                dirty = set(a[w].get("contaminated", []))
+                count += sum(1 for k in set(b[w]["passed"]) - set(a[w]["passed"])
+                             if k not in dirty and a[w]["categories"].get(k) == c)
+            return count
+
+        damage = {c: round(sum(lost_items(a_runs[s], b_runs[s], c) for s in seeds) / n, 2) for c in cats} if n else {}
+        limit = ITEMS_LOST_LIMIT
+    else:  # "failure_counts" (v5.1): change in failures per category, which also moves when a failure changes type
+        def lost(run: dict, c: str) -> int:
+            return sum(run[w]["lost_by_category"][c] for w in whiches)
+
+        damage = {c: round(sum(lost(a_runs[s], c) - lost(b_runs[s], c) for s in seeds) / n, 2) for c in cats} if n else {}
+        limit = 2
     if n < 2:
         verdict, margin = "inconclusive (fewer than 2 paired seeds)", None
     else:
         margin = T95.get(n - 1, 1.8) * (sd if sd > 0 else 0.0) / math.sqrt(n)
-        if any(v >= 2 for v in damage.values()) or mean < -margin or (sd == 0 and mean < 0):
+        if any(v >= limit for v in damage.values()) or mean < -margin or (sd == 0 and mean < 0):
             verdict = "rejected"
         elif mean > margin and mean > 0:
             verdict = "retained"
@@ -265,7 +291,7 @@ def compare(a_runs: dict[int, dict], b_runs: dict[int, dict], metric: str) -> di
         ci = [round(mean - half, 2), round(mean + half, 2)]
     return {"seeds": seeds, "diffs": diffs, "mean": None if not n else round(mean, 2),
             "sd": None if n < 2 else round(sd, 2), "margin": None if margin is None else round(margin, 2), "ci95": ci,
-            "category_change": damage, "verdict": verdict}
+            "category_change": damage, "category_rule": category_rule, "verdict": verdict}
 
 
 def summarize(spec: dict, out: Path) -> dict:
@@ -280,12 +306,12 @@ def summarize(spec: dict, out: Path) -> dict:
     for name, by_seed in runs.items():
         rs = list(by_seed.values())
         row = {"seeds": sorted(by_seed)}
-        for m in ("unseen_clean", "dev", "dev_clean", "dev_robust", "unseen", "unseen_robust", "bench", "bench_clean",
-                  "bench_robust"):
+        for m in ("unseen_clean", "all_clean", "dev", "dev_clean", "dev_robust", "unseen", "unseen_robust", "unseen2",
+                  "bench", "bench_clean", "bench_robust"):
             vals = [v for r in rs if (v := _metric(r, m)) is not None]
             mean, sd = _mean_sd(vals)
             row[m] = {"values": vals, "mean": round(mean, 2), "sd": None if math.isnan(sd) else round(sd, 2)}
-        for which in ("dev", "unseen", "bench"):
+        for which in ("dev", "unseen", "unseen2", "bench"):
             cats = [r[which]["lost_by_category"] for r in rs if which in r]
             if cats:
                 row[f"{which}_lost_by_category"] = {c: round(sum(x[c] for x in cats) / len(cats), 2) for c in cats[0]}
@@ -309,7 +335,7 @@ def summarize(spec: dict, out: Path) -> dict:
                                   if all(split in d for d in diags)}
         row["train_tokens"] = [r["training"].get("tokens") for r in rs]
         arms[name] = row
-    comparisons = [{"arm": a, "against": b, **compare(runs[a], runs[b], metric)}
+    comparisons = [{"arm": a, "against": b, **compare(runs[a], runs[b], metric, spec.get("category_rule", "failure_counts"))}
                    for a, b in spec.get("comparisons", []) if a in runs and b in runs]
     return {"name": spec["name"], "metric": metric, "arms": arms, "comparisons": comparisons}
 

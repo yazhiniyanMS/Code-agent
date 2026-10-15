@@ -136,6 +136,96 @@ def _arity(params: str) -> int:
     return 0 if not params else len([p for p in params.split(",") if p.strip()])
 
 
+# Skeleton abstraction: words that name the same kind of operation are mapped to one token, so
+# functions that differ only in such a word (min/max, any/all, upper/lower, isdigit/isalpha) share
+# a skeleton, like functions that differ only in a constant, an operator or a variable name.
+_SKELETON_GROUPS = {
+    **dict.fromkeys(("min", "max"), "MINMAX"), **dict.fromkeys(("any", "all"), "ANYALL"),
+    **dict.fromkeys(("upper", "lower", "capitalize", "title", "swapcase", "casefold"), "CASE"),
+    **dict.fromkeys(("startswith", "endswith"), "ENDS"),
+    **dict.fromkeys(("isdigit", "isalpha", "isupper", "islower", "isspace", "isalnum", "isnumeric",
+                     "isdecimal"), "ISCLASS"),
+    **dict.fromkeys(("strip", "lstrip", "rstrip"), "STRIP"),
+    **dict.fromkeys(("find", "rfind", "index", "rindex"), "FIND"),
+}
+_BUILTIN_NAMES = frozenset(dir(__import__("builtins")))
+
+
+class _Skeleton(ast.NodeTransformer):
+    def visit_Name(self, node):
+        if node.id in _BUILTIN_NAMES:
+            return ast.Name(id=_SKELETON_GROUPS.get(node.id, node.id), ctx=ast.Load())
+        return ast.Name(id="V", ctx=ast.Load())
+
+    def visit_arg(self, node):
+        return ast.arg(arg="V")
+
+    def visit_Attribute(self, node):
+        self.generic_visit(node)
+        return ast.Attribute(value=node.value, attr=_SKELETON_GROUPS.get(node.attr, node.attr), ctx=ast.Load())
+
+    def visit_Constant(self, node):
+        return ast.Constant(value=type(node.value).__name__)
+
+    def visit_UnaryOp(self, node):
+        if isinstance(node.operand, ast.Constant):  # -2 is a constant, not an operation
+            return ast.Constant(value=type(node.operand.value).__name__)
+        self.generic_visit(node)
+        node.op = ast.USub()
+        return node
+
+    def visit_BinOp(self, node):
+        self.generic_visit(node)
+        node.op = ast.Add()
+        return node
+
+    def visit_AugAssign(self, node):
+        self.generic_visit(node)
+        node.op = ast.Add()
+        return node
+
+    def visit_BoolOp(self, node):
+        self.generic_visit(node)
+        node.op = ast.And()
+        return node
+
+    def visit_Compare(self, node):
+        self.generic_visit(node)
+        node.ops = [ast.Eq() for _ in node.ops]
+        return node
+
+
+def skeleton(source: str) -> str | None:
+    """A function's body (docstring dropped) with variable names, constants, operators and the
+    words of an operation group (min/max, any/all, case methods, character-class tests, ...)
+    abstracted away. Two functions with one skeleton differ only in such details: one is a
+    near-twin of the other (``count_increases`` and ``count_decreases``, ``drop_first`` and
+    ``drop_first_two``). None if the source is not a single function."""
+    try:
+        tree = ast.parse(source)
+    except (SyntaxError, ValueError, RecursionError):
+        return None
+    funcs = [n for n in tree.body if isinstance(n, ast.FunctionDef)]
+    if len(funcs) != 1:
+        return None
+    body = funcs[0].body
+    if body and isinstance(body[0], ast.Expr) and isinstance(getattr(body[0], "value", None), ast.Constant) \
+            and isinstance(body[0].value.value, str):
+        body = body[1:]
+    module = _Skeleton().visit(ast.Module(body=[ast.fix_missing_locations(b) for b in body], type_ignores=[]))
+    return ast.dump(module, annotate_fields=False)
+
+
+def held_out_skeletons(items: list[HeldOutItem] | None = None) -> dict[str, list[str]]:
+    """Skeleton -> the held-out items (split:name) whose reference solution has it."""
+    out: dict[str, list[str]] = {}
+    for item in held_out_items() if items is None else items:
+        sk = skeleton(item.reference)
+        if sk is not None:
+            out.setdefault(sk, []).append(f"{item.split}:{item.name}")
+    return out
+
+
 def held_out_items(include_unseen: bool = True) -> list[HeldOutItem]:
     """Every benchmark write problem (standard 30, fresh 20; the 15 benchmark bug fixes reuse the
     standard functions), every dev item and every unseen-concept item (ycode.lm.unseen), with its
@@ -155,7 +245,10 @@ def held_out_items(include_unseen: bool = True) -> list[HeldOutItem]:
     if include_unseen:
         from ycode.lm.unseen import unseen_problems, unseen_references
 
+        from ycode.lm.unseen2 import unseen2_problems, unseen2_references
+
         sets.append(("unseen", unseen_problems(), unseen_references()))
+        sets.append(("unseen2", unseen2_problems(), unseen2_references()))
     items = []
     for split, problems, sources in sets:
         for p in problems:

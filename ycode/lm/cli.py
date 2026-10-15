@@ -175,7 +175,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--heldout", action="append", type=Path, default=[],
                    help="Code the models never trained on, for bits-per-byte (repeatable).")
     p.add_argument("--samples", type=int, default=1, help="Samples per problem for pass@k (default 1 = greedy).")
-    p.add_argument("--problems", default="standard", choices=("standard", "fresh", "both", "dev", "unseen"),
+    p.add_argument("--problems", default="standard", choices=("standard", "fresh", "both", "dev", "unseen", "unseen2"),
                    help="Coding problems: the standard 30, 20 fresh ones, both, or the held-out dev set "
                         "used to pick fine-tuning checkpoints (its own bug fixes too).")
     p.add_argument("--answers-out", type=Path, help="Write every answer (prompt, answer, code, pass) as JSONL.")
@@ -187,7 +187,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = sub.add_parser("analyze", help="Why answers failed: categories, expected vs actual, points lost.")
     p.add_argument("answers", type=Path, help="JSONL from `eval --answers-out`.")
-    p.add_argument("--set", default="bench", choices=("bench", "dev", "unseen"),
+    p.add_argument("--set", default="bench", choices=("bench", "dev", "unseen", "unseen2"),
                    help="Which test set the answers are from.")
     p.add_argument("--compare", type=Path, help="An earlier answers file on the same prompts: show what changed.")
     p.add_argument("--json", type=Path, help="Write the full analysis (every failed item) as JSON.")
@@ -535,6 +535,10 @@ def _eval(args) -> int:  # noqa: ANN001
                 from ycode.lm.unseen import unseen_problems
 
                 problems, bug_items = unseen_problems(), []
+            elif args.problems == "unseen2":  # unseen-concept set v2 (ycode.lm.unseen2)
+                from ycode.lm.unseen2 import unseen2_problems
+
+                problems, bug_items = unseen2_problems(), []
             else:
                 problems = {"standard": PROBLEMS, "fresh": fresh_problems(),
                             "both": PROBLEMS + fresh_problems()}[args.problems]

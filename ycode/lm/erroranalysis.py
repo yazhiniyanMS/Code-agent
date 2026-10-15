@@ -206,8 +206,12 @@ def _test_sets(which: str) -> dict[tuple[str, str], tuple[str, str | None, str |
     from ycode.lm.references import FRESH_REFERENCE, REFERENCE
 
     out: dict = {}
-    if which == "unseen":
-        from ycode.lm.unseen import unseen_problems, unseen_references
+    if which in ("unseen", "unseen2"):
+        if which == "unseen":
+            from ycode.lm.unseen import unseen_problems, unseen_references
+        else:
+            from ycode.lm.unseen2 import unseen2_problems as unseen_problems
+            from ycode.lm.unseen2 import unseen2_references as unseen_references
 
         refs = unseen_references()
         for p in unseen_problems():
@@ -232,8 +236,8 @@ def _test_sets(which: str) -> dict[tuple[str, str], tuple[str, str | None, str |
 
 
 def _group(which: str, suite: str, name: str) -> str:
-    if which == "unseen":
-        return "unseen"
+    if which in ("unseen", "unseen2"):
+        return which
     if which == "dev":
         from ycode.lm.devset import DEV_CONCEPT_NAMES
 

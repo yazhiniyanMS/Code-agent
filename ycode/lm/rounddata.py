@@ -25,6 +25,8 @@ DEFAULTS = {
     "dedup": False,           # drop exact (prompt, answer) duplicates
     "contradictions": False,  # drop answers that compute something else than another answer to the same task
     "spec_first": False,      # written functions restate the task in a docstring before the code (basics.SPEC_FIRST)
+    "idioms_write": 0,        # write examples per idiom-curriculum program (ycode.lm.idioms); 0 = none
+    "idioms_bugfix": 0,       # bug-fix examples per idiom-curriculum program
 }
 
 
@@ -43,9 +45,18 @@ def round_examples(seed: int, options: dict):
                 + compose.compose_examples(seed, per_exercise=o["compose_write"])
                 + compose.compose_bugfix_examples(seed, per_exercise=o["compose_bugfix"])
                 + compose.contrast_examples(seed, per_exercise=o["contrast"])
-                + compose.novel_examples(seed, per_exercise=o["novel_write"]))
+                + compose.novel_examples(seed, per_exercise=o["novel_write"])
+                + _idiom_examples(seed, o))
     finally:
         compose.INCLUDE_SKILLS, compose.NOVEL_DRAWS, compose.NOVEL_ORDINALS, basics.SPEC_FIRST = saved
+
+
+def _idiom_examples(seed: int, o: dict):
+    if not (o["idioms_write"] or o["idioms_bugfix"]):
+        return []
+    from ycode.lm.idioms import idiom_examples
+
+    return idiom_examples(seed, write_per_program=o["idioms_write"], bugfix_per_program=o["idioms_bugfix"])
 
 
 def replay_held_out_filter():

@@ -30,7 +30,7 @@ EVAL_VERSION = "eval-v5.1-1"
 
 @dataclass(frozen=True)
 class EvalItem:
-    split: str        # bench | dev | unseen
+    split: str        # bench | dev | unseen | unseen2
     suite: str        # write | bugfix
     name: str
     prompt: str
@@ -63,6 +63,10 @@ def eval_items(split: str) -> list[EvalItem]:
         from ycode.lm.unseen import unseen_problems
 
         return [item("write", p.name, p.prompt, p.tests) for p in unseen_problems()]
+    if split == "unseen2":  # independently written (V6); its own tests have >= 4 asserts, no robust extra
+        from ycode.lm.unseen2 import unseen2_problems
+
+        return [item("write", p.name, p.prompt, p.tests) for p in unseen2_problems()]
     raise ValueError(f"unknown evaluation set {split!r}")
 
 
@@ -74,9 +78,11 @@ def fingerprint(items: list[EvalItem]) -> str:
 def manifest() -> dict:
     from ycode.lm.robust_tests_v1 import ROBUST_VERSION
     from ycode.lm.unseen import UNSEEN_VERSION
+    from ycode.lm.unseen2 import UNSEEN2_VERSION
 
-    out = {"eval_version": EVAL_VERSION, "robust_version": ROBUST_VERSION, "unseen_version": UNSEEN_VERSION}
-    for split in ("bench", "dev", "unseen"):
+    out = {"eval_version": EVAL_VERSION, "robust_version": ROBUST_VERSION, "unseen_version": UNSEEN_VERSION,
+           "unseen2_version": UNSEEN2_VERSION}
+    for split in ("bench", "dev", "unseen", "unseen2"):
         items = eval_items(split)
         out[split] = {"items": len(items), "clean_items": sum(not i.contaminated for i in items),
                       "fingerprint": fingerprint(items),
