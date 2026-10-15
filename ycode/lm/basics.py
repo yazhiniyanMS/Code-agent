@@ -637,6 +637,13 @@ def _with_doc(c: Concept, name: str, body: str) -> str:
     return f'def {name}({c.params}):\n    """{doc}"""\n{body}'
 
 
+# Spec-first answers (a v5.1 experiment arm, off by default): every written function starts with a
+# docstring that restates the task from the prompt, then the code. Failures on unseen tasks are
+# mostly a neighbouring trained body with the one differing word ignored (fifth_item's body for
+# fourth_item); restating the task puts that word right above the code the model writes next.
+SPEC_FIRST = False
+
+
 def write_examples(rng: random.Random, per_concept: int = 6) -> list[InstructionExample]:
     out = []
     for c in training_concepts():
@@ -645,7 +652,8 @@ def write_examples(rng: random.Random, per_concept: int = 6) -> list[Instruction
             template = rng.choice(_WRITE_TEMPLATES)
             prompt = template.format(sig=f"{name}({c.params})", task=c.task, name=name,
                                      params=c.params.replace(", ", " and ") or "no arguments")
-            out.append(neutralize(InstructionExample(prompt, f"```python\n{c.source(name)}\n```"), name, rng))
+            code = _with_doc(c, name, c.body) if SPEC_FIRST else c.source(name)
+            out.append(neutralize(InstructionExample(prompt, f"```python\n{code}\n```"), name, rng))
     rng.shuffle(out)
     return out
 

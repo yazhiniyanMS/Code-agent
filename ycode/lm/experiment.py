@@ -37,10 +37,11 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]  # subprocesses run this checkout's ycode, wherever we start
 # One-sided 95% critical values of Student's t for n - 1 degrees of freedom.
+T975 = {1: 12.706, 2: 4.303, 3: 3.182, 4: 2.776, 5: 2.571, 6: 2.447, 7: 2.365, 8: 2.306, 9: 2.262, 10: 2.228}
 T95 = {1: 6.314, 2: 2.920, 3: 2.353, 4: 2.132, 5: 2.015, 6: 1.943, 7: 1.895, 8: 1.860, 9: 1.833, 10: 1.812}
 TRAIN_DEFAULTS = {"steps": 72, "lr": 1.5e-5, "batch": 4, "train_layers": 24, "warmup": 2, "precision": "bf16",
                   "init_optim": True, "seq_len": None, "average": None}
-EVAL_DEFAULTS = {"dev": True, "bench": True, "limit": None, "diagnose": 64}
+EVAL_DEFAULTS = {"dev": True, "unseen": True, "bench": True, "limit": None, "diagnose": 32}
 SMOKE = {"train": {"steps": 2}, "eval": {"limit": 4, "diagnose": 4}}
 
 
@@ -70,35 +71,34 @@ def run_measured(cmd: list[str], log_path: Path, cwd: Path | None = None) -> dic
     return {"exit": code, "minutes": round((time.time() - t0) / 60, 2), "peak_rss_mb": peak[0]}
 
 
-def scores(answers_path: Path, which: str) -> dict:
-    """Official, clean and robust scores plus the error analysis of one answers file."""
+def scores(answers_path: Path, which: str, *, classify: bool = True) -> dict:
+    """Official, clean and robust scores (ycode.lm.evalsets, explicit denominators), the v5 error
+    categories, and the v5.1 failure classes (ycode.lm.failures) of one answers file."""
     from ycode.lm.erroranalysis import analyze, load_answers
-    from ycode.lm.leakage import CONTAMINATED_ITEMS, agreement, held_out_items, probe_inputs
+    from ycode.lm.evalsets import score
 
     answers = load_answers(answers_path)
     result = analyze(answers, which)
-    items = {i.name: i for i in held_out_items() if i.split == which}
-    contaminated = {n for s, n in CONTAMINATED_ITEMS if s == which}
-    passed = [i for i in result["items"] if i["pass"]]
-    by_key = {(a["suite"], a["name"]): a for a in answers}
-    weak = []
-    for i in passed:
-        item = items.get(i["name"])
-        code = by_key.get((i["suite"], i["name"]), {}).get("code", "")
-        name = code.split("def ", 1)[1].split("(", 1)[0].strip() if "def " in code else i["name"]
-        if item is not None and agreement(code, name, item, probe_inputs(item), isolate=True) < 1.0:
-            weak.append(f"{i['suite']}:{i['name']}")
-    n_contaminated = sum(1 for i in result["items"] if i["name"] in contaminated)
-    return {
-        "points": result["points"], "of": result["of"],
-        "clean": sum(1 for i in passed if i["name"] not in contaminated), "clean_of": result["of"] - n_contaminated,
-        "robust": result["points"] - len(weak), "weak_passes": weak,
+    s = score(answers, which)
+    out = {
+        "points": s["official"], "of": s["official_of"], "clean": s["clean"], "clean_of": s["clean_of"],
+        "robust": s["robust"], "robust_of": s["robust_of"], "robust_clean": s["robust_clean"],
+        "weak_passes": s["weak_passes"], "fingerprint": s["fingerprint"], "eval_version": s["eval_version"],
         "groups": {g: v["passed"] for g, v in result["groups"].items()},
         "lost_by_category": result["lost_by_category"],
         "hallucinations": result["lost_by_category"].get("hallucination", 0),
         "invalid_outputs": result["lost_by_category"].get("formatting", 0),
-        "passed": sorted(f"{i['suite']}:{i['name']}" for i in passed),
+        "passed": sorted(f"{i['suite']}:{i['name']}" for i in result["items"] if i["pass"]),
     }
+    if classify and which in ("dev", "unseen"):
+        from ycode.lm.failures import classify_answers
+
+        failures = classify_answers(answers, which)
+        out["failure_classes"] = dict(failures["ranked"])
+        out["failure_classes_clean"] = dict(failures["ranked_clean"])
+        out["failures"] = [{k: f[k] for k in ("suite", "name", "contaminated", "class", "evidence")}
+                           for f in failures["items"]]
+    return out
 
 
 def _metrics_tail(path: Path, n: int = 10) -> dict:
@@ -164,7 +164,8 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
             raise RuntimeError(f"averaging failed: {avg.stderr[-300:]}")
     record["training"].update(_metrics_tail(cur / "metrics.jsonl"))
     summary = json.loads((cur / "train_log.json").read_text())["summary"]
-    record["training"].update({k: summary.get(k) for k in ("empty_batches", "checkpoint_sha256", "init_sha256")})
+    record["training"].update({k: summary.get(k) for k in ("empty_batches", "checkpoint_sha256", "init_sha256",
+                                                            "tokens", "answer_tokens")})
     shutil.copy(cur / "metrics.jsonl", run_dir / "metrics.jsonl")
     shutil.copy(cur / "train_log.json", run_dir / "train_log.json")
     if not train["average"]:
@@ -175,8 +176,8 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
     assert_finite_weights(model)
     del model
 
-    for which, problems in (("dev", "dev"), ("bench", "both")):
-        if not evaluation[which]:
+    for which, problems in (("dev", "dev"), ("unseen", "unseen"), ("bench", "both")):
+        if not evaluation.get(which):
             continue
         log(f"{arm['name']} seed {seed}: evaluating {which}")
         answers = run_dir / f"{which}.jsonl"
@@ -191,12 +192,13 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
         log(f"{arm['name']} seed {seed}: answer loss on train / held-out / unseen")
         diag = run_dir / "diagnose.json"
         record["diagnose_run"] = run_measured([sys.executable, "-m", "ycode.lm.diagnose", str(cur), str(data),
-                                               "--n", str(evaluation["diagnose"]), "--trained-on", "--json", str(diag)],
+                                               "--n", str(evaluation["diagnose"]), "--trained-on", "--no-all-dev",
+                                               "--json", str(diag)],
                                               run_dir / "diagnose.log")
         if diag.is_file():
             record["diagnose"] = json.loads(diag.read_text())
     record["minutes_total"] = round(sum(record.get(k, {}).get("minutes", 0) for k in
-                                        ("data", "training", "dev_run", "bench_run", "diagnose_run")), 1)
+                                        ("data", "training", "dev_run", "unseen_run", "bench_run", "diagnose_run")), 1)
     result_path.write_text(json.dumps(record, indent=1))
     shutil.rmtree(cur, ignore_errors=True)  # 7 GB per checkpoint: kept only while scoring
     shutil.rmtree(data, ignore_errors=True)
@@ -218,6 +220,10 @@ def _mean_sd(values: list[float]) -> tuple[float, float]:
 
 
 def _metric(record: dict, metric: str) -> float | None:
+    if metric == "unseen_clean":  # the primary metric: clean dev + unseen-concept set
+        if not record.get("dev") or not record.get("unseen"):
+            return None
+        return record["dev"]["clean"] + record["unseen"]["clean"]
     which, _, kind = metric.partition("_")
     block = record.get(which)
     if not block:
@@ -231,10 +237,13 @@ def compare(a_runs: dict[int, dict], b_runs: dict[int, dict], metric: str) -> di
     diffs = [_metric(a_runs[s], metric) - _metric(b_runs[s], metric) for s in seeds]
     n = len(diffs)
     mean, sd = _mean_sd(diffs)
-    which = metric.split("_")[0]
-    cats = a_runs[seeds[0]][which]["lost_by_category"] if seeds else {}
-    damage = {c: round(sum(a_runs[s][which]["lost_by_category"][c] - b_runs[s][which]["lost_by_category"][c]
-                           for s in seeds) / n, 2) for c in cats} if n else {}
+    whiches = ("dev", "unseen") if metric == "unseen_clean" else (metric.split("_")[0],)
+
+    def lost(run: dict, c: str) -> int:
+        return sum(run[w]["lost_by_category"][c] for w in whiches)
+
+    cats = a_runs[seeds[0]][whiches[0]]["lost_by_category"] if seeds else {}
+    damage = {c: round(sum(lost(a_runs[s], c) - lost(b_runs[s], c) for s in seeds) / n, 2) for c in cats} if n else {}
     if n < 2:
         verdict, margin = "inconclusive (fewer than 2 paired seeds)", None
     else:
@@ -245,8 +254,12 @@ def compare(a_runs: dict[int, dict], b_runs: dict[int, dict], metric: str) -> di
             verdict = "retained"
         else:
             verdict = "inconclusive"
+    ci = None
+    if n >= 2:
+        half = T975.get(n - 1, 2.0) * sd / math.sqrt(n)
+        ci = [round(mean - half, 2), round(mean + half, 2)]
     return {"seeds": seeds, "diffs": diffs, "mean": None if not n else round(mean, 2),
-            "sd": None if n < 2 else round(sd, 2), "margin": None if margin is None else round(margin, 2),
+            "sd": None if n < 2 else round(sd, 2), "margin": None if margin is None else round(margin, 2), "ci95": ci,
             "category_change": damage, "verdict": verdict}
 
 
@@ -262,16 +275,22 @@ def summarize(spec: dict, out: Path) -> dict:
     for name, by_seed in runs.items():
         rs = list(by_seed.values())
         row = {"seeds": sorted(by_seed)}
-        for m in ("dev", "dev_clean", "dev_robust", "bench", "bench_clean", "bench_robust"):
+        for m in ("unseen_clean", "dev", "dev_clean", "dev_robust", "unseen", "unseen_robust", "bench", "bench_clean",
+                  "bench_robust"):
             vals = [v for r in rs if (v := _metric(r, m)) is not None]
             mean, sd = _mean_sd(vals)
             row[m] = {"values": vals, "mean": round(mean, 2), "sd": None if math.isnan(sd) else round(sd, 2)}
-        for which in ("dev", "bench"):
+        for which in ("dev", "unseen", "bench"):
             cats = [r[which]["lost_by_category"] for r in rs if which in r]
             if cats:
                 row[f"{which}_lost_by_category"] = {c: round(sum(x[c] for x in cats) / len(cats), 2) for c in cats[0]}
                 row[f"{which}_hallucinations"] = [r[which]["hallucinations"] for r in rs if which in r]
                 row[f"{which}_invalid_outputs"] = [r[which]["invalid_outputs"] for r in rs if which in r]
+                classes = [r[which].get("failure_classes_clean") for r in rs if r.get(which, {}).get("failure_classes_clean") is not None]
+                if classes:
+                    keys = sorted({k for c in classes for k in c})
+                    row[f"{which}_failure_classes_clean"] = {k: round(sum(c.get(k, 0) for c in classes) / len(classes), 2)
+                                                             for k in keys}
         row["train_minutes"] = _mean_sd([r["training"]["minutes"] for r in rs])[0]
         row["total_minutes"] = _mean_sd([r["minutes_total"] for r in rs])[0]
         row["train_peak_rss_mb"] = max(r["training"]["peak_rss_mb"] for r in rs)
@@ -281,7 +300,9 @@ def summarize(spec: dict, out: Path) -> dict:
         diags = [r["diagnose"] for r in rs if "diagnose" in r]
         if diags:
             row["answer_loss"] = {split: round(sum(d[split]["token_loss"] for d in diags) / len(diags), 4)
-                                  for split in ("train", "heldout_rows", "unseen_tasks")}
+                                  for split in ("train", "heldout_rows", "unseen_tasks", "unseen_dev_clean", "unseen_new")
+                                  if all(split in d for d in diags)}
+        row["train_tokens"] = [r["training"].get("tokens") for r in rs]
         arms[name] = row
     comparisons = [{"arm": a, "against": b, **compare(runs[a], runs[b], metric)}
                    for a, b in spec.get("comparisons", []) if a in runs and b in runs]
@@ -289,23 +310,38 @@ def summarize(spec: dict, out: Path) -> dict:
 
 
 def render(summary: dict) -> str:
-    lines = [f"# Experiment {summary['name']}", "", f"Decision metric: `{summary['metric']}` "
-             "(dev score without items the starting checkpoint saw in equivalent form).", "",
-             "| Arm | Seeds | Dev | Dev clean | Dev robust | Bench | Bench clean | Bench robust | Halluc. (dev) | "
-             "Train min | Peak RSS MB |", "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
+    primary = summary["metric"]
+    lines = [f"# Experiment {summary['name']}", "",
+             f"Decision metric: `{primary}`" + (" = clean dev (/44) + unseen-concept set (/53), out of 97: concepts the "
+                                                "starting checkpoint never saw, in any form." if primary == "unseen_clean" else "."),
+             "Benchmark scores are reported only. Mean ± standard deviation over seeds.", "",
+             "| Arm | Seeds | Primary | Dev clean /44 | Unseen /53 | Unseen robust | Dev official /62 | Bench official /65 | "
+             "Bench clean /61 | Bench robust /65 | Halluc. dev+unseen | Invalid dev+unseen | Train min | Peak RSS MB |",
+             "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
 
     def ms(cell):
+        if cell is None or not cell["values"]:
+            return "-"
         return f"{cell['mean']:.1f} ± {cell['sd']:.1f}" if cell["sd"] is not None else f"{cell['mean']:.1f}"
 
     for name, r in summary["arms"].items():
-        lines.append(f"| {name} | {len(r['seeds'])} | {ms(r['dev'])} | {ms(r['dev_clean'])} | {ms(r['dev_robust'])} | "
-                     f"{ms(r['bench'])} | {ms(r['bench_clean'])} | {ms(r['bench_robust'])} | "
-                     f"{r.get('dev_hallucinations')} | {r['train_minutes']:.0f} | {r['train_peak_rss_mb']} |")
-    lines += ["", "| Comparison | Paired diffs | Mean | 95% margin | Category change (dev, + = more points lost) | Verdict |",
-              "| --- | --- | --- | --- | --- | --- |"]
+        hall = [a + b for a, b in zip(r.get("dev_hallucinations", []), r.get("unseen_hallucinations", []))]
+        inval = [a + b for a, b in zip(r.get("dev_invalid_outputs", []), r.get("unseen_invalid_outputs", []))]
+        lines.append(f"| {name} | {len(r['seeds'])} | {ms(r.get(primary))} | {ms(r.get('dev_clean'))} | {ms(r.get('unseen'))} | "
+                     f"{ms(r.get('unseen_robust'))} | {ms(r.get('dev'))} | {ms(r.get('bench'))} | {ms(r.get('bench_clean'))} | "
+                     f"{ms(r.get('bench_robust'))} | {hall} | {inval} | {r['train_minutes']:.0f} | {r['train_peak_rss_mb']} |")
+    lines += ["", "| Arm | Answer loss: train / held-out (validation) / unseen dev clean / unseen new | "
+              "Unseen-task failure classes (clean, mean per seed) |", "| --- | --- | --- |"]
+    for name, r in summary["arms"].items():
+        al = r.get("answer_loss", {})
+        losses = " / ".join(str(al.get(k, "-")) for k in ("train", "heldout_rows", "unseen_dev_clean", "unseen_new"))
+        classes = {k: v for k, v in (r.get("unseen_failure_classes_clean") or {}).items()}
+        lines.append(f"| {name} | {losses} | {classes or '-'} |")
+    lines += ["", "| Comparison | Paired diffs | Mean | 95% CI | One-sided 95% margin | Category change "
+              "(+ = more points lost) | Verdict |", "| --- | --- | --- | --- | --- | --- | --- |"]
     for c in summary["comparisons"]:
         changed = {k: v for k, v in c["category_change"].items() if v}
-        lines.append(f"| {c['arm']} vs {c['against']} | {c['diffs']} | {c['mean']} | {c['margin']} | "
+        lines.append(f"| {c['arm']} vs {c['against']} | {c['diffs']} | {c['mean']} | {c.get('ci95')} | {c['margin']} | "
                      f"{changed or 'none'} | **{c['verdict']}** |")
     return "\n".join(lines) + "\n"
 

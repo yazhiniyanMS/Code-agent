@@ -596,6 +596,7 @@ def _unfiltered(key: tuple) -> bool:
 
 def compose_examples(seed: int = 7, per_exercise: int = 1):
     """Write-a-function examples (prompt, code-only answer) with verified, auto-generated tests."""
+    import ycode.lm.basics as basics
     from ycode.lm.basics import neutralize
     from ycode.lm.data import InstructionExample
 
@@ -607,7 +608,8 @@ def compose_examples(seed: int = 7, per_exercise: int = 1):
         for _ in range(per_exercise * (UNFILTERED_BOOST if _unfiltered(ex.key) else 1)):
             prompt = rng.choice(_PROMPTS).format(sig=f"{ex.name}({ex.params})", task=ex.task)
             shown = _maybe_loop(ex, rng)
-            out.append(neutralize(InstructionExample(prompt, f"```python\n{shown.source()}\n```"), ex.name, rng))
+            code = _documented(shown) if basics.SPEC_FIRST else shown.source()
+            out.append(neutralize(InstructionExample(prompt, f"```python\n{code}\n```"), ex.name, rng))
     rng.shuffle(out)
     return out
 
@@ -720,6 +722,7 @@ def novel_exercises(seed: int) -> list[Exercise]:
 
 def novel_examples(seed: int = 7, per_exercise: int = 1):
     """Write and fix-the-bug examples from novel_exercises(seed): new constants every round."""
+    import ycode.lm.basics as basics
     from ycode.lm.basics import BUGFIX_PROMPT, _parses, _passes, _text_bugs, held_out_names, neutralize
     from ycode.lm.data import InstructionExample, inject_bug
     from ycode.lm.devset import DEV_KEYS
@@ -735,7 +738,8 @@ def novel_examples(seed: int = 7, per_exercise: int = 1):
             continue
         for _ in range(per_exercise):
             prompt = rng.choice(_PROMPTS).format(sig=f"{ex.name}({ex.params})", task=ex.task)
-            out.append(neutralize(InstructionExample(prompt, f"```python\n{ex.source()}\n```"), ex.name, rng))
+            code = _documented(ex) if basics.SPEC_FIRST else ex.source()
+            out.append(neutralize(InstructionExample(prompt, f"```python\n{code}\n```"), ex.name, rng))
         fixed = _documented(ex)
         candidates = _text_bugs(fixed) + [b for b in (inject_bug(fixed, rng) for _ in range(3)) if b]
         rng.shuffle(candidates)

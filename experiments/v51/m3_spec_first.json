@@ -1,0 +1,18 @@
+{
+  "name": "v51-m3-spec-first",
+  "note": "Control vs one targeted data intervention. Phase 2 found that most unseen-task failures are task interpretation errors: the code of a neighbouring trained function with the one word that differs ignored (fourth_item -> items[4], first_three_chars -> s[:2], longest_word -> min). Treatment B changes only the answer format of the existing verified write examples: each written function starts with a docstring restating the task from the prompt, then the same code (basics.SPEC_FIRST). Same checkpoint (round 54), token budget (72 steps x 4 x 1024 packed tokens), optimizer (Lion, lr 1.5e-5, WSD schedule), layers (top 24), evaluation and matched seeds. Skill functions off in both arms. Decision metric: unseen_clean = clean dev (/44) + unseen-concept set (/53).",
+  "anchor": "/home/user/lmwork/loop/anchor",
+  "tokenizer": "/home/user/lmwork/data/tokenizer.json",
+  "replay_dir": "/home/user/lmwork/data",
+  "average_script": "/home/user/lmwork/average.py",
+  "out": "/home/user/lmwork/v51m3",
+  "seeds": [1301, 1302, 1303],
+  "metric": "unseen_clean",
+  "train": {"steps": 72, "lr": 1.5e-5, "batch": 4, "train_layers": 24, "warmup": 2, "precision": "bf16", "init_optim": true},
+  "eval": {"dev": true, "unseen": true, "bench": true, "diagnose": 32},
+  "arms": [
+    {"name": "A", "data": {}, "note": "control: the current clean pipeline (leak-free, skills off, 200 replay rows), bare-code answers"},
+    {"name": "B", "data": {"spec_first": true}, "note": "treatment: written functions restate the task in a docstring before the code"}
+  ],
+  "comparisons": [["B", "A"]]
+}

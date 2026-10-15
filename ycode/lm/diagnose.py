@@ -91,7 +91,7 @@ def _row_kind(tok, ids: list[int]) -> str:
 
 
 def split_losses(model_dir, data_dir, *, n: int = 64, seed: int = 0, device: str = "cpu",
-                 val_fraction: float = 0.05, trained_on: bool = False) -> dict:
+                 val_fraction: float = 0.05, trained_on: bool = False, all_dev: bool = True) -> dict:
     import numpy as np
 
     from ycode.lm.generate import LocalLM
@@ -110,8 +110,10 @@ def split_losses(model_dir, data_dir, *, n: int = 64, seed: int = 0, device: str
         return [(tokens[s:s + length].tolist()[:block], mask[s:s + length].tolist()[:block]) for s, length in chosen]
 
     sets = {"train": rows(index[n_val:]), "heldout_rows": rows(index[:n_val])}
-    for name, split, clean in (("unseen_tasks", "dev", False), ("unseen_dev_clean", "dev", True),
-                               ("unseen_new", "unseen", False)):
+    unseen_sets = [("unseen_dev_clean", "dev", True), ("unseen_new", "unseen", False)]
+    if all_dev:  # every dev item, contaminated ones included (comparable with v5 reports)
+        unseen_sets.insert(0, ("unseen_tasks", "dev", False))
+    for name, split, clean in unseen_sets:
         sets[name] = [(ids[:block], w[:block]) for ids, w in unseen_task_rows(lm.tokenizer, split, clean=clean)]
     out = {"model": str(model_dir), "data": str(data_dir), "seed": seed, "trained_on": trained_on,
            "note": None if trained_on else "the checkpoint was not trained on this data: 'train' rows are unseen rows too"}
@@ -119,7 +121,7 @@ def split_losses(model_dir, data_dir, *, n: int = 64, seed: int = 0, device: str
         pairs = [_example_loss(lm.model, ids, w, lm.device, lm.precision()) for ids, w in examples]
         out[name] = _summary(pairs, [_row_kind(lm.tokenizer, ids) for ids, _ in examples], seed=seed)
     out["gap_train_to_heldout"] = round(out["heldout_rows"]["token_loss"] - out["train"]["token_loss"], 4)
-    out["gap_heldout_to_unseen"] = round(out["unseen_tasks"]["token_loss"] - out["heldout_rows"]["token_loss"], 4)
+    out["gap_heldout_to_unseen"] = round(out["unseen_dev_clean"]["token_loss"] - out["heldout_rows"]["token_loss"], 4)
     return out
 
 
@@ -131,9 +133,11 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--device", default="cpu")
     ap.add_argument("--trained-on", action="store_true", help="the checkpoint was trained on DATA's train split")
+    ap.add_argument("--no-all-dev", action="store_true", help="skip the all-dev split (clean dev and unseen only)")
     ap.add_argument("--json", type=Path)
     args = ap.parse_args(argv)
-    result = split_losses(args.model, args.data, n=args.n, seed=args.seed, device=args.device, trained_on=args.trained_on)
+    result = split_losses(args.model, args.data, n=args.n, seed=args.seed, device=args.device, trained_on=args.trained_on,
+                          all_dev=not args.no_all_dev)
     text = json.dumps(result, indent=1)
     if args.json:
         args.json.write_text(text)

@@ -24,17 +24,20 @@ DEFAULTS = {
     "replay": 200,            # rows replayed from the original instruction data
     "dedup": False,           # drop exact (prompt, answer) duplicates
     "contradictions": False,  # drop answers that compute something else than another answer to the same task
+    "spec_first": False,      # written functions restate the task in a docstring before the code (basics.SPEC_FIRST)
 }
 
 
 def round_examples(seed: int, options: dict):
     """The generated examples of one round (no replay), built exactly like the production mix."""
+    import ycode.lm.basics as basics
     import ycode.lm.compose as compose
     from ycode.lm.basics import basics_examples
 
     o = {**DEFAULTS, **options}
-    saved = compose.INCLUDE_SKILLS, compose.NOVEL_DRAWS, compose.NOVEL_ORDINALS
+    saved = compose.INCLUDE_SKILLS, compose.NOVEL_DRAWS, compose.NOVEL_ORDINALS, basics.SPEC_FIRST
     compose.INCLUDE_SKILLS, compose.NOVEL_DRAWS, compose.NOVEL_ORDINALS = o["skills"], o["novel_draws"], o["novel_ordinals"]
+    basics.SPEC_FIRST = o["spec_first"]
     try:
         return (basics_examples(seed, write_per_concept=o["basics_write"], bugfix_per_concept=o["basics_bugfix"])
                 + compose.compose_examples(seed, per_exercise=o["compose_write"])
@@ -42,7 +45,7 @@ def round_examples(seed: int, options: dict):
                 + compose.contrast_examples(seed, per_exercise=o["contrast"])
                 + compose.novel_examples(seed, per_exercise=o["novel_write"]))
     finally:
-        compose.INCLUDE_SKILLS, compose.NOVEL_DRAWS, compose.NOVEL_ORDINALS = saved
+        compose.INCLUDE_SKILLS, compose.NOVEL_DRAWS, compose.NOVEL_ORDINALS, basics.SPEC_FIRST = saved
 
 
 def replay_held_out_filter():

@@ -524,3 +524,36 @@ def test_diagnose_labels_whether_rows_were_trained_on(data_dir, base_model, tmp_
     assert out["train"]["token_loss_ci95"][0] <= out["train"]["token_loss"] <= out["train"]["token_loss_ci95"][1]
     assert out["train"]["by_kind"] and out["unseen_new"]["examples"] >= 40
     assert out["unseen_dev_clean"]["examples"] < out["unseen_tasks"]["examples"]
+
+
+def test_spec_first_answers_restate_the_task_and_keep_the_code(monkeypatch):
+    """The treatment changes only the answer format of written functions: a docstring restating the
+    prompt's task, then the same, still-correct code. Bug fixes and the default data are untouched."""
+    import re
+
+    import ycode.lm.basics as basics
+    from ycode.lm.basics import _passes, _rename_tests, training_concepts
+    from ycode.lm.rounddata import round_examples
+
+    plain = round_examples(11, {})
+    spec = round_examples(11, {"spec_first": True})
+    assert basics.SPEC_FIRST is False  # restored after the build
+    assert len(plain) == len(spec)
+    tests = {c.name: c.tests for c in training_concepts()}
+    checked = 0
+    for a, b in zip(plain, spec):
+        assert a.prompt == b.prompt
+        if a.prompt.startswith("This function has a bug"):
+            assert a.response == b.response
+            continue
+        doc = re.search(r'"""(.+?)"""', b.response)
+        assert '"""' not in a.response and doc, b.response
+        # the docstring is the prompt's task, as an imperative sentence
+        task = doc.group(1).rstrip(".").lower()
+        assert task.split(" ", 1)[1] in a.prompt.lower(), (task, a.prompt)
+        assert re.sub(r'\n\s*""".*?"""', "", b.response) == a.response  # same code
+        name = re.search(r"def (\w+)\(", b.response).group(1)
+        if name in tests:
+            assert _passes(b.response.strip("`").removeprefix("python\n"), _rename_tests(tests[name], name))
+            checked += 1
+    assert checked > 50
