@@ -118,3 +118,45 @@ def test_items_lost_rule_ignores_failures_that_only_change_type():
     lost = {s: run([], {"write:a": "coding", "write:b": "reasoning", "write:c": "reasoning", "write:d": "reasoning"}, 0)
             for s in (1, 2)}
     assert compare(lost, base, "unseen_clean", "items_lost")["category_change"]["coding"] == 1
+
+
+def test_sibling_repairs_show_plausible_wrong_code_and_fix_it(kept):
+    import re
+
+    examples = idioms.idiom_examples(11, write_per_program=0, bugfix_per_program=0, contrast_per_program=1, programs=kept)
+    assert len(examples) > 0.7 * len(kept)
+    from collections import Counter
+
+    behaviours = Counter(p.name for p in {p.source(0): p for p in kept}.values())
+    by_name = {p.name: p for p in kept if behaviours[p.name] == 1}  # some names cover variants told apart by the task
+    checked = 0
+    for e in examples:
+        wrong = re.search(r"```python\n(.*?)\n```", e.prompt, re.S).group(1)
+        fixed = re.search(r"```python\n(.*?)\n```", e.response, re.S).group(1)
+        name = re.match(r"def (\w+)\(", fixed).group(1)
+        assert '"""' in wrong and wrong.split("\n")[:2] == fixed.split("\n")[:2]  # same signature and docstring
+        if name in by_name:  # not renamed: compare behaviour with the program
+            p = by_name[name]
+            want = idioms._run(p.source(0), name, list(p.inputs))
+            assert idioms._run(fixed, name, list(p.inputs)) == want
+            assert idioms._run(wrong, name, list(p.inputs)) != want
+            checked += 1
+    assert checked > 0.5 * len(examples)
+
+
+def test_worked_examples_in_prompts_are_correct(kept):
+    import re
+
+    examples = idioms.idiom_examples(12, write_per_program=2, bugfix_per_program=0, io_fraction=1.0, programs=kept)
+    with_io = [e for e in examples if "For example, " in e.prompt]
+    assert len(with_io) > 0.7 * len(examples)
+    for e in with_io[:150]:
+        ns: dict = {}
+        exec(re.search(r"```python\n(.*?)\n```", e.response, re.S).group(1), ns)
+        for call, out in re.findall(r"`(\w+\(.*?\))` returns `(.*?)`", e.prompt.split("For example, ")[1]):
+            assert eval(call, ns) == eval(out)
+
+
+def test_probe_sets_stay_on_curriculum_v1():
+    assert len(idioms.FAMILIES_V1) == 76 and len(idioms.FAMILIES) > 76
+    assert all(f.key in idioms.FAMILIES_V1 for f in idioms.FAMILIES[:76])

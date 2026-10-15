@@ -30,7 +30,8 @@ from dataclasses import dataclass, field
 
 from ycode.lm.data import InstructionExample, inject_bug
 
-IDIOMS_VERSION = "idioms-v1"
+IDIOMS_VERSION = "idioms-v2"  # v1: the first 76 families (FAMILIES_V1); v2 adds multi-step algorithm families,
+                               # plausible-but-wrong repairs and worked input-output examples (opt-in options)
 
 NUM = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six", 7: "seven", 8: "eight", 9: "nine",
        10: "ten", 12: "twelve", 13: "thirteen", 100: "a hundred"}
@@ -316,7 +317,7 @@ FAMILIES: tuple[Family, ...] = (
            ("returns x limited to the range from low to high (low <= high): low if x is below it, high if x is above it, otherwise x.",),
            ("return max(low, min(x, high))", "if x < low:\n    return low\nif x > high:\n    return high\nreturn x")),
     Family("total_in_units", "{a}, {b}", ("small", "small"), ("total_{unit}", "{unit}_in_total"),
-           ("returns the total number of {unit} in {a} {a} and {b} {b}.",),
+           ("returns the total number of {unit} in the given number of {a} and {b}.",),
            ("return {a} * {f} + {b}", "total = {a} * {f}\ntotal += {b}\nreturn total"),
            ({"a": "minutes", "b": "seconds", "f": 60, "unit": "seconds"}, {"a": "days", "b": "hours", "f": 24, "unit": "hours"},
             {"a": "weeks", "b": "days", "f": 7, "unit": "days"}, {"a": "feet", "b": "inches", "f": 12, "unit": "inches"})),
@@ -412,7 +413,106 @@ FAMILIES: tuple[Family, ...] = (
            ("returns at how many positions the equally long lists a and b hold equal values.",),
            ("return sum(1 for x, y in zip(a, b) if x == y)",
             "count = 0\nfor i in range(len(a)):\n    if a[i] == b[i]:\n        count += 1\nreturn count")),
+) + (
+    # ---- multi-step algorithms (curriculum v2): state, nested loops, parsing, grids
+    Family("balanced_parens", "s", ("brackets",), ("parens_balanced", "brackets_match"),
+           ("returns True if every '(' in s is closed by a later ')' and every ')' closes an earlier '(' "
+            "(other characters are ignored).",),
+           ("depth = 0\nfor c in s:\n    if c == '(':\n        depth += 1\n    elif c == ')':\n        depth -= 1\n"
+            "        if depth < 0:\n            return False\nreturn depth == 0",
+            "stack = []\nfor c in s:\n    if c == '(':\n        stack.append(c)\n    elif c == ')':\n        if not stack:\n"
+            "            return False\n        stack.pop()\nreturn not stack"), level=3),
+    Family("run_lengths", "s", ("runs",), ("run_lengths", "encode_runs"),
+           ("returns a list of [character, count] pairs, one for each run of equal neighbouring characters in s, in order.",),
+           ("result = []\nfor c in s:\n    if result and result[-1][0] == c:\n        result[-1][1] += 1\n    else:\n"
+            "        result.append([c, 1])\nreturn result",
+            "result = []\ni = 0\nwhile i < len(s):\n    j = i\n    while j < len(s) and s[j] == s[i]:\n        j += 1\n"
+            "    result.append([s[i], j - i])\n    i = j\nreturn result"), level=3),
+    Family("group_by_length", "words", ("strs",), ("group_by_length", "words_by_length"),
+           ("returns a dictionary that maps each word length to the list of words of that length, in their original order.",),
+           ("groups = {{}}\nfor w in words:\n    groups.setdefault(len(w), []).append(w)\nreturn groups",
+            "groups = {{}}\nfor w in words:\n    if len(w) not in groups:\n        groups[len(w)] = []\n    groups[len(w)].append(w)\n"
+            "return groups"), level=2),
+    Family("transpose", "rows", ("matrix",), ("transpose", "columns_as_rows"),
+           ("returns the columns of the rectangular grid rows (a list of equally long lists) as a list of lists.",),
+           ("return [list(col) for col in zip(*rows)]",
+            "if not rows:\n    return []\nreturn [[row[j] for row in rows] for j in range(len(rows[0]))]"), level=2),
+    Family("row_extremes", "rows", ("matrix1",), ("row_{nm}s", "{nm}_of_each_row"),
+           ("returns a list with the {big} number of each row of the grid rows (every row is non-empty).",),
+           ("return [{fn}(row) for row in rows]",
+            "result = []\nfor row in rows:\n    best = row[0]\n    for x in row:\n        if x {cmp} best:\n            best = x\n"
+            "    result.append(best)\nreturn result"), _MINMAX, level=2),
+    Family("diagonal_sum", "grid", ("square",), ("diagonal_sum", "trace"),
+           ("returns the sum of the numbers on the main diagonal of the square grid (grid[0][0] + grid[1][1] + ...).",),
+           ("return sum(grid[i][i] for i in range(len(grid)))",
+            "total = 0\nfor i, row in enumerate(grid):\n    total += row[i]\nreturn total"), level=2),
+    Family("best_run_sum", "numbers", ("ints1",), ("best_run_sum", "max_consecutive_sum"),
+           ("returns the largest sum of one or more consecutive numbers of the non-empty list.",),
+           ("best = current = numbers[0]\nfor x in numbers[1:]:\n    current = max(x, current + x)\n    best = max(best, current)\n"
+            "return best",
+            "best = numbers[0]\nfor i in range(len(numbers)):\n    for j in range(i + 1, len(numbers) + 1):\n"
+            "        best = max(best, sum(numbers[i:j]))\nreturn best"), level=3),
+    Family("pair_with_sum", "numbers, target", ("ints", "int_small"), ("has_pair_with_sum", "two_add_up_to"),
+           ("returns True if two numbers at different positions in the list add up to target.",),
+           ("for i in range(len(numbers)):\n    for j in range(i + 1, len(numbers)):\n        if numbers[i] + numbers[j] == target:\n"
+            "            return True\nreturn False",
+            "seen = set()\nfor x in numbers:\n    if target - x in seen:\n        return True\n    seen.add(x)\nreturn False"),
+           level=3),
+    Family("search_sorted", "numbers, x", ("sorted_distinct", "int_small"), ("search_sorted", "find_in_sorted"),
+           ("returns the position of x in the sorted list numbers (no number appears twice), or -1 if x is not in it.",),
+           ("low, high = 0, len(numbers) - 1\nwhile low <= high:\n    mid = (low + high) // 2\n    if numbers[mid] == x:\n"
+            "        return mid\n    if numbers[mid] < x:\n        low = mid + 1\n    else:\n        high = mid - 1\nreturn -1",
+            "return numbers.index(x) if x in numbers else -1"), level=3),
+    Family("sum_numbers_in_text", "text", ("mixed_text",), ("sum_numbers_in_text", "add_up_numbers_in"),
+           ("returns the sum of the whole numbers written in text, where a number is a run of digits (0 if there is none).",),
+           ("total = 0\ncurrent = ''\nfor c in text + ' ':\n    if c.isdigit():\n        current += c\n    elif current:\n"
+            "        total += int(current)\n        current = ''\nreturn total",
+            "import re\nreturn sum(int(n) for n in re.findall(r'[0-9]+', text))"), level=3),
+    Family("count_inversions", "numbers", ("ints",), ("count_inversions", "out_of_order_pairs"),
+           ("returns how many pairs of positions i < j have numbers[i] > numbers[j].",),
+           ("count = 0\nfor i in range(len(numbers)):\n    for j in range(i + 1, len(numbers)):\n        if numbers[i] > numbers[j]:\n"
+            "            count += 1\nreturn count",
+            "return sum(1 for i, a in enumerate(numbers) for b in numbers[i + 1:] if a > b)"), level=3),
+    Family("before_first_negative", "numbers", ("ints",), ("before_first_negative", "until_negative"),
+           ("returns the numbers that come before the first negative number of the list (all of them if there is none).",),
+           ("result = []\nfor x in numbers:\n    if x < 0:\n        break\n    result.append(x)\nreturn result",
+            "for i, x in enumerate(numbers):\n    if x < 0:\n        return numbers[:i]\nreturn list(numbers)"), level=2),
+    Family("first_over_running", "numbers, limit", ("ints", "int"), ("when_total_exceeds", "first_position_over_total"),
+           ("returns the first position at which the running total of the numbers (from the start up to and including that "
+            "position) is greater than limit, or -1 if it never is.",),
+           ("total = 0\nfor i, x in enumerate(numbers):\n    total += x\n    if total > limit:\n        return i\nreturn -1",
+            "for i in range(len(numbers)):\n    if sum(numbers[:i + 1]) > limit:\n        return i\nreturn -1"), level=3),
+    Family("digit_names", "n", ("nonneg",), ("digit_names", "spell_digits"),
+           ("returns the English names of the digits of the non-negative integer n separated by single spaces (405 gives 'four zero five').",),
+           ("names = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine']\n"
+            "return ' '.join(names[int(d)] for d in str(n))",
+            "names = {{'0': 'zero', '1': 'one', '2': 'two', '3': 'three', '4': 'four', '5': 'five', '6': 'six', '7': 'seven', "
+            "'8': 'eight', '9': 'nine'}}\nwords = []\nfor d in str(n):\n    words.append(names[d])\nreturn ' '.join(words)"), level=2),
+    Family("common_prefix", "a, b", ("word0", "word0"), ("common_prefix", "shared_start"),
+           ("returns the longest string that both a and b start with.",),
+           ("i = 0\nwhile i < len(a) and i < len(b) and a[i] == b[i]:\n    i += 1\nreturn a[:i]",
+            "result = ''\nfor x, y in zip(a, b):\n    if x != y:\n        break\n    result += x\nreturn result"), level=2),
+    Family("collapse_runs", "items", ("runs_list",), ("collapse_runs", "squeeze_repeats"),
+           ("returns the list with every run of equal neighbouring items replaced by a single item.",),
+           ("result = []\nfor x in items:\n    if not result or result[-1] != x:\n        result.append(x)\nreturn result",
+            "return [x for i, x in enumerate(items) if i == 0 or items[i - 1] != x]"), level=2),
+    Family("star_bars", "numbers", ("small_list",), ("star_bars", "histogram_lines"),
+           ("returns a string with one line per number of the list, each line made of that many '{ch}' characters, "
+            "lines separated by newlines.",),
+           ("return '\\n'.join('{ch}' * n for n in numbers)",
+            "lines = []\nfor n in numbers:\n    lines.append('{ch}' * n)\nreturn '\\n'.join(lines)"), ({"ch": "*"}, {"ch": "#"}), level=2),
+    Family("evens_then_odds", "numbers", ("ints",), ("evens_then_odds", "split_by_parity"),
+           ("returns the even numbers of the list followed by the odd ones, each group in its original order.",),
+           ("return [x for x in numbers if x % 2 == 0] + [x for x in numbers if x % 2 != 0]",
+            "evens, odds = [], []\nfor x in numbers:\n    (evens if x % 2 == 0 else odds).append(x)\nreturn evens + odds"), level=2),
+    Family("letter_counts", "text", ("text",), ("first_letter_counts", "count_by_first_letter"),
+           ("returns a dictionary that maps each lower-cased first letter of the words of text to how many words start with it.",),
+           ("counts = {{}}\nfor w in text.split():\n    k = w[0].lower()\n    counts[k] = counts.get(k, 0) + 1\nreturn counts",
+            "counts = {{}}\nfor w in text.split():\n    if w[0].lower() in counts:\n        counts[w[0].lower()] += 1\n    else:\n"
+            "        counts[w[0].lower()] = 1\nreturn counts"), level=2),
 )
+
+FAMILIES_V1 = frozenset(f.key for f in FAMILIES[:76])  # idioms-v1 (V6 iterations 1-2)
 
 # ------------------------------------------------------------------ inputs
 
@@ -447,6 +547,24 @@ def _value(kind: str, rng: random.Random, size: int | None = None):
         return [rng.choice(_WORDS) for _ in range(size if size is not None else rng.randint(0, 5))]
     if kind == "char":
         return rng.choice("aeiozX 1")
+    if kind == "int_small":
+        return rng.randint(-5, 25)
+    if kind == "brackets":
+        return "".join(rng.choice("(()) ab") for _ in range(rng.randint(0, 9)))
+    if kind == "runs":
+        return "".join(rng.choice("aab") * rng.randint(1, 3) for _ in range(rng.randint(0, 4)))
+    if kind == "runs_list":
+        return [x for _ in range(rng.randint(0, 4)) for x in [rng.randint(0, 3)] * rng.randint(1, 3)]
+    if kind in ("matrix", "matrix1", "square"):
+        n = rng.randint(1 if kind != "matrix" else 0, 4)
+        m = n if kind == "square" else rng.randint(1, 4)
+        return [[rng.randint(-5, 9) for _ in range(m)] for _ in range(n)]
+    if kind == "sorted_distinct":
+        return sorted(rng.sample(range(-5, 25), rng.randint(0, 7)))
+    if kind == "mixed_text":
+        return "".join(rng.choice(["ab", " ", "7", "12", "x", "305", ".", "0"]) for _ in range(rng.randint(0, 7)))
+    if kind == "small_list":
+        return [rng.randint(0, 5) for _ in range(rng.randint(0, 4))]
     if kind in ("dict", "dict1"):
         keys = rng.sample(_WORDS, rng.randint(1 if kind == "dict1" else 0, 5))
         return {k: rng.randint(-5, 20) for k in keys}
@@ -569,22 +687,92 @@ def _prompt(sig: str, task: str, rng: random.Random) -> str:
     return _TEMPLATES[0][1].format(sig=sig, task=task)
 
 
-def idiom_examples(seed: int, *, write_per_program: int = 2, bugfix_per_program: int = 1,
-                   programs: list[Program] | None = None) -> list[InstructionExample]:
-    """Write-a-function examples (each with a random phrasing, implementation and prompt template)
-    and find-the-bug examples (a realistic bug injected into one implementation, kept only if it
-    changes the output on the program's inputs) for every held-out-clean program."""
+def _doc(task: str) -> str:
+    """The task as a docstring sentence: 'returns the sum ...' -> 'Return the sum ...'."""
+    first, _, rest = task.partition(" ")
+    verb = first[:-1] if first.endswith("s") and first not in ("is", "has") else first
+    return f"{verb[0].upper()}{verb[1:]} {rest}".strip()
+
+
+def _documented(p: Program, body: str) -> str:
+    lines = body.splitlines()
+    return (f"def {p.name}({p.params}):\n    \"\"\"{_doc(p.tasks[0])}\"\"\"\n"
+            + "\n".join("    " + line for line in lines))
+
+
+def _examples_sentence(p: Program, rng: random.Random) -> str | None:
+    """'For example, `f([])` returns `0` and `f([3, 1])` returns `4`.': the smallest input (a boundary
+    case: empty, zero, single item) and a typical one, with outputs from the reference."""
+    inputs = sorted(p.inputs, key=lambda a: len(repr(a)))
+    if len(inputs) < 4:
+        return None
+    chosen = [inputs[0], inputs[rng.randrange(len(inputs) // 2, len(inputs))]]
+    outputs = _run(p.source(0), p.name, chosen)
+    if outputs is None or any(len(repr(o)) > 60 for o in outputs) or any(len(repr(a)) > 60 for a in chosen):
+        return None
+    parts = [f"`{p.name}({', '.join(repr(x) for x in args)})` returns `{out!r}`" for args, out in zip(chosen, outputs)]
+    return "For example, " + " and ".join(parts) + "."
+
+
+def _sibling_repairs(programs: list[Program], rng: random.Random, per_program: int) -> list[tuple[Program, str, int]]:
+    """(program, wrong source, implementation of the fix) triples: the program's docstring and
+    signature with the body of another program that takes the same parameters (a sibling of the same
+    family first: another constant or condition, written with the same implementation, so the fix
+    changes exactly what the docstring decides; else another family's idiom). The wrong code must
+    run on the program's inputs and give a different result on at least one: plausible, executable
+    and wrong."""
+    by_params: dict[str, list[Program]] = {}
+    for q in programs:
+        by_params.setdefault(q.params, []).append(q)
+    out = []
+    for p in programs:
+        expected = _run(p.source(0), p.name, list(p.inputs))
+        others = [q for q in by_params[p.params] if q.source(0, "f") != p.source(0, "f")]
+        same = [q for q in others if q.family == p.family]
+        rng.shuffle(same)
+        rest = [q for q in others if q.family != p.family]
+        rng.shuffle(rest)
+        made = 0
+        for q in same + rest:
+            if made >= per_program:
+                break
+            impl = rng.randrange(len(q.bodies))
+            fix = impl if q.family == p.family else rng.randrange(len(p.bodies))
+            wrong = _documented(p, q.bodies[impl])
+            got = _run(wrong, p.name, list(p.inputs))
+            if got is None or repr(got) == repr(expected):
+                continue
+            out.append((p, wrong, fix))
+            made += 1
+    return out
+
+
+def idiom_examples(seed: int, *, write_per_program: int = 2, bugfix_per_program: int = 1, contrast_per_program: int = 0,
+                   io_fraction: float = 0.0, programs: list[Program] | None = None) -> list[InstructionExample]:
+    """Write-a-function examples (each with a random phrasing, implementation and prompt template;
+    with probability ``io_fraction`` followed by worked input-output examples, one of them a
+    boundary case), find-the-bug examples (a realistic bug injected into one implementation, kept
+    only if it changes the output on the program's inputs) and, with ``contrast_per_program``,
+    plausible-but-wrong repairs (the task's docstring over a sibling program's body; the answer is
+    the program) for every held-out-clean program."""
     from ycode.lm.basics import BUGFIX_PROMPT, neutralize
 
     rng = random.Random(seed)
     if programs is None:
         programs, _ = held_out_check(candidate_programs())
     out = []
+    for p, wrong, fix in _sibling_repairs(programs, rng, contrast_per_program) if contrast_per_program else []:
+        fixed = _documented(p, p.bodies[fix])
+        out.append(neutralize(InstructionExample(BUGFIX_PROMPT.format(code=wrong), f"```python\n{fixed}\n```"),
+                              p.name, rng, 0.3))
     for p in programs:
         sig = f"{p.name}({p.params})"
         for _ in range(write_per_program):
             body = rng.randrange(len(p.bodies))
-            ex = InstructionExample(_prompt(sig, rng.choice(p.tasks), rng), f"```python\n{p.source(body)}\n```")
+            task = rng.choice(p.tasks)
+            if io_fraction and rng.random() < io_fraction and (example := _examples_sentence(p, rng)):
+                task = f"{task} {example}"
+            ex = InstructionExample(_prompt(sig, task, rng), f"```python\n{p.source(body)}\n```")
             out.append(neutralize(ex, p.name, rng, 0.3))
         made = 0
         for _ in range(bugfix_per_program * 6):

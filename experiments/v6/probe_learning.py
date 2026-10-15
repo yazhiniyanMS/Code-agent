@@ -2,7 +2,7 @@
 
 usage: probe_learning.py MODEL_DIR OUT.json
 
-* ``trained``: idiom-curriculum programs (the ones a curriculum run trained on: did it learn them?);
+* ``trained``: idiom-curriculum v1 programs (the ones a curriculum run trained on: did it learn them?);
 * ``family_new``: new members of the same families (other constants, e.g. "after the first seven"),
   which no run trained on: did it learn the family's pattern rather than its instances?
 * ``dev_clean``: the clean dev write items (near trained concepts): did fine-tuning forget?
@@ -33,6 +33,8 @@ def family_new_programs() -> list:
     saved = idioms.FAMILIES
     try:
         for f in saved:
+            if f.key not in idioms.FAMILIES_V1:  # fixed set: comparable across curriculum versions
+                continue
             if not (f.variants and all(set(v) == {"k", "kw"} for v in f.variants)):
                 continue
             used = {v["k"] for v in f.variants}
@@ -51,7 +53,7 @@ def family_new_programs() -> list:
 
 
 def items(seed: int = 0):
-    trained, _ = idioms.held_out_check(idioms.candidate_programs())
+    trained, _ = idioms.held_out_check([p for p in idioms.candidate_programs() if p.family in idioms.FAMILIES_V1])
     seen = {}
     for p in trained:
         seen.setdefault(p.source(0, "f"), p)
