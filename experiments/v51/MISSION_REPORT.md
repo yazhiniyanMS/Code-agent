@@ -66,7 +66,13 @@ solution, generated answer, test outcome, group, class and evidence. Ranking:
   bf16: same answers as fp32 on a sample, at similar speed.
 - **Smoke tests:** treatment B (bf16, 2 steps) passed every stage, including the unseen
   evaluation, scoring with denominators, failure classes and the diagnostic. Control A in fp32
-  checks per-step time and peak memory.
+  measured 29–32 tokens/s, about 145 s per step, peak memory 11.3 GB.
+- **Incident:** the first launch of A1301 died at its step-12 checkpoint save because the disk was
+  full. I had stopped the fp32 smoke runner by PID before it deleted its 7 GB checkpoint. The
+  leftover was removed, and the runner now refuses to train with under 8 GB free. A1301 restarted
+  from scratch at 04:32. The same seed and data reproduce the same losses (step-1 loss 0.09438 in
+  both attempts). Its first attempt also shared the CPU with the test suite for 15 minutes; that
+  attempt is discarded.
 
 ## 4. Results
 
