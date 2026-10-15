@@ -315,7 +315,8 @@ def test_experiment_runner_end_to_end_with_a_tiny_model(data_dir, base_model, tm
             record = experiment.run_one(spec, arm, seed, out, log=lambda *_: None)
             assert record["training"]["exit"] == 0 and record["training"]["steps"] == 2
             assert record["dev"]["of"] == 4 and record["bench"]["of"] == 4  # limit 2 writes + 2 fixes
-            assert record["training"]["peak_rss_mb"] > 0 and record["diagnose"]["unseen_tasks"]["examples"] > 0
+            assert record["unseen"]["of"] == 2 and "failure_classes" in record["unseen"]  # limit 2 writes, no fixes
+            assert record["training"]["peak_rss_mb"] > 0 and record["diagnose"]["unseen_new"]["examples"] > 0
             assert not (out / arm["name"] / str(seed) / "model").exists()  # weights deleted after scoring
     summary = experiment.summarize(spec, out)
     assert set(summary["arms"]) == {"A", "B"} and summary["comparisons"][0]["seeds"] == [1, 2]

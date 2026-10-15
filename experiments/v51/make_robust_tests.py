@@ -113,7 +113,8 @@ def _candidates(item, calls: list[tuple]) -> list[tuple]:
     pools = []
     for pos in range(item.arity):
         values = []
-        for v in [c[pos] for c in calls] + [x for kind in {_kind(c[pos]) for c in calls} for x in _POOLS.get(kind, [])]:
+        kinds_here = sorted({_kind(c[pos]) for c in calls}, key=str)  # sorted: set order of types varies by process
+        for v in [c[pos] for c in calls] + [x for kind in kinds_here for x in _POOLS.get(kind, [])]:
             if v not in values and _domain_ok(tuple(v if i == pos else calls[0][i] for i in range(item.arity)), calls):
                 values.append(v)
         pools.append(values)

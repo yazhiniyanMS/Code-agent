@@ -1178,12 +1178,12 @@ ROBUST_TESTS: dict[tuple[str, str], str] = {
         'assert times_four(-24) == -96\n'
     ),
     ('dev', 'weeks_to_days'): (
+        'assert abs(weeks_to_days(0.5) - 3.5) < 1e-9\n'
+        'assert abs(weeks_to_days(2.25) - 15.75) < 1e-9\n'
+        'assert abs(weeks_to_days(10.0) - 70.0) < 1e-9\n'
         'assert weeks_to_days(2) == 14\n'
         'assert weeks_to_days(5) == 35\n'
         'assert weeks_to_days(8) == 56\n'
-        'assert weeks_to_days(10) == 70\n'
-        'assert abs(weeks_to_days(0.5) - 3.5) < 1e-9\n'
-        'assert abs(weeks_to_days(2.25) - 15.75) < 1e-9\n'
         'assert abs(weeks_to_days(11.98) - 83.86) < 1e-9\n'
         'assert abs(weeks_to_days(11.59) - 81.13) < 1e-9\n'
         'assert abs(weeks_to_days(4.69) - 32.830000000000005) < 1e-9\n'
@@ -1466,11 +1466,11 @@ ROBUST_TESTS: dict[tuple[str, str], str] = {
         'assert first_repeated([15, -7, -19, 15, 36, -17, 39, 46]) == 15\n'
     ),
     ('unseen', 'hours_to_seconds'): (
+        'assert abs(hours_to_seconds(2.25) - 8100.0) < 1e-9\n'
+        'assert abs(hours_to_seconds(10.0) - 36000.0) < 1e-9\n'
         'assert hours_to_seconds(3) == 10800\n'
         'assert hours_to_seconds(5) == 18000\n'
         'assert hours_to_seconds(8) == 28800\n'
-        'assert hours_to_seconds(10) == 36000\n'
-        'assert abs(hours_to_seconds(2.25) - 8100.0) < 1e-9\n'
         'assert abs(hours_to_seconds(4.32) - 15552.000000000002) < 1e-9\n'
         'assert abs(hours_to_seconds(2.17) - 7812.0) < 1e-9\n'
         'assert abs(hours_to_seconds(6.41) - 23076.0) < 1e-9\n'
