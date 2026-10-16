@@ -20,7 +20,8 @@
     "train_layers": 24,
     "warmup": 2,
     "precision": "fp32",
-    "init_optim": true
+    "init_optim": true,
+    "save_every": 12
   },
   "eval": {
     "dev": true,

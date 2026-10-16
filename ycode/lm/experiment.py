@@ -40,7 +40,8 @@ REPO = Path(__file__).resolve().parents[2]  # subprocesses run this checkout's y
 T975 = {1: 12.706, 2: 4.303, 3: 3.182, 4: 2.776, 5: 2.571, 6: 2.447, 7: 2.365, 8: 2.306, 9: 2.262, 10: 2.228}
 T95 = {1: 6.314, 2: 2.920, 3: 2.353, 4: 2.132, 5: 2.015, 6: 1.943, 7: 1.895, 8: 1.860, 9: 1.833, 10: 1.812}
 TRAIN_DEFAULTS = {"steps": 72, "lr": 1.5e-5, "batch": 4, "train_layers": 24, "warmup": 2, "precision": "bf16",
-                  "init_optim": True, "seq_len": None, "average": None}
+                  "init_optim": True, "seq_len": None, "average": None,
+                  "save_every": None}  # checkpoint interval in steps (default: half the run)
 EVAL_DEFAULTS = {"dev": True, "unseen": True, "unseen2": False, "bench": True, "limit": None, "diagnose": 32}
 DISK_NEEDED_GB = 8
 SMOKE = {"train": {"steps": 2}, "eval": {"limit": 4, "diagnose": 4}}
@@ -161,8 +162,8 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
            "--train-layers", str(train["train_layers"]), "--grad-checkpoint", "--eval-interval", "100000",
            "--eval-iters", "0", "--seed", str(seed), "--device", "cpu", "--precision", train["precision"]]
     cmd += ["--init-optim"] if train["init_optim"] else []
-    # checkpoint halfway (in place: one copy on disk) so a restart costs at most half a run
-    cmd += ["--resume", "--save-interval", str(max(1, train["steps"] // 2)), "--save-in-place"]
+    # checkpoint every save_every steps (default halfway; in place: one copy on disk), so a restart costs at most that much
+    cmd += ["--resume", "--save-interval", str(train["save_every"] or max(1, train["steps"] // 2)), "--save-in-place"]
     cmd += ["--seq-len", str(train["seq_len"])] if train["seq_len"] else []
     record["training"] = run_measured(cmd, run_dir / "train.log")
     if record["training"]["exit"] != 0:
