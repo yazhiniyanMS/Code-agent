@@ -1,0 +1,52 @@
+{
+  "name": "v6-g-lr",
+  "note": "V6 iteration 5. Evidence on the development tasks: every curriculum variant reaches the same transfer level (unseen-v1 code-only loss: C 0.739 at 24 steps, D 0.676, E 0.672, F 0.677 at 72 steps; round 54 1.164) and new-concept pass rates stay at 1-2/53, whatever the depth (D), formats (E) or breadth (F) of the data: the data no longer limits it. D's training loss flattened in its decay phase (0.30). Changed variable vs D: the learning rate, 1.5e-5 -> 3e-5 (Lion: each weight moves at most lr per step, so 72 steps move it at most ~1e-3 at 1.5e-5). Data (D's, pinned to curriculum v1), legacy share, budget and evaluation as D.",
+  "decision": "Same pre-registered rule as v6-c-idioms: replaces round 54 only if every seed beats its all_clean (29/168), the mean gain is >= 3 items, and no category loses >= 3 clean items round 54 passes. The benchmark is reported only.",
+  "anchor": "/home/user/lmwork/loop/anchor",
+  "tokenizer": "/home/user/lmwork/data/tokenizer.json",
+  "replay_dir": "/home/user/lmwork/data",
+  "average_script": "/home/user/lmwork/average.py",
+  "out": "/home/user/lmwork/v6/runs",
+  "seeds": [
+    1301
+  ],
+  "metric": "all_clean",
+  "category_rule": "items_lost",
+  "keep_models": true,
+  "train": {
+    "steps": 72,
+    "lr": 3e-05,
+    "batch": 4,
+    "train_layers": 24,
+    "warmup": 2,
+    "precision": "fp32",
+    "init_optim": true,
+    "save_every": 12
+  },
+  "eval": {
+    "dev": true,
+    "unseen": true,
+    "unseen2": true,
+    "bench": true,
+    "diagnose": 16
+  },
+  "arms": [
+    {
+      "name": "G",
+      "data": {
+        "idioms_write": 4,
+        "idioms_bugfix": 2,
+        "basics_write": 2,
+        "basics_bugfix": 2,
+        "compose_write": 1,
+        "compose_bugfix": 0,
+        "contrast": 0,
+        "novel_write": 1,
+        "replay": 200,
+        "idioms_families": "v1"
+      },
+      "note": "D's data, learning rate x2"
+    }
+  ],
+  "comparisons": []
+}
