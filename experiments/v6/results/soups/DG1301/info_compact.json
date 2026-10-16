@@ -1,0 +1,22 @@
+{
+  "step": 72,
+  "stage": "sft",
+  "val_loss": null,
+  "version": 5,
+  "params": 1539979520,
+  "dtype": "bf16",
+  "config": {
+    "vocab_size": 8192,
+    "block_size": 1024,
+    "n_layer": 34,
+    "n_head": 32,
+    "n_embd": 2048,
+    "dropout": 0.0,
+    "n_kv_head": 8,
+    "qk_norm": true,
+    "arch_version": 5
+  },
+  "files": [
+    "model.pt"
+  ]
+}
