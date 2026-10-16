@@ -7,15 +7,44 @@
   "replay_dir": "/home/user/lmwork/data",
   "average_script": "/home/user/lmwork/average.py",
   "out": "/home/user/lmwork/v6/runs",
-  "seeds": [1301],
+  "seeds": [
+    1301
+  ],
   "metric": "all_clean",
   "category_rule": "items_lost",
-  "train": {"steps": 24, "lr": 1.5e-5, "batch": 4, "train_layers": 24, "warmup": 2, "precision": "fp32", "init_optim": true},
-  "eval": {"dev": true, "unseen": true, "unseen2": true, "bench": true, "diagnose": 16},
+  "train": {
+    "steps": 24,
+    "lr": 1.5e-05,
+    "batch": 4,
+    "train_layers": 24,
+    "warmup": 2,
+    "precision": "fp32",
+    "init_optim": true
+  },
+  "eval": {
+    "dev": true,
+    "unseen": true,
+    "unseen2": true,
+    "bench": true,
+    "diagnose": 16
+  },
   "arms": [
-    {"name": "C", "data": {"idioms_write": 2, "idioms_bugfix": 1, "basics_write": 1, "basics_bugfix": 1, "compose_write": 0,
-                           "compose_bugfix": 0, "contrast": 0, "novel_write": 1, "replay": 100},
-     "note": "idiom curriculum (54% of tokens) + reduced legacy mix"}
+    {
+      "name": "C",
+      "data": {
+        "idioms_write": 2,
+        "idioms_bugfix": 1,
+        "basics_write": 1,
+        "basics_bugfix": 1,
+        "compose_write": 0,
+        "compose_bugfix": 0,
+        "contrast": 0,
+        "novel_write": 1,
+        "replay": 100,
+        "idioms_families": "v1"
+      },
+      "note": "idiom curriculum (54% of tokens) + reduced legacy mix"
+    }
   ],
   "comparisons": []
 }

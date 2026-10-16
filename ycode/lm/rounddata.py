@@ -29,6 +29,7 @@ DEFAULTS = {
     "idioms_bugfix": 0,       # bug-fix examples per idiom-curriculum program
     "idioms_contrast": 0,     # plausible-but-wrong repairs per program (a sibling program's body under its docstring)
     "idioms_io": 0.0,         # share of idiom write prompts with worked input-output examples (one a boundary case)
+    "idioms_families": "v3",  # curriculum family set (ycode.lm.idioms.FAMILY_SETS); runs pin the set they used
 }
 
 
@@ -59,7 +60,8 @@ def _idiom_examples(seed: int, o: dict):
     from ycode.lm.idioms import idiom_examples
 
     return idiom_examples(seed, write_per_program=o["idioms_write"], bugfix_per_program=o["idioms_bugfix"],
-                          contrast_per_program=o["idioms_contrast"], io_fraction=o["idioms_io"])
+                          contrast_per_program=o["idioms_contrast"], io_fraction=o["idioms_io"],
+                          family_set=o["idioms_families"])
 
 
 def replay_held_out_filter():

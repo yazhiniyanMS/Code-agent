@@ -1,0 +1,1660 @@
+{
+ "arm": "D",
+ "seed": 1301,
+ "smoke": false,
+ "data_options": {
+  "idioms_write": 4,
+  "idioms_bugfix": 2,
+  "basics_write": 2,
+  "basics_bugfix": 2,
+  "compose_write": 1,
+  "compose_bugfix": 0,
+  "contrast": 0,
+  "novel_write": 1,
+  "replay": 200
+ },
+ "train": {
+  "steps": 72,
+  "lr": 1.5e-05,
+  "batch": 4,
+  "train_layers": 24,
+  "warmup": 2,
+  "precision": "fp32",
+  "init_optim": true,
+  "seq_len": null,
+  "average": null
+ },
+ "eval": {
+  "dev": true,
+  "unseen": true,
+  "unseen2": true,
+  "bench": true,
+  "limit": null,
+  "diagnose": 16
+ },
+ "anchor": "/home/user/lmwork/loop/anchor",
+ "anchor_sha256": "2538b55d5aee371899a988799168042af4da27c03cafff3417a3c9925b8e8e98",
+ "data": {
+  "seed": 1301,
+  "code_version": "903c2a3e27948c3f3808b3f62923976c60e49a11",
+  "generated": 2703,
+  "removed": {},
+  "kept": 2703,
+  "basics": 2703,
+  "replay": 200,
+  "tokens": 248285,
+  "replay_dropped": {
+   "benchmark name": 6,
+   "prose bug fix": 222,
+   "garbled prompt": 26,
+   "prose over cap": 303
+  },
+  "replay_kinds": {
+   "docstring": 11,
+   "explain": 38,
+   "class": 11,
+   "write": 75,
+   "complete": 65
+  },
+  "files": {
+   "sft_tokens.bin": "ab1ea2926107f57f629de2b73cb79a6ebfa651b0a89b55e56e377eb0306d8369",
+   "sft_mask.bin": "7629bcee9f2a9b3072fb9245be3c6f8fc85e543aaf211b85b8725b93bcf9f45c",
+   "sft_index.npy": "d9e07f2463a53c716c7fa10d81925c4bc0df4346dbc368c63645ed6dd08d4095",
+   "tokenizer.json": "7079ff7b8546a23c5416f8ae08adcb636ec69da4c14cd964114f12cee9745341"
+  },
+  "minutes": 9.45
+ },
+ "training": {
+  "exit": 0,
+  "minutes": 181.23,
+  "peak_rss_mb": 11316,
+  "steps": 72,
+  "loss_last10_mean": 0.2883,
+  "loss_first": 0.451751,
+  "grad_norm_last10_mean": 0.1366,
+  "tok_per_s": 27.3,
+  "answer_tokens": 133777,
+  "empty_batches": 0,
+  "checkpoint_sha256": "e8e758bb7c69c4bf1c6464c9df60616866157ce1ed66ca81c24b39e8b3c30c62",
+  "init_sha256": null,
+  "tokens": 294912
+ },
+ "dev_run": {
+  "exit": 0,
+  "minutes": 8.24,
+  "peak_rss_mb": 7663
+ },
+ "dev": {
+  "points": 40,
+  "of": 62,
+  "clean": 28,
+  "clean_of": 44,
+  "robust": 39,
+  "robust_of": 62,
+  "robust_clean": 27,
+  "weak_passes": [
+   "write:first_negative"
+  ],
+  "fingerprint": "b4b74aeae38725c94e45ed408ba2598bf0746776dbb79014b16f14fa50bdce8a",
+  "eval_version": "eval-v5.1-1",
+  "groups": {
+   "dev_concept": 4,
+   "dev_fix": 8,
+   "dev_slot": 28
+  },
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 11,
+   "hallucination": 1,
+   "coding": 2,
+   "factual": 0,
+   "reasoning": 8
+  },
+  "hallucinations": 1,
+  "invalid_outputs": 0,
+  "passed": [
+   "bugfix:count_greater",
+   "bugfix:count_uppercase",
+   "bugfix:double_all",
+   "bugfix:first_negative",
+   "bugfix:is_negative",
+   "bugfix:longest_word",
+   "bugfix:product",
+   "bugfix:sum_of_squares",
+   "write:above_six",
+   "write:add_seven",
+   "write:all_odd",
+   "write:below_two",
+   "write:count_o",
+   "write:count_odd",
+   "write:count_uppercase",
+   "write:divisible_by_five",
+   "write:ends_with_ing",
+   "write:first_negative",
+   "write:first_three_chars",
+   "write:floor_div_four",
+   "write:has_two_items",
+   "write:has_x",
+   "write:is_negative",
+   "write:keep_gt5",
+   "write:keep_negative",
+   "write:largest_even",
+   "write:longer_than_three",
+   "write:not_three",
+   "write:remainder_three",
+   "write:remove_spaces",
+   "write:scale_each_by_three",
+   "write:smallest_positive",
+   "write:starts_with_the",
+   "write:subtract_five",
+   "write:subtract_three_each",
+   "write:sum_multiples_of_five",
+   "write:sum_odd",
+   "write:sum_positive_square",
+   "write:times_four",
+   "write:weeks_to_days"
+  ],
+  "categories": {
+   "write:count_greater": "reasoning",
+   "write:cube": "instruction_following",
+   "write:double_all": "instruction_following",
+   "write:index_of_min": "coding",
+   "write:is_between": "coding",
+   "write:last_word": "instruction_following",
+   "write:longest_word": "instruction_following",
+   "write:product": "hallucination",
+   "write:running_max": "instruction_following",
+   "write:smaller": "reasoning",
+   "write:sum_of_squares": "instruction_following",
+   "write:multiply_three_numbers": "reasoning",
+   "write:any_zero": "instruction_following",
+   "write:fourth_item": "instruction_following",
+   "write:second_to_last_item": "reasoning",
+   "bugfix:cube": "reasoning",
+   "bugfix:index_of_min": "instruction_following",
+   "bugfix:is_between": "reasoning",
+   "bugfix:last_word": "instruction_following",
+   "bugfix:remove_spaces": "instruction_following",
+   "bugfix:running_max": "reasoning",
+   "bugfix:smaller": "reasoning"
+  },
+  "contaminated": [
+   "bugfix:count_uppercase",
+   "bugfix:cube",
+   "bugfix:double_all",
+   "bugfix:is_negative",
+   "bugfix:smaller",
+   "write:above_six",
+   "write:below_two",
+   "write:count_uppercase",
+   "write:cube",
+   "write:double_all",
+   "write:is_negative",
+   "write:keep_gt5",
+   "write:keep_negative",
+   "write:longer_than_three",
+   "write:multiply_three_numbers",
+   "write:smaller",
+   "write:smallest_positive",
+   "write:weeks_to_days"
+  ],
+  "failure_classes": {
+   "incorrect_task_interpretation": 13,
+   "algorithmic_or_logic_error": 6,
+   "incorrect_code_generation": 3
+  },
+  "failure_classes_clean": {
+   "incorrect_task_interpretation": 11,
+   "incorrect_code_generation": 3,
+   "algorithmic_or_logic_error": 2
+  },
+  "failures": [
+   {
+    "suite": "write",
+    "name": "count_greater",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 12% (count_greater([1, 5, 7], 4) gave 1 (expected 2))"
+   },
+   {
+    "suite": "write",
+    "name": "cube",
+    "contaminated": true,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'over_ten'"
+   },
+   {
+    "suite": "write",
+    "name": "double_all",
+    "contaminated": true,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'add_two_each'"
+   },
+   {
+    "suite": "write",
+    "name": "index_of_min",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "TypeError on index_of_min([3, 1, 2]): '<' not supported between instances of 'int' and 'list'"
+   },
+   {
+    "suite": "write",
+    "name": "is_between",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "TypeError on is_between(2, 1, 3): object of type 'int' has no len()"
+   },
+   {
+    "suite": "write",
+    "name": "last_word",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'second_to_last_word'"
+   },
+   {
+    "suite": "write",
+    "name": "longest_word",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'shortest_word'"
+   },
+   {
+    "suite": "write",
+    "name": "product",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "NameError: name 'j' is not defined"
+   },
+   {
+    "suite": "write",
+    "name": "running_max",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'keep_positive'"
+   },
+   {
+    "suite": "write",
+    "name": "smaller",
+    "contaminated": true,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 6% (smaller(3, 7) gave 10 (expected 3))"
+   },
+   {
+    "suite": "write",
+    "name": "sum_of_squares",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'triangular_number'"
+   },
+   {
+    "suite": "write",
+    "name": "multiply_three_numbers",
+    "contaminated": true,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 1% (multiply_three_numbers(1, 2, 3) gave 5 (expected 6))"
+   },
+   {
+    "suite": "write",
+    "name": "any_zero",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'any_even'"
+   },
+   {
+    "suite": "write",
+    "name": "fourth_item",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'fifth_item'"
+   },
+   {
+    "suite": "write",
+    "name": "second_to_last_item",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes unseen:drop_first instead (agreement with the reference 0.00)"
+   },
+   {
+    "suite": "bugfix",
+    "name": "cube",
+    "contaminated": true,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 2% (cube(3) gave 81 (expected 27))"
+   },
+   {
+    "suite": "bugfix",
+    "name": "index_of_min",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "handed the buggy code back unchanged"
+   },
+   {
+    "suite": "bugfix",
+    "name": "is_between",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 18% (is_between(4, 1, 3) gave True (expected False))"
+   },
+   {
+    "suite": "bugfix",
+    "name": "last_word",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'second_to_last_word'"
+   },
+   {
+    "suite": "bugfix",
+    "name": "remove_spaces",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "handed the buggy code back unchanged"
+   },
+   {
+    "suite": "bugfix",
+    "name": "running_max",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes largest_positive instead (agreement with the reference 0.00)"
+   },
+   {
+    "suite": "bugfix",
+    "name": "smaller",
+    "contaminated": true,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 50% (smaller(3, 7) gave 7 (expected 3))"
+   }
+  ]
+ },
+ "unseen_run": {
+  "exit": 0,
+  "minutes": 7.0,
+  "peak_rss_mb": 7643
+ },
+ "unseen": {
+  "points": 2,
+  "of": 53,
+  "clean": 2,
+  "clean_of": 53,
+  "robust": 2,
+  "robust_of": 53,
+  "robust_clean": 2,
+  "weak_passes": [],
+  "fingerprint": "6cbdf2425f1d8c084b94d1492a1e8162e271d1e998006b02ec529eeffd332399",
+  "eval_version": "eval-v5.1-1",
+  "groups": {
+   "unseen": 2
+  },
+  "lost_by_category": {
+   "formatting": 1,
+   "instruction_following": 17,
+   "hallucination": 2,
+   "coding": 6,
+   "factual": 0,
+   "reasoning": 25
+  },
+  "hallucinations": 2,
+  "invalid_outputs": 1,
+  "passed": [
+   "write:double_plus_one",
+   "write:keys_above"
+  ],
+  "categories": {
+   "write:tens_digit": "instruction_following",
+   "write:last_two_digits": "reasoning",
+   "write:round_down_to_ten": "instruction_following",
+   "write:is_teenager": "coding",
+   "write:same_sign": "instruction_following",
+   "write:last_three": "reasoning",
+   "write:drop_first": "instruction_following",
+   "write:swap_ends": "reasoning",
+   "write:first_plus_last": "reasoning",
+   "write:count_above_mean": "instruction_following",
+   "write:count_changes": "instruction_following",
+   "write:chunk_pairs": "coding",
+   "write:count_true_values": "hallucination",
+   "write:repeat_word": "reasoning",
+   "write:count_doubled_letters": "reasoning",
+   "write:dashes_for_spaces": "reasoning",
+   "write:longest_word_length": "reasoning",
+   "write:words_starting_with_vowel": "coding",
+   "write:is_all_lowercase_letters": "instruction_following",
+   "write:count_letter_case_insensitive": "coding",
+   "write:alternate_case": "instruction_following",
+   "write:sum_at_odd_positions": "coding",
+   "write:second_smallest": "reasoning",
+   "write:last_index_of": "reasoning",
+   "write:insert_at_front": "reasoning",
+   "write:count_strictly_between": "reasoning",
+   "write:is_non_increasing": "instruction_following",
+   "write:without_last": "hallucination",
+   "write:hours_to_seconds": "reasoning",
+   "write:next_even": "instruction_following",
+   "write:digits_of": "reasoning",
+   "write:count_capitalized": "formatting",
+   "write:average_word_length": "reasoning",
+   "write:is_vowel": "reasoning",
+   "write:swap_halves": "instruction_following",
+   "write:step_up_to": "reasoning",
+   "write:repeat_each": "reasoning",
+   "write:ends_with_vowel": "reasoning",
+   "write:sum_of_last_two": "reasoning",
+   "write:first_index_above": "reasoning",
+   "write:middle_of_three": "instruction_following",
+   "write:count_words_longer_than": "coding",
+   "write:sum_of_last_n": "reasoning",
+   "write:contains_digit": "reasoning",
+   "write:pad_right": "instruction_following",
+   "write:abbreviate": "reasoning",
+   "write:count_increases": "instruction_following",
+   "write:same_length": "instruction_following",
+   "write:longer_of_two": "reasoning",
+   "write:first_repeated": "instruction_following",
+   "write:count_distinct": "instruction_following"
+  },
+  "contaminated": [],
+  "failure_classes": {
+   "incorrect_task_interpretation": 25,
+   "algorithmic_or_logic_error": 15,
+   "incorrect_code_generation": 8,
+   "edge_case_failure": 2,
+   "formatting_or_parsing": 1
+  },
+  "failure_classes_clean": {
+   "incorrect_task_interpretation": 25,
+   "algorithmic_or_logic_error": 15,
+   "incorrect_code_generation": 8,
+   "edge_case_failure": 2,
+   "formatting_or_parsing": 1
+  },
+  "failures": [
+   {
+    "suite": "write",
+    "name": "tens_digit",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'reverse_number'"
+   },
+   {
+    "suite": "write",
+    "name": "last_two_digits",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 1% (last_two_digits(1234) gave 4 (expected 34))"
+   },
+   {
+    "suite": "write",
+    "name": "round_down_to_ten",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'reverse_number'"
+   },
+   {
+    "suite": "write",
+    "name": "is_teenager",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "TypeError on is_teenager(13): object of type 'int' has no len()"
+   },
+   {
+    "suite": "write",
+    "name": "same_sign",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'are_equal'"
+   },
+   {
+    "suite": "write",
+    "name": "last_three",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 1% (last_three([1, 2, 3, 4, 5]) gave [4] (expected [3, 4, 5]))"
+   },
+   {
+    "suite": "write",
+    "name": "drop_first",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'first_item'"
+   },
+   {
+    "suite": "write",
+    "name": "swap_ends",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 1% (swap_ends([1, 2, 3, 4]) gave [2, 3] (expected [4, 2, 3, 1]))"
+   },
+   {
+    "suite": "write",
+    "name": "first_plus_last",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes bench:add_one instead (agreement with the reference 0.00)"
+   },
+   {
+    "suite": "write",
+    "name": "count_above_mean",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'count_negative'"
+   },
+   {
+    "suite": "write",
+    "name": "count_changes",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'count_items'"
+   },
+   {
+    "suite": "write",
+    "name": "chunk_pairs",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "TypeError on chunk_pairs([1, 2, 3, 4]): must assign iterable to extended slice"
+   },
+   {
+    "suite": "write",
+    "name": "count_true_values",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "AttributeError: 'bool' object has no attribute 'isalpha'"
+   },
+   {
+    "suite": "write",
+    "name": "repeat_word",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 12% (repeat_word('hi', 3) gave 'hi' (expected 'hi hi hi'))"
+   },
+   {
+    "suite": "write",
+    "name": "count_doubled_letters",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 2% (count_doubled_letters('balloon') gave 6 (expected 2))"
+   },
+   {
+    "suite": "write",
+    "name": "dashes_for_spaces",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 1% (dashes_for_spaces('a b c') gave '  ' (expected 'a-b-c'))"
+   },
+   {
+    "suite": "write",
+    "name": "longest_word_length",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes bench:count_words instead (agreement with the reference 0.13)"
+   },
+   {
+    "suite": "write",
+    "name": "words_starting_with_vowel",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "TypeError on words_starting_with_vowel('an apple is red'): argument of type 'int' is not iterable"
+   },
+   {
+    "suite": "write",
+    "name": "is_all_lowercase_letters",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'is_all_lower'"
+   },
+   {
+    "suite": "write",
+    "name": "count_letter_case_insensitive",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "TypeError on count_letter_case_insensitive('Banana', 'b'): 'str' object cannot be interpreted as an integer"
+   },
+   {
+    "suite": "write",
+    "name": "alternate_case",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'remove_vowels'"
+   },
+   {
+    "suite": "write",
+    "name": "sum_at_odd_positions",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "TypeError on sum_at_odd_positions([1, 2, 3, 4, 5]): unsupported operand type(s) for +: 'int' and 'list'"
+   },
+   {
+    "suite": "write",
+    "name": "second_smallest",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 23% (second_smallest([4, 1, 9, 1, 7]) gave 1 (expected 4))"
+   },
+   {
+    "suite": "write",
+    "name": "last_index_of",
+    "contaminated": false,
+    "class": "edge_case_failure",
+    "evidence": "agrees with the reference on 90% of probes (last_index_of([1, 2, 1], 1) gave -1 (expected 2))"
+   },
+   {
+    "suite": "write",
+    "name": "insert_at_front",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 0% (insert_at_front([2, 3], 1) gave [2, 3] (expected [1, 2, 3]))"
+   },
+   {
+    "suite": "write",
+    "name": "count_strictly_between",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes unseen2:pairs_with_sum instead (agreement with the reference 0.23)"
+   },
+   {
+    "suite": "write",
+    "name": "is_non_increasing",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'all_equal'"
+   },
+   {
+    "suite": "write",
+    "name": "without_last",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "NameError: name 'last' is not defined"
+   },
+   {
+    "suite": "write",
+    "name": "hours_to_seconds",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 1% (hours_to_seconds(1) gave 1 (expected 3600))"
+   },
+   {
+    "suite": "write",
+    "name": "next_even",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'above_zero'"
+   },
+   {
+    "suite": "write",
+    "name": "digits_of",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 1% (digits_of(123) gave [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78, 80, 82, 84, 86, 88, 90, 92, 94, 96, 98, 100, 10 (expected [1, 2, 3]))"
+   },
+   {
+    "suite": "write",
+    "name": "count_capitalized",
+    "contaminated": false,
+    "class": "formatting_or_parsing",
+    "evidence": "syntax error: expected ':'"
+   },
+   {
+    "suite": "write",
+    "name": "average_word_length",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 0% (average_word_length('a bb ccc') gave 0.02 (expected 2))"
+   },
+   {
+    "suite": "write",
+    "name": "is_vowel",
+    "contaminated": false,
+    "class": "edge_case_failure",
+    "evidence": "agrees with the reference on 99% of probes (is_vowel('E') gave False (expected True))"
+   },
+   {
+    "suite": "write",
+    "name": "swap_halves",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'letters_only'"
+   },
+   {
+    "suite": "write",
+    "name": "step_up_to",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 3% (step_up_to(3, 5) gave 8 (expected 4))"
+   },
+   {
+    "suite": "write",
+    "name": "repeat_each",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes remove_value instead (agreement with the reference 0.19)"
+   },
+   {
+    "suite": "write",
+    "name": "ends_with_vowel",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes is_one instead (agreement with the reference 0.66)"
+   },
+   {
+    "suite": "write",
+    "name": "sum_of_last_two",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes bench:sum_of_evens instead (agreement with the reference 0.07)"
+   },
+   {
+    "suite": "write",
+    "name": "first_index_above",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 65% (first_index_above([1, 5, 9], 4) gave -1 (expected 1))"
+   },
+   {
+    "suite": "write",
+    "name": "middle_of_three",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'min_of_three'"
+   },
+   {
+    "suite": "write",
+    "name": "count_words_longer_than",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "TypeError on count_words_longer_than('a bb ccc dddd', 2): must be str or None, not int"
+   },
+   {
+    "suite": "write",
+    "name": "sum_of_last_n",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 42% (sum_of_last_n([1, 2, 3, 4], 2) gave 3 (expected 7))"
+   },
+   {
+    "suite": "write",
+    "name": "contains_digit",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes longer_than_one instead (agreement with the reference 0.24)"
+   },
+   {
+    "suite": "write",
+    "name": "pad_right",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'trim'"
+   },
+   {
+    "suite": "write",
+    "name": "abbreviate",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 0% (abbreviate('international', 5) gave <generator object abbreviate at 0x7f0adb73f780> (expected 'inter.'))"
+   },
+   {
+    "suite": "write",
+    "name": "count_increases",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'count_negative'"
+   },
+   {
+    "suite": "write",
+    "name": "same_length",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'are_equal'"
+   },
+   {
+    "suite": "write",
+    "name": "longer_of_two",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes bench:add instead (agreement with the reference 0.27)"
+   },
+   {
+    "suite": "write",
+    "name": "first_repeated",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'first_item'"
+   },
+   {
+    "suite": "write",
+    "name": "count_distinct",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'count_items'"
+   }
+  ]
+ },
+ "unseen2_run": {
+  "exit": 0,
+  "minutes": 11.9,
+  "peak_rss_mb": 7673
+ },
+ "unseen2": {
+  "points": 0,
+  "of": 71,
+  "clean": 0,
+  "clean_of": 71,
+  "robust": 0,
+  "robust_of": 71,
+  "robust_clean": 0,
+  "weak_passes": [],
+  "fingerprint": "f83b6af641dee9ef7aa979f11671160ab6e7a58481fde0bb32e95542eb034d39",
+  "eval_version": "eval-v5.1-1",
+  "groups": {
+   "unseen2": 0
+  },
+  "lost_by_category": {
+   "formatting": 3,
+   "instruction_following": 19,
+   "hallucination": 6,
+   "coding": 17,
+   "factual": 0,
+   "reasoning": 26
+  },
+  "hallucinations": 6,
+  "invalid_outputs": 3,
+  "passed": [],
+  "categories": {
+   "write:count_even_digits": "reasoning",
+   "write:swap_first_last_digit": "instruction_following",
+   "write:alternating_digit_sum": "instruction_following",
+   "write:strip_trailing_zeros": "reasoning",
+   "write:distinct_digit_count": "reasoning",
+   "write:count_digit_changes": "reasoning",
+   "write:count_multiples_in_range": "reasoning",
+   "write:binary_one_count": "instruction_following",
+   "write:nearest_square_below": "instruction_following",
+   "write:odd_digits_number": "instruction_following",
+   "write:place_value": "reasoning",
+   "write:split_bill": "hallucination",
+   "write:feet_inches_to_cm": "instruction_following",
+   "write:boxes_needed": "reasoning",
+   "write:compound_interest": "reasoning",
+   "write:time_difference_minutes": "reasoning",
+   "write:round_to_nearest_multiple": "coding",
+   "write:seconds_to_clock": "coding",
+   "write:change_coins": "hallucination",
+   "write:hourly_pay": "coding",
+   "write:arithmetic_series_sum": "coding",
+   "write:manhattan_distance": "reasoning",
+   "write:intervals_overlap": "reasoning",
+   "write:digits_strictly_increasing": "instruction_following",
+   "write:exactly_two_true": "instruction_following",
+   "write:is_strong_password": "coding",
+   "write:all_same_sign": "reasoning",
+   "write:is_within_tolerance": "coding",
+   "write:steps_within": "reasoning",
+   "write:is_valid_day_of_month": "reasoning",
+   "write:is_hex_color": "instruction_following",
+   "write:point_in_rectangle": "hallucination",
+   "write:has_majority": "coding",
+   "write:is_harshad": "instruction_following",
+   "write:middle_elements": "reasoning",
+   "write:rotate_right": "coding",
+   "write:local_peaks": "coding",
+   "write:count_sign_changes": "reasoning",
+   "write:mean_without_extremes": "coding",
+   "write:second_largest_distinct": "coding",
+   "write:remove_at": "coding",
+   "write:compress_runs": "reasoning",
+   "write:mask_all_but_last4": "instruction_following",
+   "write:first_unique_char": "instruction_following",
+   "write:censor_word": "reasoning",
+   "write:count_char_types": "reasoning",
+   "write:truncate_text": "instruction_following",
+   "write:most_common_char": "instruction_following",
+   "write:count_words_starting_with": "coding",
+   "write:repeat_each_char": "instruction_following",
+   "write:sum_numbers_in_string": "coding",
+   "write:group_keys_by_value": "reasoning",
+   "write:stock_after_orders": "reasoning",
+   "write:count_by_length": "instruction_following",
+   "write:counts_to_list": "reasoning",
+   "write:parse_key_values": "formatting",
+   "write:total_cost": "hallucination",
+   "write:keys_sorted_by_value": "formatting",
+   "write:changed_keys": "reasoning",
+   "write:nested_get": "hallucination",
+   "write:rename_keys": "reasoning",
+   "write:weighted_average": "coding",
+   "write:count_matching_positions": "coding",
+   "write:common_prefix": "reasoning",
+   "write:chars_in_both": "instruction_following",
+   "write:is_subsequence": "instruction_following",
+   "write:count_overlapping": "hallucination",
+   "write:round_winner": "formatting",
+   "write:is_rotation": "instruction_following",
+   "write:can_build_from": "reasoning",
+   "write:pairs_with_sum": "coding"
+  },
+  "contaminated": [],
+  "failure_classes": {
+   "incorrect_task_interpretation": 29,
+   "incorrect_code_generation": 22,
+   "algorithmic_or_logic_error": 14,
+   "edge_case_failure": 3,
+   "formatting_or_parsing": 3
+  },
+  "failure_classes_clean": {
+   "incorrect_task_interpretation": 29,
+   "incorrect_code_generation": 22,
+   "algorithmic_or_logic_error": 14,
+   "edge_case_failure": 3,
+   "formatting_or_parsing": 3
+  },
+  "failures": [
+   {
+    "suite": "write",
+    "name": "count_even_digits",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 8% (count_even_digits(2468) gave 246 (expected 4))"
+   },
+   {
+    "suite": "write",
+    "name": "swap_first_last_digit",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'last_digit'"
+   },
+   {
+    "suite": "write",
+    "name": "alternating_digit_sum",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'triangular_number'"
+   },
+   {
+    "suite": "write",
+    "name": "strip_trailing_zeros",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 0% (strip_trailing_zeros(1200) gave 1190 (expected 12))"
+   },
+   {
+    "suite": "write",
+    "name": "distinct_digit_count",
+    "contaminated": false,
+    "class": "edge_case_failure",
+    "evidence": "agrees with the reference on 83% of probes (distinct_digit_count(1123) gave 4 (expected 3))"
+   },
+   {
+    "suite": "write",
+    "name": "count_digit_changes",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 13% (count_digit_changes(1122) gave 0 (expected 1))"
+   },
+   {
+    "suite": "write",
+    "name": "count_multiples_in_range",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes sum_three_numbers instead (agreement with the reference 0.00)"
+   },
+   {
+    "suite": "write",
+    "name": "binary_one_count",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'count_digits'"
+   },
+   {
+    "suite": "write",
+    "name": "nearest_square_below",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'above_nine'"
+   },
+   {
+    "suite": "write",
+    "name": "odd_digits_number",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'reverse_number'"
+   },
+   {
+    "suite": "write",
+    "name": "place_value",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 1% (place_value(4721, 2) gave 28329 (expected 700))"
+   },
+   {
+    "suite": "write",
+    "name": "split_bill",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "NameError: name 'peopne' is not defined"
+   },
+   {
+    "suite": "write",
+    "name": "feet_inches_to_cm",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'feet_to_inches'"
+   },
+   {
+    "suite": "write",
+    "name": "boxes_needed",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 11% (boxes_needed(10, 3) gave 3 (expected 4))"
+   },
+   {
+    "suite": "write",
+    "name": "compound_interest",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 9% (compound_interest(1000, 10, 2) gave 121000 (expected 1210.0))"
+   },
+   {
+    "suite": "write",
+    "name": "time_difference_minutes",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 1% (time_difference_minutes(9, 30, 11, 0) gave 2970 (expected 90))"
+   },
+   {
+    "suite": "write",
+    "name": "round_to_nearest_multiple",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "TypeError on round_to_nearest_multiple(17, 5): 'int' object is not iterable"
+   },
+   {
+    "suite": "write",
+    "name": "seconds_to_clock",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "TypeError on seconds_to_clock(3661): 'int' object is not iterable"
+   },
+   {
+    "suite": "write",
+    "name": "change_coins",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "NameError: name 'aet' is not defined"
+   },
+   {
+    "suite": "write",
+    "name": "hourly_pay",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "TypeError on hourly_pay(40, 10): 'int' object is not iterable"
+   },
+   {
+    "suite": "write",
+    "name": "arithmetic_series_sum",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "TypeError on arithmetic_series_sum(1, 1, 10): 'int' object is not iterable"
+   },
+   {
+    "suite": "write",
+    "name": "manhattan_distance",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 0% (manhattan_distance(0, 0, 3, 4) gave (0, 0) (expected 7))"
+   },
+   {
+    "suite": "write",
+    "name": "intervals_overlap",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 0% (intervals_overlap(1, 3, 4, 6) gave 27 (expected False))"
+   },
+   {
+    "suite": "write",
+    "name": "digits_strictly_increasing",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'last_digit'"
+   },
+   {
+    "suite": "write",
+    "name": "exactly_two_true",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'is_valid_triangle'"
+   },
+   {
+    "suite": "write",
+    "name": "is_strong_password",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "TypeError on is_strong_password('Abcdef12'): '>=' not supported between instances of 'str' and 'int'"
+   },
+   {
+    "suite": "write",
+    "name": "all_same_sign",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes all_zero instead (agreement with the reference 0.64)"
+   },
+   {
+    "suite": "write",
+    "name": "is_within_tolerance",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "TypeError on is_within_tolerance(105, 100, 5): object of type 'int' has no len()"
+   },
+   {
+    "suite": "write",
+    "name": "steps_within",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes are_equal instead (agreement with the reference 0.31)"
+   },
+   {
+    "suite": "write",
+    "name": "is_valid_day_of_month",
+    "contaminated": false,
+    "class": "edge_case_failure",
+    "evidence": "agrees with the reference on 86% of probes (is_valid_day_of_month(31, 1) gave False (expected True))"
+   },
+   {
+    "suite": "write",
+    "name": "is_hex_color",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'is_digit_string'"
+   },
+   {
+    "suite": "write",
+    "name": "point_in_rectangle",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "AttributeError: 'int' object has no attribute 'corners'"
+   },
+   {
+    "suite": "write",
+    "name": "has_majority",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "TypeError on has_majority([1, 1, 2], 1): object of type 'int' has no len()"
+   },
+   {
+    "suite": "write",
+    "name": "is_harshad",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'divisible_by_ten'"
+   },
+   {
+    "suite": "write",
+    "name": "middle_elements",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 1% (middle_elements([1, 2, 3]) gave [] (expected [2]))"
+   },
+   {
+    "suite": "write",
+    "name": "rotate_right",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes positions_of instead (agreement with the reference 0.11)"
+   },
+   {
+    "suite": "write",
+    "name": "local_peaks",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "TypeError on local_peaks([1, 3, 2, 4, 1]): can't multiply sequence by non-int of type 'list'"
+   },
+   {
+    "suite": "write",
+    "name": "count_sign_changes",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes sum_zero instead (agreement with the reference 0.37)"
+   },
+   {
+    "suite": "write",
+    "name": "mean_without_extremes",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "TypeError on mean_without_extremes([1, 2, 3, 4, 100]): can only concatenate list (not \"int\") to list"
+   },
+   {
+    "suite": "write",
+    "name": "second_largest_distinct",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "TypeError on second_largest_distinct([3, 1, 4, 4]): object of type 'int' has no len()"
+   },
+   {
+    "suite": "write",
+    "name": "remove_at",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "TypeError on remove_at(['a'], 0): '<' not supported between instances of 'str' and 'int'"
+   },
+   {
+    "suite": "write",
+    "name": "compress_runs",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes sum_zero instead (agreement with the reference 0.00)"
+   },
+   {
+    "suite": "write",
+    "name": "mask_all_but_last4",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'remove_vowels'"
+   },
+   {
+    "suite": "write",
+    "name": "first_unique_char",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'first_two_chars'"
+   },
+   {
+    "suite": "write",
+    "name": "censor_word",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 1% (censor_word('the cat sat', 'cat') gave 'c a t' (expected 'the *** sat'))"
+   },
+   {
+    "suite": "write",
+    "name": "count_char_types",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 0% (count_char_types('abc123!!') gave <generator object count_char_types.<locals>.<genexpr> at 0x7faa868fa7a0> (expected (3, 3, 2)))"
+   },
+   {
+    "suite": "write",
+    "name": "truncate_text",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'truncate'"
+   },
+   {
+    "suite": "write",
+    "name": "most_common_char",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'remove_vowels'"
+   },
+   {
+    "suite": "write",
+    "name": "count_words_starting_with",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "TypeError on count_words_starting_with('Apple and banana Avocado', 'a'): 'str' object cannot be interpreted as an integer"
+   },
+   {
+    "suite": "write",
+    "name": "repeat_each_char",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'double_letters'"
+   },
+   {
+    "suite": "write",
+    "name": "sum_numbers_in_string",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "TypeError on sum_numbers_in_string('a12b3'): bad operand type for abs(): 'str'"
+   },
+   {
+    "suite": "write",
+    "name": "group_keys_by_value",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 1% (group_keys_by_value({'a': 1, 'b': 2, 'c': 1}) gave {} (expected {1: ['a', 'c'], 2: ['b']}))"
+   },
+   {
+    "suite": "write",
+    "name": "stock_after_orders",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes dict_from_lists instead (agreement with the reference 0.16)"
+   },
+   {
+    "suite": "write",
+    "name": "count_by_length",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'group_by_length'"
+   },
+   {
+    "suite": "write",
+    "name": "counts_to_list",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes sort_by_length instead (agreement with the reference 0.03)"
+   },
+   {
+    "suite": "write",
+    "name": "parse_key_values",
+    "contaminated": false,
+    "class": "formatting_or_parsing",
+    "evidence": "syntax error: unterminated string literal (detected at line 2)"
+   },
+   {
+    "suite": "write",
+    "name": "total_cost",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "AttributeError: 'dict' object has no attribute 'split'"
+   },
+   {
+    "suite": "write",
+    "name": "keys_sorted_by_value",
+    "contaminated": false,
+    "class": "formatting_or_parsing",
+    "evidence": "syntax error: unterminated string literal (detected at line 2)"
+   },
+   {
+    "suite": "write",
+    "name": "changed_keys",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes greater_than instead (agreement with the reference 0.20)"
+   },
+   {
+    "suite": "write",
+    "name": "nested_get",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "AttributeError: 'list' object has no attribute 'startswith'"
+   },
+   {
+    "suite": "write",
+    "name": "rename_keys",
+    "contaminated": false,
+    "class": "edge_case_failure",
+    "evidence": "agrees with the reference on 80% of probes (rename_keys({'a': 1, 'b': 2}, {'a': 'x'}) gave {'a': 1, 'b': 2} (expected {'x': 1, 'b': 2}))"
+   },
+   {
+    "suite": "write",
+    "name": "weighted_average",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "TypeError on weighted_average([1, 2, 3], [1, 1, 1]): unsupported operand type(s) for +: 'int' and 'list'"
+   },
+   {
+    "suite": "write",
+    "name": "count_matching_positions",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "TypeError on count_matching_positions(['a', 'b'], ['b', 'a']): unsupported operand type(s) for +: 'int' and 'str'"
+   },
+   {
+    "suite": "write",
+    "name": "common_prefix",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes bench:gcd instead (agreement with the reference 0.73)"
+   },
+   {
+    "suite": "write",
+    "name": "chars_in_both",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'letters_only'"
+   },
+   {
+    "suite": "write",
+    "name": "is_subsequence",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'first_two_chars'"
+   },
+   {
+    "suite": "write",
+    "name": "count_overlapping",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "NameError: name 'counting_overlapping' is not defined"
+   },
+   {
+    "suite": "write",
+    "name": "round_winner",
+    "contaminated": false,
+    "class": "formatting_or_parsing",
+    "evidence": "syntax error: expected 'else' after 'if' expression"
+   },
+   {
+    "suite": "write",
+    "name": "is_rotation",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'is_comment'"
+   },
+   {
+    "suite": "write",
+    "name": "can_build_from",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 32% (can_build_from('cat', 'tacx') gave False (expected True))"
+   },
+   {
+    "suite": "write",
+    "name": "pairs_with_sum",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "TypeError on pairs_with_sum([1, 2, 3], [3, 2, 1], 4): unsupported operand type(s) for -: 'enumerate' and 'int'"
+   }
+  ]
+ },
+ "bench_run": {
+  "exit": 0,
+  "minutes": 8.84,
+  "peak_rss_mb": 7657
+ },
+ "bench": {
+  "points": 24,
+  "of": 65,
+  "clean": 22,
+  "clean_of": 61,
+  "robust": 23,
+  "robust_of": 65,
+  "robust_clean": 21,
+  "weak_passes": [
+   "write:first_word"
+  ],
+  "fingerprint": "c41681ec4ac20ed3ff3f5e19074f84804b391c6ebabc277d947495ffc27b14c0",
+  "eval_version": "eval-v5.1-1",
+  "groups": {
+   "fixed": 7,
+   "fresh": 10,
+   "standard": 7
+  },
+  "lost_by_category": {
+   "formatting": 1,
+   "instruction_following": 18,
+   "hallucination": 0,
+   "coding": 2,
+   "factual": 5,
+   "reasoning": 15
+  },
+  "hallucinations": 0,
+  "invalid_outputs": 1,
+  "passed": [
+   "bugfix:add",
+   "bugfix:count_vowels",
+   "bugfix:factorial",
+   "bugfix:is_palindrome",
+   "bugfix:is_sorted",
+   "bugfix:square",
+   "bugfix:subtract",
+   "write:add",
+   "write:add_one",
+   "write:count_letter_a",
+   "write:count_spaces",
+   "write:count_words",
+   "write:count_zeros",
+   "write:dict_size",
+   "write:ends_with_dot",
+   "write:filter_even",
+   "write:first_word",
+   "write:halve_all",
+   "write:is_zero",
+   "write:square",
+   "write:subtract",
+   "write:sum_of_evens",
+   "write:total",
+   "write:triple"
+  ],
+  "categories": {
+   "write:is_even": "instruction_following",
+   "write:maximum": "instruction_following",
+   "write:minimum": "reasoning",
+   "write:average": "instruction_following",
+   "write:reverse_string": "instruction_following",
+   "write:is_palindrome": "reasoning",
+   "write:factorial": "factual",
+   "write:fibonacci": "factual",
+   "write:count_vowels": "instruction_following",
+   "write:is_prime": "instruction_following",
+   "write:gcd": "instruction_following",
+   "write:celsius_to_fahrenheit": "instruction_following",
+   "write:unique": "reasoning",
+   "write:flatten": "reasoning",
+   "write:clamp": "reasoning",
+   "write:char_count": "reasoning",
+   "write:merge_dicts": "reasoning",
+   "write:to_upper": "instruction_following",
+   "write:is_sorted": "instruction_following",
+   "write:second_largest": "reasoning",
+   "write:binary_search": "reasoning",
+   "write:is_anagram": "reasoning",
+   "write:digit_sum": "reasoning",
+   "write:area_of_square": "formatting",
+   "write:second_item": "instruction_following",
+   "write:max_length": "instruction_following",
+   "write:seconds_to_minutes": "factual",
+   "write:is_empty": "instruction_following",
+   "write:starts_with_vowel": "factual",
+   "write:middle_item": "instruction_following",
+   "write:sum_of_cubes": "instruction_following",
+   "write:all_strings_short": "reasoning",
+   "write:join_words": "instruction_following",
+   "bugfix:is_even": "instruction_following",
+   "bugfix:total": "reasoning",
+   "bugfix:maximum": "coding",
+   "bugfix:minimum": "coding",
+   "bugfix:filter_even": "instruction_following",
+   "bugfix:celsius_to_fahrenheit": "factual",
+   "bugfix:char_count": "reasoning",
+   "bugfix:clamp": "reasoning"
+  },
+  "contaminated": [
+   "bugfix:total",
+   "write:dict_size",
+   "write:sum_of_cubes",
+   "write:total"
+  ]
+ },
+ "diagnose_run": {
+  "exit": 0,
+  "minutes": 5.23,
+  "peak_rss_mb": 11316
+ },
+ "diagnose": {
+  "model": "/home/user/lmwork/v6/runs/D/1301/model",
+  "data": "/home/user/lmwork/v6/runs/D/1301/data",
+  "seed": 0,
+  "trained_on": true,
+  "weights_dtype": "fp32",
+  "note": null,
+  "train": {
+   "examples": 16,
+   "answer_tokens": 685,
+   "token_loss": 0.3667,
+   "token_loss_ci95": [
+    0.0804,
+    0.649
+   ],
+   "example_loss_mean": 0.2112,
+   "example_loss_sd": 0.3007,
+   "by_kind": {
+    "bugfix": {
+     "examples": 5,
+     "token_loss": 0.0104
+    },
+    "docstring": {
+     "examples": 1,
+     "token_loss": 0.2904
+    },
+    "write": {
+     "examples": 10,
+     "token_loss": 0.5212
+    }
+   }
+  },
+  "heldout_rows": {
+   "examples": 16,
+   "answer_tokens": 604,
+   "token_loss": 0.1248,
+   "token_loss_ci95": [
+    0.0579,
+    0.2064
+   ],
+   "example_loss_mean": 0.106,
+   "example_loss_sd": 0.1175,
+   "by_kind": {
+    "bugfix": {
+     "examples": 7,
+     "token_loss": 0.0467
+    },
+    "write": {
+     "examples": 9,
+     "token_loss": 0.1867
+    }
+   }
+  },
+  "unseen_dev_clean": {
+   "examples": 34,
+   "answer_tokens": 988,
+   "token_loss": 0.1444,
+   "token_loss_ci95": [
+    0.0874,
+    0.2092
+   ],
+   "example_loss_mean": 0.1242,
+   "example_loss_sd": 0.1537,
+   "by_kind": {
+    "write": {
+     "examples": 34,
+     "token_loss": 0.1444
+    }
+   },
+   "code_token_loss_plain": 0.1819,
+   "code_token_loss_spec_first": 0.2049
+  },
+  "unseen_new": {
+   "examples": 53,
+   "answer_tokens": 1766,
+   "token_loss": 0.5544,
+   "token_loss_ci95": [
+    0.483,
+    0.6327
+   ],
+   "example_loss_mean": 0.5386,
+   "example_loss_sd": 0.267,
+   "by_kind": {
+    "write": {
+     "examples": 53,
+     "token_loss": 0.5544
+    }
+   },
+   "code_token_loss_plain": 0.6761,
+   "code_token_loss_spec_first": 0.6441
+  },
+  "gap_train_to_heldout": -0.2419,
+  "gap_heldout_to_unseen": 0.0196
+ },
+ "minutes_total": 231.9,
+ "kept_model": {
+  "path": "/home/user/lmwork/v6/runs/D/1301/model_bf16/model.pt",
+  "sha256": "a6290bf1a02c6261353d8aa7c136e6ec23539289e4939251d02aecd9120f008a"
+ }
+}

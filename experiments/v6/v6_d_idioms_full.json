@@ -7,16 +7,45 @@
   "replay_dir": "/home/user/lmwork/data",
   "average_script": "/home/user/lmwork/average.py",
   "out": "/home/user/lmwork/v6/runs",
-  "seeds": [1301],
+  "seeds": [
+    1301
+  ],
   "metric": "all_clean",
   "category_rule": "items_lost",
   "keep_models": true,
-  "train": {"steps": 72, "lr": 1.5e-5, "batch": 4, "train_layers": 24, "warmup": 2, "precision": "fp32", "init_optim": true},
-  "eval": {"dev": true, "unseen": true, "unseen2": true, "bench": true, "diagnose": 16},
+  "train": {
+    "steps": 72,
+    "lr": 1.5e-05,
+    "batch": 4,
+    "train_layers": 24,
+    "warmup": 2,
+    "precision": "fp32",
+    "init_optim": true
+  },
+  "eval": {
+    "dev": true,
+    "unseen": true,
+    "unseen2": true,
+    "bench": true,
+    "diagnose": 16
+  },
   "arms": [
-    {"name": "D", "data": {"idioms_write": 4, "idioms_bugfix": 2, "basics_write": 2, "basics_bugfix": 2, "compose_write": 1,
-                           "compose_bugfix": 0, "contrast": 0, "novel_write": 1, "replay": 200},
-     "note": "curriculum x2 exposures, full budget, half legacy"}
+    {
+      "name": "D",
+      "data": {
+        "idioms_write": 4,
+        "idioms_bugfix": 2,
+        "basics_write": 2,
+        "basics_bugfix": 2,
+        "compose_write": 1,
+        "compose_bugfix": 0,
+        "contrast": 0,
+        "novel_write": 1,
+        "replay": 200,
+        "idioms_families": "v1"
+      },
+      "note": "curriculum x2 exposures, full budget, half legacy"
+    }
   ],
   "comparisons": []
 }

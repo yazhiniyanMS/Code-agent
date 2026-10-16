@@ -30,8 +30,10 @@ from dataclasses import dataclass, field
 
 from ycode.lm.data import InstructionExample, inject_bug
 
-IDIOMS_VERSION = "idioms-v2"  # v1: the first 76 families (FAMILIES_V1); v2 adds multi-step algorithm families,
-                               # plausible-but-wrong repairs and worked input-output examples (opt-in options)
+IDIOMS_VERSION = "idioms-v3"  # v1: the first 76 families (FAMILIES_V1); v2 adds 19 multi-step algorithm families,
+                               # plausible-but-wrong repairs and worked input-output examples (opt-in options);
+                               # v3 adds 120 families from ycode.lm.idioms_extra (written without reading any
+                               # evaluation set; filtered by the same held-out check)
 
 NUM = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six", 7: "seven", 8: "eight", 9: "nine",
        10: "ten", 12: "twelve", 13: "thirteen", 100: "a hundred"}
@@ -513,6 +515,16 @@ FAMILIES: tuple[Family, ...] = (
 )
 
 FAMILIES_V1 = frozenset(f.key for f in FAMILIES[:76])  # idioms-v1 (V6 iterations 1-2)
+FAMILIES_V2 = frozenset(f.key for f in FAMILIES)  # idioms-v2 (V6 iteration 3)
+
+
+def _with_extra() -> tuple[Family, ...]:
+    from ycode.lm.idioms_extra import EXTRA_FAMILIES
+
+    return FAMILIES + EXTRA_FAMILIES
+
+
+FAMILIES = _with_extra()
 
 # ------------------------------------------------------------------ inputs
 
@@ -616,11 +628,21 @@ def _fill(template: str, v: dict) -> str:
     return template.format(**v)
 
 
-def candidate_programs(seed: int = 0) -> list[Program]:
+FAMILY_SETS = ("v1", "v2", "v3")  # each a prefix of FAMILIES, so a pinned set reproduces its programs exactly
+
+
+def families(family_set: str = "v3") -> tuple[Family, ...]:
+    keys = {"v1": FAMILIES_V1, "v2": FAMILIES_V2}.get(family_set)
+    if family_set not in FAMILY_SETS:
+        raise ValueError(f"unknown family set {family_set!r}")
+    return FAMILIES if keys is None else tuple(f for f in FAMILIES if f.key in keys)
+
+
+def candidate_programs(seed: int = 0, family_list: tuple[Family, ...] | None = None) -> list[Program]:
     """Every program of every family, before the held-out checks; each verified by execution."""
     rng = random.Random(seed)
     out = []
-    for fam in FAMILIES:
+    for fam in FAMILIES if family_list is None else family_list:
         for v in fam.variants:
             params = _fill(fam.params, v)
             names = tuple(dict.fromkeys(_fill(n, v) for n in fam.names))
@@ -748,7 +770,8 @@ def _sibling_repairs(programs: list[Program], rng: random.Random, per_program: i
 
 
 def idiom_examples(seed: int, *, write_per_program: int = 2, bugfix_per_program: int = 1, contrast_per_program: int = 0,
-                   io_fraction: float = 0.0, programs: list[Program] | None = None) -> list[InstructionExample]:
+                   io_fraction: float = 0.0, programs: list[Program] | None = None,
+                   family_set: str = "v3") -> list[InstructionExample]:
     """Write-a-function examples (each with a random phrasing, implementation and prompt template;
     with probability ``io_fraction`` followed by worked input-output examples, one of them a
     boundary case), find-the-bug examples (a realistic bug injected into one implementation, kept
@@ -759,7 +782,7 @@ def idiom_examples(seed: int, *, write_per_program: int = 2, bugfix_per_program:
 
     rng = random.Random(seed)
     if programs is None:
-        programs, _ = held_out_check(candidate_programs())
+        programs, _ = held_out_check(candidate_programs(family_list=families(family_set)))
     out = []
     for p, wrong, fix in _sibling_repairs(programs, rng, contrast_per_program) if contrast_per_program else []:
         fixed = _documented(p, p.bodies[fix])

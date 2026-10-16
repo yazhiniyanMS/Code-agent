@@ -148,8 +148,11 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
     shutil.copy(data / "manifest.json", run_dir / "manifest.json")
 
     free_gb = shutil.disk_usage(run_dir).free / 1e9
-    if free_gb < DISK_NEEDED_GB:  # a checkpoint is ~7 GB; failing at the first save wastes the whole run
-        raise RuntimeError(f"only {free_gb:.1f} GB free under {run_dir}; training needs {DISK_NEEDED_GB} GB "
+    # a run writes one checkpoint the size of the one it starts from (weights + optimizer state), plus margin
+    anchor_gb = sum(f.stat().st_size for f in Path(spec["anchor"]).glob("*.pt")) / 1e9
+    needed_gb = min(DISK_NEEDED_GB, 1.1 * anchor_gb + 0.5)
+    if free_gb < needed_gb:  # a checkpoint is ~7 GB; failing at the first save wastes the whole run
+        raise RuntimeError(f"only {free_gb:.1f} GB free under {run_dir}; training needs {needed_gb:.1f} GB "
                            "(remove leftover checkpoints, e.g. of an interrupted smoke run)")
     log(f"{arm['name']} seed {seed}: training {train['steps']} steps")
     cmd = [sys.executable, "-m", "ycode.lm.cli", "sft", "--data", str(data), "--init-from", spec["anchor"],
@@ -178,6 +181,9 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
     shutil.copy(cur / "train_log.json", run_dir / "train_log.json")
     if not train["average"]:
         verify_checkpoint(cur)  # the file evaluated is the file training wrote
+    # the optimizer state (~2 GB) only serves resuming training, which is complete: free it for the
+    # bf16 export (a re-run of an interrupted evaluation resumes at the final step and trains nothing)
+    (cur / "optim.pt").unlink(missing_ok=True)
     import torch
 
     model, _, _ = load_checkpoint(cur, dtype=torch.bfloat16)  # half the memory; NaN/Inf survive the cast
