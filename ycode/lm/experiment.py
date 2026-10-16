@@ -41,7 +41,8 @@ T975 = {1: 12.706, 2: 4.303, 3: 3.182, 4: 2.776, 5: 2.571, 6: 2.447, 7: 2.365, 8
 T95 = {1: 6.314, 2: 2.920, 3: 2.353, 4: 2.132, 5: 2.015, 6: 1.943, 7: 1.895, 8: 1.860, 9: 1.833, 10: 1.812}
 TRAIN_DEFAULTS = {"steps": 72, "lr": 1.5e-5, "batch": 4, "train_layers": 24, "warmup": 2, "precision": "bf16",
                   "init_optim": True, "seq_len": None, "average": None,
-                  "save_every": None}  # checkpoint interval in steps (default: half the run)
+                  "save_every": None,  # checkpoint interval in steps (default: half the run)
+                  "compact": False}  # checkpoints store only the trained tensors, referencing the anchor
 EVAL_DEFAULTS = {"dev": True, "unseen": True, "unseen2": False, "bench": True, "limit": None, "diagnose": 32}
 DISK_NEEDED_GB = 8
 SMOKE = {"train": {"steps": 2}, "eval": {"limit": 4, "diagnose": 4}}
@@ -117,6 +118,21 @@ def _metrics_tail(path: Path, n: int = 10) -> dict:
             "answer_tokens": rows[-1]["answer_tokens"]}
 
 
+def _checkpoint_gb(anchor: Path, train: dict) -> float:
+    """Size of the checkpoint a run writes: the anchor's, or with compact checkpoints only its trained
+    blocks and final norm in fp32 (the rest stays referenced), plus the optimizer state."""
+    optim = (anchor / "optim.pt").stat().st_size if (anchor / "optim.pt").is_file() else 0
+    model = sum(f.stat().st_size for f in anchor.glob("*.pt") if f.name != "optim.pt")
+    if train.get("compact") and train.get("train_layers"):
+        import torch
+
+        payload = torch.load(anchor / "model.pt", map_location="cpu", weights_only=True, mmap=True)
+        first = payload["config"]["n_layer"] - train["train_layers"]
+        model = sum(v.numel() * 4 for k, v in payload["model"].items()
+                    if k.startswith("norm.") or (k.startswith("blocks.") and int(k.split(".")[1]) >= first))
+    return (model + optim) / 1e9
+
+
 def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False, log=print) -> dict:
     from ycode.lm.rounddata import write_round_dataset
     from ycode.lm.train import assert_finite_weights, load_checkpoint, verify_checkpoint
@@ -150,8 +166,7 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
 
     free_gb = shutil.disk_usage(run_dir).free / 1e9
     # a run writes one checkpoint the size of the one it starts from (weights + optimizer state), plus margin
-    anchor_gb = sum(f.stat().st_size for f in Path(spec["anchor"]).glob("*.pt")) / 1e9
-    needed_gb = min(DISK_NEEDED_GB, 1.1 * anchor_gb + 0.5)
+    needed_gb = min(DISK_NEEDED_GB, 1.02 * _checkpoint_gb(Path(spec["anchor"]), train) + 0.5)
     if free_gb < needed_gb:  # a checkpoint is ~7 GB; failing at the first save wastes the whole run
         raise RuntimeError(f"only {free_gb:.1f} GB free under {run_dir}; training needs {needed_gb:.1f} GB "
                            "(remove leftover checkpoints, e.g. of an interrupted smoke run)")
@@ -162,6 +177,7 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
            "--train-layers", str(train["train_layers"]), "--grad-checkpoint", "--eval-interval", "100000",
            "--eval-iters", "0", "--seed", str(seed), "--device", "cpu", "--precision", train["precision"]]
     cmd += ["--init-optim"] if train["init_optim"] else []
+    cmd += ["--compact-checkpoints"] if train["compact"] else []
     # checkpoint every save_every steps (default halfway; in place: one copy on disk), so a restart costs at most that much
     cmd += ["--resume", "--save-interval", str(train["save_every"] or max(1, train["steps"] // 2)), "--save-in-place"]
     cmd += ["--seq-len", str(train["seq_len"])] if train["seq_len"] else []
@@ -218,7 +234,9 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
     if spec.get("keep_models"):  # a bf16 inference copy (~3 GB; evaluation runs in bf16 too) survives the cleanup
         from ycode.lm.train import export_checkpoint, file_sha256
 
-        kept = export_checkpoint(cur, run_dir / "model_bf16", dtype="bf16")
+        # "compact": only the tensors that differ from the anchor (the trained layers), ~2.2 GB instead of ~3.1
+        kept = export_checkpoint(cur, run_dir / "model_bf16", dtype="bf16",
+                                 base=spec["anchor"] if spec["keep_models"] == "compact" else None)
         record["kept_model"] = {"path": str(kept), "sha256": file_sha256(kept)}
     result_path.write_text(json.dumps(record, indent=1))
     shutil.rmtree(cur, ignore_errors=True)  # 7 GB per checkpoint: kept only while scoring

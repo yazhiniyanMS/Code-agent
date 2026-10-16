@@ -1,6 +1,6 @@
 {
   "name": "v6-d-idioms-full",
-  "note": "V6 iteration 2. Evidence from iteration 1 (C1301, 24 steps): the curriculum transfers in likelihood (code-only loss vs round 54: new members of trained families -46%, unseen-v1 -37%, unseen-v2 -23%; experiments/v6/probe_learning.py) but one pass leaves it under-learned (training loss still ~0.42 and falling at step 24; legacy rows sit at ~0.07), and pass rates did not move. Changed variable: learning on the curriculum - the production 72-step budget with each curriculum program seen ~2x as often (4 write + 2 bug-fix examples). Legacy share kept at ~half (basics 2/2, compose 1, novel 1, 200 replay rows) against the forgetting C showed on near-certain items. Everything else as C.",
+  "note": "V6 iteration 2. Evidence from iteration 1 (C1301, 24 steps): the curriculum transfers in likelihood (code-only loss vs round 54: new members of trained families -46%, unseen-v1 -37%, unseen-v2 -23%; experiments/v6/probe_learning.py) but one pass leaves it under-learned (training loss still ~0.42 and falling at step 24; legacy rows sit at ~0.07), and pass rates did not move. Changed variable: learning on the curriculum - the production 72-step budget with each curriculum program seen ~2x as often (4 write + 2 bug-fix examples). Legacy share kept at ~half (basics 2/2, compose 1, novel 1, 200 replay rows) against the forgetting C showed on near-certain items. Everything else as C. Seed 1302 (added for the D+G soup's replication) uses compact checkpoints and kept models (only the tensors that differ from round 54; tested to give identical weights) and checkpoints every 12 steps.",
   "decision": "Same pre-registered rule as v6-c-idioms: replaces round 54 only if every seed beats its all_clean (29/168), the mean gain is >= 3 items, and no category loses >= 3 clean items round 54 passes. The benchmark is reported only.",
   "anchor": "/home/user/lmwork/loop/anchor",
   "tokenizer": "/home/user/lmwork/data/tokenizer.json",
@@ -8,11 +8,12 @@
   "average_script": "/home/user/lmwork/average.py",
   "out": "/home/user/lmwork/v6/runs",
   "seeds": [
-    1301
+    1301,
+    1302
   ],
   "metric": "all_clean",
   "category_rule": "items_lost",
-  "keep_models": true,
+  "keep_models": "compact",
   "train": {
     "steps": 72,
     "lr": 1.5e-05,
@@ -20,7 +21,9 @@
     "train_layers": 24,
     "warmup": 2,
     "precision": "fp32",
-    "init_optim": true
+    "init_optim": true,
+    "compact": true,
+    "save_every": 12
   },
   "eval": {
     "dev": true,

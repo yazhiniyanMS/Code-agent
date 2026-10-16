@@ -60,6 +60,9 @@ def _train_args(p: argparse.ArgumentParser, *, sft: bool) -> None:
                    help="Delete the previous checkpoint before saving: half the disk, but a crash mid-save loses it.")
     p.add_argument("--init-optim", action="store_true",
                    help="With --init-from: also continue that run's optimizer state (optim.pt) if it matches.")
+    p.add_argument("--compact-checkpoints", action="store_true",
+                   help="With --train-layers and --init-from: checkpoints store only the trained tensors "
+                        "and reference --init-from for the rest (~1 GB less on disk).")
     p.add_argument("--seq-len", type=int, default=None,
                    help="SFT: pack examples into rows of this many tokens (default: the model's context).")
     p.add_argument("--device", default="auto", help="auto, cpu, cuda or mps.")
@@ -280,6 +283,7 @@ def main(argv: list[str] | None = None) -> int:
             until_step=args.until_step,
             save_interval=args.save_interval,
             save_in_place=args.save_in_place,
+            compact_checkpoints=getattr(args, "compact_checkpoints", False),
             init_optim=args.init_optim,
             seq_len=args.seq_len,
         )
