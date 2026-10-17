@@ -1,0 +1,74 @@
+{
+  "name": "v7-pairs",
+  "note": "V7 step 3, one variable. Evidence (experiments/v7, development tasks only): round 54's failures are mostly a trained function written instead of the requested one (38 of 68 clean dev + unseen-v1 failures); the function it writes is the trained one whose description shares the most words with the prompt (wording percentile 0.90, name 0.80, code 0.81; training frequency 0.49, no relation). On the neighbour diagnostic set it passes 1/19 tasks worded like a trained function with one detail changed, and prefers the neighbour's code by 16 nats on average; adding input-output examples or a behavioural constraint does not help (0/19, 0/19), and naming a neighbouring function in the prompt makes it write that function (17/38 answers compute the neighbour, from 9). The mapping from the deciding words of a task to the deciding tokens of its code is what fails. Arms P1 and P0 train on the same examples (half: curriculum programs that have a sibling, i.e. another constant, condition or direction in the same family, built by ycode.lm.idioms.pair_examples; half: the C-sized legacy mix) and differ only in the loss weight of the answer tokens where the program's code differs from its sibling's: 20 in P1 (about 20% of the pair examples' loss weight, 1.6 tokens per example), the usual body weight 3 in P0. Same seed, steps, learning rate, layers and evaluation; curriculum families, architecture and duration unchanged between arms. No pair program shares an AST skeleton with a held-out item (dev, unseen-v1, unseen-v2, benchmark) or with the neighbour diagnostic set.",
+  "decision": "The V6 rule, unchanged: a candidate replaces round 54 only if every seed beats its all_clean (29/168), the mean gain is >= 3 items and no failure category loses >= 3 clean items round 54 passes (items_lost). Screening (development tasks only; the runner's metric is unseen_clean = clean dev /44 + unseen-v1 /53, because unseen-v2 is evaluated only for a candidate that passes screening): P1 goes on to a second seed and the full evaluation only if it beats P0 and round 54 on the neighbour set's original prompts and does not lose dev + unseen-v1 items against P0. The benchmark is reported only.",
+  "anchor": "/home/user/lmwork/loop/anchor",
+  "tokenizer": "/home/user/lmwork/data/tokenizer.json",
+  "replay_dir": "/home/user/lmwork/data",
+  "average_script": "/home/user/lmwork/average.py",
+  "out": "/home/user/lmwork/v7/runs",
+  "seeds": [
+    1301
+  ],
+  "metric": "unseen_clean",
+  "category_rule": "items_lost",
+  "keep_models": "compact",
+  "train": {
+    "steps": 24,
+    "lr": 1.5e-05,
+    "batch": 4,
+    "train_layers": 24,
+    "warmup": 2,
+    "precision": "fp32",
+    "init_optim": true,
+    "compact": true,
+    "save_every": 12
+  },
+  "eval": {
+    "dev": true,
+    "unseen": true,
+    "unseen2": false,
+    "bench": false,
+    "diagnose": 0
+  },
+  "arms": [
+    {
+      "name": "P1",
+      "data": {
+        "idioms_pairs": 2,
+        "pair_weight": 20,
+        "idioms_families": "v3",
+        "basics_write": 1,
+        "basics_bugfix": 1,
+        "compose_write": 0,
+        "compose_bugfix": 0,
+        "contrast": 0,
+        "novel_write": 1,
+        "replay": 100
+      },
+      "note": "treatment: deciding tokens weigh 20"
+    },
+    {
+      "name": "P0",
+      "data": {
+        "idioms_pairs": 2,
+        "pair_weight": 0,
+        "idioms_families": "v3",
+        "basics_write": 1,
+        "basics_bugfix": 1,
+        "compose_write": 0,
+        "compose_bugfix": 0,
+        "contrast": 0,
+        "novel_write": 1,
+        "replay": 100
+      },
+      "note": "control: the same examples with the usual weights"
+    }
+  ],
+  "comparisons": [
+    [
+      "P1",
+      "P0"
+    ]
+  ]
+}

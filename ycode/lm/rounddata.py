@@ -30,6 +30,8 @@ DEFAULTS = {
     "idioms_contrast": 0,     # plausible-but-wrong repairs per program (a sibling program's body under its docstring)
     "idioms_io": 0.0,         # share of idiom write prompts with worked input-output examples (one a boundary case)
     "idioms_families": "v3",  # curriculum family set (ycode.lm.idioms.FAMILY_SETS); runs pin the set they used
+    "idioms_pairs": 0,        # V7: write examples per curriculum program that has a sibling (idioms.pair_examples)
+    "pair_weight": 0,         # V7: loss weight of the answer tokens that differ from the sibling's code; 0 = usual weights
 }
 
 
@@ -55,13 +57,18 @@ def round_examples(seed: int, options: dict):
 
 
 def _idiom_examples(seed: int, o: dict):
-    if not (o["idioms_write"] or o["idioms_bugfix"] or o["idioms_contrast"]):
-        return []
-    from ycode.lm.idioms import idiom_examples
+    out = []
+    if o["idioms_write"] or o["idioms_bugfix"] or o["idioms_contrast"]:
+        from ycode.lm.idioms import idiom_examples
 
-    return idiom_examples(seed, write_per_program=o["idioms_write"], bugfix_per_program=o["idioms_bugfix"],
-                          contrast_per_program=o["idioms_contrast"], io_fraction=o["idioms_io"],
-                          family_set=o["idioms_families"])
+        out += idiom_examples(seed, write_per_program=o["idioms_write"], bugfix_per_program=o["idioms_bugfix"],
+                              contrast_per_program=o["idioms_contrast"], io_fraction=o["idioms_io"],
+                              family_set=o["idioms_families"])
+    if o["idioms_pairs"]:
+        from ycode.lm.idioms import pair_examples
+
+        out += pair_examples(seed, per_program=o["idioms_pairs"], weight=o["pair_weight"], family_set=o["idioms_families"])
+    return out
 
 
 def replay_held_out_filter():

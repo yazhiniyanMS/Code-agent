@@ -121,6 +121,11 @@ def format_chat(prompt: str, response: str | None = None) -> str:
 class InstructionExample:
     prompt: str
     response: str
+    # A neighbouring function's code under the same signature, and the weight (with
+    # ``encode_example(weighted=True)``) of the answer tokens that differ from it: the tokens that
+    # decide between the requested function and its neighbour. 0 keeps the usual weights.
+    contrast: str | None = None
+    contrast_weight: int = 0
 
 
 _PROMPTS_WRITE = (
@@ -497,8 +502,25 @@ def _token_lines(tok: BPETokenizer, ids: list[int]) -> list[int]:
     return lines
 
 
-def answer_weights(tok: BPETokenizer, prompt: str, answer_ids: list[int]) -> list[int]:
-    """Per-token loss weights for an exercise answer (see DIFF_WEIGHT)."""
+def contrast_tokens(answer_ids: list[int], contrast_ids: list[int]) -> set[int]:
+    """Positions of the answer tokens that differ from a contrasting answer (inserted or replaced,
+    and the token right after a deletion)."""
+    n = len(answer_ids)
+    changed: set[int] = set()
+    a_end = b_end = 0
+    for a, b, size in difflib.SequenceMatcher(None, contrast_ids, answer_ids, autojunk=False).get_matching_blocks():
+        changed.update(range(b_end, b))
+        if a > a_end and b == b_end and b < n:
+            changed.add(b)
+        a_end, b_end = a + size, b + size
+    return changed
+
+
+def answer_weights(tok: BPETokenizer, prompt: str, answer_ids: list[int], contrast_ids: list[int] | None = None,
+                   contrast_weight: int = 0) -> list[int]:
+    """Per-token loss weights for an exercise answer (see DIFF_WEIGHT). With ``contrast_ids`` and a
+    ``contrast_weight``, the answer tokens that differ from the contrasting answer weigh that much
+    (at least)."""
     n = len(answer_ids)
     lines = _token_lines(tok, answer_ids)
     weights = [1] * n
@@ -538,6 +560,9 @@ def answer_weights(tok: BPETokenizer, prompt: str, answer_ids: list[int]) -> lis
         for j in range(n):
             if first <= lines[j] < last or lines[j] == 1:
                 weights[j] = BODY_WEIGHT
+    if contrast_ids is not None and contrast_weight:
+        for j in contrast_tokens(answer_ids, contrast_ids):
+            weights[j] = max(weights[j], contrast_weight)
     return weights
 
 
@@ -568,7 +593,10 @@ def encode_example(tok: BPETokenizer, ex: InstructionExample, *, weighted: bool 
     body_ids = encode_answer(tok, ex.prompt, ex.response) if weighted else tok.encode(ex.response.strip(),
                                                                                        allow_special=False)
     end_ids = tok.encode("\n" + END)
-    body_mask = answer_weights(tok, ex.prompt, body_ids) if weighted else [1] * len(body_ids)
+    contrast_ids = (encode_answer(tok, ex.prompt, f"```python\n{ex.contrast}\n```")
+                    if weighted and ex.contrast and ex.contrast_weight else None)
+    body_mask = (answer_weights(tok, ex.prompt, body_ids, contrast_ids, ex.contrast_weight) if weighted
+                 else [1] * len(body_ids))
     return prompt_ids + body_ids + end_ids, [0] * len(prompt_ids) + body_mask + [1] * len(end_ids)
 
 

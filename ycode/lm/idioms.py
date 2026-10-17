@@ -816,3 +816,71 @@ def idiom_examples(seed: int, *, write_per_program: int = 2, bugfix_per_program:
             made += 1
     rng.shuffle(out)
     return out
+
+
+def neighbour_skeletons(path=None) -> set[str]:
+    """AST skeletons of the V7 neighbour diagnostic set (references and the neighbours' code under
+    the tasks' signatures): training data built for V7 keeps away from them, so the set measures
+    transfer like the other development sets."""
+    import json
+    from pathlib import Path
+
+    from ycode.lm.leakage import skeleton
+
+    path = Path(path) if path else Path(__file__).with_name("neighbours_v1.json")
+    if not path.exists():
+        return set()
+    data = json.loads(path.read_text())
+    return {s for t in data["tasks"] for s in (skeleton(t["reference"]), skeleton(t["wrong"])) if s}
+
+
+def neighbour_pairs(programs: list[Program], rng: random.Random, per_program: int) -> list[tuple[Program, Program, int]]:
+    """(program, sibling, implementation) triples: a sibling is a program of the same family with the
+    same parameters that computes something else on the program's inputs (another constant,
+    condition or direction); the implementation index is one both have, so their code differs only
+    where the task does."""
+    by_family: dict[str, list[Program]] = {}
+    for q in programs:
+        by_family.setdefault(q.family, []).append(q)
+    out = []
+    for p in programs:
+        expected = repr(_run(p.source(0), p.name, list(p.inputs)))
+        siblings = [q for q in by_family[p.family] if q.params == p.params and q.source(0, "f") != p.source(0, "f")]
+        rng.shuffle(siblings)
+        made = 0
+        for q in siblings:
+            if made >= per_program:
+                break
+            if repr(_run(q.source(0, p.name), p.name, list(p.inputs))) == expected:
+                continue
+            out.append((p, q, rng.randrange(min(len(p.bodies), len(q.bodies)))))
+            made += 1
+    return out
+
+
+def pair_examples(seed: int, *, per_program: int, weight: int, programs: list[Program] | None = None,
+                  family_set: str = "v3") -> list[InstructionExample]:
+    """Write examples for programs that have a sibling (``neighbour_pairs``): the program's task and
+    code, with the sibling's code under the same signature as the contrast. ``weight`` > 0 makes the
+    answer tokens that differ from the sibling's code (the ones that decide between them) weigh that
+    much in the loss; 0 builds the same examples with the usual weights (the control)."""
+    import re
+
+    from ycode.lm.basics import neutralize
+    from ycode.lm.leakage import skeleton
+
+    rng = random.Random(seed)
+    if programs is None:
+        programs, _ = held_out_check(candidate_programs(family_list=families(family_set)))
+    avoid = neighbour_skeletons()
+    programs = [p for p in programs if not any(skeleton(p.source(i)) in avoid for i in range(len(p.bodies)))]
+    out = []
+    for p, q, impl in neighbour_pairs(programs, rng, per_program):
+        sig = f"{p.name}({p.params})"
+        ex = neutralize(InstructionExample(_prompt(sig, rng.choice(p.tasks), rng), f"```python\n{p.source(impl)}\n```"),
+                        p.name, rng, 0.3)
+        new = re.match(r"```python\ndef (\w+)\(", ex.response).group(1)
+        contrast = re.sub(rf"(?<![\w.]){re.escape(p.name)}(?=\()", new, q.source(impl, p.name))
+        out.append(InstructionExample(ex.prompt, ex.response, contrast, weight))
+    rng.shuffle(out)
+    return out

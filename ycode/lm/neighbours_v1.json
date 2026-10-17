@@ -1,0 +1,2172 @@
+{
+ "version": "neighbours-v1",
+ "variants": [
+  "original",
+  "io",
+  "constraint",
+  "distractor"
+ ],
+ "tasks": [
+  {
+   "group": "same_wording",
+   "name": "first_four_chars",
+   "params": "s",
+   "neighbour": "first_five_chars",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `first_four_chars(s)` that returns the first four characters of s.",
+    "io": "Write a Python function `first_four_chars(s)` that returns the first four characters of s. For example, `first_four_chars('keyboard')` returns `'keyb'` and `first_four_chars('hello world')` returns `'hell'`.",
+    "constraint": "Write a Python function `first_four_chars(s)` that returns the first four characters of s. If s has fewer than four characters, the whole of s is returned.",
+    "distractor": "Write a Python function `first_four_chars(s)` that returns the first four characters of s. The same module also has `first_five_chars(s)`, which returns the first 5 characters of s."
+   },
+   "tests": "assert first_four_chars('abcdefg') == 'abcd'\nassert first_four_chars('python') == 'pyth'\nassert first_four_chars('ab') == 'ab'\nassert first_four_chars('12345') == '1234'\nassert first_four_chars('four') == 'four'",
+   "test_inputs": [
+    [
+     "abcdefg"
+    ],
+    [
+     "python"
+    ],
+    [
+     "ab"
+    ],
+    [
+     "12345"
+    ],
+    [
+     "four"
+    ]
+   ],
+   "reference": "def first_four_chars(s):\n    return s[:4]",
+   "wrong": "def first_four_chars(s):\n    return s[:5]",
+   "expected": [
+    "'abcd'",
+    "'pyth'",
+    "'ab'",
+    "'1234'",
+    "'four'"
+   ],
+   "wrong_outputs": [
+    "'abcde'",
+    "'pytho'",
+    "'ab'",
+    "'12345'",
+    "'four'"
+   ]
+  },
+  {
+   "group": "same_wording",
+   "name": "last_two_chars",
+   "params": "s",
+   "neighbour": "first_two_chars",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `last_two_chars(s)` that returns the last two characters of s.",
+    "io": "Write a Python function `last_two_chars(s)` that returns the last two characters of s. For example, `last_two_chars('garden')` returns `'en'` and `last_two_chars('moon')` returns `'on'`.",
+    "constraint": "Write a Python function `last_two_chars(s)` that returns the last two characters of s. The characters come from the end of s; if s is shorter than two characters, all of s is returned.",
+    "distractor": "Write a Python function `last_two_chars(s)` that returns the last two characters of s. The same module also has `first_two_chars(s)`, which returns the first two characters of s."
+   },
+   "tests": "assert last_two_chars('abcdef') == 'ef'\nassert last_two_chars('python') == 'on'\nassert last_two_chars('xy') == 'xy'\nassert last_two_chars('hello') == 'lo'\nassert last_two_chars('a') == 'a'",
+   "test_inputs": [
+    [
+     "abcdef"
+    ],
+    [
+     "python"
+    ],
+    [
+     "xy"
+    ],
+    [
+     "hello"
+    ],
+    [
+     "a"
+    ]
+   ],
+   "reference": "def last_two_chars(s):\n    return s[-2:]",
+   "wrong": "def last_two_chars(s):\n    return s[:2]",
+   "expected": [
+    "'ef'",
+    "'on'",
+    "'xy'",
+    "'lo'",
+    "'a'"
+   ],
+   "wrong_outputs": [
+    "'ab'",
+    "'py'",
+    "'xy'",
+    "'he'",
+    "'a'"
+   ]
+  },
+  {
+   "group": "same_wording",
+   "name": "count_at_least",
+   "params": "numbers, limit",
+   "neighbour": "count_greater",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `count_at_least(numbers, limit)` that returns how many numbers are greater than or equal to limit.",
+    "io": "Write a Python function `count_at_least(numbers, limit)` that returns how many numbers are greater than or equal to limit. For example, `count_at_least([4, 6, 8, 6], 6)` returns `3` and `count_at_least([1, 2, 3], 4)` returns `0`.",
+    "constraint": "Write a Python function `count_at_least(numbers, limit)` that returns how many numbers are greater than or equal to limit. Numbers equal to limit are counted too.",
+    "distractor": "Write a Python function `count_at_least(numbers, limit)` that returns how many numbers are greater than or equal to limit. The same module also has `count_greater(numbers, limit)`, which returns how many numbers are greater than limit."
+   },
+   "tests": "assert count_at_least([1, 5, 3, 5, 7], 5) == 3\nassert count_at_least([], 3) == 0\nassert count_at_least([2, 2, 2], 2) == 3\nassert count_at_least([-1, 0, 1], 0) == 2\nassert count_at_least([10, 20, 30], 25) == 1",
+   "test_inputs": [
+    [
+     [
+      1,
+      5,
+      3,
+      5,
+      7
+     ],
+     5
+    ],
+    [
+     [],
+     3
+    ],
+    [
+     [
+      2,
+      2,
+      2
+     ],
+     2
+    ],
+    [
+     [
+      -1,
+      0,
+      1
+     ],
+     0
+    ],
+    [
+     [
+      10,
+      20,
+      30
+     ],
+     25
+    ]
+   ],
+   "reference": "def count_at_least(numbers, limit):\n    return sum(1 for x in numbers if x >= limit)",
+   "wrong": "def count_at_least(numbers, limit):\n    return sum(1 for x in numbers if x > limit)",
+   "expected": [
+    "3",
+    "0",
+    "3",
+    "2",
+    "1"
+   ],
+   "wrong_outputs": [
+    "1",
+    "0",
+    "0",
+    "1",
+    "1"
+   ]
+  },
+  {
+   "group": "same_wording",
+   "name": "product_of_positives",
+   "params": "numbers",
+   "neighbour": "sum_positive",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `product_of_positives(numbers)` that returns the product of the positive numbers in the list.",
+    "io": "Write a Python function `product_of_positives(numbers)` that returns the product of the positive numbers in the list. For example, `product_of_positives([3, 3, -5])` returns `9` and `product_of_positives([2, 10])` returns `20`.",
+    "constraint": "Write a Python function `product_of_positives(numbers)` that returns the product of the positive numbers in the list. The result is 1 when no number in the list is positive.",
+    "distractor": "Write a Python function `product_of_positives(numbers)` that returns the product of the positive numbers in the list. The same module also has `sum_positive(numbers)`, which returns the sum of the positive numbers in the list."
+   },
+   "tests": "assert product_of_positives([2, -3, 4]) == 8\nassert product_of_positives([]) == 1\nassert product_of_positives([-1, -2]) == 1\nassert product_of_positives([1, 5, 0, 3]) == 15\nassert product_of_positives([7]) == 7",
+   "test_inputs": [
+    [
+     [
+      2,
+      -3,
+      4
+     ]
+    ],
+    [
+     []
+    ],
+    [
+     [
+      -1,
+      -2
+     ]
+    ],
+    [
+     [
+      1,
+      5,
+      0,
+      3
+     ]
+    ],
+    [
+     [
+      7
+     ]
+    ]
+   ],
+   "reference": "def product_of_positives(numbers):\n    result = 1\n    for x in numbers:\n        if x > 0:\n            result *= x\n    return result",
+   "wrong": "def product_of_positives(numbers):\n    return sum(x for x in numbers if x > 0)",
+   "expected": [
+    "8",
+    "1",
+    "1",
+    "15",
+    "7"
+   ],
+   "wrong_outputs": [
+    "6",
+    "0",
+    "0",
+    "9",
+    "7"
+   ]
+  },
+  {
+   "group": "same_wording",
+   "name": "last_index_of_max",
+   "params": "numbers",
+   "neighbour": "index_of_max",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `last_index_of_max(numbers)` that returns the index of the last occurrence of the largest number in a non-empty list.",
+    "io": "Write a Python function `last_index_of_max(numbers)` that returns the index of the last occurrence of the largest number in a non-empty list. For example, `last_index_of_max([7, 2, 7])` returns `2` and `last_index_of_max([1, 8, 3, 8, 8])` returns `4`.",
+    "constraint": "Write a Python function `last_index_of_max(numbers)` that returns the index of the last occurrence of the largest number in a non-empty list. When the largest number occurs more than once, the index of its last occurrence is returned.",
+    "distractor": "Write a Python function `last_index_of_max(numbers)` that returns the index of the last occurrence of the largest number in a non-empty list. The same module also has `index_of_max(numbers)`, which returns the index of the largest number in a non-empty list."
+   },
+   "tests": "assert last_index_of_max([1, 5, 2, 5]) == 3\nassert last_index_of_max([3]) == 0\nassert last_index_of_max([9, 1, 9, 9, 0]) == 3\nassert last_index_of_max([4, 3, 2]) == 0\nassert last_index_of_max([-2, -2]) == 1",
+   "test_inputs": [
+    [
+     [
+      1,
+      5,
+      2,
+      5
+     ]
+    ],
+    [
+     [
+      3
+     ]
+    ],
+    [
+     [
+      9,
+      1,
+      9,
+      9,
+      0
+     ]
+    ],
+    [
+     [
+      4,
+      3,
+      2
+     ]
+    ],
+    [
+     [
+      -2,
+      -2
+     ]
+    ]
+   ],
+   "reference": "def last_index_of_max(numbers):\n    return len(numbers) - 1 - numbers[::-1].index(max(numbers))",
+   "wrong": "def last_index_of_max(numbers):\n    return numbers.index(max(numbers))",
+   "expected": [
+    "3",
+    "0",
+    "3",
+    "0",
+    "1"
+   ],
+   "wrong_outputs": [
+    "1",
+    "0",
+    "0",
+    "0",
+    "0"
+   ]
+  },
+  {
+   "group": "same_wording",
+   "name": "shortest_word_last",
+   "params": "text",
+   "neighbour": "shortest_word",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `shortest_word_last(text)` that returns the shortest word in text (the last one if there is a tie).",
+    "io": "Write a Python function `shortest_word_last(text)` that returns the shortest word in text (the last one if there is a tie). For example, `shortest_word_last('we go up')` returns `'up'` and `shortest_word_last('one of my')` returns `'my'`.",
+    "constraint": "Write a Python function `shortest_word_last(text)` that returns the shortest word in text (the last one if there is a tie). If several words share the shortest length, the one that comes later in text wins.",
+    "distractor": "Write a Python function `shortest_word_last(text)` that returns the shortest word in text (the last one if there is a tie). The same module also has `shortest_word(text)`, which returns the shortest word in text (the first one if there is a tie)."
+   },
+   "tests": "assert shortest_word_last('an apple is a fruit') == 'a'\nassert shortest_word_last('cat dog') == 'dog'\nassert shortest_word_last('hello') == 'hello'\nassert shortest_word_last('to be or not') == 'or'\nassert shortest_word_last('big red box') == 'box'",
+   "test_inputs": [
+    [
+     "an apple is a fruit"
+    ],
+    [
+     "cat dog"
+    ],
+    [
+     "hello"
+    ],
+    [
+     "to be or not"
+    ],
+    [
+     "big red box"
+    ]
+   ],
+   "reference": "def shortest_word_last(text):\n    best = None\n    for w in text.split():\n        if best is None or len(w) <= len(best):\n            best = w\n    return best",
+   "wrong": "def shortest_word_last(text):\n    return min(text.split(), key=len)",
+   "expected": [
+    "'a'",
+    "'dog'",
+    "'hello'",
+    "'or'",
+    "'box'"
+   ],
+   "wrong_outputs": [
+    "'a'",
+    "'cat'",
+    "'hello'",
+    "'to'",
+    "'big'"
+   ]
+  },
+  {
+   "group": "same_wording",
+   "name": "remove_dashes",
+   "params": "s",
+   "neighbour": "remove_spaces",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `remove_dashes(s)` that returns s with all dashes removed.",
+    "io": "Write a Python function `remove_dashes(s)` that returns s with all dashes removed. For example, `remove_dashes('2024-01-31')` returns `'20240131'` and `remove_dashes('up - down')` returns `'up  down'`.",
+    "constraint": "Write a Python function `remove_dashes(s)` that returns s with all dashes removed. Only '-' characters are removed; spaces stay.",
+    "distractor": "Write a Python function `remove_dashes(s)` that returns s with all dashes removed. The same module also has `remove_spaces(s)`, which returns s with all spaces removed."
+   },
+   "tests": "assert remove_dashes('a-b-c') == 'abc'\nassert remove_dashes('no dashes here') == 'no dashes here'\nassert remove_dashes('--x--') == 'x'\nassert remove_dashes('well - known') == 'well  known'\nassert remove_dashes('') == ''",
+   "test_inputs": [
+    [
+     "a-b-c"
+    ],
+    [
+     "no dashes here"
+    ],
+    [
+     "--x--"
+    ],
+    [
+     "well - known"
+    ],
+    [
+     ""
+    ]
+   ],
+   "reference": "def remove_dashes(s):\n    return s.replace('-', '')",
+   "wrong": "def remove_dashes(s):\n    return s.replace(' ', '')",
+   "expected": [
+    "'abc'",
+    "'no dashes here'",
+    "'x'",
+    "'well  known'",
+    "''"
+   ],
+   "wrong_outputs": [
+    "'a-b-c'",
+    "'nodasheshere'",
+    "'--x--'",
+    "'well-known'",
+    "''"
+   ]
+  },
+  {
+   "group": "same_wording",
+   "name": "drop_last",
+   "params": "items, n",
+   "neighbour": "drop",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `drop_last(items, n)` that returns the list without its last n items.",
+    "io": "Write a Python function `drop_last(items, n)` that returns the list without its last n items. For example, `drop_last([10, 20, 30, 40], 1)` returns `[10, 20, 30]` and `drop_last(['x', 'y', 'z'], 2)` returns `['x']`.",
+    "constraint": "Write a Python function `drop_last(items, n)` that returns the list without its last n items. n is between 0 and the length of the list; with n = 0 the whole list is returned.",
+    "distractor": "Write a Python function `drop_last(items, n)` that returns the list without its last n items. The same module also has `drop(items, n)`, which returns the list without its first n items."
+   },
+   "tests": "assert drop_last([1, 2, 3, 4, 5], 2) == [1, 2, 3]\nassert drop_last([1, 2, 3], 0) == [1, 2, 3]\nassert drop_last(['a', 'b', 'c', 'd'], 1) == ['a', 'b', 'c']\nassert drop_last([7, 8], 2) == []\nassert drop_last([9, 8, 7, 6], 3) == [9]",
+   "test_inputs": [
+    [
+     [
+      1,
+      2,
+      3,
+      4,
+      5
+     ],
+     2
+    ],
+    [
+     [
+      1,
+      2,
+      3
+     ],
+     0
+    ],
+    [
+     [
+      "a",
+      "b",
+      "c",
+      "d"
+     ],
+     1
+    ],
+    [
+     [
+      7,
+      8
+     ],
+     2
+    ],
+    [
+     [
+      9,
+      8,
+      7,
+      6
+     ],
+     3
+    ]
+   ],
+   "reference": "def drop_last(items, n):\n    return items[:len(items) - n]",
+   "wrong": "def drop_last(items, n):\n    return items[n:]",
+   "expected": [
+    "[1, 2, 3]",
+    "[1, 2, 3]",
+    "['a', 'b', 'c']",
+    "[]",
+    "[9]"
+   ],
+   "wrong_outputs": [
+    "[3, 4, 5]",
+    "[1, 2, 3]",
+    "['b', 'c', 'd']",
+    "[]",
+    "[6]"
+   ]
+  },
+  {
+   "group": "same_wording",
+   "name": "is_strictly_between",
+   "params": "x, low, high",
+   "neighbour": "is_between",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `is_strictly_between(x, low, high)` that returns True if x is strictly between low and high.",
+    "io": "Write a Python function `is_strictly_between(x, low, high)` that returns True if x is strictly between low and high. For example, `is_strictly_between(7, 7, 9)` returns `False` and `is_strictly_between(8, 7, 9)` returns `True`.",
+    "constraint": "Write a Python function `is_strictly_between(x, low, high)` that returns True if x is strictly between low and high. x equal to low or to high gives False.",
+    "distractor": "Write a Python function `is_strictly_between(x, low, high)` that returns True if x is strictly between low and high. The same module also has `is_between(x, low, high)`, which returns True if x is between low and high, inclusive."
+   },
+   "tests": "assert is_strictly_between(5, 1, 10) == True\nassert is_strictly_between(1, 1, 10) == False\nassert is_strictly_between(10, 1, 10) == False\nassert is_strictly_between(0, 1, 10) == False\nassert is_strictly_between(3, 2, 4) == True\nassert is_strictly_between(-1, -5, 0) == True",
+   "test_inputs": [
+    [
+     5,
+     1,
+     10
+    ],
+    [
+     1,
+     1,
+     10
+    ],
+    [
+     10,
+     1,
+     10
+    ],
+    [
+     0,
+     1,
+     10
+    ],
+    [
+     3,
+     2,
+     4
+    ],
+    [
+     -1,
+     -5,
+     0
+    ]
+   ],
+   "reference": "def is_strictly_between(x, low, high):\n    return low < x < high",
+   "wrong": "def is_strictly_between(x, low, high):\n    return low <= x <= high",
+   "expected": [
+    "True",
+    "False",
+    "False",
+    "False",
+    "True",
+    "True"
+   ],
+   "wrong_outputs": [
+    "True",
+    "True",
+    "True",
+    "False",
+    "True",
+    "True"
+   ]
+  },
+  {
+   "group": "same_wording",
+   "name": "keep_at_most",
+   "params": "numbers, limit",
+   "neighbour": "greater_than",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `keep_at_most(numbers, limit)` that returns a list of the numbers less than or equal to limit.",
+    "io": "Write a Python function `keep_at_most(numbers, limit)` that returns a list of the numbers less than or equal to limit. For example, `keep_at_most([6, 1, 9, 4], 5)` returns `[1, 4]` and `keep_at_most([3, 3, 8], 3)` returns `[3, 3]`.",
+    "constraint": "Write a Python function `keep_at_most(numbers, limit)` that returns a list of the numbers less than or equal to limit. Numbers equal to limit are kept.",
+    "distractor": "Write a Python function `keep_at_most(numbers, limit)` that returns a list of the numbers less than or equal to limit. The same module also has `greater_than(numbers, limit)`, which returns a list of the numbers greater than limit."
+   },
+   "tests": "assert keep_at_most([1, 5, 3, 7], 4) == [1, 3]\nassert keep_at_most([], 2) == []\nassert keep_at_most([2, 2, 3], 2) == [2, 2]\nassert keep_at_most([-1, 0, 1], 0) == [-1, 0]\nassert keep_at_most([10, 20], 5) == []",
+   "test_inputs": [
+    [
+     [
+      1,
+      5,
+      3,
+      7
+     ],
+     4
+    ],
+    [
+     [],
+     2
+    ],
+    [
+     [
+      2,
+      2,
+      3
+     ],
+     2
+    ],
+    [
+     [
+      -1,
+      0,
+      1
+     ],
+     0
+    ],
+    [
+     [
+      10,
+      20
+     ],
+     5
+    ]
+   ],
+   "reference": "def keep_at_most(numbers, limit):\n    return [x for x in numbers if x <= limit]",
+   "wrong": "def keep_at_most(numbers, limit):\n    return [x for x in numbers if x > limit]",
+   "expected": [
+    "[1, 3]",
+    "[]",
+    "[2, 2]",
+    "[-1, 0]",
+    "[]"
+   ],
+   "wrong_outputs": [
+    "[5, 7]",
+    "[]",
+    "[3]",
+    "[1]",
+    "[10, 20]"
+   ]
+  },
+  {
+   "group": "same_wording",
+   "name": "capitalize_last",
+   "params": "s",
+   "neighbour": "capitalize_first",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `capitalize_last(s)` that returns s with its last character in upper case.",
+    "io": "Write a Python function `capitalize_last(s)` that returns s with its last character in upper case. For example, `capitalize_last('python')` returns `'pythoN'` and `capitalize_last('go')` returns `'gO'`.",
+    "constraint": "Write a Python function `capitalize_last(s)` that returns s with its last character in upper case. Only the final character changes; an empty string stays empty.",
+    "distractor": "Write a Python function `capitalize_last(s)` that returns s with its last character in upper case. The same module also has `capitalize_first(s)`, which returns s with its first character in upper case."
+   },
+   "tests": "assert capitalize_last('hello') == 'hellO'\nassert capitalize_last('a') == 'A'\nassert capitalize_last('') == ''\nassert capitalize_last('abc def') == 'abc deF'\nassert capitalize_last('Xy') == 'XY'",
+   "test_inputs": [
+    [
+     "hello"
+    ],
+    [
+     "a"
+    ],
+    [
+     ""
+    ],
+    [
+     "abc def"
+    ],
+    [
+     "Xy"
+    ]
+   ],
+   "reference": "def capitalize_last(s):\n    return s[:-1] + s[-1:].upper()",
+   "wrong": "def capitalize_last(s):\n    return s[:1].upper() + s[1:]",
+   "expected": [
+    "'hellO'",
+    "'A'",
+    "''",
+    "'abc deF'",
+    "'XY'"
+   ],
+   "wrong_outputs": [
+    "'Hello'",
+    "'A'",
+    "''",
+    "'Abc def'",
+    "'Xy'"
+   ]
+  },
+  {
+   "group": "same_wording",
+   "name": "kelvin_to_celsius",
+   "params": "k",
+   "neighbour": "celsius_to_kelvin",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `kelvin_to_celsius(k)` that converts a temperature from Kelvin to Celsius.",
+    "io": "Write a Python function `kelvin_to_celsius(k)` that converts a temperature from Kelvin to Celsius. For example, `kelvin_to_celsius(310.15)` returns `37.0` and `kelvin_to_celsius(200)` returns `-73.14999999999998`.",
+    "constraint": "Write a Python function `kelvin_to_celsius(k)` that converts a temperature from Kelvin to Celsius. 0 degrees Celsius is 273.15 Kelvin.",
+    "distractor": "Write a Python function `kelvin_to_celsius(k)` that converts a temperature from Kelvin to Celsius. The same module also has `celsius_to_kelvin(c)`, which converts a temperature from Celsius to Kelvin."
+   },
+   "tests": "assert kelvin_to_celsius(273.15) == 0.0\nassert kelvin_to_celsius(0) == -273.15\nassert kelvin_to_celsius(300) == 26.850000000000023\nassert kelvin_to_celsius(373.15) == 100.0\nassert kelvin_to_celsius(100) == -173.14999999999998",
+   "test_inputs": [
+    [
+     273.15
+    ],
+    [
+     0
+    ],
+    [
+     300
+    ],
+    [
+     373.15
+    ],
+    [
+     100
+    ]
+   ],
+   "reference": "def kelvin_to_celsius(k):\n    return k - 273.15",
+   "wrong": "def kelvin_to_celsius(k):\n    return k + 273.15",
+   "expected": [
+    "0.0",
+    "-273.15",
+    "26.850000000000023",
+    "100.0",
+    "-173.14999999999998"
+   ],
+   "wrong_outputs": [
+    "546.3",
+    "273.15",
+    "573.15",
+    "646.3",
+    "373.15"
+   ]
+  },
+  {
+   "group": "same_wording",
+   "name": "count_non_negative",
+   "params": "numbers",
+   "neighbour": "count_negative",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `count_non_negative(numbers)` that returns how many numbers in the list are not negative.",
+    "io": "Write a Python function `count_non_negative(numbers)` that returns how many numbers in the list are not negative. For example, `count_non_negative([2, -3, 7])` returns `2` and `count_non_negative([-1, 0])` returns `1`.",
+    "constraint": "Write a Python function `count_non_negative(numbers)` that returns how many numbers in the list are not negative. Zero is not negative, so it is counted.",
+    "distractor": "Write a Python function `count_non_negative(numbers)` that returns how many numbers in the list are not negative. The same module also has `count_negative(numbers)`, which returns how many numbers in the list are negative."
+   },
+   "tests": "assert count_non_negative([1, -2, 0, 3]) == 3\nassert count_non_negative([]) == 0\nassert count_non_negative([-1, -5]) == 0\nassert count_non_negative([0, 0]) == 2\nassert count_non_negative([4, 5, -6]) == 2",
+   "test_inputs": [
+    [
+     [
+      1,
+      -2,
+      0,
+      3
+     ]
+    ],
+    [
+     []
+    ],
+    [
+     [
+      -1,
+      -5
+     ]
+    ],
+    [
+     [
+      0,
+      0
+     ]
+    ],
+    [
+     [
+      4,
+      5,
+      -6
+     ]
+    ]
+   ],
+   "reference": "def count_non_negative(numbers):\n    return sum(1 for x in numbers if x >= 0)",
+   "wrong": "def count_non_negative(numbers):\n    return sum(1 for x in numbers if x < 0)",
+   "expected": [
+    "3",
+    "0",
+    "0",
+    "2",
+    "2"
+   ],
+   "wrong_outputs": [
+    "1",
+    "0",
+    "2",
+    "0",
+    "1"
+   ]
+  },
+  {
+   "group": "same_wording",
+   "name": "remove_first",
+   "params": "items, value",
+   "neighbour": "remove_value",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `remove_first(items, value)` that returns a new list without the first occurrence of value.",
+    "io": "Write a Python function `remove_first(items, value)` that returns a new list without the first occurrence of value. For example, `remove_first([5, 6, 5, 6], 6)` returns `[5, 5, 6]` and `remove_first(['x', 'y', 'z', 'x'], 'x')` returns `['y', 'z', 'x']`.",
+    "constraint": "Write a Python function `remove_first(items, value)` that returns a new list without the first occurrence of value. Later occurrences of value stay; if value does not occur, the list is unchanged.",
+    "distractor": "Write a Python function `remove_first(items, value)` that returns a new list without the first occurrence of value. The same module also has `remove_value(items, value)`, which returns a new list without any occurrence of value."
+   },
+   "tests": "assert remove_first([1, 2, 1, 3], 1) == [2, 1, 3]\nassert remove_first([], 5) == []\nassert remove_first([4, 4, 4], 4) == [4, 4]\nassert remove_first(['a', 'b', 'c', 'a'], 'a') == ['b', 'c', 'a']\nassert remove_first([7, 8], 9) == [7, 8]",
+   "test_inputs": [
+    [
+     [
+      1,
+      2,
+      1,
+      3
+     ],
+     1
+    ],
+    [
+     [],
+     5
+    ],
+    [
+     [
+      4,
+      4,
+      4
+     ],
+     4
+    ],
+    [
+     [
+      "a",
+      "b",
+      "c",
+      "a"
+     ],
+     "a"
+    ],
+    [
+     [
+      7,
+      8
+     ],
+     9
+    ]
+   ],
+   "reference": "def remove_first(items, value):\n    result = list(items)\n    if value in result:\n        result.remove(value)\n    return result",
+   "wrong": "def remove_first(items, value):\n    return [x for x in items if x != value]",
+   "expected": [
+    "[2, 1, 3]",
+    "[]",
+    "[4, 4]",
+    "['b', 'c', 'a']",
+    "[7, 8]"
+   ],
+   "wrong_outputs": [
+    "[2, 3]",
+    "[]",
+    "[]",
+    "['b', 'c']",
+    "[7, 8]"
+   ]
+  },
+  {
+   "group": "same_wording",
+   "name": "first_words",
+   "params": "text, n",
+   "neighbour": "truncate",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `first_words(text, n)` that returns the first n words of text, joined by single spaces.",
+    "io": "Write a Python function `first_words(text, n)` that returns the first n words of text, joined by single spaces. For example, `first_words('we will meet at noon', 3)` returns `'we will meet'` and `first_words('x y z', 2)` returns `'x y'`.",
+    "constraint": "Write a Python function `first_words(text, n)` that returns the first n words of text, joined by single spaces. n counts words, not characters; if text has fewer than n words, all of them are returned.",
+    "distractor": "Write a Python function `first_words(text, n)` that returns the first n words of text, joined by single spaces. The same module also has `truncate(s, n)`, which returns s cut to at most n characters."
+   },
+   "tests": "assert first_words('the quick brown fox', 2) == 'the quick'\nassert first_words('hello world', 1) == 'hello'\nassert first_words('a b c', 0) == ''\nassert first_words('one two', 5) == 'one two'\nassert first_words('red green blue', 3) == 'red green blue'",
+   "test_inputs": [
+    [
+     "the quick brown fox",
+     2
+    ],
+    [
+     "hello world",
+     1
+    ],
+    [
+     "a b c",
+     0
+    ],
+    [
+     "one two",
+     5
+    ],
+    [
+     "red green blue",
+     3
+    ]
+   ],
+   "reference": "def first_words(text, n):\n    return ' '.join(text.split()[:n])",
+   "wrong": "def first_words(text, n):\n    return text[:n]",
+   "expected": [
+    "'the quick'",
+    "'hello'",
+    "''",
+    "'one two'",
+    "'red green blue'"
+   ],
+   "wrong_outputs": [
+    "'th'",
+    "'h'",
+    "''",
+    "'one t'",
+    "'red'"
+   ]
+  },
+  {
+   "group": "same_wording",
+   "name": "count_nonempty_lines",
+   "params": "text",
+   "neighbour": "count_lines",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `count_nonempty_lines(text)` that returns the number of non-empty lines in text.",
+    "io": "Write a Python function `count_nonempty_lines(text)` that returns the number of non-empty lines in text. For example, `count_nonempty_lines('first\\n\\nsecond\\n')` returns `2` and `count_nonempty_lines('solo')` returns `1`.",
+    "constraint": "Write a Python function `count_nonempty_lines(text)` that returns the number of non-empty lines in text. A line holding only spaces counts as empty.",
+    "distractor": "Write a Python function `count_nonempty_lines(text)` that returns the number of non-empty lines in text. The same module also has `count_lines(text)`, which returns the number of lines in text."
+   },
+   "tests": "assert count_nonempty_lines('a\\n\\nb') == 2\nassert count_nonempty_lines('') == 0\nassert count_nonempty_lines('one\\ntwo\\nthree') == 3\nassert count_nonempty_lines('\\n\\n') == 0\nassert count_nonempty_lines('x\\n \\ny\\n') == 2",
+   "test_inputs": [
+    [
+     "a\n\nb"
+    ],
+    [
+     ""
+    ],
+    [
+     "one\ntwo\nthree"
+    ],
+    [
+     "\n\n"
+    ],
+    [
+     "x\n \ny\n"
+    ]
+   ],
+   "reference": "def count_nonempty_lines(text):\n    return sum(1 for line in text.splitlines() if line.strip())",
+   "wrong": "def count_nonempty_lines(text):\n    return len(text.splitlines())",
+   "expected": [
+    "2",
+    "0",
+    "3",
+    "0",
+    "2"
+   ],
+   "wrong_outputs": [
+    "3",
+    "0",
+    "3",
+    "2",
+    "3"
+   ]
+  },
+  {
+   "group": "same_wording",
+   "name": "odd_positions",
+   "params": "items",
+   "neighbour": "every_other",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `odd_positions(items)` that returns every second item of the list, starting with the second.",
+    "io": "Write a Python function `odd_positions(items)` that returns every second item of the list, starting with the second. For example, `odd_positions([10, 11, 12, 13, 14])` returns `[11, 13]` and `odd_positions(['p', 'q', 'r', 's'])` returns `['q', 's']`.",
+    "constraint": "Write a Python function `odd_positions(items)` that returns every second item of the list, starting with the second. The kept items are those at positions 1, 3, 5 and so on.",
+    "distractor": "Write a Python function `odd_positions(items)` that returns every second item of the list, starting with the second. The same module also has `every_other(items)`, which returns every second item of the list, starting with the first."
+   },
+   "tests": "assert odd_positions([0, 1, 2, 3, 4, 5, 6]) == [1, 3, 5]\nassert odd_positions([5]) == []\nassert odd_positions([]) == []\nassert odd_positions(['a', 'b', 'c', 'd', 'e', 'f']) == ['b', 'd', 'f']\nassert odd_positions([9, 8, 7, 6]) == [8, 6]",
+   "test_inputs": [
+    [
+     [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+     ]
+    ],
+    [
+     [
+      5
+     ]
+    ],
+    [
+     []
+    ],
+    [
+     [
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "f"
+     ]
+    ],
+    [
+     [
+      9,
+      8,
+      7,
+      6
+     ]
+    ]
+   ],
+   "reference": "def odd_positions(items):\n    return items[1::2]",
+   "wrong": "def odd_positions(items):\n    return items[::2]",
+   "expected": [
+    "[1, 3, 5]",
+    "[]",
+    "[]",
+    "['b', 'd', 'f']",
+    "[8, 6]"
+   ],
+   "wrong_outputs": [
+    "[0, 2, 4, 6]",
+    "[5]",
+    "[]",
+    "['a', 'c', 'e']",
+    "[9, 7]"
+   ]
+  },
+  {
+   "group": "same_wording",
+   "name": "sum_first_n",
+   "params": "numbers, n",
+   "neighbour": "take",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `sum_first_n(numbers, n)` that returns the sum of the first n numbers of the list.",
+    "io": "Write a Python function `sum_first_n(numbers, n)` that returns the sum of the first n numbers of the list. For example, `sum_first_n([10, 20, 30], 2)` returns `30` and `sum_first_n([7, 8, 9], 3)` returns `24`.",
+    "constraint": "Write a Python function `sum_first_n(numbers, n)` that returns the sum of the first n numbers of the list. The result is a number; with n = 0 it is 0.",
+    "distractor": "Write a Python function `sum_first_n(numbers, n)` that returns the sum of the first n numbers of the list. The same module also has `take(items, n)`, which returns the first n items of the list."
+   },
+   "tests": "assert sum_first_n([1, 2, 3, 4], 2) == 3\nassert sum_first_n([5], 1) == 5\nassert sum_first_n([], 3) == 0\nassert sum_first_n([1, 1, 1], 0) == 0\nassert sum_first_n([2, 4, 6], 5) == 12",
+   "test_inputs": [
+    [
+     [
+      1,
+      2,
+      3,
+      4
+     ],
+     2
+    ],
+    [
+     [
+      5
+     ],
+     1
+    ],
+    [
+     [],
+     3
+    ],
+    [
+     [
+      1,
+      1,
+      1
+     ],
+     0
+    ],
+    [
+     [
+      2,
+      4,
+      6
+     ],
+     5
+    ]
+   ],
+   "reference": "def sum_first_n(numbers, n):\n    return sum(numbers[:n])",
+   "wrong": "def sum_first_n(numbers, n):\n    return numbers[:n]",
+   "expected": [
+    "3",
+    "5",
+    "0",
+    "0",
+    "12"
+   ],
+   "wrong_outputs": [
+    "[1, 2]",
+    "[5]",
+    "[]",
+    "[]",
+    "[2, 4, 6]"
+   ]
+  },
+  {
+   "group": "same_wording",
+   "name": "closer_to_zero",
+   "params": "a, b",
+   "neighbour": "smaller",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `closer_to_zero(a, b)` that returns whichever of a and b is closer to zero (a if they are equally close).",
+    "io": "Write a Python function `closer_to_zero(a, b)` that returns whichever of a and b is closer to zero (a if they are equally close). For example, `closer_to_zero(6, -2)` returns `-2` and `closer_to_zero(-1, 8)` returns `-1`.",
+    "constraint": "Write a Python function `closer_to_zero(a, b)` that returns whichever of a and b is closer to zero (a if they are equally close). Distance from zero ignores the sign.",
+    "distractor": "Write a Python function `closer_to_zero(a, b)` that returns whichever of a and b is closer to zero (a if they are equally close). The same module also has `smaller(a, b)`, which returns the smaller of a and b."
+   },
+   "tests": "assert closer_to_zero(3, -5) == 3\nassert closer_to_zero(-2, 1) == 1\nassert closer_to_zero(4, -4) == 4\nassert closer_to_zero(0, 7) == 0\nassert closer_to_zero(-9, -3) == -3",
+   "test_inputs": [
+    [
+     3,
+     -5
+    ],
+    [
+     -2,
+     1
+    ],
+    [
+     4,
+     -4
+    ],
+    [
+     0,
+     7
+    ],
+    [
+     -9,
+     -3
+    ]
+   ],
+   "reference": "def closer_to_zero(a, b):\n    return a if abs(a) <= abs(b) else b",
+   "wrong": "def closer_to_zero(a, b):\n    if a < b:\n        return a\n    return b",
+   "expected": [
+    "3",
+    "1",
+    "4",
+    "0",
+    "-3"
+   ],
+   "wrong_outputs": [
+    "-5",
+    "-2",
+    "-4",
+    "0",
+    "-9"
+   ]
+  },
+  {
+   "group": "new_wording",
+   "name": "opposite",
+   "params": "x",
+   "neighbour": "absolute",
+   "same_as": "negate",
+   "prompts": {
+    "original": "Write a Python function `opposite(x)` that gives the additive inverse of x.",
+    "io": "Write a Python function `opposite(x)` that gives the additive inverse of x. For example, `opposite(7)` returns `-7` and `opposite(-9)` returns `9`.",
+    "constraint": "Write a Python function `opposite(x)` that gives the additive inverse of x. Positive numbers become negative and negative numbers become positive.",
+    "distractor": "Write a Python function `opposite(x)` that gives the additive inverse of x. The same module also has `absolute(x)`, which returns the absolute value of x."
+   },
+   "tests": "assert opposite(3) == -3\nassert opposite(-4) == 4\nassert opposite(0) == 0\nassert opposite(2.5) == -2.5\nassert opposite(-100) == 100",
+   "test_inputs": [
+    [
+     3
+    ],
+    [
+     -4
+    ],
+    [
+     0
+    ],
+    [
+     2.5
+    ],
+    [
+     -100
+    ]
+   ],
+   "reference": "def opposite(x):\n    return -x",
+   "wrong": "def opposite(x):\n    return abs(x)",
+   "expected": [
+    "-3",
+    "4",
+    "0",
+    "-2.5",
+    "100"
+   ],
+   "wrong_outputs": [
+    "3",
+    "4",
+    "0",
+    "2.5",
+    "100"
+   ]
+  },
+  {
+   "group": "new_wording",
+   "name": "strip_numerals",
+   "params": "s",
+   "neighbour": "letters_only",
+   "same_as": "remove_digits",
+   "prompts": {
+    "original": "Write a Python function `strip_numerals(s)` that takes every character from 0 to 9 out of s.",
+    "io": "Write a Python function `strip_numerals(s)` that takes every character from 0 to 9 out of s. For example, `strip_numerals('room 101')` returns `'room '` and `strip_numerals('4ever young')` returns `'ever young'`.",
+    "constraint": "Write a Python function `strip_numerals(s)` that takes every character from 0 to 9 out of s. Every other character, including spaces and punctuation, stays.",
+    "distractor": "Write a Python function `strip_numerals(s)` that takes every character from 0 to 9 out of s. The same module also has `letters_only(s)`, which returns only the letters of s, in order."
+   },
+   "tests": "assert strip_numerals('a1b2c3') == 'abc'\nassert strip_numerals('no digits!') == 'no digits!'\nassert strip_numerals('2024') == ''\nassert strip_numerals('') == ''\nassert strip_numerals('x 9 y') == 'x  y'",
+   "test_inputs": [
+    [
+     "a1b2c3"
+    ],
+    [
+     "no digits!"
+    ],
+    [
+     "2024"
+    ],
+    [
+     ""
+    ],
+    [
+     "x 9 y"
+    ]
+   ],
+   "reference": "def strip_numerals(s):\n    return ''.join(c for c in s if not c.isdigit())",
+   "wrong": "def strip_numerals(s):\n    return ''.join(c for c in s if c.isalpha())",
+   "expected": [
+    "'abc'",
+    "'no digits!'",
+    "''",
+    "''",
+    "'x  y'"
+   ],
+   "wrong_outputs": [
+    "'abc'",
+    "'nodigits'",
+    "''",
+    "''",
+    "'xy'"
+   ]
+  },
+  {
+   "group": "new_wording",
+   "name": "none_at_or_below_zero",
+   "params": "numbers",
+   "neighbour": "any_negative",
+   "same_as": "all_positive",
+   "prompts": {
+    "original": "Write a Python function `none_at_or_below_zero(numbers)` that says whether no number in the list is zero or below.",
+    "io": "Write a Python function `none_at_or_below_zero(numbers)` that says whether no number in the list is zero or below. For example, `none_at_or_below_zero([4, 9])` returns `True` and `none_at_or_below_zero([3, -3])` returns `False`.",
+    "constraint": "Write a Python function `none_at_or_below_zero(numbers)` that says whether no number in the list is zero or below. An empty list gives True.",
+    "distractor": "Write a Python function `none_at_or_below_zero(numbers)` that says whether no number in the list is zero or below. The same module also has `any_negative(numbers)`, which returns True if at least one number in the list is negative."
+   },
+   "tests": "assert none_at_or_below_zero([1, 2, 3]) == True\nassert none_at_or_below_zero([1, 0, 2]) == False\nassert none_at_or_below_zero([]) == True\nassert none_at_or_below_zero([-1]) == False\nassert none_at_or_below_zero([5, 6, -7]) == False",
+   "test_inputs": [
+    [
+     [
+      1,
+      2,
+      3
+     ]
+    ],
+    [
+     [
+      1,
+      0,
+      2
+     ]
+    ],
+    [
+     []
+    ],
+    [
+     [
+      -1
+     ]
+    ],
+    [
+     [
+      5,
+      6,
+      -7
+     ]
+    ]
+   ],
+   "reference": "def none_at_or_below_zero(numbers):\n    return all(x > 0 for x in numbers)",
+   "wrong": "def none_at_or_below_zero(numbers):\n    return any(x < 0 for x in numbers)",
+   "expected": [
+    "True",
+    "False",
+    "True",
+    "False",
+    "False"
+   ],
+   "wrong_outputs": [
+    "False",
+    "False",
+    "False",
+    "True",
+    "True"
+   ]
+  },
+  {
+   "group": "new_wording",
+   "name": "dips_below_zero",
+   "params": "numbers",
+   "neighbour": "all_positive",
+   "same_as": "any_negative",
+   "prompts": {
+    "original": "Write a Python function `dips_below_zero(numbers)` that says whether the list holds at least one value under zero.",
+    "io": "Write a Python function `dips_below_zero(numbers)` that says whether the list holds at least one value under zero. For example, `dips_below_zero([3, -1])` returns `True` and `dips_below_zero([7, 8])` returns `False`.",
+    "constraint": "Write a Python function `dips_below_zero(numbers)` that says whether the list holds at least one value under zero. Zero is not under zero; an empty list gives False.",
+    "distractor": "Write a Python function `dips_below_zero(numbers)` that says whether the list holds at least one value under zero. The same module also has `all_positive(numbers)`, which returns True if every number in the list is greater than zero."
+   },
+   "tests": "assert dips_below_zero([1, -2, 3]) == True\nassert dips_below_zero([0, 1]) == False\nassert dips_below_zero([]) == False\nassert dips_below_zero([-5]) == True\nassert dips_below_zero([2, 4, 6]) == False",
+   "test_inputs": [
+    [
+     [
+      1,
+      -2,
+      3
+     ]
+    ],
+    [
+     [
+      0,
+      1
+     ]
+    ],
+    [
+     []
+    ],
+    [
+     [
+      -5
+     ]
+    ],
+    [
+     [
+      2,
+      4,
+      6
+     ]
+    ]
+   ],
+   "reference": "def dips_below_zero(numbers):\n    return any(x < 0 for x in numbers)",
+   "wrong": "def dips_below_zero(numbers):\n    return all(x > 0 for x in numbers)",
+   "expected": [
+    "True",
+    "False",
+    "False",
+    "True",
+    "False"
+   ],
+   "wrong_outputs": [
+    "False",
+    "False",
+    "True",
+    "False",
+    "True"
+   ]
+  },
+  {
+   "group": "new_wording",
+   "name": "bracketed",
+   "params": "s",
+   "neighbour": "trim",
+   "same_as": "wrap_in_brackets",
+   "prompts": {
+    "original": "Write a Python function `bracketed(s)` that puts s between a '[' and a ']'.",
+    "io": "Write a Python function `bracketed(s)` that puts s between a '[' and a ']'. For example, `bracketed('note')` returns `'[note]'` and `bracketed(' y')` returns `'[ y]'`.",
+    "constraint": "Write a Python function `bracketed(s)` that puts s between a '[' and a ']'. The opening bracket comes first and the closing bracket last; s is not changed.",
+    "distractor": "Write a Python function `bracketed(s)` that puts s between a '[' and a ']'. The same module also has `trim(s)`, which returns s without leading and trailing whitespace."
+   },
+   "tests": "assert bracketed('abc') == '[abc]'\nassert bracketed('') == '[]'\nassert bracketed(' x ') == '[ x ]'\nassert bracketed('[]') == '[[]]'\nassert bracketed('hello world') == '[hello world]'",
+   "test_inputs": [
+    [
+     "abc"
+    ],
+    [
+     ""
+    ],
+    [
+     " x "
+    ],
+    [
+     "[]"
+    ],
+    [
+     "hello world"
+    ]
+   ],
+   "reference": "def bracketed(s):\n    return '[' + s + ']'",
+   "wrong": "def bracketed(s):\n    return s.strip()",
+   "expected": [
+    "'[abc]'",
+    "'[]'",
+    "'[ x ]'",
+    "'[[]]'",
+    "'[hello world]'"
+   ],
+   "wrong_outputs": [
+    "'abc'",
+    "''",
+    "'x'",
+    "'[]'",
+    "'hello world'"
+   ]
+  },
+  {
+   "group": "new_wording",
+   "name": "word_tally",
+   "params": "text",
+   "neighbour": "char_frequencies",
+   "same_as": "word_frequencies",
+   "prompts": {
+    "original": "Write a Python function `word_tally(text)` that tallies the words of text into a dictionary from each word to its count.",
+    "io": "Write a Python function `word_tally(text)` that tallies the words of text into a dictionary from each word to its count. For example, `word_tally('to be or not to be')` returns `{'to': 2, 'be': 2, 'or': 1, 'not': 1}` and `word_tally('cat dog cat')` returns `{'cat': 2, 'dog': 1}`.",
+    "constraint": "Write a Python function `word_tally(text)` that tallies the words of text into a dictionary from each word to its count. Words are separated by whitespace; each distinct word is a key.",
+    "distractor": "Write a Python function `word_tally(text)` that tallies the words of text into a dictionary from each word to its count. The same module also has `char_frequencies(s)`, which returns a dictionary mapping each character of s to how often it occurs."
+   },
+   "tests": "assert word_tally('a b a') == {'a': 2, 'b': 1}\nassert word_tally('') == {}\nassert word_tally('hi') == {'hi': 1}\nassert word_tally('x y z x') == {'x': 2, 'y': 1, 'z': 1}\nassert word_tally('one one one') == {'one': 3}",
+   "test_inputs": [
+    [
+     "a b a"
+    ],
+    [
+     ""
+    ],
+    [
+     "hi"
+    ],
+    [
+     "x y z x"
+    ],
+    [
+     "one one one"
+    ]
+   ],
+   "reference": "def word_tally(text):\n    counts = {}\n    for w in text.split():\n        counts[w] = counts.get(w, 0) + 1\n    return counts",
+   "wrong": "def word_tally(text):\n    counts = {}\n    for c in text:\n        counts[c] = counts.get(c, 0) + 1\n    return counts",
+   "expected": [
+    "{'a': 2, 'b': 1}",
+    "{}",
+    "{'hi': 1}",
+    "{'x': 2, 'y': 1, 'z': 1}",
+    "{'one': 3}"
+   ],
+   "wrong_outputs": [
+    "{'a': 2, ' ': 2, 'b': 1}",
+    "{}",
+    "{'h': 1, 'i': 1}",
+    "{'x': 2, ' ': 3, 'y': 1, 'z': 1}",
+    "{'o': 3, 'n': 3, 'e': 3, ' ': 2}"
+   ]
+  },
+  {
+   "group": "new_wording",
+   "name": "only_whitespace",
+   "params": "s",
+   "neighbour": "is_uppercase",
+   "same_as": "is_blank",
+   "prompts": {
+    "original": "Write a Python function `only_whitespace(s)` that says whether s holds nothing but whitespace, or nothing at all.",
+    "io": "Write a Python function `only_whitespace(s)` that says whether s holds nothing but whitespace, or nothing at all. For example, `only_whitespace('  \\t ')` returns `True` and `only_whitespace('x')` returns `False`.",
+    "constraint": "Write a Python function `only_whitespace(s)` that says whether s holds nothing but whitespace, or nothing at all. The empty string gives True.",
+    "distractor": "Write a Python function `only_whitespace(s)` that says whether s holds nothing but whitespace, or nothing at all. The same module also has `is_uppercase(s)`, which returns True if every letter in s is upper case."
+   },
+   "tests": "assert only_whitespace('   ') == True\nassert only_whitespace('') == True\nassert only_whitespace(' a ') == False\nassert only_whitespace('\\t\\n') == True\nassert only_whitespace('ABC') == False",
+   "test_inputs": [
+    [
+     "   "
+    ],
+    [
+     ""
+    ],
+    [
+     " a "
+    ],
+    [
+     "\t\n"
+    ],
+    [
+     "ABC"
+    ]
+   ],
+   "reference": "def only_whitespace(s):\n    return s.strip() == ''",
+   "wrong": "def only_whitespace(s):\n    return s.isupper()",
+   "expected": [
+    "True",
+    "True",
+    "False",
+    "True",
+    "False"
+   ],
+   "wrong_outputs": [
+    "False",
+    "False",
+    "False",
+    "False",
+    "True"
+   ]
+  },
+  {
+   "group": "new_wording",
+   "name": "total_stored",
+   "params": "d",
+   "neighbour": "dict_keys",
+   "same_as": "dict_values_sum",
+   "prompts": {
+    "original": "Write a Python function `total_stored(d)` that adds up everything stored as a value in the dictionary d.",
+    "io": "Write a Python function `total_stored(d)` that adds up everything stored as a value in the dictionary d. For example, `total_stored({'m': 3, 'n': 4})` returns `7` and `total_stored({5: 1})` returns `1`.",
+    "constraint": "Write a Python function `total_stored(d)` that adds up everything stored as a value in the dictionary d. An empty dictionary gives 0.",
+    "distractor": "Write a Python function `total_stored(d)` that adds up everything stored as a value in the dictionary d. The same module also has `dict_keys(d)`, which returns a list of the keys of the dictionary d."
+   },
+   "tests": "assert total_stored({'a': 1, 'b': 2}) == 3\nassert total_stored({}) == 0\nassert total_stored({'x': -5}) == -5\nassert total_stored({1: 10, 2: 20, 3: 30}) == 60\nassert total_stored({'p': 0, 'q': 0}) == 0",
+   "test_inputs": [
+    [
+     {
+      "a": 1,
+      "b": 2
+     }
+    ],
+    [
+     {}
+    ],
+    [
+     {
+      "x": -5
+     }
+    ],
+    [
+     {
+      "1": 10,
+      "2": 20,
+      "3": 30
+     }
+    ],
+    [
+     {
+      "p": 0,
+      "q": 0
+     }
+    ]
+   ],
+   "reference": "def total_stored(d):\n    return sum(d.values())",
+   "wrong": "def total_stored(d):\n    return list(d.keys())",
+   "expected": [
+    "3",
+    "0",
+    "-5",
+    "60",
+    "0"
+   ],
+   "wrong_outputs": [
+    "['a', 'b']",
+    "[]",
+    "['x']",
+    "[1, 2, 3]",
+    "['p', 'q']"
+   ]
+  },
+  {
+   "group": "new_wording",
+   "name": "goes_into",
+   "params": "a, b",
+   "neighbour": "remainder",
+   "same_as": "is_divisible",
+   "prompts": {
+    "original": "Write a Python function `goes_into(a, b)` that says whether b goes into a with nothing left over.",
+    "io": "Write a Python function `goes_into(a, b)` that says whether b goes into a with nothing left over. For example, `goes_into(12, 4)` returns `True` and `goes_into(7, 2)` returns `False`.",
+    "constraint": "Write a Python function `goes_into(a, b)` that says whether b goes into a with nothing left over. b is never zero.",
+    "distractor": "Write a Python function `goes_into(a, b)` that says whether b goes into a with nothing left over. The same module also has `remainder(a, b)`, which returns the remainder when a is divided by b."
+   },
+   "tests": "assert goes_into(10, 5) == True\nassert goes_into(10, 3) == False\nassert goes_into(0, 7) == True\nassert goes_into(9, 3) == True\nassert goes_into(14, 4) == False",
+   "test_inputs": [
+    [
+     10,
+     5
+    ],
+    [
+     10,
+     3
+    ],
+    [
+     0,
+     7
+    ],
+    [
+     9,
+     3
+    ],
+    [
+     14,
+     4
+    ]
+   ],
+   "reference": "def goes_into(a, b):\n    return a % b == 0",
+   "wrong": "def goes_into(a, b):\n    return a % b",
+   "expected": [
+    "True",
+    "False",
+    "True",
+    "True",
+    "False"
+   ],
+   "wrong_outputs": [
+    "0",
+    "1",
+    "0",
+    "0",
+    "2"
+   ]
+  },
+  {
+   "group": "new_wording",
+   "name": "mirror_digits",
+   "params": "n",
+   "neighbour": "count_digits",
+   "same_as": "reverse_number",
+   "prompts": {
+    "original": "Write a Python function `mirror_digits(n)` that gives the integer whose digits are those of the non-negative integer n read from right to left.",
+    "io": "Write a Python function `mirror_digits(n)` that gives the integer whose digits are those of the non-negative integer n read from right to left. For example, `mirror_digits(4567)` returns `7654` and `mirror_digits(30)` returns `3`.",
+    "constraint": "Write a Python function `mirror_digits(n)` that gives the integer whose digits are those of the non-negative integer n read from right to left. Leading zeros of the result disappear, so 100 gives 1.",
+    "distractor": "Write a Python function `mirror_digits(n)` that gives the integer whose digits are those of the non-negative integer n read from right to left. The same module also has `count_digits(n)`, which returns how many decimal digits the non-negative integer n has."
+   },
+   "tests": "assert mirror_digits(123) == 321\nassert mirror_digits(0) == 0\nassert mirror_digits(100) == 1\nassert mirror_digits(5) == 5\nassert mirror_digits(9081) == 1809",
+   "test_inputs": [
+    [
+     123
+    ],
+    [
+     0
+    ],
+    [
+     100
+    ],
+    [
+     5
+    ],
+    [
+     9081
+    ]
+   ],
+   "reference": "def mirror_digits(n):\n    return int(str(n)[::-1])",
+   "wrong": "def mirror_digits(n):\n    return len(str(n))",
+   "expected": [
+    "321",
+    "0",
+    "1",
+    "5",
+    "1809"
+   ],
+   "wrong_outputs": [
+    "3",
+    "1",
+    "3",
+    "1",
+    "4"
+   ]
+  },
+  {
+   "group": "new_wording",
+   "name": "number_switched_on",
+   "params": "flags",
+   "neighbour": "count_items",
+   "same_as": "count_true",
+   "prompts": {
+    "original": "Write a Python function `number_switched_on(flags)` that counts the switches that are on in a list of booleans.",
+    "io": "Write a Python function `number_switched_on(flags)` that counts the switches that are on in a list of booleans. For example, `number_switched_on([False, True, True, True])` returns `3` and `number_switched_on([True, False])` returns `1`.",
+    "constraint": "Write a Python function `number_switched_on(flags)` that counts the switches that are on in a list of booleans. True means on and False means off.",
+    "distractor": "Write a Python function `number_switched_on(flags)` that counts the switches that are on in a list of booleans. The same module also has `count_items(items)`, which returns how many items the list contains."
+   },
+   "tests": "assert number_switched_on([True, False, True]) == 2\nassert number_switched_on([]) == 0\nassert number_switched_on([False, False]) == 0\nassert number_switched_on([True]) == 1\nassert number_switched_on([True, True, True, True, False]) == 4",
+   "test_inputs": [
+    [
+     [
+      true,
+      false,
+      true
+     ]
+    ],
+    [
+     []
+    ],
+    [
+     [
+      false,
+      false
+     ]
+    ],
+    [
+     [
+      true
+     ]
+    ],
+    [
+     [
+      true,
+      true,
+      true,
+      true,
+      false
+     ]
+    ]
+   ],
+   "reference": "def number_switched_on(flags):\n    return sum(1 for f in flags if f)",
+   "wrong": "def number_switched_on(flags):\n    return len(flags)",
+   "expected": [
+    "2",
+    "0",
+    "0",
+    "1",
+    "4"
+   ],
+   "wrong_outputs": [
+    "3",
+    "0",
+    "2",
+    "1",
+    "5"
+   ]
+  },
+  {
+   "group": "new_wording",
+   "name": "squares_total",
+   "params": "numbers",
+   "neighbour": "squares",
+   "same_as": "sum_all_square",
+   "prompts": {
+    "original": "Write a Python function `squares_total(numbers)` that squares each number in the list and adds the results.",
+    "io": "Write a Python function `squares_total(numbers)` that squares each number in the list and adds the results. For example, `squares_total([3, 4])` returns `25` and `squares_total([-1, 2])` returns `5`.",
+    "constraint": "Write a Python function `squares_total(numbers)` that squares each number in the list and adds the results. An empty list gives 0.",
+    "distractor": "Write a Python function `squares_total(numbers)` that squares each number in the list and adds the results. The same module also has `squares(numbers)`, which returns a list of the squares of the numbers."
+   },
+   "tests": "assert squares_total([1, 2, 3]) == 14\nassert squares_total([]) == 0\nassert squares_total([-2]) == 4\nassert squares_total([0, 5]) == 25\nassert squares_total([1, 1, 1, 1]) == 4",
+   "test_inputs": [
+    [
+     [
+      1,
+      2,
+      3
+     ]
+    ],
+    [
+     []
+    ],
+    [
+     [
+      -2
+     ]
+    ],
+    [
+     [
+      0,
+      5
+     ]
+    ],
+    [
+     [
+      1,
+      1,
+      1,
+      1
+     ]
+    ]
+   ],
+   "reference": "def squares_total(numbers):\n    return sum(x * x for x in numbers)",
+   "wrong": "def squares_total(numbers):\n    return [x * x for x in numbers]",
+   "expected": [
+    "14",
+    "0",
+    "4",
+    "25",
+    "4"
+   ],
+   "wrong_outputs": [
+    "[1, 4, 9]",
+    "[]",
+    "[4]",
+    "[0, 25]",
+    "[1, 1, 1, 1]"
+   ]
+  },
+  {
+   "group": "new_wording",
+   "name": "words_backwards",
+   "params": "text",
+   "neighbour": "reverse_each_word",
+   "same_as": "reverse_words",
+   "prompts": {
+    "original": "Write a Python function `words_backwards(text)` that says the words of text in the opposite order, with one space between each.",
+    "io": "Write a Python function `words_backwards(text)` that says the words of text in the opposite order, with one space between each. For example, `words_backwards('we go home')` returns `'home go we'` and `words_backwards('x y')` returns `'y x'`.",
+    "constraint": "Write a Python function `words_backwards(text)` that says the words of text in the opposite order, with one space between each. The letters inside each word keep their order.",
+    "distractor": "Write a Python function `words_backwards(text)` that says the words of text in the opposite order, with one space between each. The same module also has `reverse_each_word(text)`, which returns text with the letters of each word reversed, keeping the word order."
+   },
+   "tests": "assert words_backwards('one two three') == 'three two one'\nassert words_backwards('hello') == 'hello'\nassert words_backwards('') == ''\nassert words_backwards('a  b') == 'b a'\nassert words_backwards('red green') == 'green red'",
+   "test_inputs": [
+    [
+     "one two three"
+    ],
+    [
+     "hello"
+    ],
+    [
+     ""
+    ],
+    [
+     "a  b"
+    ],
+    [
+     "red green"
+    ]
+   ],
+   "reference": "def words_backwards(text):\n    return ' '.join(text.split()[::-1])",
+   "wrong": "def words_backwards(text):\n    return ' '.join(word[::-1] for word in text.split())",
+   "expected": [
+    "'three two one'",
+    "'hello'",
+    "''",
+    "'b a'",
+    "'green red'"
+   ],
+   "wrong_outputs": [
+    "'eno owt eerht'",
+    "'olleh'",
+    "''",
+    "'a b'",
+    "'der neerg'"
+   ]
+  },
+  {
+   "group": "new_wording",
+   "name": "capital_initials",
+   "params": "phrase",
+   "neighbour": "capitalize_words",
+   "same_as": "acronym",
+   "prompts": {
+    "original": "Write a Python function `capital_initials(phrase)` that builds an abbreviation from the first letter of every word of phrase, in capitals.",
+    "io": "Write a Python function `capital_initials(phrase)` that builds an abbreviation from the first letter of every word of phrase, in capitals. For example, `capital_initials('graphics processing unit')` returns `'GPU'` and `capital_initials('away from keyboard')` returns `'AFK'`.",
+    "constraint": "Write a Python function `capital_initials(phrase)` that builds an abbreviation from the first letter of every word of phrase, in capitals. The result has one letter per word and no spaces.",
+    "distractor": "Write a Python function `capital_initials(phrase)` that builds an abbreviation from the first letter of every word of phrase, in capitals. The same module also has `capitalize_words(text)`, which returns text with the first letter of every word in upper case."
+   },
+   "tests": "assert capital_initials('portable network graphics') == 'PNG'\nassert capital_initials('hello') == 'H'\nassert capital_initials('as soon as possible') == 'ASAP'\nassert capital_initials('Big Data') == 'BD'\nassert capital_initials('x y z') == 'XYZ'",
+   "test_inputs": [
+    [
+     "portable network graphics"
+    ],
+    [
+     "hello"
+    ],
+    [
+     "as soon as possible"
+    ],
+    [
+     "Big Data"
+    ],
+    [
+     "x y z"
+    ]
+   ],
+   "reference": "def capital_initials(phrase):\n    return ''.join(word[0] for word in phrase.split()).upper()",
+   "wrong": "def capital_initials(phrase):\n    return ' '.join(word.capitalize() for word in phrase.split())",
+   "expected": [
+    "'PNG'",
+    "'H'",
+    "'ASAP'",
+    "'BD'",
+    "'XYZ'"
+   ],
+   "wrong_outputs": [
+    "'Portable Network Graphics'",
+    "'Hello'",
+    "'As Soon As Possible'",
+    "'Big Data'",
+    "'X Y Z'"
+   ]
+  },
+  {
+   "group": "new_wording",
+   "name": "repeats_somewhere",
+   "params": "items",
+   "neighbour": "all_equal",
+   "same_as": "has_duplicates",
+   "prompts": {
+    "original": "Write a Python function `repeats_somewhere(items)` that reports whether some value appears two or more times in the list.",
+    "io": "Write a Python function `repeats_somewhere(items)` that reports whether some value appears two or more times in the list. For example, `repeats_somewhere([3, 4, 3, 5])` returns `True` and `repeats_somewhere([9])` returns `False`.",
+    "constraint": "Write a Python function `repeats_somewhere(items)` that reports whether some value appears two or more times in the list. An empty list or a list of distinct values gives False.",
+    "distractor": "Write a Python function `repeats_somewhere(items)` that reports whether some value appears two or more times in the list. The same module also has `all_equal(items)`, which returns True if every item in the list is equal."
+   },
+   "tests": "assert repeats_somewhere([1, 2, 1]) == True\nassert repeats_somewhere([]) == False\nassert repeats_somewhere([1, 2, 3]) == False\nassert repeats_somewhere([5, 5]) == True\nassert repeats_somewhere(['a', 'b', 'c', 'b']) == True",
+   "test_inputs": [
+    [
+     [
+      1,
+      2,
+      1
+     ]
+    ],
+    [
+     []
+    ],
+    [
+     [
+      1,
+      2,
+      3
+     ]
+    ],
+    [
+     [
+      5,
+      5
+     ]
+    ],
+    [
+     [
+      "a",
+      "b",
+      "c",
+      "b"
+     ]
+    ]
+   ],
+   "reference": "def repeats_somewhere(items):\n    return len(set(items)) != len(items)",
+   "wrong": "def repeats_somewhere(items):\n    return len(set(items)) <= 1",
+   "expected": [
+    "True",
+    "False",
+    "False",
+    "True",
+    "True"
+   ],
+   "wrong_outputs": [
+    "False",
+    "True",
+    "False",
+    "True",
+    "False"
+   ]
+  },
+  {
+   "group": "new_wording",
+   "name": "shared_values",
+   "params": "a, b",
+   "neighbour": "merge_sorted",
+   "same_as": "common_items",
+   "prompts": {
+    "original": "Write a Python function `shared_values(a, b)` that lists, in ascending order, the values that both lists contain.",
+    "io": "Write a Python function `shared_values(a, b)` that lists, in ascending order, the values that both lists contain. For example, `shared_values([3, 6, 9], [6, 9, 12])` returns `[6, 9]` and `shared_values([2, 4], [4])` returns `[4]`.",
+    "constraint": "Write a Python function `shared_values(a, b)` that lists, in ascending order, the values that both lists contain. Each shared value appears once.",
+    "distractor": "Write a Python function `shared_values(a, b)` that lists, in ascending order, the values that both lists contain. The same module also has `merge_sorted(a, b)`, which merges two sorted lists into one sorted list."
+   },
+   "tests": "assert shared_values([1, 2, 3], [2, 3, 4]) == [2, 3]\nassert shared_values([], [1]) == []\nassert shared_values([5, 1], [1, 5]) == [1, 5]\nassert shared_values([1, 1, 2], [1]) == [1]\nassert shared_values([7], [8]) == []",
+   "test_inputs": [
+    [
+     [
+      1,
+      2,
+      3
+     ],
+     [
+      2,
+      3,
+      4
+     ]
+    ],
+    [
+     [],
+     [
+      1
+     ]
+    ],
+    [
+     [
+      5,
+      1
+     ],
+     [
+      1,
+      5
+     ]
+    ],
+    [
+     [
+      1,
+      1,
+      2
+     ],
+     [
+      1
+     ]
+    ],
+    [
+     [
+      7
+     ],
+     [
+      8
+     ]
+    ]
+   ],
+   "reference": "def shared_values(a, b):\n    return sorted(set(a) & set(b))",
+   "wrong": "def shared_values(a, b):\n    result = []\n    i = j = 0\n    while i < len(a) and j < len(b):\n        if a[i] <= b[j]:\n            result.append(a[i])\n            i += 1\n        else:\n            result.append(b[j])\n            j += 1\n    return result + a[i:] + b[j:]",
+   "expected": [
+    "[2, 3]",
+    "[]",
+    "[1, 5]",
+    "[1]",
+    "[]"
+   ],
+   "wrong_outputs": [
+    "[1, 2, 2, 3, 3, 4]",
+    "[1]",
+    "[1, 5, 1, 5]",
+    "[1, 1, 1, 2]",
+    "[7, 8]"
+   ]
+  },
+  {
+   "group": "new_wording",
+   "name": "partial_sums",
+   "params": "numbers",
+   "neighbour": "running_max",
+   "same_as": "cumulative_sum",
+   "prompts": {
+    "original": "Write a Python function `partial_sums(numbers)` that gives the list of totals of numbers up to and including each position.",
+    "io": "Write a Python function `partial_sums(numbers)` that gives the list of totals of numbers up to and including each position. For example, `partial_sums([3, 3, 3])` returns `[3, 6, 9]` and `partial_sums([10, -5])` returns `[10, 5]`.",
+    "constraint": "Write a Python function `partial_sums(numbers)` that gives the list of totals of numbers up to and including each position. The last total is the sum of the whole list.",
+    "distractor": "Write a Python function `partial_sums(numbers)` that gives the list of totals of numbers up to and including each position. The same module also has `running_max(numbers)`, which returns a list where each position holds the largest number seen so far."
+   },
+   "tests": "assert partial_sums([1, 2, 3]) == [1, 3, 6]\nassert partial_sums([]) == []\nassert partial_sums([5]) == [5]\nassert partial_sums([2, -1, 4]) == [2, 1, 5]\nassert partial_sums([0, 0, 1]) == [0, 0, 1]",
+   "test_inputs": [
+    [
+     [
+      1,
+      2,
+      3
+     ]
+    ],
+    [
+     []
+    ],
+    [
+     [
+      5
+     ]
+    ],
+    [
+     [
+      2,
+      -1,
+      4
+     ]
+    ],
+    [
+     [
+      0,
+      0,
+      1
+     ]
+    ]
+   ],
+   "reference": "def partial_sums(numbers):\n    result = []\n    total = 0\n    for x in numbers:\n        total += x\n        result.append(total)\n    return result",
+   "wrong": "def partial_sums(numbers):\n    result = []\n    best = None\n    for x in numbers:\n        if best is None or x > best:\n            best = x\n        result.append(best)\n    return result",
+   "expected": [
+    "[1, 3, 6]",
+    "[]",
+    "[5]",
+    "[2, 1, 5]",
+    "[0, 0, 1]"
+   ],
+   "wrong_outputs": [
+    "[1, 2, 3]",
+    "[]",
+    "[5]",
+    "[2, 2, 4]",
+    "[0, 0, 1]"
+   ]
+  },
+  {
+   "group": "new_wording",
+   "name": "has_366_days",
+   "params": "year",
+   "neighbour": "is_odd",
+   "same_as": "is_leap_year",
+   "prompts": {
+    "original": "Write a Python function `has_366_days(year)` that says whether year has 366 days in the Gregorian calendar.",
+    "io": "Write a Python function `has_366_days(year)` that says whether year has 366 days in the Gregorian calendar. For example, `has_366_days(2020)` returns `True` and `has_366_days(1800)` returns `False`.",
+    "constraint": "Write a Python function `has_366_days(year)` that says whether year has 366 days in the Gregorian calendar. Century years count only when divisible by 400.",
+    "distractor": "Write a Python function `has_366_days(year)` that says whether year has 366 days in the Gregorian calendar. The same module also has `is_odd(n)`, which returns True if n is odd, otherwise False."
+   },
+   "tests": "assert has_366_days(2024) == True\nassert has_366_days(1900) == False\nassert has_366_days(2000) == True\nassert has_366_days(2023) == False\nassert has_366_days(1996) == True\nassert has_366_days(2100) == False",
+   "test_inputs": [
+    [
+     2024
+    ],
+    [
+     1900
+    ],
+    [
+     2000
+    ],
+    [
+     2023
+    ],
+    [
+     1996
+    ],
+    [
+     2100
+    ]
+   ],
+   "reference": "def has_366_days(year):\n    return year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)",
+   "wrong": "def has_366_days(year):\n    return year % 2 == 1",
+   "expected": [
+    "True",
+    "False",
+    "True",
+    "False",
+    "True",
+    "False"
+   ],
+   "wrong_outputs": [
+    "False",
+    "False",
+    "False",
+    "True",
+    "False",
+    "False"
+   ]
+  },
+  {
+   "group": "new_wording",
+   "name": "groups_of",
+   "params": "items, size",
+   "neighbour": "take",
+   "same_as": "chunk",
+   "prompts": {
+    "original": "Write a Python function `groups_of(items, size)` that cuts the list into consecutive groups of size items each (the last group may be smaller).",
+    "io": "Write a Python function `groups_of(items, size)` that cuts the list into consecutive groups of size items each (the last group may be smaller). For example, `groups_of([9, 8, 7, 6], 2)` returns `[[9, 8], [7, 6]]` and `groups_of(['x', 'y', 'z'], 2)` returns `[['x', 'y'], ['z']]`.",
+    "constraint": "Write a Python function `groups_of(items, size)` that cuts the list into consecutive groups of size items each (the last group may be smaller). Every group except possibly the last has exactly size items.",
+    "distractor": "Write a Python function `groups_of(items, size)` that cuts the list into consecutive groups of size items each (the last group may be smaller). The same module also has `take(items, n)`, which returns the first n items of the list."
+   },
+   "tests": "assert groups_of([1, 2, 3, 4, 5], 2) == [[1, 2], [3, 4], [5]]\nassert groups_of([], 3) == []\nassert groups_of(['a', 'b', 'c', 'd', 'e', 'f'], 3) == [['a', 'b', 'c'], ['d', 'e', 'f']]\nassert groups_of([1], 1) == [[1]]\nassert groups_of([1, 2, 3], 5) == [[1, 2, 3]]",
+   "test_inputs": [
+    [
+     [
+      1,
+      2,
+      3,
+      4,
+      5
+     ],
+     2
+    ],
+    [
+     [],
+     3
+    ],
+    [
+     [
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "f"
+     ],
+     3
+    ],
+    [
+     [
+      1
+     ],
+     1
+    ],
+    [
+     [
+      1,
+      2,
+      3
+     ],
+     5
+    ]
+   ],
+   "reference": "def groups_of(items, size):\n    return [items[i:i + size] for i in range(0, len(items), size)]",
+   "wrong": "def groups_of(items, size):\n    return items[:size]",
+   "expected": [
+    "[[1, 2], [3, 4], [5]]",
+    "[]",
+    "[['a', 'b', 'c'], ['d', 'e', 'f']]",
+    "[[1]]",
+    "[[1, 2, 3]]"
+   ],
+   "wrong_outputs": [
+    "[1, 2]",
+    "[]",
+    "['a', 'b', 'c']",
+    "[1]",
+    "[1, 2, 3]"
+   ]
+  }
+ ]
+}
