@@ -1122,9 +1122,9 @@
    "frequency": {
     "mean_percentile": 0.494,
     "top1": 1,
-    "auc_nearest_neighbour": 0.567,
-    "auc_vs_passed": 0.489,
-    "auc_vs_other_failures": 0.642
+    "auc_nearest_neighbour": 0.531,
+    "auc_vs_passed": 0.474,
+    "auc_vs_other_failures": 0.585
    }
   },
   "rows": [
@@ -1768,7 +1768,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.6,
     "code_nn": 0.5333333333333333,
-    "frequency_nn": 13.0
+    "frequency_nn": 8.0
    },
    {
     "item": "first_negative",
@@ -1778,7 +1778,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.6,
     "code_nn": 0.6666666666666666,
-    "frequency_nn": 20.0
+    "frequency_nn": 5.0
    },
    {
     "item": "index_of_min",
@@ -1788,7 +1788,7 @@
     "name_nn": 0.5,
     "wording_nn": 1.0,
     "code_nn": 1.0,
-    "frequency_nn": 20.0
+    "frequency_nn": 0.0
    },
    {
     "item": "is_between",
@@ -1798,7 +1798,7 @@
     "name_nn": 0.25,
     "wording_nn": 1.0,
     "code_nn": 1.0,
-    "frequency_nn": 10.0
+    "frequency_nn": 0.0
    },
    {
     "item": "last_word",
@@ -1808,7 +1808,7 @@
     "name_nn": 0.5,
     "wording_nn": 0.75,
     "code_nn": 0.9,
-    "frequency_nn": 20.0
+    "frequency_nn": 5.0
    },
    {
     "item": "longest_word",
@@ -1818,7 +1818,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.75,
     "code_nn": 0.5757575757575758,
-    "frequency_nn": 20.0
+    "frequency_nn": 7.0
    },
    {
     "item": "product",
@@ -1828,7 +1828,7 @@
     "name_nn": 0.5,
     "wording_nn": 1.0,
     "code_nn": 1.0,
-    "frequency_nn": 20.0
+    "frequency_nn": 0.0
    },
    {
     "item": "remove_spaces",
@@ -1838,7 +1838,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 1.0,
     "code_nn": 1.0,
-    "frequency_nn": 20.0
+    "frequency_nn": 0.0
    },
    {
     "item": "running_max",
@@ -1848,7 +1848,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.125,
     "code_nn": 0.6545454545454545,
-    "frequency_nn": 20.0
+    "frequency_nn": 6.666666666666667
    },
    {
     "item": "sum_of_squares",
@@ -1858,7 +1858,7 @@
     "name_nn": 0.5,
     "wording_nn": 0.8,
     "code_nn": 0.7111111111111111,
-    "frequency_nn": 20.0
+    "frequency_nn": 10.0
    },
    {
     "item": "add_seven",
@@ -1868,7 +1868,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.5,
     "code_nn": 0.75,
-    "frequency_nn": 20.0
+    "frequency_nn": 15.0
    },
    {
     "item": "subtract_five",
@@ -1878,7 +1878,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.5,
     "code_nn": 0.75,
-    "frequency_nn": 20.0
+    "frequency_nn": 15.0
    },
    {
     "item": "times_four",
@@ -1888,7 +1888,7 @@
     "name_nn": 0.5,
     "wording_nn": 0.5,
     "code_nn": 0.75,
-    "frequency_nn": 20.0
+    "frequency_nn": 15.0
    },
    {
     "item": "floor_div_four",
@@ -1898,7 +1898,7 @@
     "name_nn": 0.5,
     "wording_nn": 0.7142857142857143,
     "code_nn": 0.75,
-    "frequency_nn": 20.0
+    "frequency_nn": 10.0
    },
    {
     "item": "remainder_three",
@@ -1908,7 +1908,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.6666666666666666,
     "code_nn": 0.75,
-    "frequency_nn": 20.0
+    "frequency_nn": 10.0
    },
    {
     "item": "not_three",
@@ -1918,7 +1918,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.6,
     "code_nn": 0.75,
-    "frequency_nn": 20.0
+    "frequency_nn": 5.0
    },
    {
     "item": "divisible_by_five",
@@ -1938,7 +1938,7 @@
     "name_nn": 0.6666666666666666,
     "wording_nn": 0.6666666666666666,
     "code_nn": 0.9333333333333333,
-    "frequency_nn": 20.0
+    "frequency_nn": 8.0
    },
    {
     "item": "sum_odd",
@@ -1948,7 +1948,7 @@
     "name_nn": 0.6666666666666666,
     "wording_nn": 0.6666666666666666,
     "code_nn": 0.9375,
-    "frequency_nn": 20.0
+    "frequency_nn": 3.0
    },
    {
     "item": "count_odd",
@@ -1958,7 +1958,7 @@
     "name_nn": 0.6666666666666666,
     "wording_nn": 0.6666666666666666,
     "code_nn": 0.9333333333333333,
-    "frequency_nn": 20.0
+    "frequency_nn": 7.0
    },
    {
     "item": "largest_even",
@@ -1968,7 +1968,7 @@
     "name_nn": 0.6666666666666666,
     "wording_nn": 0.6666666666666666,
     "code_nn": 0.9375,
-    "frequency_nn": 20.0
+    "frequency_nn": 4.333333333333333
    },
    {
     "item": "any_zero",
@@ -1978,7 +1978,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.6666666666666666,
     "code_nn": 0.9166666666666666,
-    "frequency_nn": 20.0
+    "frequency_nn": 4.333333333333333
    },
    {
     "item": "all_odd",
@@ -1988,7 +1988,7 @@
     "name_nn": 0.6666666666666666,
     "wording_nn": 1.0,
     "code_nn": 0.9230769230769231,
-    "frequency_nn": 20.0
+    "frequency_nn": 10.0
    },
    {
     "item": "subtract_three_each",
@@ -1998,7 +1998,7 @@
     "name_nn": 0.6666666666666666,
     "wording_nn": 0.5,
     "code_nn": 0.9,
-    "frequency_nn": 20.0
+    "frequency_nn": 4.666666666666667
    },
    {
     "item": "scale_each_by_three",
@@ -2008,7 +2008,7 @@
     "name_nn": 0.6,
     "wording_nn": 0.5,
     "code_nn": 0.9090909090909091,
-    "frequency_nn": 20.0
+    "frequency_nn": 6.666666666666667
    },
    {
     "item": "fourth_item",
@@ -2018,7 +2018,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.3333333333333333,
     "code_nn": 0.8,
-    "frequency_nn": 20.0
+    "frequency_nn": 5.0
    },
    {
     "item": "second_to_last_item",
@@ -2028,7 +2028,7 @@
     "name_nn": 0.6,
     "wording_nn": 0.4,
     "code_nn": 0.9090909090909091,
-    "frequency_nn": 20.0
+    "frequency_nn": 5.0
    },
    {
     "item": "has_two_items",
@@ -2038,7 +2038,7 @@
     "name_nn": 0.5,
     "wording_nn": 0.6,
     "code_nn": 0.8571428571428571,
-    "frequency_nn": 20.0
+    "frequency_nn": 5.0
    },
    {
     "item": "count_o",
@@ -2048,7 +2048,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.8333333333333334,
     "code_nn": 0.8571428571428571,
-    "frequency_nn": 20.0
+    "frequency_nn": 4.0
    },
    {
     "item": "has_x",
@@ -2058,7 +2058,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.6666666666666666,
     "code_nn": 0.75,
-    "frequency_nn": 20.0
+    "frequency_nn": 5.0
    },
    {
     "item": "ends_with_ing",
@@ -2068,7 +2068,7 @@
     "name_nn": 0.5,
     "wording_nn": 0.6666666666666666,
     "code_nn": 0.8571428571428571,
-    "frequency_nn": 20.0
+    "frequency_nn": 5.0
    },
    {
     "item": "starts_with_the",
@@ -2078,7 +2078,7 @@
     "name_nn": 0.5,
     "wording_nn": 1.0,
     "code_nn": 0.8571428571428571,
-    "frequency_nn": 20.0
+    "frequency_nn": 5.0
    },
    {
     "item": "first_three_chars",
@@ -2088,7 +2088,7 @@
     "name_nn": 0.5,
     "wording_nn": 0.6,
     "code_nn": 0.8333333333333334,
-    "frequency_nn": 20.0
+    "frequency_nn": 5.0
    },
    {
     "item": "sum_multiples_of_five",
@@ -2098,7 +2098,7 @@
     "name_nn": 0.6,
     "wording_nn": 0.6666666666666666,
     "code_nn": 0.9565217391304348,
-    "frequency_nn": 20.0
+    "frequency_nn": 5.0
    },
    {
     "item": "tens_digit",
@@ -2108,7 +2108,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.625,
     "code_nn": 0.6666666666666666,
-    "frequency_nn": 20.0
+    "frequency_nn": 9.0
    },
    {
     "item": "last_two_digits",
@@ -2118,7 +2118,7 @@
     "name_nn": 0.6666666666666666,
     "wording_nn": 0.5,
     "code_nn": 0.75,
-    "frequency_nn": 20.0
+    "frequency_nn": 9.0
    },
    {
     "item": "round_down_to_ten",
@@ -2128,7 +2128,7 @@
     "name_nn": 0.2,
     "wording_nn": 0.4,
     "code_nn": 0.6,
-    "frequency_nn": 20.0
+    "frequency_nn": 10.0
    },
    {
     "item": "double_plus_one",
@@ -2148,7 +2148,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.0,
     "code_nn": 0.4,
-    "frequency_nn": 20.0
+    "frequency_nn": 10.0
    },
    {
     "item": "same_sign",
@@ -2158,7 +2158,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.25,
     "code_nn": 0.37037037037037035,
-    "frequency_nn": 13.0
+    "frequency_nn": 10.0
    },
    {
     "item": "last_three",
@@ -2168,7 +2168,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.16666666666666666,
     "code_nn": 0.7692307692307693,
-    "frequency_nn": 20.0
+    "frequency_nn": 9.0
    },
    {
     "item": "drop_first",
@@ -2178,7 +2178,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.3333333333333333,
     "code_nn": 0.8333333333333334,
-    "frequency_nn": 20.0
+    "frequency_nn": 9.0
    },
    {
     "item": "swap_ends",
@@ -2188,7 +2188,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.2857142857142857,
     "code_nn": 0.4166666666666667,
-    "frequency_nn": 20.0
+    "frequency_nn": 0.0
    },
    {
     "item": "first_plus_last",
@@ -2198,7 +2198,7 @@
     "name_nn": 0.25,
     "wording_nn": 0.2222222222222222,
     "code_nn": 0.5882352941176471,
-    "frequency_nn": 20.0
+    "frequency_nn": 0.0
    },
    {
     "item": "count_above_mean",
@@ -2208,7 +2208,7 @@
     "name_nn": 0.25,
     "wording_nn": 0.4444444444444444,
     "code_nn": 0.6486486486486487,
-    "frequency_nn": 20.0
+    "frequency_nn": 4.0
    },
    {
     "item": "count_changes",
@@ -2218,7 +2218,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.3333333333333333,
     "code_nn": 0.6222222222222222,
-    "frequency_nn": 20.0
+    "frequency_nn": 4.0
    },
    {
     "item": "chunk_pairs",
@@ -2228,7 +2228,7 @@
     "name_nn": 0.25,
     "wording_nn": 0.15,
     "code_nn": 0.6086956521739131,
-    "frequency_nn": 20.0
+    "frequency_nn": 0.0
    },
    {
     "item": "count_true_values",
@@ -2238,7 +2238,7 @@
     "name_nn": 0.6666666666666666,
     "wording_nn": 0.5,
     "code_nn": 0.6923076923076923,
-    "frequency_nn": 20.0
+    "frequency_nn": 7.0
    },
    {
     "item": "repeat_word",
@@ -2248,7 +2248,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.375,
     "code_nn": 0.4444444444444444,
-    "frequency_nn": 13.0
+    "frequency_nn": 7.0
    },
    {
     "item": "count_doubled_letters",
@@ -2258,7 +2258,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.25,
     "code_nn": 0.6222222222222222,
-    "frequency_nn": 20.0
+    "frequency_nn": 4.0
    },
    {
     "item": "dashes_for_spaces",
@@ -2268,7 +2268,7 @@
     "name_nn": 0.25,
     "wording_nn": 0.5,
     "code_nn": 0.8888888888888888,
-    "frequency_nn": 20.0
+    "frequency_nn": 4.0
    },
    {
     "item": "longest_word_length",
@@ -2278,7 +2278,7 @@
     "name_nn": 0.6666666666666666,
     "wording_nn": 0.36363636363636365,
     "code_nn": 0.5853658536585366,
-    "frequency_nn": 20.0
+    "frequency_nn": 0.0
    },
    {
     "item": "words_starting_with_vowel",
@@ -2288,7 +2288,7 @@
     "name_nn": 0.2,
     "wording_nn": 0.26666666666666666,
     "code_nn": 0.5454545454545454,
-    "frequency_nn": 20.0
+    "frequency_nn": 8.0
    },
    {
     "item": "is_all_lowercase_letters",
@@ -2298,7 +2298,7 @@
     "name_nn": 0.4,
     "wording_nn": 0.5714285714285714,
     "code_nn": 0.6666666666666666,
-    "frequency_nn": 20.0
+    "frequency_nn": 4.0
    },
    {
     "item": "count_letter_case_insensitive",
@@ -2308,7 +2308,7 @@
     "name_nn": 0.2,
     "wording_nn": 0.25,
     "code_nn": 0.6666666666666666,
-    "frequency_nn": 13.0
+    "frequency_nn": 0.0
    },
    {
     "item": "alternate_case",
@@ -2318,7 +2318,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.36363636363636365,
     "code_nn": 0.5384615384615384,
-    "frequency_nn": 20.0
+    "frequency_nn": 10.0
    },
    {
     "item": "sum_at_odd_positions",
@@ -2328,7 +2328,7 @@
     "name_nn": 0.4,
     "wording_nn": 0.25,
     "code_nn": 0.6666666666666666,
-    "frequency_nn": 20.0
+    "frequency_nn": 3.0
    },
    {
     "item": "second_smallest",
@@ -2338,7 +2338,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.375,
     "code_nn": 0.6666666666666666,
-    "frequency_nn": 20.0
+    "frequency_nn": 5.0
    },
    {
     "item": "last_index_of",
@@ -2348,7 +2348,7 @@
     "name_nn": 0.6666666666666666,
     "wording_nn": 0.3333333333333333,
     "code_nn": 0.5517241379310345,
-    "frequency_nn": 13.0
+    "frequency_nn": 0.0
    },
    {
     "item": "insert_at_front",
@@ -2358,7 +2358,7 @@
     "name_nn": 0.25,
     "wording_nn": 0.125,
     "code_nn": 0.5,
-    "frequency_nn": 13.0
+    "frequency_nn": 7.0
    },
    {
     "item": "count_strictly_between",
@@ -2368,7 +2368,7 @@
     "name_nn": 0.25,
     "wording_nn": 0.2,
     "code_nn": 0.32,
-    "frequency_nn": 10.0
+    "frequency_nn": 0.0
    },
    {
     "item": "is_non_increasing",
@@ -2378,7 +2378,7 @@
     "name_nn": 0.25,
     "wording_nn": 0.4,
     "code_nn": 0.6976744186046512,
-    "frequency_nn": 20.0
+    "frequency_nn": 9.0
    },
    {
     "item": "without_last",
@@ -2388,7 +2388,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.3333333333333333,
     "code_nn": 0.9333333333333333,
-    "frequency_nn": 20.0
+    "frequency_nn": 9.0
    },
    {
     "item": "hours_to_seconds",
@@ -2398,7 +2398,7 @@
     "name_nn": 0.5,
     "wording_nn": 0.5,
     "code_nn": 0.75,
-    "frequency_nn": 20.0
+    "frequency_nn": 9.0
    },
    {
     "item": "next_even",
@@ -2408,7 +2408,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.42857142857142855,
     "code_nn": 0.6,
-    "frequency_nn": 20.0
+    "frequency_nn": 10.0
    },
    {
     "item": "digits_of",
@@ -2418,7 +2418,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.5,
     "code_nn": 0.6206896551724138,
-    "frequency_nn": 20.0
+    "frequency_nn": 9.0
    },
    {
     "item": "count_capitalized",
@@ -2428,7 +2428,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.4,
     "code_nn": 0.6486486486486487,
-    "frequency_nn": 20.0
+    "frequency_nn": 6.0
    },
    {
     "item": "average_word_length",
@@ -2438,7 +2438,7 @@
     "name_nn": 0.25,
     "wording_nn": 0.2857142857142857,
     "code_nn": 0.46153846153846156,
-    "frequency_nn": 20.0
+    "frequency_nn": 3.0
    },
    {
     "item": "is_vowel",
@@ -2448,7 +2448,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.3076923076923077,
     "code_nn": 0.7142857142857143,
-    "frequency_nn": 20.0
+    "frequency_nn": 8.0
    },
    {
     "item": "swap_halves",
@@ -2458,7 +2458,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.25,
     "code_nn": 0.4666666666666667,
-    "frequency_nn": 20.0
+    "frequency_nn": 8.0
    },
    {
     "item": "step_up_to",
@@ -2468,7 +2468,7 @@
     "name_nn": 0.4,
     "wording_nn": 0.23076923076923078,
     "code_nn": 0.625,
-    "frequency_nn": 13.0
+    "frequency_nn": 0.0
    },
    {
     "item": "repeat_each",
@@ -2478,7 +2478,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.5,
     "code_nn": 0.5625,
-    "frequency_nn": 13.0
+    "frequency_nn": 7.0
    },
    {
     "item": "ends_with_vowel",
@@ -2488,7 +2488,7 @@
     "name_nn": 0.5,
     "wording_nn": 0.38461538461538464,
     "code_nn": 0.6666666666666666,
-    "frequency_nn": 20.0
+    "frequency_nn": 8.0
    },
    {
     "item": "sum_of_last_two",
@@ -2498,7 +2498,7 @@
     "name_nn": 0.4,
     "wording_nn": 0.5,
     "code_nn": 0.5555555555555556,
-    "frequency_nn": 20.0
+    "frequency_nn": 5.0
    },
    {
     "item": "first_index_above",
@@ -2508,7 +2508,7 @@
     "name_nn": 0.25,
     "wording_nn": 0.375,
     "code_nn": 0.6153846153846154,
-    "frequency_nn": 13.0
+    "frequency_nn": 8.0
    },
    {
     "item": "middle_of_three",
@@ -2518,7 +2518,7 @@
     "name_nn": 0.5,
     "wording_nn": 0.3,
     "code_nn": 0.6956521739130435,
-    "frequency_nn": 10.0
+    "frequency_nn": 7.0
    },
    {
     "item": "count_words_longer_than",
@@ -2528,7 +2528,7 @@
     "name_nn": 0.2,
     "wording_nn": 0.2727272727272727,
     "code_nn": 0.42424242424242425,
-    "frequency_nn": 13.0
+    "frequency_nn": 0.0
    },
    {
     "item": "sum_of_last_n",
@@ -2538,7 +2538,7 @@
     "name_nn": 0.5,
     "wording_nn": 0.2222222222222222,
     "code_nn": 0.7586206896551724,
-    "frequency_nn": 13.0
+    "frequency_nn": 8.0
    },
    {
     "item": "contains_digit",
@@ -2548,7 +2548,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.42857142857142855,
     "code_nn": 0.6153846153846154,
-    "frequency_nn": 20.0
+    "frequency_nn": 7.0
    },
    {
     "item": "pad_right",
@@ -2558,7 +2558,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.2857142857142857,
     "code_nn": 0.5,
-    "frequency_nn": 13.0
+    "frequency_nn": 6.0
    },
    {
     "item": "abbreviate",
@@ -2568,7 +2568,7 @@
     "name_nn": 0.0,
     "wording_nn": 0.2,
     "code_nn": 0.43478260869565216,
-    "frequency_nn": 13.0
+    "frequency_nn": 7.0
    },
    {
     "item": "count_increases",
@@ -2578,7 +2578,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.3333333333333333,
     "code_nn": 0.7111111111111111,
-    "frequency_nn": 20.0
+    "frequency_nn": 4.0
    },
    {
     "item": "same_length",
@@ -2588,7 +2588,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.2727272727272727,
     "code_nn": 0.6086956521739131,
-    "frequency_nn": 13.0
+    "frequency_nn": 0.0
    },
    {
     "item": "longer_of_two",
@@ -2598,7 +2598,7 @@
     "name_nn": 0.5,
     "wording_nn": 0.15384615384615385,
     "code_nn": 0.38095238095238093,
-    "frequency_nn": 13.0
+    "frequency_nn": 0.0
    },
    {
     "item": "keys_above",
@@ -2608,7 +2608,7 @@
     "name_nn": 0.25,
     "wording_nn": 0.5,
     "code_nn": 0.8888888888888888,
-    "frequency_nn": 13.0
+    "frequency_nn": 8.0
    },
    {
     "item": "first_repeated",
@@ -2618,7 +2618,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.25,
     "code_nn": 0.5185185185185185,
-    "frequency_nn": 20.0
+    "frequency_nn": 8.0
    },
    {
     "item": "count_distinct",
@@ -2628,7 +2628,7 @@
     "name_nn": 0.3333333333333333,
     "wording_nn": 0.6,
     "code_nn": 0.8888888888888888,
-    "frequency_nn": 20.0
+    "frequency_nn": 9.0
    }
   ]
  }
