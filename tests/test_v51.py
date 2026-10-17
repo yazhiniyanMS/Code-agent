@@ -323,8 +323,10 @@ def test_experiment_runner_end_to_end_with_a_tiny_model(data_dir, base_model, tm
     assert "Verdict" in experiment.render(summary)
 
 
-def test_v6_runner_path_scores_unseen2_and_keeps_a_bf16_model(data_dir, base_model, tmp_path, monkeypatch):
-    """V6 options on a tiny model: unseen-v2 evaluation, the all_clean metric and a kept bf16 copy."""
+@pytest.mark.parametrize("final_bf16", [False, True])
+def test_v6_runner_path_scores_unseen2_and_keeps_a_bf16_model(data_dir, base_model, tmp_path, monkeypatch, final_bf16):
+    """V6 options on a tiny model: unseen-v2 evaluation, the all_clean metric and a kept bf16 copy
+    (V7: with final_bf16 the final checkpoint itself is kept)."""
     import json
     from pathlib import Path
 
@@ -344,7 +346,7 @@ def test_v6_runner_path_scores_unseen2_and_keeps_a_bf16_model(data_dir, base_mod
     spec = {"name": "tiny6", "anchor": str(base_model), "anchor_sha256": "x", "tokenizer": str(data_dir / "tokenizer.json"),
             "out": str(tmp_path / "exp"), "seeds": [1], "metric": "all_clean", "category_rule": "items_lost",
             "keep_models": "compact", "train": {"steps": 1, "precision": "fp32", "train_layers": 2, "init_optim": False,
-                                                "compact": True},
+                                                "compact": True, "final_bf16": final_bf16},
             "eval": {"limit": 2, "diagnose": 0, "unseen2": True}, "arms": [{"name": "C"}], "comparisons": []}
     record = experiment.run_one(spec, spec["arms"][0], 1, tmp_path / "exp", log=lambda *_: None)
     assert record["unseen2"]["of"] == 2 and "failure_classes" in record["unseen2"]
@@ -357,6 +359,8 @@ def test_v6_runner_path_scores_unseen2_and_keeps_a_bf16_model(data_dir, base_mod
 
     assert torch.load(kept, weights_only=True)["base"]["path"] == str(Path(base_model).resolve())  # compact copy
     load_checkpoint(kept.parent)  # loads with the anchor's frozen tensors
+    payload = torch.load(kept, weights_only=True)
+    assert {v.dtype for v in payload["model"].values() if v.is_floating_point()} == {torch.bfloat16}
     assert not (tmp_path / "exp" / "C" / "1" / "model").exists()  # the full checkpoint is still deleted
     summary = experiment.summarize(spec, tmp_path / "exp")
     assert summary["arms"]["C"]["all_clean"]["values"] == [record["dev"]["clean"] + record["unseen"]["clean"]
@@ -451,6 +455,26 @@ def test_compact_checkpoints_train_and_resume_exactly_like_full_ones(data_dir, b
     assert payload["base"]["path"] == str(base_model.resolve()) and payload["step"] == 4
     assert (compact / "model.pt").stat().st_size < (full / "model.pt").stat().st_size
     a, b = _weights(full), _weights(compact)
+    assert a.keys() == b.keys() and all(torch.equal(a[k], b[k]) for k in a)
+
+
+def test_final_bf16_checkpoint_is_the_bf16_load_of_a_full_one(data_dir, base_model, tmp_path):
+    """--final-bf16: the last save holds the trained tensors in bf16 and no optimizer state, and the
+    weights it loads are exactly those evaluation loads (bf16) from an ordinary compact checkpoint."""
+    import torch
+
+    from ycode.lm.train import load_checkpoint
+
+    base_model = _bf16_base(base_model, tmp_path)
+    full = _sft(data_dir, tmp_path / "full", base_model, compact_checkpoints=True)
+    final = _sft(data_dir, tmp_path / "final", base_model, compact_checkpoints=True, final_bf16=True, save_interval=4)
+    assert (full / "optim.pt").is_file() and not (final / "optim.pt").exists()
+    payload = torch.load(final / "model.pt", weights_only=True)
+    assert payload["base"] and payload["step"] == 4
+    assert {v.dtype for v in payload["model"].values() if v.is_floating_point()} == {torch.bfloat16}
+    assert (final / "model.pt").stat().st_size < (full / "model.pt").stat().st_size
+    a = load_checkpoint(full, dtype=torch.bfloat16)[0].state_dict()
+    b = load_checkpoint(final, dtype=torch.bfloat16)[0].state_dict()
     assert a.keys() == b.keys() and all(torch.equal(a[k], b[k]) for k in a)
 
 

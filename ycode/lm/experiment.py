@@ -42,7 +42,8 @@ T95 = {1: 6.314, 2: 2.920, 3: 2.353, 4: 2.132, 5: 2.015, 6: 1.943, 7: 1.895, 8: 
 TRAIN_DEFAULTS = {"steps": 72, "lr": 1.5e-5, "batch": 4, "train_layers": 24, "warmup": 2, "precision": "bf16",
                   "init_optim": True, "seq_len": None, "average": None,
                   "save_every": None,  # checkpoint interval in steps (default: half the run)
-                  "compact": False}  # checkpoints store only the trained tensors, referencing the anchor
+                  "compact": False,  # checkpoints store only the trained tensors, referencing the anchor
+                  "final_bf16": False}  # the final checkpoint is bf16 without optimizer state (train.TrainConfig)
 EVAL_DEFAULTS = {"dev": True, "unseen": True, "unseen2": False, "bench": True, "limit": None, "diagnose": 32}
 DISK_NEEDED_GB = 8
 SMOKE = {"train": {"steps": 2}, "eval": {"limit": 4, "diagnose": 4}}
@@ -123,13 +124,17 @@ def _checkpoint_gb(anchor: Path, train: dict) -> float:
     blocks and final norm in fp32 (the rest stays referenced), plus the optimizer state."""
     optim = (anchor / "optim.pt").stat().st_size if (anchor / "optim.pt").is_file() else 0
     model = sum(f.stat().st_size for f in anchor.glob("*.pt") if f.name != "optim.pt")
+    steps = train.get("steps") or 0
+    final_only = train.get("final_bf16") and (train.get("save_every") or max(1, steps // 2)) >= steps
     if train.get("compact") and train.get("train_layers"):
         import torch
 
         payload = torch.load(anchor / "model.pt", map_location="cpu", weights_only=True, mmap=True)
         first = payload["config"]["n_layer"] - train["train_layers"]
-        model = sum(v.numel() * 4 for k, v in payload["model"].items()
+        model = sum(v.numel() * (2 if final_only else 4) for k, v in payload["model"].items()
                     if k.startswith("norm.") or (k.startswith("blocks.") and int(k.split(".")[1]) >= first))
+    if final_only:  # the only save is the bf16 inference checkpoint, without optimizer state
+        optim = 0
     return (model + optim) / 1e9
 
 
@@ -178,6 +183,7 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
            "--eval-iters", "0", "--seed", str(seed), "--device", "cpu", "--precision", train["precision"]]
     cmd += ["--init-optim"] if train["init_optim"] else []
     cmd += ["--compact-checkpoints"] if train["compact"] else []
+    cmd += ["--final-bf16"] if train["final_bf16"] else []
     # checkpoint every save_every steps (default halfway; in place: one copy on disk), so a restart costs at most that much
     cmd += ["--resume", "--save-interval", str(train["save_every"] or max(1, train["steps"] // 2)), "--save-in-place"]
     cmd += ["--seq-len", str(train["seq_len"])] if train["seq_len"] else []
@@ -235,8 +241,16 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
         from ycode.lm.train import export_checkpoint, file_sha256
 
         # "compact": only the tensors that differ from the anchor (the trained layers), ~2.2 GB instead of ~3.1
-        kept = export_checkpoint(cur, run_dir / "model_bf16", dtype="bf16",
-                                 base=spec["anchor"] if spec["keep_models"] == "compact" else None)
+        if train["final_bf16"] and train["compact"] and spec["keep_models"] == "compact":
+            # the final checkpoint already is that file (bf16 trained tensors referencing the anchor): keep it
+            # instead of writing a second copy
+            (run_dir / "model_bf16").mkdir(exist_ok=True)
+            for name in ("model.pt", "info.json"):
+                os.replace(cur / name, run_dir / "model_bf16" / name)
+            kept = run_dir / "model_bf16" / "model.pt"
+        else:
+            kept = export_checkpoint(cur, run_dir / "model_bf16", dtype="bf16",
+                                     base=spec["anchor"] if spec["keep_models"] == "compact" else None)
         record["kept_model"] = {"path": str(kept), "sha256": file_sha256(kept)}
     result_path.write_text(json.dumps(record, indent=1))
     shutil.rmtree(cur, ignore_errors=True)  # 7 GB per checkpoint: kept only while scoring

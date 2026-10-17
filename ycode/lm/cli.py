@@ -63,6 +63,9 @@ def _train_args(p: argparse.ArgumentParser, *, sft: bool) -> None:
     p.add_argument("--compact-checkpoints", action="store_true",
                    help="With --train-layers and --init-from: checkpoints store only the trained tensors "
                         "and reference --init-from for the rest (~1 GB less on disk).")
+    p.add_argument("--final-bf16", action="store_true",
+                   help="The save after the last step writes the trained weights in bf16 and no optimizer state "
+                        "(an inference checkpoint: much less disk; the run cannot resume past its end).")
     p.add_argument("--seq-len", type=int, default=None,
                    help="SFT: pack examples into rows of this many tokens (default: the model's context).")
     p.add_argument("--device", default="auto", help="auto, cpu, cuda or mps.")
@@ -284,6 +287,7 @@ def main(argv: list[str] | None = None) -> int:
             save_interval=args.save_interval,
             save_in_place=args.save_in_place,
             compact_checkpoints=getattr(args, "compact_checkpoints", False),
+            final_bf16=getattr(args, "final_bf16", False),
             init_optim=args.init_optim,
             seq_len=args.seq_len,
         )

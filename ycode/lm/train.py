@@ -89,6 +89,10 @@ class TrainConfig:
     # checkpoints round frozen weights to bf16; these keep init_from's values, the same when init_from stores
     # them in bf16 (as fine-tuned checkpoints such as round 54 do)
     init_optim: bool = False  # also start the optimizer state from init_from/optim.pt (if it matches)
+    # The save after the last step writes the trained tensors in bf16 (the precision evaluation loads)
+    # and no optimizer state: an inference checkpoint, ~2.1 GB instead of ~6.4 for 24 of 34 layers of
+    # round 54, for disk-limited hosts. Earlier interval saves are full; the run cannot resume past its end.
+    final_bf16: bool = False
     seq_len: int | None = None  # sft: pack rows to this many tokens instead of the model's block size
     until_step: int | None = None  # stop early at this step (segmented runs); schedule still spans max_steps
     # adamw | muon (Muon for hidden matrices + AdamW for the rest) | lion (low memory: one bf16
@@ -779,14 +783,20 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
         dist.all_reduce(flag, op=dist.ReduceOp.MIN)
         return bool(flag.item())
 
-    def checkpoint(val_loss: float | None) -> None:
+    def checkpoint(val_loss: float | None, final: bool = False) -> None:
         """Save model + optimizer (+ the example order). Sharded: every rank joins the gather and
-        writes its optimizer shard."""
+        writes its optimizer shard. ``final`` with cfg.final_bf16: trained tensors in bf16, no optimizer."""
         if not shard:
             compact = bool(cfg.compact_checkpoints and cfg.train_layers and cfg.init_from)
             state = (trained_state(model) if compact else compact_state(model)) if cfg.train_layers else None
+            inference = final and cfg.final_bf16
+            if inference:
+                state = {k: (v.to(torch.bfloat16) if v.is_floating_point() else v)
+                         for k, v in (state if state is not None else model.state_dict()).items()}
+                (out_dir / "optim.pt").unlink(missing_ok=True)
             save_checkpoint(out_dir, model, tok, step=step, stage=cfg.stage, val_loss=val_loss,
-                            optimizer=optimizer, state=state, in_place=cfg.save_in_place,
+                            optimizer=None if inference else optimizer, state=state,
+                            in_place=cfg.save_in_place or inference,
                             base=base_reference(cfg.init_from) if compact else None)
             save_sampler()
             return
@@ -917,10 +927,10 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
             losses = estimate_loss(model, data, cfg, eval_gen, autocast)
             history.append({"step": step, **losses})
             log(f"final eval step {step}: train {losses['train']:.3f} | val {losses['val']:.3f}")
-            checkpoint(losses["val"])
+            checkpoint(losses["val"], final=step >= cfg.max_steps)
         else:  # --eval-iters 0: no validation passes (they cost minutes on a CPU), just save
             history.append({"step": step})
-            checkpoint(None)
+            checkpoint(None, final=step >= cfg.max_steps)
     if main:
         import resource
         from dataclasses import asdict
