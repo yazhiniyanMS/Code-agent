@@ -255,7 +255,11 @@ def main() -> None:
         retrieved = r.get("retrieved") if not r["pass"] else None
         nearest.append({"item": r["name"], "split": r["split"], "retrieved": retrieved is not None,
                         "status": "pass" if r["pass"] else r["class"],
-                        **{f"{k}_nn": max((v[k] for v in feats.values()), default=0.0) for k in FEATURES}})
+                        **{f"{k}_nn": max((v[k] for v in feats.values()), default=0.0) for k in FEATURES if k != "frequency"},
+                        # the training frequency of the closest-worded training function (a maximum over all
+                        # functions would only depend on the item's arity)
+                        "frequency_nn": max(feats.values(), key=lambda v: (v["wording"], v["name"]))["frequency"]
+                        if feats else 0.0})
         if retrieved and retrieved in feats:
             mine = feats[retrieved]
             ret_ranks.append({"name": r["name"], "split": r["split"], "retrieved": retrieved,

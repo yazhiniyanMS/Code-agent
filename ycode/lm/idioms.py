@@ -884,3 +884,12 @@ def pair_examples(seed: int, *, per_program: int, weight: int, programs: list[Pr
         out.append(InstructionExample(ex.prompt, ex.response, contrast, weight))
     rng.shuffle(out)
     return out
+
+
+def k_family_programs(family_set: str = "v1") -> list[Program]:
+    """The held-out-clean programs of the families parameterised by a constant k alone (every
+    variant {"k", "kw"}): V7's learnability control trains on these and tests new constants of the
+    same families (the learning probe's family_new programs, which no run trains on)."""
+    fams = families(family_set)
+    keys = {f.key for f in fams if f.variants and all(set(v) == {"k", "kw"} for v in f.variants)}
+    return held_out_check([p for p in candidate_programs(family_list=fams) if p.family in keys])[0]

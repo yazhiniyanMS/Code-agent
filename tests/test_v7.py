@@ -86,3 +86,21 @@ def test_neighbour_set_is_frozen_and_verified():
         assert not run_tests(t["wrong"], t["tests"])  # the neighbour's behaviour fails
         assert set(t["prompts"]) == {"original", "io", "constraint", "distractor"}
         assert all(p.startswith(t["prompts"]["original"]) for p in t["prompts"].values())
+
+
+def test_k_family_selection_trains_only_constant_families_and_leaves_family_new_untrained():
+    import sys
+
+    from ycode.lm import rounddata
+
+    progs = idioms.k_family_programs("v1")
+    keys = {p.family for p in progs}
+    fams = {f.key: f for f in idioms.families("v1")}
+    assert len(keys) == 12 and all(all(set(v) == {"k", "kw"} for v in fams[k].variants) for k in keys)
+    sys.path.insert(0, str(ROOT / "experiments" / "v6"))
+    from probe_learning import family_new_programs
+
+    trained = {p.source(i, "f") for p in progs for i in range(len(p.bodies))}
+    assert not any(p.source(i, "f") in trained for p in family_new_programs() for i in range(len(p.bodies)))
+    with pytest.raises(ValueError):
+        rounddata._idiom_examples(1, {**rounddata.DEFAULTS, "idioms_write": 1, "idioms_select": "nope"})

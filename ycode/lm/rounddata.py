@@ -32,6 +32,7 @@ DEFAULTS = {
     "idioms_families": "v3",  # curriculum family set (ycode.lm.idioms.FAMILY_SETS); runs pin the set they used
     "idioms_pairs": 0,        # V7: write examples per curriculum program that has a sibling (idioms.pair_examples)
     "pair_weight": 0,         # V7: loss weight of the answer tokens that differ from the sibling's code; 0 = usual weights
+    "idioms_select": None,    # V7: None = every family of idioms_families; "k_families" = only those parameterised by a constant
 }
 
 
@@ -61,9 +62,16 @@ def _idiom_examples(seed: int, o: dict):
     if o["idioms_write"] or o["idioms_bugfix"] or o["idioms_contrast"]:
         from ycode.lm.idioms import idiom_examples
 
+        programs = None
+        if o["idioms_select"] == "k_families":
+            from ycode.lm.idioms import k_family_programs
+
+            programs = k_family_programs(o["idioms_families"])
+        elif o["idioms_select"] is not None:
+            raise ValueError(f"unknown idioms_select {o['idioms_select']!r}")
         out += idiom_examples(seed, write_per_program=o["idioms_write"], bugfix_per_program=o["idioms_bugfix"],
                               contrast_per_program=o["idioms_contrast"], io_fraction=o["idioms_io"],
-                              family_set=o["idioms_families"])
+                              programs=programs, family_set=o["idioms_families"])
     if o["idioms_pairs"]:
         from ycode.lm.idioms import pair_examples
 
