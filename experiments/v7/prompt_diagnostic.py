@@ -27,11 +27,13 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 
-def outputs(code: str, name: str, inputs: list) -> list[str] | None:
+def outputs(code: str, name: str, inputs: list, *, literal: bool = False) -> list[str] | None:
     """repr of each output (or <ErrorType>) of the answer's ``name`` on the inputs; None if the
-    code does not define it. Subprocess with a timeout, like the tests."""
+    code does not define it. Subprocess with a timeout, like the tests. ``literal``: the inputs are
+    repr strings of argument tuples (V8 probe sets), evaluated with ast.literal_eval."""
+    inputs_src = f"[ast.literal_eval(_s) for _s in {inputs!r}]" if literal else repr(inputs)
     prog = f"""
-import copy, json
+import ast, copy, json
 _ns = {{}}
 try:
     exec({code!r}, _ns)
@@ -39,7 +41,7 @@ try:
 except Exception:
     print(json.dumps(None)); raise SystemExit
 _out = []
-for _a in {inputs!r}:
+for _a in {inputs_src}:
     try:
         _out.append(repr(_f(*copy.deepcopy(_a))))
     except Exception as _e:
@@ -96,22 +98,29 @@ def main() -> None:
                 continue
             prompt = t["prompts"][variant]
             ref_loss, ref_n = code_loss(lm, prompt, t["reference"])
-            wrong_loss, wrong_n = code_loss(lm, prompt, t["wrong"])
             row = {"set": data["version"], "model": args.model, "group": t["group"], "name": t["name"],
-                   "variant": variant, "prompt": prompt, "ref_loss": round(ref_loss, 4), "ref_tokens": ref_n,
-                   "wrong_loss": round(wrong_loss, 4), "wrong_tokens": wrong_n,
-                   "margin": round(wrong_loss - ref_loss, 4)}
+                   "variant": variant, "prompt": prompt, "ref_loss": round(ref_loss, 4), "ref_tokens": ref_n}
+            if t.get("wrong"):  # a task without a contrasting program (V8 sets) has no margin
+                wrong_loss, wrong_n = code_loss(lm, prompt, t["wrong"])
+                row.update({"wrong_loss": round(wrong_loss, 4), "wrong_tokens": wrong_n,
+                            "margin": round(wrong_loss - ref_loss, 4)})
             if not args.no_generate:
                 answer = lm.chat([("user", prompt)], max_new_tokens=200, temperature=0)
                 code = extract_code(answer)
                 got = outputs(code, t["name"], t["test_inputs"])
                 row.update({"answer": answer, "code": code, "pass": run_tests(code, t["tests"]),
                             "outputs": got,
-                            "wrong": got is not None and got == t["wrong_outputs"] and got != t["expected"]})
+                            "wrong": bool(t.get("wrong_outputs")) and got is not None and got == t["wrong_outputs"]
+                            and got != t["expected"]})
+                if t.get("probe_args"):  # exact functional correctness on every probe input
+                    probe = outputs(code, t["name"], t["probe_args"], literal=True)
+                    row["strict"] = probe is not None and probe == t["probe_expected"]
+                    row["probe_agreement"] = (round(sum(a == b for a, b in zip(probe, t["probe_expected"]))
+                                                    / len(t["probe_expected"]), 3) if probe else 0.0)
             with out.open("a") as f:
                 f.write(json.dumps(row) + "\n")
             print(f"[{time.time() - t0:7.0f}s] {variant:10s} {t['name']:24s} pass={row.get('pass')} "
-                  f"wrong={row.get('wrong')} margin={row['margin']:+.2f}", flush=True)
+                  f"strict={row.get('strict')} wrong={row.get('wrong')} margin={row.get('margin', 0.0):+.2f}", flush=True)
 
 
 if __name__ == "__main__":

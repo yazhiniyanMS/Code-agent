@@ -419,6 +419,10 @@ class SFTData:
         self.seed, self.rank, self.world = seed, rank, world
         self.epoch, self.cursor = 0, 0
         self._order: np.ndarray | None = None
+        self.n_val = n_val
+        # training rows consumed: file row index -> [tokens, answer tokens] actually trained (a packed row
+        # cuts its last example short, so partly seen examples count partly)
+        self.consumed: dict[int, list[int]] = {}
 
     def state_dict(self) -> dict:
         return {"epoch": self.epoch, "cursor": self.cursor}
@@ -449,17 +453,28 @@ class SFTData:
         else:
             i = int(torch.randint(len(index), (1,), generator=gen))
         start, length = index[i]
+        self._last = i + (self.n_val if split == "train" else 0)  # row index in the data files
         return (self.tokens[start: start + length].astype(np.int64),
                 self.mask[start: start + length].astype(np.int64))  # integer weights, never clamped
 
+    def _count(self, row: int, mask: np.ndarray, used: int) -> None:
+        seen = self.consumed.setdefault(row, [0, 0])
+        seen[0] += used
+        seen[1] += int((mask[1:used] > 0).sum())  # targets are shifted by one: token 0 is never a target
+
     def _row(self, split: str, gen: torch.Generator, ordered: bool):
         need = self.block_size + 1
+        count = ordered and split == "train"
         if not self.pack:
             t, m = self._example(split, gen, ordered)
+            if count:
+                self._count(self._last, m, min(len(t), need))
             return t[:need], m[:need]
         toks, masks, size = [], [], 0
         while size < need:
             t, m = self._example(split, gen, ordered)
+            if count:
+                self._count(self._last, m, min(len(t), need - size))
             toks.append(t)
             masks.append(m)
             size += len(t)
@@ -931,6 +946,13 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
         else:  # --eval-iters 0: no validation passes (they cost minutes on a CPU), just save
             history.append({"step": step})
             checkpoint(None, final=step >= cfg.max_steps)
+    if main and getattr(data, "consumed", None) is not None:
+        exp_path = out_dir / "exposures.json"
+        merged = {int(k): v for k, v in json.loads(exp_path.read_text())["rows"]} if (start_step and exp_path.is_file()) else {}
+        for k, (t, a) in data.consumed.items():
+            old_t, old_a = merged.get(k, [0, 0])
+            merged[k] = [old_t + t, old_a + a]
+        exp_path.write_text(json.dumps({"n_val": data.n_val, "rows": sorted([k, v] for k, v in merged.items())}))
     if main:
         import resource
         from dataclasses import asdict

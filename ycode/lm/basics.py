@@ -17,6 +17,7 @@ exists: 20 problems whose concepts appear nowhere in this file's training set.
 
 from __future__ import annotations
 
+import json
 import random
 import re
 from dataclasses import dataclass
@@ -753,7 +754,7 @@ def replay_kind(prompt: str) -> str:
 
 
 def write_basics_dataset(out_dir, tokenizer_path, *, replay_dir=None, replay: int = 0, seed: int = 1337,
-                         examples=None, log=print, replay_filter=None) -> dict:
+                         examples=None, log=print, replay_filter=None, tags: list[str] | None = None) -> dict:
     """Write an SFT dataset of basics examples, optionally mixed with ``replay`` examples drawn from
     an earlier SFT dataset (so fine-tuning does not erase what the model already learned).
 
@@ -774,6 +775,8 @@ def write_basics_dataset(out_dir, tokenizer_path, *, replay_dir=None, replay: in
     rows = [encode_example(tok, ex, weighted=True)
             for ex in (examples if examples is not None else basics_examples(seed))]
     n_basics = len(rows)
+    if tags is not None and len(tags) != n_basics:
+        raise ValueError("one tag per example")
     if replay_dir and replay:
         from ycode.lm.data import ASSISTANT, END, USER
 
@@ -826,7 +829,12 @@ def write_basics_dataset(out_dir, tokenizer_path, *, replay_dir=None, replay: in
                 rows.append((t, mask[start:start + length].tolist()))
             kept += 1
         log(f"Replay: kept {kept} ({rewritten} written functions re-encoded), dropped {dropped}, mix {kinds}")
-    rng.shuffle(rows)
+    # shuffle rows and their source tags together (the same permutation as shuffling the rows alone)
+    tagged = list(zip(rows, (tags or ["generated"] * n_basics) + ["replay"] * (len(rows) - n_basics)))
+    rng.shuffle(tagged)
+    rows = [r for r, _ in tagged]
+    if tags is not None:
+        (out_dir / "sft_tags.json").write_text(json.dumps([t for _, t in tagged]))
     all_tokens, all_mask, idx = [], [], []
     for t, m in rows:
         idx.append((len(all_tokens), len(t)))

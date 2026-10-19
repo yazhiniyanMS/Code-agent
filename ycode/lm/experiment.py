@@ -44,7 +44,10 @@ TRAIN_DEFAULTS = {"steps": 72, "lr": 1.5e-5, "batch": 4, "train_layers": 24, "wa
                   "save_every": None,  # checkpoint interval in steps (default: half the run)
                   "compact": False,  # checkpoints store only the trained tensors, referencing the anchor
                   "final_bf16": False}  # the final checkpoint is bf16 without optimizer state (train.TrainConfig)
-EVAL_DEFAULTS = {"dev": True, "unseen": True, "unseen2": False, "bench": True, "limit": None, "diagnose": 32}
+EVAL_DEFAULTS = {"dev": True, "unseen": True, "unseen2": False, "bench": True, "limit": None, "diagnose": 32,
+                 # V8: task sets scored on the trained model (experiments/v7/prompt_diagnostic.py), each
+                 # {"name", "set" (path from the repo root), "variants" (comma-separated, default original)}
+                 "sets": []}
 DISK_NEEDED_GB = 8
 SMOKE = {"train": {"steps": 2}, "eval": {"limit": 4, "diagnose": 4}}
 
@@ -108,6 +111,24 @@ def scores(answers_path: Path, which: str, *, classify: bool = True) -> dict:
     return out
 
 
+def set_scores(rows_path: Path) -> dict:
+    """Pass counts of a task-set run (prompt_diagnostic rows) per variant and group, with denominators:
+    ``strict`` = correct on all probe inputs, ``tests`` = passes the task's tests, ``wrong`` = computes
+    the contrasting program."""
+    rows = [json.loads(line) for line in rows_path.read_text().splitlines()]
+    out: dict = {}
+    for r in rows:
+        for key in (r["variant"], f"{r['variant']}:{r['group']}"):
+            e = out.setdefault(key, {"tasks": 0, "strict": 0, "tests": 0, "wrong": 0, "strict_names": []})
+            e["tasks"] += 1
+            e["tests"] += bool(r.get("pass"))
+            e["wrong"] += bool(r.get("wrong"))
+            if r.get("strict"):
+                e["strict"] += 1
+                e["strict_names"].append(r["name"])
+    return {"scores": out}
+
+
 def _metrics_tail(path: Path, n: int = 10) -> dict:
     rows = [json.loads(line) for line in path.read_text().splitlines()] if path.is_file() else []
     if not rows:
@@ -153,6 +174,9 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
                     "train": train, "eval": evaluation, "anchor": spec["anchor"], "anchor_sha256": spec["anchor_sha256"]}
 
     data, cur = run_dir / "data", run_dir / "model"
+    if spec.get("work_dir"):  # the model lives elsewhere, e.g. a RAM disk when the disk is short (V8)
+        cur = Path(spec["work_dir"]) / arm["name"] / str(seed) / "model"
+        cur.parent.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
     if (data / "manifest.json").is_file() and (cur / "model.pt").is_file():
         # an interrupted run (e.g. a container restart): its data is reused and training resumes
@@ -169,11 +193,11 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
     shutil.copy(data / "hygiene.json", run_dir / "hygiene.json")
     shutil.copy(data / "manifest.json", run_dir / "manifest.json")
 
-    free_gb = shutil.disk_usage(run_dir).free / 1e9
+    free_gb = shutil.disk_usage(cur.parent).free / 1e9
     # a run writes one checkpoint the size of the one it starts from (weights + optimizer state), plus margin
     needed_gb = min(DISK_NEEDED_GB, 1.02 * _checkpoint_gb(Path(spec["anchor"]), train) + 0.5)
     if free_gb < needed_gb:  # a checkpoint is ~7 GB; failing at the first save wastes the whole run
-        raise RuntimeError(f"only {free_gb:.1f} GB free under {run_dir}; training needs {needed_gb:.1f} GB "
+        raise RuntimeError(f"only {free_gb:.1f} GB free under {cur.parent}; training needs {needed_gb:.1f} GB "
                            "(remove leftover checkpoints, e.g. of an interrupted smoke run)")
     log(f"{arm['name']} seed {seed}: training {train['steps']} steps")
     cmd = [sys.executable, "-m", "ycode.lm.cli", "sft", "--data", str(data), "--init-from", spec["anchor"],
@@ -202,6 +226,11 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
                                                             "tokens", "answer_tokens")})
     shutil.copy(cur / "metrics.jsonl", run_dir / "metrics.jsonl")
     shutil.copy(cur / "train_log.json", run_dir / "train_log.json")
+    if (cur / "exposures.json").is_file() and (data / "sft_tags.json").is_file():
+        from ycode.lm.rounddata import exposure_summary
+
+        shutil.copy(cur / "exposures.json", run_dir / "exposures.json")
+        record["exposures"] = exposure_summary(data, cur / "exposures.json")
     if not train["average"]:
         verify_checkpoint(cur)  # the file evaluated is the file training wrote
     # the optimizer state (~2 GB) only serves resuming training, which is complete: free it for the
@@ -225,6 +254,16 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
         if record[f"{which}_run"]["exit"] != 0:
             raise RuntimeError(f"{which} evaluation failed; see {run_dir / f'{which}.log'}")
         record[which] = scores(answers, which)
+    root = Path(__file__).resolve().parents[2]
+    for ts in evaluation.get("sets") or []:
+        log(f"{arm['name']} seed {seed}: task set {ts['name']}")
+        rows_path = run_dir / f"set_{ts['name']}.jsonl"
+        cmd = [sys.executable, str(root / "experiments" / "v7" / "prompt_diagnostic.py"), str(cur), str(rows_path),
+               "--set", str(root / ts["set"]), "--variants", ts.get("variants", "original")]
+        record.setdefault("sets", {})[ts["name"]] = {"run": run_measured(cmd, run_dir / f"set_{ts['name']}.log")}
+        if record["sets"][ts["name"]]["run"]["exit"] != 0:
+            raise RuntimeError(f"task set {ts['name']} failed; see {run_dir / ('set_' + ts['name'] + '.log')}")
+        record["sets"][ts["name"]].update(set_scores(rows_path))
     if evaluation["diagnose"]:
         log(f"{arm['name']} seed {seed}: answer loss on train / held-out / unseen")
         diag = run_dir / "diagnose.json"
@@ -236,7 +275,8 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
             record["diagnose"] = json.loads(diag.read_text())
     record["minutes_total"] = round(sum(record.get(k, {}).get("minutes", 0) for k in
                                         ("data", "training", "dev_run", "unseen_run", "unseen2_run", "bench_run",
-                                         "diagnose_run")), 1)
+                                         "diagnose_run"))
+                                    + sum(v["run"].get("minutes", 0) for v in record.get("sets", {}).values()), 1)
     if spec.get("keep_models"):  # a bf16 inference copy (~3 GB; evaluation runs in bf16 too) survives the cleanup
         from ycode.lm.train import export_checkpoint, file_sha256
 
@@ -246,7 +286,7 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
             # instead of writing a second copy
             (run_dir / "model_bf16").mkdir(exist_ok=True)
             for name in ("model.pt", "info.json"):
-                os.replace(cur / name, run_dir / "model_bf16" / name)
+                shutil.move(str(cur / name), str(run_dir / "model_bf16" / name))  # cur may be on a RAM disk
             kept = run_dir / "model_bf16" / "model.pt"
         else:
             kept = export_checkpoint(cur, run_dir / "model_bf16", dtype="bf16",

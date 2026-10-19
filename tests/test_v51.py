@@ -155,7 +155,7 @@ def test_round_dataset_writes_manifest_and_hygiene(data_dir, tmp_path, monkeypat
                                 "```python\ndef f(numbers):\n    return sum(x for x in numbers if x != 0)\n```"),
              InstructionExample("Write a Python function `neg(x)` that returns minus x.",
                                 "```python\ndef neg(x):\n    return -x\n```")]
-    monkeypatch.setattr(rounddata, "round_examples", lambda seed, options: small + small[1:])
+    monkeypatch.setattr(rounddata, "round_examples_tagged", lambda seed, options: (small + small[1:], ["legacy:write"] * 3))
     manifest = rounddata.write_round_dataset(tmp_path, 5, data_dir / "tokenizer.json", options={"dedup": True, "replay": 0},
                                              log=lambda *_: None)
     assert manifest["removed"] == {"held-out equivalent": 1, "duplicate": 1} and manifest["kept"] == 1
