@@ -117,3 +117,25 @@ def test_runner_trains_on_a_ram_disk_and_scores_task_sets(data_dir, base_model, 
     assert s["tasks"] == 1 and s["strict"] in (0, 1) and (tmp_path / "exp" / "C" / "1" / "set_tiny.jsonl").is_file()
     assert record["exposures"]["trained_tokens"] > 0
     assert not (ram / "C" / "1" / "model").exists() and not (tmp_path / "exp" / "C" / "1" / "model").exists()
+
+
+def test_transfer_split_trains_its_programs_only():
+    from ycode.lm import idioms, rounddata
+    from ycode.lm.leakage import skeleton
+
+    split = json.loads((ROOT / "ycode" / "lm" / "v8_transfer_split.json").read_text())
+    assert 100 <= split["counts"]["trained_behaviours"] <= 150
+    assert not set(split["train_families"]) & set(split["held_out_families"])
+    programs = rounddata._curriculum_programs({**rounddata.DEFAULTS, "idioms_select": "v8_transfer"})
+    behaviours = {(p.family, p.source(0, "f")) for p in programs}
+    assert len(behaviours) == split["counts"]["trained_behaviours"]
+    assert {p.family for p in programs} <= set(split["train_families"])
+    trained = {skeleton(p.source(i)) for p in programs for i in range(len(p.bodies))}
+    for name in ("t_within", "t_families"):  # no test program is a trained behaviour; cross tests share no skeleton
+        tasks = json.loads((ROOT / "experiments" / "v8" / "sets" / f"{name}.json").read_text())["tasks"]
+        import re
+
+        assert not {(t["family"], re.sub(rf"\b{t['name']}\b", "f", t["reference"])) for t in tasks} & behaviours
+        if name == "t_families":
+            assert not any(skeleton(t["reference"]) in trained for t in tasks)
+    assert not trained & idioms.neighbour_skeletons()

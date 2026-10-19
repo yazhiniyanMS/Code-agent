@@ -1,0 +1,1482 @@
+{
+ "version": "v8-transfer-1",
+ "seed": 8,
+ "held_out_share": 0.3,
+ "per_family": 2,
+ "train_families": [
+  "add_lists_padded",
+  "all_in_range",
+  "alternating_sum",
+  "arrange_digits",
+  "balance_point",
+  "before_first_negative",
+  "best_run_sum",
+  "best_trade",
+  "best_window_sum",
+  "bounded_walk",
+  "camel_to_snake",
+  "can_reach_end",
+  "cancel_pairs",
+  "capitalized_words",
+  "chain_words",
+  "char_positions",
+  "chunk_sums",
+  "clip",
+  "clock_text",
+  "closest_to",
+  "collapse_runs",
+  "column_sums",
+  "count_by_sign",
+  "count_digit",
+  "count_divisors",
+  "count_grid_paths",
+  "count_inversions",
+  "count_overlapping",
+  "count_positive_in_first",
+  "count_positive_regions",
+  "count_records",
+  "count_singletons",
+  "count_stretches_with_sum",
+  "dense_ranks",
+  "diagonal_sum",
+  "digital_root",
+  "digits_above",
+  "distinct_positions",
+  "dot_product",
+  "edit_distance",
+  "exactly_one_positive",
+  "extreme_digit",
+  "extreme_of_first",
+  "fairest_split",
+  "fewest_candies",
+  "fewest_coins",
+  "first_over_running",
+  "greedy_change",
+  "grid_peaks",
+  "group_by_length",
+  "group_keys_by_value",
+  "half_of_string",
+  "integer_sqrt",
+  "interleave",
+  "invert",
+  "key_of_extreme",
+  "keys_by_value",
+  "last_position",
+  "last_reversed",
+  "leaders",
+  "letter_counts",
+  "long_words",
+  "longest_monotone_run",
+  "longest_rising_subsequence",
+  "longest_run",
+  "lookup_with_default",
+  "majority_value",
+  "map_filtered",
+  "mask_but_last",
+  "mask_vowels",
+  "merge_add",
+  "min_boats",
+  "missing_digits",
+  "move_to_end",
+  "multiples_in_range",
+  "neighbour_counts",
+  "neighbour_steps",
+  "neighbours_close",
+  "nesting_depth",
+  "next_bigger_same_digits",
+  "next_greater",
+  "numbered_lines",
+  "numeronyms",
+  "ordinal_suffix",
+  "pad_list",
+  "pair_up",
+  "pairs_sum_divisible",
+  "pairs_summing_above",
+  "pairwise_extreme",
+  "rotate_grid",
+  "rotate_left",
+  "row_extremes",
+  "running_extreme",
+  "satisfied_children",
+  "shift_letters",
+  "shortest_window_reaching",
+  "sign_changes",
+  "smallest_missing_positive",
+  "sort_by_frequency",
+  "sort_numbers_by",
+  "sort_words_by",
+  "sorted_distinct",
+  "sorted_pairs_with_sum",
+  "sorted_squares",
+  "spiral_order",
+  "split_digit_runs",
+  "split_on_value",
+  "sum_after_first",
+  "sum_every_kth_position",
+  "sum_of_first",
+  "sum_values_over",
+  "to_base",
+  "toggle_lamps",
+  "total_gains",
+  "total_in_units",
+  "total_waiting",
+  "transpose",
+  "trapped_water",
+  "truncate",
+  "words_containing",
+  "wrap_with",
+  "wrap_words",
+  "zero_pad"
+ ],
+ "held_out_families": [
+  "all_present",
+  "balance_no_overdraft",
+  "balanced_parens",
+  "border_sum",
+  "camel_case",
+  "cheapest_path",
+  "common_subsequence_length",
+  "count_peaks",
+  "digit_names",
+  "digit_product",
+  "digit_sum_by_parity",
+  "election_winner",
+  "english_list",
+  "evens_then_odds",
+  "filter_dict_values",
+  "first_position",
+  "flip_odd_positions",
+  "grid_steps",
+  "initials",
+  "largest_jump",
+  "last_standing",
+  "longest_window_within",
+  "luhn_check_digit",
+  "missing_between",
+  "most_common",
+  "neighbour_op",
+  "pair_with_sum",
+  "pairs_with_difference",
+  "parens_to_add",
+  "positions_compared",
+  "repeat_chars",
+  "replace_value",
+  "reverse_in_groups",
+  "shortest_word_length",
+  "slice_between",
+  "span_back",
+  "stack_commands",
+  "star_bars",
+  "subset_sum",
+  "sum_of_range",
+  "summarize_ranges",
+  "thousands_separator",
+  "three_sum",
+  "total_three_units",
+  "ways_to_pay",
+  "window_extremes",
+  "word_lengths",
+  "word_positions"
+ ],
+ "trained": [
+  [
+   "add_lists_padded",
+   "add_lists",
+   "def f(a, b):\n    import itertools\n    return [x + y for x, y in itertools.zip_longest(a, b, fillvalue=0)]"
+  ],
+  [
+   "all_in_range",
+   "all_in_range",
+   "def f(numbers, low, high):\n    return all(low <= x <= high for x in numbers)"
+  ],
+  [
+   "alternating_sum",
+   "alternating_sum",
+   "def f(numbers):\n    return sum(x if i % 2 == 0 else -x for i, x in enumerate(numbers))"
+  ],
+  [
+   "arrange_digits",
+   "largest_digit_arrangement",
+   "def f(n):\n    return int(''.join(sorted(str(n), reverse=True)))"
+  ],
+  [
+   "balance_point",
+   "balance_point",
+   "def f(numbers):\n    total = sum(numbers)\n    left = 0\n    for i, x in enumerate(numbers):\n        if left == total - left - x:\n            return i\n        left += x\n    return -1"
+  ],
+  [
+   "before_first_negative",
+   "before_first_negative",
+   "def f(numbers):\n    result = []\n    for x in numbers:\n        if x < 0:\n            break\n        result.append(x)\n    return result"
+  ],
+  [
+   "best_run_sum",
+   "best_run_sum",
+   "def f(numbers):\n    best = current = numbers[0]\n    for x in numbers[1:]:\n        current = max(x, current + x)\n        best = max(best, current)\n    return best"
+  ],
+  [
+   "best_trade",
+   "best_trade",
+   "def f(prices):\n    best = 0\n    lowest = None\n    for p in prices:\n        if lowest is not None:\n            best = max(best, p - lowest)\n        if lowest is None or p < lowest:\n            lowest = p\n    return best"
+  ],
+  [
+   "best_window_sum",
+   "best_sum_of_four",
+   "def f(numbers):\n    if len(numbers) < 4:\n        return None\n    window = sum(numbers[:4])\n    best = window\n    for i in range(4, len(numbers)):\n        window += numbers[i] - numbers[i - 4]\n        best = max(best, window)\n    return best"
+  ],
+  [
+   "best_window_sum",
+   "best_sum_of_two",
+   "def f(numbers):\n    if len(numbers) < 2:\n        return None\n    window = sum(numbers[:2])\n    best = window\n    for i in range(2, len(numbers)):\n        window += numbers[i] - numbers[i - 2]\n        best = max(best, window)\n    return best"
+  ],
+  [
+   "bounded_walk",
+   "bounded_walk_10",
+   "def f(moves):\n    pos = 0\n    for m in moves:\n        pos = min(max(pos + m, 0), 10)\n    return pos"
+  ],
+  [
+   "camel_to_snake",
+   "camel_to_snake",
+   "def f(s):\n    return ''.join('_' + c.lower() if c.isupper() else c for c in s)"
+  ],
+  [
+   "can_reach_end",
+   "can_reach_end",
+   "def f(steps):\n    reach = 0\n    for i, s in enumerate(steps):\n        if i > reach:\n            return False\n        reach = max(reach, i + s)\n    return True"
+  ],
+  [
+   "cancel_pairs",
+   "cancel_pairs",
+   "def f(s):\n    stack = []\n    for c in s:\n        if stack and stack[-1] == c:\n            stack.pop()\n        else:\n            stack.append(c)\n    return ''.join(stack)"
+  ],
+  [
+   "capitalized_words",
+   "capitalized_words",
+   "def f(text):\n    return [w for w in text.split() if w[0].isupper()]"
+  ],
+  [
+   "chain_words",
+   "chains",
+   "def f(a, b):\n    return a != '' and b != '' and a[-1] == b[0]"
+  ],
+  [
+   "char_positions",
+   "positions_of_char",
+   "def f(s, ch):\n    return [i for i, c in enumerate(s) if c == ch]"
+  ],
+  [
+   "chunk_sums",
+   "sums_of_groups_of_two",
+   "def f(numbers):\n    return [sum(numbers[i:i + 2]) for i in range(0, len(numbers), 2)]"
+  ],
+  [
+   "clip",
+   "clip_high",
+   "def f(numbers, limit):\n    return [min(x, limit) for x in numbers]"
+  ],
+  [
+   "clock_text",
+   "clock_text",
+   "def f(minutes):\n    return f'{minutes // 60}:{minutes % 60:02d}'"
+  ],
+  [
+   "closest_to",
+   "closest_to",
+   "def f(numbers, target):\n    return min(numbers, key=lambda x: (abs(x - target), x))"
+  ],
+  [
+   "collapse_runs",
+   "collapse_runs",
+   "def f(items):\n    result = []\n    for x in items:\n        if not result or result[-1] != x:\n            result.append(x)\n    return result"
+  ],
+  [
+   "column_sums",
+   "column_sums",
+   "def f(rows):\n    return [sum(col) for col in zip(*rows)]"
+  ],
+  [
+   "count_by_sign",
+   "count_by_sign",
+   "def f(numbers):\n    counts = {'negative': 0, 'zero': 0, 'positive': 0}\n    for x in numbers:\n        if x < 0:\n            counts['negative'] += 1\n        elif x == 0:\n            counts['zero'] += 1\n        else:\n            counts['positive'] += 1\n    return counts"
+  ],
+  [
+   "count_digit",
+   "count_digit_7",
+   "def f(n):\n    return str(n).count('7')"
+  ],
+  [
+   "count_digit",
+   "count_digit_5",
+   "def f(n):\n    return str(n).count('5')"
+  ],
+  [
+   "count_divisors",
+   "count_divisors",
+   "def f(n):\n    return sum(1 for d in range(1, n + 1) if n % d == 0)"
+  ],
+  [
+   "count_grid_paths",
+   "count_open_paths",
+   "def f(grid):\n    n, m = len(grid), len(grid[0])\n    ways = [[0] * m for _ in range(n)]\n    for i in range(n):\n        for j in range(m):\n            if grid[i][j] < 0:\n                continue\n            if i == 0 and j == 0:\n                ways[i][j] = 1\n            else:\n                ways[i][j] = (ways[i - 1][j] if i > 0 else 0) + (ways[i][j - 1] if j > 0 else 0)\n    return ways[-1][-1]"
+  ],
+  [
+   "count_inversions",
+   "count_inversions",
+   "def f(numbers):\n    count = 0\n    for i in range(len(numbers)):\n        for j in range(i + 1, len(numbers)):\n            if numbers[i] > numbers[j]:\n                count += 1\n    return count"
+  ],
+  [
+   "count_overlapping",
+   "occurrences_with_overlap",
+   "def f(s, part):\n    if not part:\n        return 0\n    return sum(1 for i in range(len(s) - len(part) + 1) if s[i:i + len(part)] == part)"
+  ],
+  [
+   "count_positive_in_first",
+   "positives_in_first_four",
+   "def f(numbers):\n    return sum(1 for x in numbers[:4] if x > 0)"
+  ],
+  [
+   "count_positive_in_first",
+   "positives_in_first_five",
+   "def f(numbers):\n    return sum(1 for x in numbers[:5] if x > 0)"
+  ],
+  [
+   "count_positive_regions",
+   "count_positive_regions",
+   "def f(grid):\n    seen = set()\n    count = 0\n    for r in range(len(grid)):\n        for c in range(len(grid[r])):\n            if grid[r][c] > 0 and (r, c) not in seen:\n                count += 1\n                seen.add((r, c))\n                stack = [(r, c)]\n                while stack:\n                    i, j = stack.pop()\n                    for a, b in ((i + 1, j), (i - 1, j), (i, j + 1), (i, j - 1)):\n                        if 0 <= a < len(grid) and 0 <= b < len(grid[a]) and grid[a][b] > 0 and (a, b) not in seen:\n                            seen.add((a, b))\n                            stack.append((a, b))\n    return count"
+  ],
+  [
+   "count_records",
+   "count_new_lows",
+   "def f(numbers):\n    count = 0\n    best = None\n    for x in numbers:\n        if best is None or x < best:\n            count += 1\n            best = x\n    return count"
+  ],
+  [
+   "count_singletons",
+   "count_singletons",
+   "def f(items):\n    return sum(1 for x in items if items.count(x) == 1)"
+  ],
+  [
+   "count_stretches_with_sum",
+   "stretches_summing_to",
+   "def f(numbers, target):\n    count = 0\n    for i in range(len(numbers)):\n        total = 0\n        for j in range(i, len(numbers)):\n            total += numbers[j]\n            if total == target:\n                count += 1\n    return count"
+  ],
+  [
+   "dense_ranks",
+   "dense_ranks",
+   "def f(numbers):\n    rank = {x: i + 1 for i, x in enumerate(sorted(set(numbers)))}\n    return [rank[x] for x in numbers]"
+  ],
+  [
+   "diagonal_sum",
+   "diagonal_sum",
+   "def f(grid):\n    return sum(grid[i][i] for i in range(len(grid)))"
+  ],
+  [
+   "digital_root",
+   "digital_root",
+   "def f(n):\n    while n >= 10:\n        n = sum(int(d) for d in str(n))\n    return n"
+  ],
+  [
+   "digits_above",
+   "digits_above_5",
+   "def f(n):\n    return sum(1 for d in str(n) if int(d) > 5)"
+  ],
+  [
+   "digits_above",
+   "digits_above_7",
+   "def f(n):\n    return sum(1 for d in str(n) if int(d) > 7)"
+  ],
+  [
+   "distinct_positions",
+   "positions_visited",
+   "def f(moves):\n    pos = 0\n    seen = {0}\n    for m in moves:\n        pos += m\n        seen.add(pos)\n    return len(seen)"
+  ],
+  [
+   "dot_product",
+   "dot_product",
+   "def f(a, b):\n    return sum(x * y for x, y in zip(a, b))"
+  ],
+  [
+   "edit_distance",
+   "edit_distance",
+   "def f(a, b):\n    rows, cols = len(a) + 1, len(b) + 1\n    d = [[0] * cols for _ in range(rows)]\n    for i in range(rows):\n        d[i][0] = i\n    for j in range(cols):\n        d[0][j] = j\n    for i in range(1, rows):\n        for j in range(1, cols):\n            cost = 0 if a[i - 1] == b[j - 1] else 1\n            d[i][j] = min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost)\n    return d[-1][-1]"
+  ],
+  [
+   "exactly_one_positive",
+   "exactly_one_positive",
+   "def f(a, b):\n    return (a > 0) != (b > 0)"
+  ],
+  [
+   "extreme_digit",
+   "max_digit",
+   "def f(n):\n    return max(int(d) for d in str(n))"
+  ],
+  [
+   "extreme_of_first",
+   "max_of_first_three",
+   "def f(numbers):\n    return max(numbers[:3])"
+  ],
+  [
+   "extreme_of_first",
+   "max_of_first_two",
+   "def f(numbers):\n    return max(numbers[:2])"
+  ],
+  [
+   "fairest_split",
+   "fairest_split",
+   "def f(numbers):\n    sums = {0}\n    for x in numbers:\n        sums = sums | {s + x for s in sums}\n    total = sum(numbers)\n    return min(abs(total - 2 * s) for s in sums)"
+  ],
+  [
+   "fewest_candies",
+   "fewest_candies",
+   "def f(ratings):\n    n = len(ratings)\n    candies = [1] * n\n    for i in range(1, n):\n        if ratings[i] > ratings[i - 1]:\n            candies[i] = candies[i - 1] + 1\n    for i in range(n - 2, -1, -1):\n        if ratings[i] > ratings[i + 1]:\n            candies[i] = max(candies[i], candies[i + 1] + 1)\n    return sum(candies)"
+  ],
+  [
+   "fewest_coins",
+   "fewest_coins_with_1_3_4",
+   "def f(amount):\n    big = amount + 1\n    best = [0] + [big] * amount\n    for x in range(1, amount + 1):\n        for coin in (1, 3, 4):\n            if coin <= x and best[x - coin] + 1 < best[x]:\n                best[x] = best[x - coin] + 1\n    return best[amount] if best[amount] < big else -1"
+  ],
+  [
+   "first_over_running",
+   "when_total_exceeds",
+   "def f(numbers, limit):\n    total = 0\n    for i, x in enumerate(numbers):\n        total += x\n        if total > limit:\n            return i\n    return -1"
+  ],
+  [
+   "greedy_change",
+   "coins_for_euro_cents",
+   "def f(amount):\n    count = 0\n    for coin in (50, 20, 10, 5, 2, 1):\n        count += amount // coin\n        amount %= coin\n    return count"
+  ],
+  [
+   "grid_peaks",
+   "grid_peaks",
+   "def f(grid):\n    count = 0\n    for i in range(len(grid)):\n        for j in range(len(grid[i])):\n            around = [grid[a][b] for a, b in ((i - 1, j), (i + 1, j), (i, j - 1), (i, j + 1))\n                      if 0 <= a < len(grid) and 0 <= b < len(grid[a])]\n            if all(grid[i][j] > v for v in around):\n                count += 1\n    return count"
+  ],
+  [
+   "group_by_length",
+   "group_by_length",
+   "def f(words):\n    groups = {}\n    for w in words:\n        groups.setdefault(len(w), []).append(w)\n    return groups"
+  ],
+  [
+   "group_keys_by_value",
+   "invert_to_lists",
+   "def f(d):\n    result = {}\n    for k, v in d.items():\n        result.setdefault(v, []).append(k)\n    return result"
+  ],
+  [
+   "half_of_string",
+   "first_half",
+   "def f(s):\n    return s[:len(s) // 2]"
+  ],
+  [
+   "integer_sqrt",
+   "integer_sqrt",
+   "def f(n):\n    low, high = 0, n\n    while low < high:\n        mid = (low + high + 1) // 2\n        if mid * mid <= n:\n            low = mid\n        else:\n            high = mid - 1\n    return low"
+  ],
+  [
+   "interleave",
+   "interleave",
+   "def f(a, b):\n    result = []\n    for x, y in zip(a, b):\n        result.append(x)\n        result.append(y)\n    return result"
+  ],
+  [
+   "invert",
+   "invert",
+   "def f(d):\n    return {v: k for k, v in d.items()}"
+  ],
+  [
+   "key_of_extreme",
+   "key_with_min",
+   "def f(d):\n    return min(d, key=d.get)"
+  ],
+  [
+   "keys_by_value",
+   "keys_by_value_ascending",
+   "def f(d):\n    return sorted(d, key=d.get)"
+  ],
+  [
+   "last_position",
+   "last_zero_position",
+   "def f(numbers):\n    result = -1\n    for i, x in enumerate(numbers):\n        if x == 0:\n            result = i\n    return result"
+  ],
+  [
+   "last_position",
+   "last_odd_position",
+   "def f(numbers):\n    result = -1\n    for i, x in enumerate(numbers):\n        if x % 2 == 1:\n            result = i\n    return result"
+  ],
+  [
+   "last_reversed",
+   "last_three_reversed",
+   "def f(items):\n    return items[::-1][:3]"
+  ],
+  [
+   "last_reversed",
+   "last_four_reversed",
+   "def f(items):\n    return items[::-1][:4]"
+  ],
+  [
+   "leaders",
+   "leaders",
+   "def f(numbers):\n    result = []\n    best = None\n    for x in reversed(numbers):\n        if best is None or x > best:\n            result.append(x)\n            best = x\n    return result[::-1]"
+  ],
+  [
+   "letter_counts",
+   "first_letter_counts",
+   "def f(text):\n    counts = {}\n    for w in text.split():\n        k = w[0].lower()\n        counts[k] = counts.get(k, 0) + 1\n    return counts"
+  ],
+  [
+   "long_words",
+   "words_longer_than_3",
+   "def f(text):\n    return [w for w in text.split() if len(w) > 3]"
+  ],
+  [
+   "longest_monotone_run",
+   "longest_rising_stretch",
+   "def f(numbers):\n    best = 0\n    start = 0\n    for i in range(len(numbers)):\n        if i > 0 and not numbers[i] > numbers[i - 1]:\n            start = i\n        best = max(best, i - start + 1)\n    return best"
+  ],
+  [
+   "longest_rising_subsequence",
+   "longest_rising_subsequence",
+   "def f(numbers):\n    best = [1] * len(numbers)\n    for i in range(len(numbers)):\n        for j in range(i):\n            if numbers[j] < numbers[i]:\n                best[i] = max(best[i], best[j] + 1)\n    return max(best, default=0)"
+  ],
+  [
+   "longest_run",
+   "longest_run",
+   "def f(items):\n    best = 0\n    run = 0\n    for i, x in enumerate(items):\n        run = run + 1 if i > 0 and x == items[i - 1] else 1\n        best = max(best, run)\n    return best"
+  ],
+  [
+   "lookup_with_default",
+   "lookup_all_or_minus_one",
+   "def f(d, keys):\n    return [d.get(k, -1) for k in keys]"
+  ],
+  [
+   "majority_value",
+   "majority_value",
+   "def f(items):\n    for x in set(items):\n        if items.count(x) * 2 > len(items):\n            return x\n    return None"
+  ],
+  [
+   "map_filtered",
+   "squares_of_odd",
+   "def f(numbers):\n    return [x * x for x in numbers if x % 2 == 1]"
+  ],
+  [
+   "map_filtered",
+   "plus_one_of_even",
+   "def f(numbers):\n    return [x + 1 for x in numbers if x % 2 == 0]"
+  ],
+  [
+   "mask_but_last",
+   "mask_all_but_last_2",
+   "def f(s):\n    return '*' * max(len(s) - 2, 0) + s[-2:]"
+  ],
+  [
+   "mask_vowels",
+   "mask_vowels",
+   "def f(s):\n    return ''.join('_' if c in 'aeiou' else c for c in s)"
+  ],
+  [
+   "merge_add",
+   "merge_add",
+   "def f(a, b):\n    result = dict(a)\n    for k, v in b.items():\n        result[k] = result.get(k, 0) + v\n    return result"
+  ],
+  [
+   "min_boats",
+   "min_boats_8",
+   "def f(weights):\n    w = sorted(weights)\n    i, j = 0, len(w) - 1\n    boats = 0\n    while i <= j:\n        if w[i] + w[j] <= 8:\n            i += 1\n        j -= 1\n        boats += 1\n    return boats"
+  ],
+  [
+   "min_boats",
+   "min_boats_6",
+   "def f(weights):\n    w = sorted(weights)\n    i, j = 0, len(w) - 1\n    boats = 0\n    while i <= j:\n        if w[i] + w[j] <= 6:\n            i += 1\n        j -= 1\n        boats += 1\n    return boats"
+  ],
+  [
+   "missing_digits",
+   "missing_digits",
+   "def f(n):\n    return [d for d in range(10) if str(d) not in str(n)]"
+  ],
+  [
+   "move_to_end",
+   "move_to_end",
+   "def f(items, x):\n    return [v for v in items if v != x] + [v for v in items if v == x]"
+  ],
+  [
+   "multiples_in_range",
+   "multiples_of_7_between",
+   "def f(low, high):\n    return sum(1 for x in range(low, high + 1) if x % 7 == 0)"
+  ],
+  [
+   "multiples_in_range",
+   "multiples_of_3_between",
+   "def f(low, high):\n    return sum(1 for x in range(low, high + 1) if x % 3 == 0)"
+  ],
+  [
+   "neighbour_counts",
+   "positive_neighbour_counts",
+   "def f(grid):\n    n, m = len(grid), len(grid[0])\n    result = []\n    for i in range(n):\n        row = []\n        for j in range(m):\n            count = 0\n            for di in (-1, 0, 1):\n                for dj in (-1, 0, 1):\n                    if (di or dj) and 0 <= i + di < n and 0 <= j + dj < m and grid[i + di][j + dj] > 0:\n                        count += 1\n            row.append(count)\n        result.append(row)\n    return result"
+  ],
+  [
+   "neighbour_steps",
+   "steps_between",
+   "def f(numbers):\n    return [b - a for a, b in zip(numbers, numbers[1:])]"
+  ],
+  [
+   "neighbours_close",
+   "steps_at_most_three",
+   "def f(numbers):\n    return all(abs(b - a) <= 3 for a, b in zip(numbers, numbers[1:]))"
+  ],
+  [
+   "neighbours_close",
+   "steps_at_most_two",
+   "def f(numbers):\n    return all(abs(b - a) <= 2 for a, b in zip(numbers, numbers[1:]))"
+  ],
+  [
+   "nesting_depth",
+   "max_nesting",
+   "def f(s):\n    depth = best = 0\n    for c in s:\n        if c == '(':\n            depth += 1\n            best = max(best, depth)\n        elif c == ')':\n            depth -= 1\n    return best"
+  ],
+  [
+   "next_bigger_same_digits",
+   "next_bigger_same_digits",
+   "def f(n):\n    d = list(str(n))\n    i = len(d) - 2\n    while i >= 0 and d[i] >= d[i + 1]:\n        i -= 1\n    if i < 0:\n        return -1\n    j = len(d) - 1\n    while d[j] <= d[i]:\n        j -= 1\n    d[i], d[j] = d[j], d[i]\n    d[i + 1:] = reversed(d[i + 1:])\n    return int(''.join(d))"
+  ],
+  [
+   "next_greater",
+   "next_greater",
+   "def f(numbers):\n    result = []\n    for i, x in enumerate(numbers):\n        result.append(next((y for y in numbers[i + 1:] if y > x), None))\n    return result"
+  ],
+  [
+   "numbered_lines",
+   "numbered_lines_paren",
+   "def f(words):\n    return '\\n'.join(f'{i}) {w}' for i, w in enumerate(words, 1))"
+  ],
+  [
+   "numeronyms",
+   "numeronyms_over_3",
+   "def f(text):\n    return ' '.join(w[0] + str(len(w) - 2) + w[-1] if len(w) > 3 else w for w in text.split())"
+  ],
+  [
+   "ordinal_suffix",
+   "ordinal",
+   "def f(n):\n    if 11 <= n % 100 <= 13:\n        return str(n) + 'th'\n    return str(n) + {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')"
+  ],
+  [
+   "pad_list",
+   "pad_with_zeros",
+   "def f(items, size):\n    return items + [0] * (size - len(items))"
+  ],
+  [
+   "pair_up",
+   "pair_up",
+   "def f(keys, values):\n    return dict(zip(keys, values))"
+  ],
+  [
+   "pairs_sum_divisible",
+   "pairs_divisible_by_3",
+   "def f(numbers):\n    count = 0\n    for i in range(len(numbers)):\n        for j in range(i + 1, len(numbers)):\n            if (numbers[i] + numbers[j]) % 3 == 0:\n                count += 1\n    return count"
+  ],
+  [
+   "pairs_summing_above",
+   "neighbour_pairs_above_10",
+   "def f(numbers):\n    return sum(1 for a, b in zip(numbers, numbers[1:]) if a + b > 10)"
+  ],
+  [
+   "pairs_summing_above",
+   "neighbour_pairs_above_0",
+   "def f(numbers):\n    return sum(1 for a, b in zip(numbers, numbers[1:]) if a + b > 0)"
+  ],
+  [
+   "pairwise_extreme",
+   "pairwise_min",
+   "def f(a, b):\n    return [min(x, y) for x, y in zip(a, b)]"
+  ],
+  [
+   "rotate_grid",
+   "rotate_counterclockwise",
+   "def f(rows):\n    return [list(r) for r in zip(*rows)][::-1]"
+  ],
+  [
+   "rotate_left",
+   "rotate_left_one",
+   "def f(items):\n    if not items:\n        return []\n    k = 1 % len(items)\n    return items[k:] + items[:k]"
+  ],
+  [
+   "rotate_left",
+   "rotate_left_two",
+   "def f(items):\n    if not items:\n        return []\n    k = 2 % len(items)\n    return items[k:] + items[:k]"
+  ],
+  [
+   "row_extremes",
+   "row_mins",
+   "def f(rows):\n    return [min(row) for row in rows]"
+  ],
+  [
+   "running_extreme",
+   "running_min",
+   "def f(numbers):\n    result = []\n    for x in numbers:\n        result.append(x if not result else min(result[-1], x))\n    return result"
+  ],
+  [
+   "satisfied_children",
+   "content_children",
+   "def f(greed, sizes):\n    g = sorted(greed)\n    c = sorted(sizes)\n    i = j = 0\n    while i < len(g) and j < len(c):\n        if c[j] >= g[i]:\n            i += 1\n        j += 1\n    return i"
+  ],
+  [
+   "shift_letters",
+   "shift_by_13",
+   "def f(s):\n    return ''.join(chr((ord(c) - ord('a') + 13) % 26 + ord('a')) for c in s)"
+  ],
+  [
+   "shift_letters",
+   "shift_by_3",
+   "def f(s):\n    return ''.join(chr((ord(c) - ord('a') + 3) % 26 + ord('a')) for c in s)"
+  ],
+  [
+   "shortest_window_reaching",
+   "shortest_stretch_reaching",
+   "def f(numbers, target):\n    best = 0\n    left = 0\n    total = 0\n    for right, x in enumerate(numbers):\n        total += x\n        while left < right and total - numbers[left] >= target:\n            total -= numbers[left]\n            left += 1\n        if total >= target and (best == 0 or right - left + 1 < best):\n            best = right - left + 1\n    return best"
+  ],
+  [
+   "sign_changes",
+   "sign_changes",
+   "def f(numbers):\n    return sum(1 for a, b in zip(numbers, numbers[1:]) if a * b < 0)"
+  ],
+  [
+   "smallest_missing_positive",
+   "smallest_missing_positive",
+   "def f(numbers):\n    present = set(numbers)\n    k = 1\n    while k in present:\n        k += 1\n    return k"
+  ],
+  [
+   "sort_by_frequency",
+   "sort_by_frequency",
+   "def f(numbers):\n    return sorted(numbers, key=lambda x: (-numbers.count(x), x))"
+  ],
+  [
+   "sort_numbers_by",
+   "sort_by_absolute_value",
+   "def f(numbers):\n    return sorted(numbers, key=lambda x: abs(x))"
+  ],
+  [
+   "sort_numbers_by",
+   "sort_by_distance_from_ten",
+   "def f(numbers):\n    return sorted(numbers, key=lambda x: abs(x - 10))"
+  ],
+  [
+   "sort_words_by",
+   "sort_words_by_length",
+   "def f(words):\n    return sorted(words, key=lambda w: len(w))"
+  ],
+  [
+   "sort_words_by",
+   "sort_words_by_name",
+   "def f(words):\n    return sorted(words, key=lambda w: w.lower())"
+  ],
+  [
+   "sorted_distinct",
+   "sorted_unique",
+   "def f(items):\n    return sorted(set(items))"
+  ],
+  [
+   "sorted_pairs_with_sum",
+   "count_pairs_with_sum",
+   "def f(numbers, target):\n    count = 0\n    i, j = 0, len(numbers) - 1\n    while i < j:\n        s = numbers[i] + numbers[j]\n        if s == target:\n            count += 1\n            i += 1\n            j -= 1\n        elif s < target:\n            i += 1\n        else:\n            j -= 1\n    return count"
+  ],
+  [
+   "sorted_squares",
+   "sorted_squares",
+   "def f(numbers):\n    result = []\n    i, j = 0, len(numbers) - 1\n    while i <= j:\n        if abs(numbers[i]) > abs(numbers[j]):\n            result.append(numbers[i] * numbers[i])\n            i += 1\n        else:\n            result.append(numbers[j] * numbers[j])\n            j -= 1\n    return result[::-1]"
+  ],
+  [
+   "spiral_order",
+   "spiral_order",
+   "def f(rows):\n    grid = [list(row) for row in rows]\n    result = []\n    while grid:\n        result.extend(grid.pop(0))\n        grid = [list(r) for r in zip(*grid)][::-1]\n    return result"
+  ],
+  [
+   "split_digit_runs",
+   "split_digit_runs",
+   "def f(text):\n    pieces = []\n    for c in text:\n        if pieces and pieces[-1][-1].isdigit() == c.isdigit():\n            pieces[-1] += c\n        else:\n            pieces.append(c)\n    return pieces"
+  ],
+  [
+   "split_on_value",
+   "split_on_value",
+   "def f(items, sep):\n    pieces = [[]]\n    for v in items:\n        if v == sep:\n            pieces.append([])\n        else:\n            pieces[-1].append(v)\n    return pieces"
+  ],
+  [
+   "sum_after_first",
+   "sum_after_first_three",
+   "def f(numbers):\n    return sum(numbers[3:])"
+  ],
+  [
+   "sum_after_first",
+   "sum_after_first_one",
+   "def f(numbers):\n    return sum(numbers[1:])"
+  ],
+  [
+   "sum_every_kth_position",
+   "sum_every_three",
+   "def f(numbers):\n    return sum(numbers[::3])"
+  ],
+  [
+   "sum_of_first",
+   "sum_of_first_five",
+   "def f(numbers):\n    return sum(numbers[:5])"
+  ],
+  [
+   "sum_of_first",
+   "sum_of_first_four",
+   "def f(numbers):\n    return sum(numbers[:4])"
+  ],
+  [
+   "sum_values_over",
+   "sum_values_over",
+   "def f(d, limit):\n    return sum(v for v in d.values() if v > limit)"
+  ],
+  [
+   "to_base",
+   "to_base_2",
+   "def f(n):\n    if n == 0:\n        return '0'\n    digits = []\n    while n > 0:\n        digits.append(str(n % 2))\n        n //= 2\n    return ''.join(reversed(digits))"
+  ],
+  [
+   "toggle_lamps",
+   "lamps_left_on",
+   "def f(presses):\n    on = set()\n    for p in presses:\n        if p in on:\n            on.remove(p)\n        else:\n            on.add(p)\n    return sorted(on)"
+  ],
+  [
+   "total_gains",
+   "sum_of_rises",
+   "def f(prices):\n    return sum(max(b - a, 0) for a, b in zip(prices, prices[1:]))"
+  ],
+  [
+   "total_in_units",
+   "total_days",
+   "def f(weeks, days):\n    return weeks * 7 + days"
+  ],
+  [
+   "total_in_units",
+   "total_hours",
+   "def f(days, hours):\n    return days * 24 + hours"
+  ],
+  [
+   "total_waiting",
+   "total_waiting",
+   "def f(times):\n    total = 0\n    waited = 0\n    for t in times:\n        total += waited\n        waited += t\n    return total"
+  ],
+  [
+   "transpose",
+   "transpose",
+   "def f(rows):\n    return [list(col) for col in zip(*rows)]"
+  ],
+  [
+   "trapped_water",
+   "trapped_water",
+   "def f(heights):\n    n = len(heights)\n    if n == 0:\n        return 0\n    left = [0] * n\n    right = [0] * n\n    left[0] = heights[0]\n    for i in range(1, n):\n        left[i] = max(left[i - 1], heights[i])\n    right[-1] = heights[-1]\n    for i in range(n - 2, -1, -1):\n        right[i] = max(right[i + 1], heights[i])\n    return sum(min(left[i], right[i]) - heights[i] for i in range(n))"
+  ],
+  [
+   "truncate",
+   "truncate_6",
+   "def f(s):\n    return s if len(s) <= 6 else s[:6] + '...'"
+  ],
+  [
+   "truncate",
+   "truncate_4",
+   "def f(s):\n    return s if len(s) <= 4 else s[:4] + '...'"
+  ],
+  [
+   "words_containing",
+   "words_containing",
+   "def f(text, letter):\n    return sum(1 for w in text.split() if letter in w)"
+  ],
+  [
+   "wrap_with",
+   "wrap_with",
+   "def f(items, x):\n    return [x] + items + [x]"
+  ],
+  [
+   "wrap_words",
+   "wrap_words_8",
+   "def f(text):\n    lines = []\n    line = ''\n    for w in text.split():\n        if line and len(line) + 1 + len(w) <= 8:\n            line += ' ' + w\n        else:\n            if line:\n                lines.append(line)\n            line = w\n    if line:\n        lines.append(line)\n    return lines"
+  ],
+  [
+   "zero_pad",
+   "zero_pad_3",
+   "def f(n):\n    return str(n).zfill(3)"
+  ],
+  [
+   "zero_pad",
+   "zero_pad_6",
+   "def f(n):\n    return str(n).zfill(6)"
+  ]
+ ],
+ "within": [
+  [
+   "arrange_digits",
+   "smallest_digit_arrangement",
+   "def f(n):\n    return int(''.join(sorted(str(n))))"
+  ],
+  [
+   "best_window_sum",
+   "best_sum_of_three",
+   "def f(numbers):\n    if len(numbers) < 3:\n        return None\n    window = sum(numbers[:3])\n    best = window\n    for i in range(3, len(numbers)):\n        window += numbers[i] - numbers[i - 3]\n        best = max(best, window)\n    return best"
+  ],
+  [
+   "bounded_walk",
+   "bounded_walk_25",
+   "def f(moves):\n    pos = 0\n    for m in moves:\n        pos = min(max(pos + m, 0), 25)\n    return pos"
+  ],
+  [
+   "chunk_sums",
+   "sums_of_groups_of_three",
+   "def f(numbers):\n    return [sum(numbers[i:i + 3]) for i in range(0, len(numbers), 3)]"
+  ],
+  [
+   "clip",
+   "clip_low",
+   "def f(numbers, limit):\n    return [max(x, limit) for x in numbers]"
+  ],
+  [
+   "count_digit",
+   "count_digit_1",
+   "def f(n):\n    return str(n).count('1')"
+  ],
+  [
+   "count_positive_in_first",
+   "positives_in_first_three",
+   "def f(numbers):\n    return sum(1 for x in numbers[:3] if x > 0)"
+  ],
+  [
+   "count_records",
+   "count_new_highs",
+   "def f(numbers):\n    count = 0\n    best = None\n    for x in numbers:\n        if best is None or x > best:\n            count += 1\n            best = x\n    return count"
+  ],
+  [
+   "digits_above",
+   "digits_above_4",
+   "def f(n):\n    return sum(1 for d in str(n) if int(d) > 4)"
+  ],
+  [
+   "extreme_digit",
+   "min_digit",
+   "def f(n):\n    return min(int(d) for d in str(n))"
+  ],
+  [
+   "extreme_of_first",
+   "min_of_first_four",
+   "def f(numbers):\n    return min(numbers[:4])"
+  ],
+  [
+   "fewest_coins",
+   "fewest_coins_with_3_5",
+   "def f(amount):\n    big = amount + 1\n    best = [0] + [big] * amount\n    for x in range(1, amount + 1):\n        for coin in (3, 5):\n            if coin <= x and best[x - coin] + 1 < best[x]:\n                best[x] = best[x - coin] + 1\n    return best[amount] if best[amount] < big else -1"
+  ],
+  [
+   "half_of_string",
+   "second_half",
+   "def f(s):\n    return s[len(s) // 2:]"
+  ],
+  [
+   "key_of_extreme",
+   "key_with_max",
+   "def f(d):\n    return max(d, key=d.get)"
+  ],
+  [
+   "keys_by_value",
+   "keys_by_value_descending",
+   "def f(d):\n    return sorted(d, key=d.get, reverse=True)"
+  ],
+  [
+   "last_position",
+   "last_even_position",
+   "def f(numbers):\n    result = -1\n    for i, x in enumerate(numbers):\n        if x % 2 == 0:\n            result = i\n    return result"
+  ],
+  [
+   "last_reversed",
+   "last_two_reversed",
+   "def f(items):\n    return items[::-1][:2]"
+  ],
+  [
+   "long_words",
+   "words_longer_than_4",
+   "def f(text):\n    return [w for w in text.split() if len(w) > 4]"
+  ],
+  [
+   "longest_monotone_run",
+   "longest_falling_stretch",
+   "def f(numbers):\n    best = 0\n    start = 0\n    for i in range(len(numbers)):\n        if i > 0 and not numbers[i] < numbers[i - 1]:\n            start = i\n        best = max(best, i - start + 1)\n    return best"
+  ],
+  [
+   "lookup_with_default",
+   "lookup_all_or_zero",
+   "def f(d, keys):\n    return [d.get(k, 0) for k in keys]"
+  ],
+  [
+   "map_filtered",
+   "squares_of_negative",
+   "def f(numbers):\n    return [x * x for x in numbers if x < 0]"
+  ],
+  [
+   "mask_vowels",
+   "mask_vowels",
+   "def f(s):\n    return ''.join('*' if c in 'aeiou' else c for c in s)"
+  ],
+  [
+   "min_boats",
+   "min_boats_5",
+   "def f(weights):\n    w = sorted(weights)\n    i, j = 0, len(w) - 1\n    boats = 0\n    while i <= j:\n        if w[i] + w[j] <= 5:\n            i += 1\n        j -= 1\n        boats += 1\n    return boats"
+  ],
+  [
+   "multiples_in_range",
+   "multiples_of_5_between",
+   "def f(low, high):\n    return sum(1 for x in range(low, high + 1) if x % 5 == 0)"
+  ],
+  [
+   "neighbours_close",
+   "steps_at_most_five",
+   "def f(numbers):\n    return all(abs(b - a) <= 5 for a, b in zip(numbers, numbers[1:]))"
+  ],
+  [
+   "numbered_lines",
+   "numbered_lines_dot",
+   "def f(words):\n    return '\\n'.join(f'{i}. {w}' for i, w in enumerate(words, 1))"
+  ],
+  [
+   "numeronyms",
+   "numeronyms_over_4",
+   "def f(text):\n    return ' '.join(w[0] + str(len(w) - 2) + w[-1] if len(w) > 4 else w for w in text.split())"
+  ],
+  [
+   "pairs_sum_divisible",
+   "pairs_divisible_by_5",
+   "def f(numbers):\n    count = 0\n    for i in range(len(numbers)):\n        for j in range(i + 1, len(numbers)):\n            if (numbers[i] + numbers[j]) % 5 == 0:\n                count += 1\n    return count"
+  ],
+  [
+   "pairs_summing_above",
+   "neighbour_pairs_above_5",
+   "def f(numbers):\n    return sum(1 for a, b in zip(numbers, numbers[1:]) if a + b > 5)"
+  ],
+  [
+   "pairwise_extreme",
+   "pairwise_max",
+   "def f(a, b):\n    return [max(x, y) for x, y in zip(a, b)]"
+  ],
+  [
+   "rotate_grid",
+   "rotate_clockwise",
+   "def f(rows):\n    return [list(r) for r in zip(*rows[::-1])]"
+  ],
+  [
+   "rotate_left",
+   "rotate_left_three",
+   "def f(items):\n    if not items:\n        return []\n    k = 3 % len(items)\n    return items[k:] + items[:k]"
+  ],
+  [
+   "row_extremes",
+   "row_maxs",
+   "def f(rows):\n    return [max(row) for row in rows]"
+  ],
+  [
+   "shift_letters",
+   "shift_by_1",
+   "def f(s):\n    return ''.join(chr((ord(c) - ord('a') + 1) % 26 + ord('a')) for c in s)"
+  ],
+  [
+   "sort_numbers_by",
+   "sort_by_last_digit",
+   "def f(numbers):\n    return sorted(numbers, key=lambda x: abs(x) % 10)"
+  ],
+  [
+   "sort_words_by",
+   "sort_words_by_last_letter",
+   "def f(words):\n    return sorted(words, key=lambda w: w[-1].lower())"
+  ],
+  [
+   "sum_after_first",
+   "sum_after_first_two",
+   "def f(numbers):\n    return sum(numbers[2:])"
+  ],
+  [
+   "sum_every_kth_position",
+   "sum_every_four",
+   "def f(numbers):\n    return sum(numbers[::4])"
+  ],
+  [
+   "sum_of_first",
+   "sum_of_first_two",
+   "def f(numbers):\n    return sum(numbers[:2])"
+  ],
+  [
+   "to_base",
+   "to_base_8",
+   "def f(n):\n    if n == 0:\n        return '0'\n    digits = []\n    while n > 0:\n        digits.append(str(n % 8))\n        n //= 8\n    return ''.join(reversed(digits))"
+  ],
+  [
+   "total_in_units",
+   "total_inches",
+   "def f(feet, inches):\n    return feet * 12 + inches"
+  ],
+  [
+   "total_waiting",
+   "total_waiting_shortest_first",
+   "def f(times):\n    total = 0\n    waited = 0\n    for t in sorted(times):\n        total += waited\n        waited += t\n    return total"
+  ],
+  [
+   "truncate",
+   "truncate_8",
+   "def f(s):\n    return s if len(s) <= 8 else s[:8] + '...'"
+  ],
+  [
+   "wrap_words",
+   "wrap_words_12",
+   "def f(text):\n    lines = []\n    line = ''\n    for w in text.split():\n        if line and len(line) + 1 + len(w) <= 12:\n            line += ' ' + w\n        else:\n            if line:\n                lines.append(line)\n            line = w\n    if line:\n        lines.append(line)\n    return lines"
+  ],
+  [
+   "zero_pad",
+   "zero_pad_5",
+   "def f(n):\n    return str(n).zfill(5)"
+  ]
+ ],
+ "cross": [
+  [
+   "all_present",
+   "all_present_in",
+   "def f(a, b):\n    return set(a) <= set(b)"
+  ],
+  [
+   "balance_no_overdraft",
+   "final_balance_from_0",
+   "def f(transactions):\n    balance = 0\n    for t in transactions:\n        if balance + t >= 0:\n            balance += t\n    return balance"
+  ],
+  [
+   "balance_no_overdraft",
+   "final_balance_from_10",
+   "def f(transactions):\n    balance = 10\n    for t in transactions:\n        if balance + t >= 0:\n            balance += t\n    return balance"
+  ],
+  [
+   "balanced_parens",
+   "parens_balanced",
+   "def f(s):\n    depth = 0\n    for c in s:\n        if c == '(':\n            depth += 1\n        elif c == ')':\n            depth -= 1\n            if depth < 0:\n                return False\n    return depth == 0"
+  ],
+  [
+   "border_sum",
+   "border_sum",
+   "def f(grid):\n    n, m = len(grid), len(grid[0])\n    return sum(grid[i][j] for i in range(n) for j in range(m) if i in (0, n - 1) or j in (0, m - 1))"
+  ],
+  [
+   "camel_case",
+   "camel_case",
+   "def f(text):\n    words = text.split()\n    if not words:\n        return ''\n    return words[0].lower() + ''.join(w.capitalize() for w in words[1:])"
+  ],
+  [
+   "cheapest_path",
+   "cheapest_path",
+   "def f(grid):\n    n, m = len(grid), len(grid[0])\n    cost = [[0] * m for _ in range(n)]\n    for i in range(n):\n        for j in range(m):\n            if i == 0 and j == 0:\n                cost[i][j] = grid[0][0]\n            elif i == 0:\n                cost[i][j] = cost[i][j - 1] + grid[i][j]\n            elif j == 0:\n                cost[i][j] = cost[i - 1][j] + grid[i][j]\n            else:\n                cost[i][j] = min(cost[i - 1][j], cost[i][j - 1]) + grid[i][j]\n    return cost[-1][-1]"
+  ],
+  [
+   "common_subsequence_length",
+   "common_subsequence_length",
+   "def f(a, b):\n    table = [[0] * (len(b) + 1) for _ in range(len(a) + 1)]\n    for i in range(len(a) - 1, -1, -1):\n        for j in range(len(b) - 1, -1, -1):\n            if a[i] == b[j]:\n                table[i][j] = table[i + 1][j + 1] + 1\n            else:\n                table[i][j] = max(table[i + 1][j], table[i][j + 1])\n    return table[0][0]"
+  ],
+  [
+   "count_peaks",
+   "count_peaks",
+   "def f(numbers):\n    return sum(1 for a, b, c in zip(numbers, numbers[1:], numbers[2:]) if b > a and b > c)"
+  ],
+  [
+   "digit_names",
+   "digit_names",
+   "def f(n):\n    names = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine']\n    return ' '.join(names[int(d)] for d in str(n))"
+  ],
+  [
+   "digit_product",
+   "digit_product",
+   "def f(n):\n    result = 1\n    for d in str(n):\n        result *= int(d)\n    return result"
+  ],
+  [
+   "digit_sum_by_parity",
+   "sum_of_even_digits",
+   "def f(n):\n    return sum(int(d) for d in str(n) if int(d) % 2 == 0)"
+  ],
+  [
+   "digit_sum_by_parity",
+   "sum_of_odd_digits",
+   "def f(n):\n    return sum(int(d) for d in str(n) if int(d) % 2 == 1)"
+  ],
+  [
+   "election_winner",
+   "election_winner",
+   "def f(votes):\n    if not votes:\n        return ''\n    counts = {}\n    for v in votes:\n        counts[v] = counts.get(v, 0) + 1\n    return min(counts, key=lambda name: (-counts[name], name))"
+  ],
+  [
+   "english_list",
+   "english_list",
+   "def f(words):\n    if not words:\n        return ''\n    if len(words) == 1:\n        return words[0]\n    return ', '.join(words[:-1]) + ' and ' + words[-1]"
+  ],
+  [
+   "evens_then_odds",
+   "evens_then_odds",
+   "def f(numbers):\n    return [x for x in numbers if x % 2 == 0] + [x for x in numbers if x % 2 != 0]"
+  ],
+  [
+   "filter_dict_values",
+   "keep_even_values",
+   "def f(d):\n    return {k: x for k, x in d.items() if x % 2 == 0}"
+  ],
+  [
+   "filter_dict_values",
+   "keep_negative_values",
+   "def f(d):\n    return {k: x for k, x in d.items() if x < 0}"
+  ],
+  [
+   "filter_dict_values",
+   "keep_big_values",
+   "def f(d):\n    return {k: x for k, x in d.items() if x > 10}"
+  ],
+  [
+   "first_position",
+   "first_even_position",
+   "def f(numbers):\n    for i, x in enumerate(numbers):\n        if x % 2 == 0:\n            return i\n    return -1"
+  ],
+  [
+   "first_position",
+   "first_odd_position",
+   "def f(numbers):\n    for i, x in enumerate(numbers):\n        if x % 2 == 1:\n            return i\n    return -1"
+  ],
+  [
+   "first_position",
+   "first_negative_position",
+   "def f(numbers):\n    for i, x in enumerate(numbers):\n        if x < 0:\n            return i\n    return -1"
+  ],
+  [
+   "first_position",
+   "first_zero_position",
+   "def f(numbers):\n    for i, x in enumerate(numbers):\n        if x == 0:\n            return i\n    return -1"
+  ],
+  [
+   "first_position",
+   "first_big_position",
+   "def f(numbers):\n    for i, x in enumerate(numbers):\n        if x > 10:\n            return i\n    return -1"
+  ],
+  [
+   "flip_odd_positions",
+   "flip_odd_positions",
+   "def f(numbers):\n    return [-x if i % 2 == 1 else x for i, x in enumerate(numbers)]"
+  ],
+  [
+   "grid_steps",
+   "fewest_steps",
+   "def f(grid):\n    from collections import deque\n    n, m = len(grid), len(grid[0])\n    if grid[0][0] < 0 or grid[n - 1][m - 1] < 0:\n        return -1\n    dist = {(0, 0): 0}\n    queue = deque([(0, 0)])\n    while queue:\n        i, j = queue.popleft()\n        if (i, j) == (n - 1, m - 1):\n            return dist[(i, j)]\n        for a, b in ((i + 1, j), (i - 1, j), (i, j + 1), (i, j - 1)):\n            if 0 <= a < n and 0 <= b < m and grid[a][b] >= 0 and (a, b) not in dist:\n                dist[(a, b)] = dist[(i, j)] + 1\n                queue.append((a, b))\n    return -1"
+  ],
+  [
+   "initials",
+   "initials",
+   "def f(text):\n    return ''.join(w[0].upper() for w in text.split())"
+  ],
+  [
+   "largest_jump",
+   "largest_jump",
+   "def f(numbers):\n    return max(abs(b - a) for a, b in zip(numbers, numbers[1:]))"
+  ],
+  [
+   "last_standing",
+   "last_standing_two",
+   "def f(n):\n    people = list(range(1, n + 1))\n    i = 0\n    while len(people) > 1:\n        i = (i + 2 - 1) % len(people)\n        people.pop(i)\n    return people[0]"
+  ],
+  [
+   "last_standing",
+   "last_standing_three",
+   "def f(n):\n    people = list(range(1, n + 1))\n    i = 0\n    while len(people) > 1:\n        i = (i + 3 - 1) % len(people)\n        people.pop(i)\n    return people[0]"
+  ],
+  [
+   "longest_window_within",
+   "longest_stretch_within",
+   "def f(numbers, limit):\n    best = 0\n    left = 0\n    total = 0\n    for right, x in enumerate(numbers):\n        total += x\n        while total > limit:\n            total -= numbers[left]\n            left += 1\n        best = max(best, right - left + 1)\n    return best"
+  ],
+  [
+   "luhn_check_digit",
+   "luhn_check_digit",
+   "def f(n):\n    total = 0\n    for i, c in enumerate(reversed(str(n))):\n        d = int(c)\n        if i % 2 == 0:\n            d *= 2\n            if d > 9:\n                d -= 9\n        total += d\n    return (10 - total % 10) % 10"
+  ],
+  [
+   "missing_between",
+   "missing_between",
+   "def f(numbers):\n    if not numbers:\n        return []\n    present = set(numbers)\n    return [x for x in range(numbers[0], numbers[-1]) if x not in present]"
+  ],
+  [
+   "most_common",
+   "most_common",
+   "def f(items):\n    best = items[0]\n    for x in items:\n        if items.count(x) > items.count(best):\n            best = x\n    return best"
+  ],
+  [
+   "pair_with_sum",
+   "has_pair_with_sum",
+   "def f(numbers, target):\n    for i in range(len(numbers)):\n        for j in range(i + 1, len(numbers)):\n            if numbers[i] + numbers[j] == target:\n                return True\n    return False"
+  ],
+  [
+   "pairs_with_difference",
+   "pairs_differing_by_1",
+   "def f(numbers):\n    count = 0\n    for i in range(len(numbers)):\n        for j in range(i + 1, len(numbers)):\n            if abs(numbers[i] - numbers[j]) == 1:\n                count += 1\n    return count"
+  ],
+  [
+   "pairs_with_difference",
+   "pairs_differing_by_2",
+   "def f(numbers):\n    count = 0\n    for i in range(len(numbers)):\n        for j in range(i + 1, len(numbers)):\n            if abs(numbers[i] - numbers[j]) == 2:\n                count += 1\n    return count"
+  ],
+  [
+   "pairs_with_difference",
+   "pairs_differing_by_3",
+   "def f(numbers):\n    count = 0\n    for i in range(len(numbers)):\n        for j in range(i + 1, len(numbers)):\n            if abs(numbers[i] - numbers[j]) == 3:\n                count += 1\n    return count"
+  ],
+  [
+   "parens_to_add",
+   "parens_to_add",
+   "def f(s):\n    open_count = 0\n    added = 0\n    for c in s:\n        if c == '(':\n            open_count += 1\n        elif c == ')':\n            if open_count > 0:\n                open_count -= 1\n            else:\n                added += 1\n    return added + open_count"
+  ],
+  [
+   "repeat_chars",
+   "repeat_each_char_2",
+   "def f(s):\n    return ''.join(c * 2 for c in s)"
+  ],
+  [
+   "repeat_chars",
+   "repeat_each_char_3",
+   "def f(s):\n    return ''.join(c * 3 for c in s)"
+  ],
+  [
+   "replace_value",
+   "replace_value",
+   "def f(items, old, new):\n    return [new if v == old else v for v in items]"
+  ],
+  [
+   "reverse_in_groups",
+   "reverse_groups_of_two",
+   "def f(items):\n    result = []\n    for i in range(0, len(items), 2):\n        result.extend(reversed(items[i:i + 2]))\n    return result"
+  ],
+  [
+   "reverse_in_groups",
+   "reverse_groups_of_three",
+   "def f(items):\n    result = []\n    for i in range(0, len(items), 3):\n        result.extend(reversed(items[i:i + 3]))\n    return result"
+  ],
+  [
+   "shortest_word_length",
+   "shortest_word_length",
+   "def f(text):\n    return min(len(w) for w in text.split())"
+  ],
+  [
+   "slice_between",
+   "items_1_to_3",
+   "def f(items):\n    return items[1:3]"
+  ],
+  [
+   "slice_between",
+   "items_2_to_5",
+   "def f(items):\n    return items[2:5]"
+  ],
+  [
+   "slice_between",
+   "items_1_to_4",
+   "def f(items):\n    return items[1:4]"
+  ],
+  [
+   "slice_between",
+   "items_3_to_6",
+   "def f(items):\n    return items[3:6]"
+  ],
+  [
+   "span_back",
+   "spans_back",
+   "def f(numbers):\n    result = []\n    for i, x in enumerate(numbers):\n        j = i\n        while j > 0 and numbers[j - 1] <= x:\n            j -= 1\n        result.append(i - j + 1)\n    return result"
+  ],
+  [
+   "stack_commands",
+   "run_stack",
+   "def f(numbers):\n    stack = []\n    for x in numbers:\n        if x > 0:\n            stack.append(x)\n        elif x < 0 and stack:\n            stack.pop()\n    return stack"
+  ],
+  [
+   "star_bars",
+   "star_bars",
+   "def f(numbers):\n    return '\\n'.join('*' * n for n in numbers)"
+  ],
+  [
+   "star_bars",
+   "star_bars",
+   "def f(numbers):\n    return '\\n'.join('#' * n for n in numbers)"
+  ],
+  [
+   "subset_sum",
+   "subset_adds_to",
+   "def f(numbers, target):\n    sums = {0}\n    for x in numbers:\n        sums |= {s + x for s in sums}\n    return target in sums"
+  ],
+  [
+   "sum_of_range",
+   "sum_from_to",
+   "def f(low, high):\n    return sum(range(low, high + 1))"
+  ],
+  [
+   "summarize_ranges",
+   "summarize_ranges",
+   "def f(numbers):\n    parts = []\n    i = 0\n    while i < len(numbers):\n        j = i\n        while j + 1 < len(numbers) and numbers[j + 1] == numbers[j] + 1:\n            j += 1\n        parts.append(str(numbers[i]) if i == j else f'{numbers[i]}..{numbers[j]}')\n        i = j + 1\n    return ', '.join(parts)"
+  ],
+  [
+   "three_sum",
+   "three_add_up_to",
+   "def f(numbers, target):\n    import itertools\n    return any(a + b + c == target for a, b, c in itertools.combinations(numbers, 3))"
+  ],
+  [
+   "total_three_units",
+   "total_seconds",
+   "def f(hours, minutes, seconds):\n    return hours * 3600 + minutes * 60 + seconds"
+  ],
+  [
+   "ways_to_pay",
+   "ways_to_pay_with_1_2_5",
+   "def f(amount):\n    ways = [1] + [0] * amount\n    for coin in (1, 2, 5):\n        for x in range(coin, amount + 1):\n            ways[x] += ways[x - coin]\n    return ways[amount]"
+  ],
+  [
+   "ways_to_pay",
+   "ways_to_pay_with_2_3_7",
+   "def f(amount):\n    ways = [1] + [0] * amount\n    for coin in (2, 3, 7):\n        for x in range(coin, amount + 1):\n            ways[x] += ways[x - coin]\n    return ways[amount]"
+  ],
+  [
+   "window_extremes",
+   "window_max_2",
+   "def f(numbers):\n    return [max(numbers[i:i + 2]) for i in range(len(numbers) - 2 + 1)]"
+  ],
+  [
+   "window_extremes",
+   "window_max_3",
+   "def f(numbers):\n    return [max(numbers[i:i + 3]) for i in range(len(numbers) - 3 + 1)]"
+  ],
+  [
+   "window_extremes",
+   "window_min_2",
+   "def f(numbers):\n    return [min(numbers[i:i + 2]) for i in range(len(numbers) - 2 + 1)]"
+  ],
+  [
+   "window_extremes",
+   "window_min_3",
+   "def f(numbers):\n    return [min(numbers[i:i + 3]) for i in range(len(numbers) - 3 + 1)]"
+  ],
+  [
+   "word_lengths",
+   "word_lengths",
+   "def f(text):\n    return {w: len(w) for w in text.split()}"
+  ],
+  [
+   "word_positions",
+   "word_positions",
+   "def f(text):\n    result = {}\n    for i, w in enumerate(text.split()):\n        result.setdefault(w, []).append(i)\n    return result"
+  ]
+ ],
+ "counts": {
+  "train_families": 123,
+  "held_out_families": 48,
+  "trained_behaviours": 144,
+  "within_tests": 45,
+  "cross_tests": 66,
+  "cross_dropped_skeleton_twin_of_a_trained_program": 6,
+  "trained_by_level": {
+   "1": 65,
+   "2": 47,
+   "3": 32
+  },
+  "cross_by_level": {
+   "1": 26,
+   "2": 25,
+   "3": 15
+  },
+  "trained_with_aliases": 136,
+  "trained_with_a_trained_sibling": 42
+ }
+}
