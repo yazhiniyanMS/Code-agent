@@ -1,0 +1,80 @@
+{
+  "name": "v8-transfer",
+  "note": "V8 stage 2: does learning many families transfer to families never trained? Stage 1 (v8-replay) showed that replay from round 54's own mix trades forgetting against learning at a fixed budget (dev 15/21/25 of 44 at 24/54/77% replay; trained programs 35/32/28 of 36) and that a narrow curriculum (12 families) gives no cross-family transfer (neighbours 1-4/38, round 54 4/38). T50 trains the balanced split ycode/lm/v8_transfer_split.json (144 behaviours of 123 families, levels 65/47/32; 48 families held out whole) with 4 write examples per name (~7.7 per behaviour), replay at 50% of tokens, from round 54 at lr 1e-4 for 56 steps (~one epoch, ~7.5 exposures per behaviour, the exposure level at which C75 still wrote 28/36 of its programs). Everything else as stage 1.",
+  "decision": "Development tasks only. Transfer = t_families (66 programs of the 48 held-out families, no skeleton shared with a trained program) and the neighbour set, against round 54 and L2 on the same sets; t_trained and t_within (45 held-back variants of trained families) measure learning and within-family generalization, which are not evidence of cross-family transfer. A cross-family gain would need a matched-budget narrow control and a second seed before any claim.",
+  "anchor": "/home/user/lmwork/loop/anchor",
+  "tokenizer": "/home/user/lmwork/data/tokenizer.json",
+  "replay_dir": "/home/user/lmwork/data",
+  "average_script": "/home/user/lmwork/average.py",
+  "work_dir": "/dev/shm/ycode-v8",
+  "metric": "unseen_clean",
+  "category_rule": "items_lost",
+  "out": "/home/user/lmwork/v8/runs",
+  "seeds": [
+    1301
+  ],
+  "keep_models": false,
+  "train": {
+    "steps": 56,
+    "lr": 0.0001,
+    "batch": 4,
+    "train_layers": 24,
+    "warmup": 2,
+    "precision": "fp32",
+    "init_optim": true,
+    "compact": true,
+    "save_every": 56,
+    "final_bf16": true
+  },
+  "eval": {
+    "dev": true,
+    "unseen": true,
+    "unseen2": false,
+    "bench": false,
+    "diagnose": 0,
+    "sets": [
+      {
+        "name": "t_trained",
+        "set": "experiments/v8/sets/t_trained.json"
+      },
+      {
+        "name": "t_within",
+        "set": "experiments/v8/sets/t_within.json"
+      },
+      {
+        "name": "t_families",
+        "set": "experiments/v8/sets/t_families.json"
+      },
+      {
+        "name": "family_new",
+        "set": "experiments/v8/sets/family_new.json"
+      },
+      {
+        "name": "neighbours",
+        "set": "experiments/v8/sets/neighbours.json",
+        "variants": "original"
+      }
+    ]
+  },
+  "arms": [
+    {
+      "name": "T50",
+      "data": {
+        "idioms_write": 4,
+        "idioms_bugfix": 0,
+        "idioms_select": "v8_transfer",
+        "idioms_families": "v3",
+        "basics_write": 0,
+        "basics_bugfix": 0,
+        "compose_write": 0,
+        "compose_bugfix": 0,
+        "contrast": 0,
+        "novel_write": 0,
+        "replay": 0,
+        "legacy_share": 0.5
+      },
+      "note": "broad curriculum, 50% replay"
+    }
+  ],
+  "comparisons": []
+}
