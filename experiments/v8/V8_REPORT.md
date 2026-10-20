@@ -99,7 +99,7 @@ of the numbers that come after the first two in the list".
 | Round 54 | 27 | 2 | 0 | 1 | **1** | 2 | 4 | - |
 | COMP, seed 1301 | 26 | 2 | 57 | 55 (trained) | **55** | 1 | 2 | 106 |
 | MORE, seed 1301 | 25 | 1 | 60 | 43 (new for MORE) | **45** | 0 | 3 | 111 |
-| COMP, seed 1302 | SEED2 | | | | | | | |
+| COMP, seed 1302 | 24 | 1 | 56 | 58 (trained) | **54** | 1 | 2 | 109 |
 | MORE, seed 1302 | SEED2 | | | | | | | |
 
 - **Compositional structure makes learning cheap.** COMP writes 57/60 and 55/60 of its programs
