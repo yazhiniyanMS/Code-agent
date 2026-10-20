@@ -1,0 +1,76 @@
+{
+  "name": "v9-grammar",
+  "note": "V9-1, the screen V8_REPORT.md section 5 proposes: does training on compositions carry across families when the parts come from the training families' own operations? Grammar v2 (ycode.lm.compositions2): integer-list views, digits, characters and words, every part taken from one of the 123 V8 training families; 693 behaviours after held-out, v5-trained, test-skeleton and test-behaviour exclusions. Before training it can express 5 of the 66 held-out-family tasks (ycode/lm/v9_grammar_split.json: expressible_t_families). C2 trains 350 combinations (105 / 85 / 55 / 105 per domain) x 3 examples, 50% replay, lr 1e-4, seed 1301, from round 54. 56 steps instead of the pre-registered 52: grammar v2's longer task texts make the data 14% larger (238k tokens), and 56 steps is one epoch, as 52 was for COMP. The benchmark is evaluated and reported only.",
+  "decision": "Development tasks only; the benchmark is reported, never used to choose. Pre-registered (V8_REPORT.md section 5): run a second seed only if held-out families reach >= 6/66 (round 54: 2) with dev + unseen-v1 >= 27. A candidate replaces round 54 only under the V6 rule (every seed beats 29, mean gain >= 3, no category loses >= 3).",
+  "anchor": "/home/user/lmwork/loop/anchor",
+  "tokenizer": "/home/user/lmwork/data/tokenizer.json",
+  "replay_dir": "/home/user/lmwork/data",
+  "average_script": "/home/user/lmwork/average.py",
+  "work_dir": "/dev/shm/ycode-v9",
+  "metric": "unseen_clean",
+  "category_rule": "items_lost",
+  "out": "/home/user/lmwork/v9/runs",
+  "seeds": [
+    1301
+  ],
+  "keep_models": false,
+  "train": {
+    "steps": 56,
+    "lr": 0.0001,
+    "batch": 4,
+    "train_layers": 24,
+    "warmup": 2,
+    "precision": "fp32",
+    "init_optim": true,
+    "compact": true,
+    "save_every": 56,
+    "final_bf16": true
+  },
+  "eval": {
+    "dev": true,
+    "unseen": true,
+    "unseen2": false,
+    "bench": true,
+    "diagnose": 0,
+    "sets": [
+      {
+        "name": "c2_test",
+        "set": "experiments/v9/sets/c2_test.json"
+      },
+      {
+        "name": "c2_trained",
+        "set": "experiments/v9/sets/c2_trained.json"
+      },
+      {
+        "name": "t_families",
+        "set": "experiments/v8/sets/t_families.json"
+      },
+      {
+        "name": "neighbours",
+        "set": "experiments/v8/sets/neighbours.json",
+        "variants": "original"
+      }
+    ]
+  },
+  "arms": [
+    {
+      "name": "C2",
+      "data": {
+        "idioms_bugfix": 0,
+        "idioms_families": "v3",
+        "basics_write": 0,
+        "basics_bugfix": 0,
+        "compose_write": 0,
+        "compose_bugfix": 0,
+        "contrast": 0,
+        "novel_write": 0,
+        "replay": 0,
+        "legacy_share": 0.5,
+        "idioms_select": "v9_grammar_train",
+        "idioms_write": 3
+      },
+      "note": "grammar v2: 350 combinations x 3 examples"
+    }
+  ],
+  "comparisons": []
+}

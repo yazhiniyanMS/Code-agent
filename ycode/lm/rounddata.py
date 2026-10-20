@@ -34,7 +34,8 @@ DEFAULTS = {
     "pair_weight": 0,         # V7: loss weight of the answer tokens that differ from the sibling's code; 0 = usual weights
     "idioms_select": None,    # V7: None = every family of idioms_families; "k_families" = only those parameterised by a constant;
                               # V8: "v8_transfer" = the training programs of ycode/lm/v8_transfer_split.json;
-                              # "v8_comp_train" / "v8_comp_more" = the composition arms (ycode/lm/v8_comp_split.json)
+                              # "v8_comp_train" / "v8_comp_more" = the composition arms (ycode/lm/v8_comp_split.json);
+                              # V9: "v9_grammar_train" = grammar v2's training programs (ycode/lm/v9_grammar_split.json)
     # V8: replay from round 54's own training distribution (one production round: the legacy counts above at
     # their defaults and 200 replay rows), sampled to this share of the dataset's tokens and added to the
     # examples the other options build; 0 = off. The share reached is in the manifest (tokens_by_source).
@@ -101,6 +102,12 @@ def _curriculum_programs(o: dict):
         split = json.loads((Path(__file__).with_name("v8_comp_split.json")).read_text())
         wanted = set(split["train" if o["idioms_select"] == "v8_comp_train" else "more"])
         return [p for p in composition_programs()[0] if p.name in wanted]
+    if o["idioms_select"] == "v9_grammar_train":  # V9-1: the split holds the programs that passed the hygiene checks
+        from ycode.lm.compositions2 import all_combinations
+
+        split = json.loads((Path(__file__).with_name("v9_grammar_split.json")).read_text())
+        wanted = set(split["train"])
+        return [p for p in all_combinations() if p.name in wanted]
     if o["idioms_select"] is not None:
         raise ValueError(f"unknown idioms_select {o['idioms_select']!r}")
     return idioms.held_out_check(idioms.candidate_programs(family_list=idioms.families(o["idioms_families"])))[0]
