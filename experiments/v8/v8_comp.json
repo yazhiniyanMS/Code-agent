@@ -1,6 +1,6 @@
 {
   "name": "v8-comp",
-  "note": "V8 stage 3, the one additional hypothesis: replay restored dev (C75 and T50: 25/44 against round 54's 27) but nothing transferred across families (T50: held-out families 2/66, the same as round 54 and L2; neighbours 4/38). Does the model need more diverse, compositionally structured examples rather than more examples? Programs aggregate(transform(selection(numbers))) from a V8 grammar (ycode.lm.compositions: 11 selections, 7 transforms, 9 aggregates; 412 behaviours after held-out, test-skeleton and v5-trained exclusions), task text composed the same way. COMP trains 352 combinations x 3 examples; MORE trains 60 of them x 18 examples: the same curriculum tokens (99.8k / 102.1k), the same 50% replay, 52 steps (one epoch), lr 1e-4, seed 1301. COMP runs first; MORE only if COMP gains on new combinations or across families.",
+  "note": "V8 stage 3, the one additional hypothesis: replay restored dev (C75 and T50: 25/44 against round 54's 27) but nothing transferred across families (T50: held-out families 2/66, the same as round 54 and L2; neighbours 4/38). Does the model need more diverse, compositionally structured examples rather than more examples? Programs aggregate(transform(selection(numbers))) from a V8 grammar (ycode.lm.compositions: 11 selections, 7 transforms, 9 aggregates; 412 behaviours after held-out, test-skeleton and v5-trained exclusions), task text composed the same way. COMP trains 352 combinations x 3 examples; MORE trains 60 of them x 18 examples: the same curriculum tokens (99.8k / 102.1k), the same 50% replay, 52 steps (one epoch), lr 1e-4, seed 1301. COMP runs first; MORE only if COMP gains on new combinations or across families. Seed 1302 (both arms, same spec) added after seed 1301: COMP 55/60 vs MORE 45/60 on the held-out combinations (paired 11 vs 1, sign test p = 0.006 over tasks), to check the difference across seeds.",
   "decision": "Development tasks only. Systematic generalisation = c_test (60 combinations of trained parts no arm trains on); learning = c_more (both arms train) and c_comp_only (only COMP trains); cross-family = t_families and the neighbour set, against round 54. A gain on new combinations of trained parts is not evidence of transfer to new families.",
   "anchor": "/home/user/lmwork/loop/anchor",
   "tokenizer": "/home/user/lmwork/data/tokenizer.json",
@@ -11,7 +11,8 @@
   "category_rule": "items_lost",
   "out": "/home/user/lmwork/v8/runs",
   "seeds": [
-    1301
+    1301,
+    1302
   ],
   "keep_models": false,
   "train": {
