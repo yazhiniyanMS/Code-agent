@@ -164,3 +164,35 @@ def test_compositions_are_verified_held_out_clean_and_split_systematically():
     for name in ("c_more", "c_comp_only", "c_test"):
         tasks = json.loads((ROOT / "experiments" / "v8" / "sets" / f"{name}.json").read_text())["tasks"]
         assert len(tasks) == 60 and all(len(t["probe_args"]) == 40 for t in tasks)
+
+
+def test_no_trained_combination_computes_a_test_task():
+    """Behaviour, not only skeleton: no COMP or MORE training program computes, on a test task's 40
+    probe inputs, what a cross-family, within-family or neighbour task asks for."""
+    import ast
+    import copy
+
+    from ycode.lm import compositions as C
+
+    split = json.loads((ROOT / "ycode" / "lm" / "v8_comp_split.json").read_text())
+    kept = {p.name: p for p in C.composition_programs()[0]}
+    fns = []
+    for name in split["train"]:  # MORE's programs are a subset
+        ns = {}
+        exec(kept[name].source(0), ns)
+        fns.append((name, ns[name]))
+    sets = [ROOT / "experiments" / "v8" / "sets" / f"{n}.json" for n in ("t_families", "t_within", "neighbours")]
+    clashes = []
+    for path in sets:
+        for t in json.loads(path.read_text())["tasks"]:
+            args = [ast.literal_eval(a) for a in t.get("probe_args") or []]
+            if not args or any(len(a) != 1 or not isinstance(a[0], list) for a in args):
+                continue  # every training program takes one list
+            for name, f in fns:
+                try:
+                    out = [repr(f(*copy.deepcopy(a))) for a in args]
+                except Exception:
+                    continue
+                if out == t["probe_expected"]:
+                    clashes.append((path.stem, t["name"], name))
+    assert not clashes, clashes
