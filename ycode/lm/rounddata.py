@@ -33,7 +33,8 @@ DEFAULTS = {
     "idioms_pairs": 0,        # V7: write examples per curriculum program that has a sibling (idioms.pair_examples)
     "pair_weight": 0,         # V7: loss weight of the answer tokens that differ from the sibling's code; 0 = usual weights
     "idioms_select": None,    # V7: None = every family of idioms_families; "k_families" = only those parameterised by a constant;
-                              # V8: "v8_transfer" = the training programs of ycode/lm/v8_transfer_split.json
+                              # V8: "v8_transfer" = the training programs of ycode/lm/v8_transfer_split.json;
+                              # "v8_comp_train" / "v8_comp_more" = the composition arms (ycode/lm/v8_comp_split.json)
     # V8: replay from round 54's own training distribution (one production round: the legacy counts above at
     # their defaults and 200 replay rows), sampled to this share of the dataset's tokens and added to the
     # examples the other options build; 0 = off. The share reached is in the manifest (tokens_by_source).
@@ -94,6 +95,12 @@ def _curriculum_programs(o: dict):
         keys = {(family, behaviour) for family, _name, behaviour in split["trained"]}
         clean = idioms.held_out_check(idioms.candidate_programs(family_list=idioms.families("v3")))[0]
         return [p for p in clean if (p.family, p.source(0, "f")) in keys]
+    if o["idioms_select"] in ("v8_comp_train", "v8_comp_more"):  # V8 stage 3: the composition arms' programs
+        from ycode.lm.compositions import composition_programs
+
+        split = json.loads((Path(__file__).with_name("v8_comp_split.json")).read_text())
+        wanted = set(split["train" if o["idioms_select"] == "v8_comp_train" else "more"])
+        return [p for p in composition_programs()[0] if p.name in wanted]
     if o["idioms_select"] is not None:
         raise ValueError(f"unknown idioms_select {o['idioms_select']!r}")
     return idioms.held_out_check(idioms.candidate_programs(family_list=idioms.families(o["idioms_families"])))[0]

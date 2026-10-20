@@ -139,3 +139,28 @@ def test_transfer_split_trains_its_programs_only():
         if name == "t_families":
             assert not any(skeleton(t["reference"]) in trained for t in tasks)
     assert not trained & idioms.neighbour_skeletons()
+
+
+def test_compositions_are_verified_held_out_clean_and_split_systematically():
+    from ycode.lm import compositions as C
+    from ycode.lm import idioms, rounddata
+    from ycode.lm.leakage import held_out_items, held_out_skeletons, skeleton
+
+    kept, counts = C.composition_programs()
+    assert len(kept) > 300 and len({p.source(0, "f") for p in kept}) == len(kept)  # one per behaviour
+    held = held_out_skeletons(held_out_items())
+    avoid = idioms.neighbour_skeletons()
+    assert not any(skeleton(p.source(i)) in held or skeleton(p.source(i)) in avoid for p in kept for i in range(2))
+    split = json.loads((ROOT / "ycode" / "lm" / "v8_comp_split.json").read_text())
+    train, more, test = set(split["train"]), set(split["more"]), set(split["test"])
+    assert more <= train and not test & train and set(split["comp_only_sample"]) <= train - more
+    by_name = {p.name: p for p in kept}
+    train_parts = set().union(*(C._parts(by_name[n]) for n in train))
+    assert all(C._parts(by_name[n]) <= train_parts for n in test)  # new combinations of trained parts
+    comp = rounddata._curriculum_programs({**rounddata.DEFAULTS, "idioms_select": "v8_comp_train"})
+    assert {p.name for p in comp} == train
+    examples = idioms.idiom_examples(3, write_per_program=1, bugfix_per_program=0, programs=comp[:20])
+    assert len(examples) == 20 and all("```python" in e.response for e in examples)
+    for name in ("c_more", "c_comp_only", "c_test"):
+        tasks = json.loads((ROOT / "experiments" / "v8" / "sets" / f"{name}.json").read_text())["tasks"]
+        assert len(tasks) == 60 and all(len(t["probe_args"]) == 40 for t in tasks)
