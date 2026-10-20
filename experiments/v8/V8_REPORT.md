@@ -81,7 +81,38 @@ T50 trains this curriculum: 4 write examples per name, 50% replay, 56 steps, 229
 
 ## 3. Compositional structure against more examples (stage 3, `v8_comp.json`)
 
-STAGE3_PENDING
+A V8 grammar (`ycode/lm/compositions.py`) builds programs of the form
+`aggregate(transform(selection(numbers)))` from 11 selections, 7 element transforms and 9
+aggregates. The task text is composed the same way, for example "returns the largest of the squares
+of the numbers that come after the first two in the list".
+- **Candidates:** 461 combinations have distinct behaviour. 412 are kept after dropping 19 that
+  match a held-out item and 30 that compute a function round 54 was trained on.
+- **Test set:** 60 combinations held out (`c_test`), each made of a selection, transform and
+  aggregate that all occur in training.
+- **Arms:** both start from round 54 with 50% replay, 52 steps (213,200 trained tokens, one epoch)
+  and learning rate 1e-4, and use matched curriculum tokens (99.8k and 102.1k):
+  - **COMP:** 352 combinations x 3 examples (2.9 exposures each).
+  - **MORE:** 60 of them x 18 examples (17.3 exposures each).
+
+| Model | Dev clean /44 | Unseen-v1 /53 | Programs both arms train /60 | COMP-only programs /60 | **Held-out combinations /60** | Held-out families /66 | Neighbours /38 | Train min |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Round 54 | 27 | 2 | 0 | 1 | **1** | 2 | 4 | - |
+| COMP, seed 1301 | 26 | 2 | 57 | 55 (trained) | **55** | 1 | 2 | 106 |
+| MORE, seed 1301 | 25 | 1 | 60 | 43 (new for MORE) | **45** | 0 | 3 | 111 |
+| COMP, seed 1302 | SEED2 | | | | | | | |
+| MORE, seed 1302 | SEED2 | | | | | | | |
+
+- **Compositional structure makes learning cheap.** COMP writes 57/60 and 55/60 of its programs
+  after about 3 examples each. Each selection, transform and aggregate recurs in dozens of programs.
+  By contrast, the constant families needed about 14-24 exposures, and T50's assorted families
+  learned 22% at 7.
+- **Both arms generalize to new combinations of known parts, and diversity generalizes better.** On
+  the 60 held-out combinations COMP scores 55 and MORE 45, against round 54's 1. Paired by task, 11
+  are solved only by COMP and 1 only by MORE (sign test over tasks, p = 0.006). MORE also writes
+  43/60 of COMP's other programs, which are new combinations for it.
+- **Neither crosses families.** Held-out families: 1/66 and 0/66, against round 54's 2. Neighbours:
+  2/38 and 3/38 (4). Unseen-v1: 2/53 and 1/53 (2).
+- **Replay holds.** Dev 26/44 and 25/44, against round 54's 27.
 
 ## 4. Decision
 
