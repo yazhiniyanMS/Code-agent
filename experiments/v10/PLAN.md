@@ -64,3 +64,13 @@ keeps C2's 50%.
 - **R5:** R1's recipe plus one verified bug-fix example per program (`v10_r5.json`). It runs after R2.
 - **R5's rules:** the gates and rules above, unchanged. Dev items are never used to build training
   data: the bug-fix examples come from the grammar programs, by the generator every curriculum uses.
+
+## Amendment after R2 (written before R6 runs)
+
+- **R2's result:** grammar v3 trained alone erased C2's grammar v2. C2's trained programs fell from
+  26/40 to 1/40, and its held-out combinations from 32/60 to 0/60. Its answers take grammar v3's xs/ys
+  shape and are often not valid Python. Combined score 27.
+- **The cause:** R2 trained on about 77% of one epoch. Its spec reused R1's 36 steps for 202k tokens.
+- **R6:** R1's recipe plus grammar v3's programs, one epoch measured by a dry run (`v10_r6.json`), after
+  R5.
+- **R6's rules:** the gates and rules above, unchanged.
