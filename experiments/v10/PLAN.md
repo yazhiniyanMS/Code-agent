@@ -74,3 +74,12 @@ keeps C2's 50%.
 - **R6:** R1's recipe plus grammar v3's programs, one epoch measured by a dry run (`v10_r6.json`), after
   R5.
 - **R6's rules:** the gates and rules above, unchanged.
+
+## Amendment after R4 and R6 (written before R7 runs)
+
+- **R4 (lr 3e-5) and R6** still lose `remove_spaces` (written and as a bug fix) and the
+  `longest_word` bug fix. C2 had already lost them, and every V10 run starts from C2, so a gentler
+  continuation cannot restore them. The training has to restore them.
+- **R7 tests replay (A) for that purpose:** R1's recipe at 75% replay from round 54's own training
+  distribution, which contains its bug-fix examples (`v10_r7.json`).
+- **R7's rules:** unchanged.
