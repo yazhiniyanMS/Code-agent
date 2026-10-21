@@ -217,6 +217,22 @@ def base_reference(base_dir: Path | str) -> dict:
     return {"path": str(path.parent), "size": path.stat().st_size}
 
 
+def plain_base(init_dir: Path | str, trained: set[str]) -> Path:
+    """The plain checkpoint a compact checkpoint of a run from ``init_dir`` references. A plain
+    ``init_dir`` is its own base. A base-referenced one (a compact fine-tune, e.g. V9's C2) stores
+    only its trained tensors; when this run trains every one of them, all the tensors it does not
+    train are that checkpoint's base's, so the base stands in for it."""
+    payload = torch.load(Path(init_dir) / CHECKPOINT_NAME, map_location="cpu", weights_only=True, mmap=True)
+    base = payload.get("base")
+    if not base:
+        return Path(init_dir)
+    untrained = sorted(set(payload["model"]) - trained)
+    if untrained:
+        raise ValueError(f"{init_dir} stores tensors this run does not train ({', '.join(untrained[:3])}, ...): "
+                         "a compact checkpoint cannot reference its base for them")
+    return Path(base["path"])
+
+
 def base_state(payload: dict, device: str = "cpu", mmap: dict | None = None) -> dict:
     """The base checkpoint's tensors, for a payload that stores only what differs from it (the
     layers a fine-tuning run trained): its frozen layers are the base's, byte for byte."""
@@ -809,10 +825,11 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
                 state = {k: (v.to(torch.bfloat16) if v.is_floating_point() else v)
                          for k, v in (state if state is not None else model.state_dict()).items()}
                 (out_dir / "optim.pt").unlink(missing_ok=True)
+            trained = {name for name, p in model.named_parameters() if p.requires_grad}
             save_checkpoint(out_dir, model, tok, step=step, stage=cfg.stage, val_loss=val_loss,
                             optimizer=None if inference else optimizer, state=state,
                             in_place=cfg.save_in_place or inference,
-                            base=base_reference(cfg.init_from) if compact else None)
+                            base=base_reference(plain_base(cfg.init_from, trained)) if compact else None)
             save_sampler()
             return
         full = _full_state_dict(model)

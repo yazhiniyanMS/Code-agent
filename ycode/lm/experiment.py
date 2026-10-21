@@ -281,15 +281,17 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
         from ycode.lm.train import export_checkpoint, file_sha256
 
         # "compact": only the tensors that differ from the anchor (the trained layers), ~2.2 GB instead of ~3.1
+        # keep_dir (V10): where kept models go, e.g. a RAM disk when the disk has no room for them
+        keep = (Path(spec["keep_dir"]) / arm["name"] / str(seed) if spec.get("keep_dir") else run_dir) / "model_bf16"
+        keep.mkdir(parents=True, exist_ok=True)
         if train["final_bf16"] and train["compact"] and spec["keep_models"] == "compact":
             # the final checkpoint already is that file (bf16 trained tensors referencing the anchor): keep it
             # instead of writing a second copy
-            (run_dir / "model_bf16").mkdir(exist_ok=True)
             for name in ("model.pt", "info.json"):
-                shutil.move(str(cur / name), str(run_dir / "model_bf16" / name))  # cur may be on a RAM disk
-            kept = run_dir / "model_bf16" / "model.pt"
+                shutil.move(str(cur / name), str(keep / name))  # cur may be on a RAM disk
+            kept = keep / "model.pt"
         else:
-            kept = export_checkpoint(cur, run_dir / "model_bf16", dtype="bf16",
+            kept = export_checkpoint(cur, keep, dtype="bf16",
                                      base=spec["anchor"] if spec["keep_models"] == "compact" else None)
         record["kept_model"] = {"path": str(kept), "sha256": file_sha256(kept)}
     result_path.write_text(json.dumps(record, indent=1))
