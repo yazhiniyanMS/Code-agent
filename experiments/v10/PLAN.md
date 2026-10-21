@@ -46,7 +46,7 @@ The order of R2-R4 depends on R1's result and is decided before each launch.
 | Run | Change from C2 | Question |
 | --- | --- | --- |
 | R0 | C2 rebuilt | Does C2 reproduce? (required: the checkpoint is gone) |
-| R1 | From C2: 28 more steps on new examples of C2's own 350 programs (data seed 1302), same recipe | Does consolidation help? C2 reproduces only 26/40 of its programs |
+| R1 | From C2: more steps on new examples of C2's own 350 programs (data seed 1302), same recipe (as run, fixed in `v10_r1.json` before launch: 2 examples per program, 36 steps = one epoch) | Does consolidation help? C2 reproduces only 26/40 of its programs |
 | R2 | From C2: cross-family compositions (grammar v3: training-family operations chained across domains, e.g. word lengths, then neighbour differences, then an aggregate) | B: does combining concepts across families transfer? (Replay already restores dev, so the decision policy puts this first among the coverage changes.) |
 | R3 | From C2: minimal pairs (each program next to its sibling that differs in one part, with V7's pair weighting) | C: do contrastive distinctions remove C2's part-swap errors? |
 | R4 | R1's recipe at lr 3e-5 | D: a conservative rate against the strong one |
