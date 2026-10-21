@@ -177,3 +177,25 @@ def test_grammar3_parts_come_from_training_families_and_nothing_leaks():
     for name in ("c3_test", "c3_trained"):
         sets = json.loads((root / "experiments" / "v10" / "sets" / f"{name}.json").read_text())["tasks"]
         assert len(sets) in (60, 40) and all(len(t["probe_args"]) == 40 for t in sets)
+
+
+def test_minimal_pairs_differ_in_exactly_one_part_and_in_behaviour():
+    import re
+
+    from ycode.lm import compositions2 as G
+    from ycode.lm import idioms, rounddata
+
+    programs = rounddata._curriculum_programs({**rounddata.DEFAULTS, "idioms_select": "v9_grammar_train"})[:120]
+    by_code = {}
+    for p in programs:
+        for i in range(2):
+            by_code[p.source(i)] = p
+    examples = G.minimal_pair_examples(3, programs, per_program=1, weight=20)
+    assert len(examples) > 100 and all(e.contrast_weight == 20 for e in examples)
+    for e in examples:
+        code = re.search(r"```python\n(.*?)\n```", e.response, re.S).group(1)
+        name = re.match(r"def (\w+)\(", code).group(1)
+        p = next(q for src, q in by_code.items() if src.replace(f"def {q.name}(", f"def {name}(") == code)
+        sibling = next(q for src, q in by_code.items() if src.replace(f"def {q.name}(", f"def {name}(") == e.contrast)
+        assert sum(a != b for a, b in zip(G.PARTS[p.name], G.PARTS[sibling.name])) == 1
+        assert idioms._run(code, name, list(p.inputs)) != idioms._run(e.contrast, name, list(p.inputs))

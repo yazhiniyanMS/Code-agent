@@ -135,7 +135,11 @@ def _idiom_examples_tagged(seed: int, o: dict):
         out += idiom_examples(seed, write_per_program=o["idioms_write"], bugfix_per_program=o["idioms_bugfix"],
                               contrast_per_program=o["idioms_contrast"], io_fraction=o["idioms_io"],
                               programs=programs, family_set=o["idioms_families"])
-    if o["idioms_pairs"]:
+    if o["idioms_pairs"] and o["idioms_select"] == "v9_grammar_train":  # V10 R3: minimal pairs within grammar v2
+        from ycode.lm.compositions2 import minimal_pair_examples
+
+        out += minimal_pair_examples(seed, programs, per_program=o["idioms_pairs"], weight=o["pair_weight"])
+    elif o["idioms_pairs"]:
         from ycode.lm.idioms import pair_examples
 
         out += pair_examples(seed, per_program=o["idioms_pairs"], weight=o["pair_weight"], family_set=o["idioms_families"])

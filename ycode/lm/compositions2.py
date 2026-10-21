@@ -287,3 +287,42 @@ def grammar_split(programs: list[Program], train_per_domain: dict | None = None,
 def _parts(p: Program) -> set[str]:
     domain, sel, tr, agg = PARTS[p.name]
     return {f"s:{sel}", f"t:{tr}", f"a:{agg}"}
+
+
+def minimal_pair_examples(seed: int, programs: list[Program], *, per_program: int, weight: int, parts=None) -> list:
+    """V10 R3: write examples whose contrast is a minimal-pair sibling: a program of the same domain and
+    parameters that differs in exactly one part (selection, transform or aggregate: max against min,
+    first against last, odd against even digits) and computes something else on the program's inputs.
+    Both use the same implementation style, so their code differs only where the tasks do; ``weight``
+    makes those answer tokens weigh that much in the loss (idioms.pair_examples' mechanism)."""
+    import re
+
+    from ycode.lm.basics import neutralize
+    from ycode.lm.data import InstructionExample
+    from ycode.lm.idioms import _prompt
+
+    parts = parts or PARTS
+    rng = random.Random(seed)
+    out = []
+    for p in programs:
+        dp = parts[p.name]
+        expected = repr(_run(p.source(0), p.name, list(p.inputs)))
+        siblings = [q for q in programs if q.params == p.params and parts[q.name][0] == dp[0]
+                    and sum(a != b for a, b in zip(parts[q.name][1:], dp[1:])) == 1]
+        rng.shuffle(siblings)
+        made = 0
+        for q in siblings:
+            if made >= per_program:
+                break
+            if repr(_run(q.source(0, p.name), p.name, list(p.inputs))) == expected:
+                continue
+            impl = rng.randrange(min(len(p.bodies), len(q.bodies)))
+            sig = f"{p.name}({p.params})"
+            ex = neutralize(InstructionExample(_prompt(sig, rng.choice(p.tasks), rng), f"```python\n{p.source(impl)}\n```"),
+                            p.name, rng, 0.3)
+            new = re.match(r"```python\ndef (\w+)\(", ex.response).group(1)
+            contrast = re.sub(rf"(?<![\w.]){re.escape(p.name)}(?=\()", new, q.source(impl, p.name))
+            out.append(InstructionExample(ex.prompt, ex.response, contrast, weight))
+            made += 1
+    rng.shuffle(out)
+    return out
