@@ -731,6 +731,10 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
     model.grad_checkpoint = cfg.grad_checkpoint
     if cfg.train_layers:
         freeze_below(model, cfg.train_layers)
+    # what compact checkpoints reference, resolved now: the init checkpoint is not read again after loading
+    # (V10: a run from C2 can drop C2's RAM-disk copy while it trains)
+    base_ref = (base_reference(plain_base(cfg.init_from, {n for n, p in model.named_parameters() if p.requires_grad}))
+                if cfg.compact_checkpoints and cfg.train_layers and cfg.init_from else None)
     precision = pick_precision(cfg.precision, dev_type)
     amp_dtype = torch.float16 if precision == "fp16" else torch.bfloat16
     if shard:
@@ -825,11 +829,9 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
                 state = {k: (v.to(torch.bfloat16) if v.is_floating_point() else v)
                          for k, v in (state if state is not None else model.state_dict()).items()}
                 (out_dir / "optim.pt").unlink(missing_ok=True)
-            trained = {name for name, p in model.named_parameters() if p.requires_grad}
             save_checkpoint(out_dir, model, tok, step=step, stage=cfg.stage, val_loss=val_loss,
                             optimizer=None if inference else optimizer, state=state,
-                            in_place=cfg.save_in_place or inference,
-                            base=base_reference(plain_base(cfg.init_from, trained)) if compact else None)
+                            in_place=cfg.save_in_place or inference, base=base_ref if compact else None)
             save_sampler()
             return
         full = _full_state_dict(model)

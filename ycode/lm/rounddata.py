@@ -35,7 +35,8 @@ DEFAULTS = {
     "idioms_select": None,    # V7: None = every family of idioms_families; "k_families" = only those parameterised by a constant;
                               # V8: "v8_transfer" = the training programs of ycode/lm/v8_transfer_split.json;
                               # "v8_comp_train" / "v8_comp_more" = the composition arms (ycode/lm/v8_comp_split.json);
-                              # V9: "v9_grammar_train" = grammar v2's training programs (ycode/lm/v9_grammar_split.json)
+                              # V9: "v9_grammar_train" = grammar v2's training programs (ycode/lm/v9_grammar_split.json);
+                              # V10: "v10_grammar3_train" = grammar v3's (ycode/lm/v10_grammar3_split.json)
     # V8: replay from round 54's own training distribution (one production round: the legacy counts above at
     # their defaults and 200 replay rows), sampled to this share of the dataset's tokens and added to the
     # examples the other options build; 0 = off. The share reached is in the manifest (tokens_by_source).
@@ -108,6 +109,12 @@ def _curriculum_programs(o: dict):
         split = json.loads((Path(__file__).with_name("v9_grammar_split.json")).read_text())
         wanted = set(split["train"])
         return [p for p in all_combinations() if p.name in wanted]
+    if o["idioms_select"] == "v10_grammar3_train":  # V10 R2: grammar v3's training programs
+        from ycode.lm.compositions3 import all_combinations as all3
+
+        split = json.loads((Path(__file__).with_name("v10_grammar3_split.json")).read_text())
+        wanted = set(split["train"])
+        return [p for p in all3() if p.name in wanted]
     if o["idioms_select"] is not None:
         raise ValueError(f"unknown idioms_select {o['idioms_select']!r}")
     return idioms.held_out_check(idioms.candidate_programs(family_list=idioms.families(o["idioms_families"])))[0]

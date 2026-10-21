@@ -43,7 +43,8 @@ TRAIN_DEFAULTS = {"steps": 72, "lr": 1.5e-5, "batch": 4, "train_layers": 24, "wa
                   "init_optim": True, "seq_len": None, "average": None,
                   "save_every": None,  # checkpoint interval in steps (default: half the run)
                   "compact": False,  # checkpoints store only the trained tensors, referencing the anchor
-                  "final_bf16": False}  # the final checkpoint is bf16 without optimizer state (train.TrainConfig)
+                  "final_bf16": False,  # the final checkpoint is bf16 without optimizer state (train.TrainConfig)
+                  "schedule": None}  # V10: the trainer's LR schedule (None: its default, wsd)
 EVAL_DEFAULTS = {"dev": True, "unseen": True, "unseen2": False, "bench": True, "limit": None, "diagnose": 32,
                  # V8: task sets scored on the trained model (experiments/v7/prompt_diagnostic.py), each
                  # {"name", "set" (path from the repo root), "variants" (comma-separated, default original)}
@@ -186,8 +187,10 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
         log(f"{arm['name']} seed {seed}: building data {arm.get('data', {})}")
         shutil.rmtree(data, ignore_errors=True)
         shutil.rmtree(cur, ignore_errors=True)
-        manifest = write_round_dataset(data, seed, spec["tokenizer"], replay_dir=spec.get("replay_dir"),
-                                       options=arm.get("data", {}), log=lambda m: log(f"  {m}"))
+        # V10: data_seed_offset draws other examples (prompts, names, replay sample) than a run with this seed
+        manifest = write_round_dataset(data, seed + arm.get("data_seed_offset", 0), spec["tokenizer"],
+                                       replay_dir=spec.get("replay_dir"), options=arm.get("data", {}),
+                                       log=lambda m: log(f"  {m}"))
     record["data"] = {k: v for k, v in manifest.items() if k != "options"}
     record["data"]["minutes"] = round((time.time() - t0) / 60, 2)
     shutil.copy(data / "hygiene.json", run_dir / "hygiene.json")
@@ -200,12 +203,16 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
         raise RuntimeError(f"only {free_gb:.1f} GB free under {cur.parent}; training needs {needed_gb:.1f} GB "
                            "(remove leftover checkpoints, e.g. of an interrupted smoke run)")
     log(f"{arm['name']} seed {seed}: training {train['steps']} steps")
-    cmd = [sys.executable, "-m", "ycode.lm.cli", "sft", "--data", str(data), "--init-from", spec["anchor"],
+    # V10: a run can start from another checkpoint than the anchor (e.g. C2); the anchor stays the reference
+    init = arm.get("init_from") or spec.get("init_from") or spec["anchor"]
+    record["init_from"] = init
+    cmd = [sys.executable, "-m", "ycode.lm.cli", "sft", "--data", str(data), "--init-from", init,
            "--out", str(cur), "--steps", str(train["steps"]), "--warmup", str(train["warmup"]),
            "--batch-size", str(train["batch"]), "--optimizer", "lion", "--lr", str(train["lr"]),
            "--train-layers", str(train["train_layers"]), "--grad-checkpoint", "--eval-interval", "100000",
            "--eval-iters", "0", "--seed", str(seed), "--device", "cpu", "--precision", train["precision"]]
     cmd += ["--init-optim"] if train["init_optim"] else []
+    cmd += ["--schedule", train["schedule"]] if train["schedule"] else []
     cmd += ["--compact-checkpoints"] if train["compact"] else []
     cmd += ["--final-bf16"] if train["final_bf16"] else []
     # checkpoint every save_every steps (default halfway; in place: one copy on disk), so a restart costs at most that much

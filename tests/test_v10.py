@@ -89,3 +89,91 @@ def test_kept_models_go_to_keep_dir(data_dir, base_model, tmp_path, monkeypatch)
     kept = tmp_path / "keep" / "C" / "1" / "model_bf16" / "model.pt"
     assert kept.is_file() and record["kept_model"]["path"] == str(kept)
     assert not (tmp_path / "exp" / "C" / "1" / "model_bf16").exists()
+
+
+def test_runner_starts_from_another_checkpoint_with_other_examples(data_dir, base_model, sft, tmp_path, monkeypatch):
+    import shutil
+
+    from ycode.lm import experiment, rounddata
+
+    start = _finetune(sft, base_model, tmp_path / "start", 1)  # a compact checkpoint, like C2
+    seen = {}
+
+    def fake_round(out_dir, seed, tokenizer_path, **kwargs):
+        shutil.copytree(sft, out_dir, dirs_exist_ok=True)
+        seen["seed"] = seed
+        manifest = {"seed": seed, "options": kwargs.get("options") or {}}
+        (out_dir / "manifest.json").write_text(json.dumps(manifest))
+        (out_dir / "hygiene.json").write_text("[]")
+        return manifest
+
+    monkeypatch.setattr(rounddata, "write_round_dataset", fake_round)
+    spec = {"name": "tiny10b", "anchor": str(base_model), "anchor_sha256": "x", "tokenizer": str(data_dir / "tokenizer.json"),
+            "out": str(tmp_path / "exp"), "work_dir": str(tmp_path / "ram"), "keep_models": "compact",
+            "keep_dir": str(tmp_path / "keep"), "seeds": [1], "metric": "unseen_clean",
+            "train": {"steps": 1, "precision": "fp32", "train_layers": 1, "init_optim": False, "compact": True,
+                      "final_bf16": True, "save_every": 1, "schedule": "cosine"},
+            "eval": {"limit": 1, "diagnose": 0, "bench": False, "dev": False, "unseen": False, "sets": []},
+            "arms": [{"name": "R", "init_from": str(start), "data_seed_offset": 5}], "comparisons": []}
+    record = experiment.run_one(spec, spec["arms"][0], 1, tmp_path / "exp", log=lambda *_: None)
+    assert seen["seed"] == 6 and record["init_from"] == str(start)
+    kept = torch.load(record["kept_model"]["path"], map_location="cpu", weights_only=True)
+    assert kept["base"]["path"] == str(base_model.resolve())  # the plain base, not the compact start
+    log = (tmp_path / "exp" / "R" / "1" / "train.log").read_text()
+    assert str(start) in log or "cosine" in json.dumps(record["train"])
+
+
+def test_packing_a_checkpoint_restores_every_tensor_bit_for_bit(base_model, sft, tmp_path):
+    from ycode.lm import packckpt
+    from ycode.lm.train import load_checkpoint
+
+    ft = _finetune(sft, base_model, tmp_path / "ft", 1)
+    packed = tmp_path / "ft.ypk"
+    packckpt.main(["pack", str(ft), str(packed)])
+    assert packckpt.verify(ft, packed)
+    out = packckpt.unpack(packed, tmp_path / "restored")
+    a = torch.load(ft / "model.pt", map_location="cpu", weights_only=True)
+    b = torch.load(out, map_location="cpu", weights_only=True)
+    assert packckpt.content_sha256(a["model"]) == packckpt.content_sha256(b["model"])
+    assert all(torch.equal(a["model"][k].view(torch.int16) if a["model"][k].dtype == torch.bfloat16 else a["model"][k],
+                           b["model"][k].view(torch.int16) if b["model"][k].dtype == torch.bfloat16 else b["model"][k])
+               for k in a["model"])
+    m1, m2 = load_checkpoint(ft)[0].state_dict(), load_checkpoint(tmp_path / "restored")[0].state_dict()
+    assert all(torch.equal(m1[k], m2[k]) for k in m1)
+
+
+def test_grammar3_parts_come_from_training_families_and_nothing_leaks():
+    from pathlib import Path
+
+    from ycode.lm import compositions2 as G2
+    from ycode.lm import compositions3 as G
+    from ycode.lm import idioms, rounddata
+    from ycode.lm.leakage import skeleton
+
+    root = Path(__file__).resolve().parents[1]
+    transfer = json.loads((root / "ycode" / "lm" / "v8_transfer_split.json").read_text())
+    sources = {s[-1] for s in G.SOURCE} | {v[-1] for v in G.VIEW} | {a[-1] for a in G.AGGREGATE}
+    assert sources <= set(transfer["train_families"]) and not sources & set(transfer["held_out_families"])
+    split = json.loads((root / "ycode" / "lm" / "v10_grammar3_split.json").read_text())
+    train, test = set(split["train"]), set(split["test"])
+    assert not train & test and set(split["trained_sample"]) <= train
+    by_name = {p.name: p for p in G.all_combinations()}
+    for src in G.SOURCE:
+        parts = set().union(*(G._parts(by_name[n]) for n in train if G.PARTS[n][0] == src[0]))
+        assert all(G._parts(by_name[n]) <= parts for n in test if G.PARTS[n][0] == src[0])
+    programs = rounddata._curriculum_programs({**rounddata.DEFAULTS, "idioms_select": "v10_grammar3_train"})
+    assert {p.name for p in programs} == train
+    used = [by_name[n] for n in split["train"] + split["test"]]
+    assert not idioms.held_out_check(used)[1]
+    avoid = idioms.neighbour_skeletons()
+    assert not any(skeleton(p.source(i)) in avoid for p in used for i in range(2))
+    tasks = G2.test_tasks()
+    clashes = []
+    for p in (by_name[n] for n in split["train"]):
+        ns: dict = {}
+        exec(p.source(0), ns)
+        clashes += [(s, n, p.name) for s, n, args, want in tasks if G2._computes(ns[p.name], args, want)]
+    assert not clashes, clashes
+    for name in ("c3_test", "c3_trained"):
+        sets = json.loads((root / "experiments" / "v10" / "sets" / f"{name}.json").read_text())["tasks"]
+        assert len(sets) in (60, 40) and all(len(t["probe_args"]) == 40 for t in sets)
