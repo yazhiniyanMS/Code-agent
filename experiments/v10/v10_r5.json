@@ -1,0 +1,83 @@
+{
+  "name": "v10-r5-bugfix",
+  "note": "V10 R5, added after R1 (PLAN.md amendment, written before R5 runs): R1 reached combined 33 but loses 3 instruction-following dev items round 54 passes (the same 3 C2 loses), so the pre-registered category gate denies it a second seed. Two of them are bug fixes that R1 answers by returning the buggy code unchanged: neither grammar curriculum has a single find-the-bug example. R1's recipe with one change: one verified bug-fix example per C2 program added (idioms.inject_bug on one implementation, kept only if it changes the output on the program's 40 inputs; the answer is the program), +45.6k curriculum tokens, 57 steps for one epoch.",
+  "decision": "PLAN.md: selection on dev, unseen-v1, combined /97 and family_new; second seed if combined >= 32 and no failure category loses >= 3 of round 54's items. The benchmark, neighbours, held-out families, reproduction and held-out combinations are reported.",
+  "anchor": "/home/user/lmwork/loop/anchor",
+  "tokenizer": "/home/user/lmwork/data/tokenizer.json",
+  "replay_dir": "/home/user/lmwork/data",
+  "average_script": "/home/user/lmwork/average.py",
+  "work_dir": "/dev/shm/ycode-v10",
+  "metric": "unseen_clean",
+  "category_rule": "items_lost",
+  "out": "/home/user/lmwork/v10/runs",
+  "seeds": [
+    1301
+  ],
+  "keep_models": "compact",
+  "train": {
+    "steps": 57,
+    "lr": 0.0001,
+    "batch": 4,
+    "train_layers": 24,
+    "warmup": 2,
+    "precision": "fp32",
+    "init_optim": false,
+    "compact": true,
+    "save_every": 57,
+    "final_bf16": true
+  },
+  "eval": {
+    "dev": true,
+    "unseen": true,
+    "unseen2": false,
+    "bench": true,
+    "diagnose": 0,
+    "sets": [
+      {
+        "name": "family_new",
+        "set": "experiments/v8/sets/family_new.json"
+      },
+      {
+        "name": "c2_trained",
+        "set": "experiments/v9/sets/c2_trained.json"
+      },
+      {
+        "name": "c2_test",
+        "set": "experiments/v9/sets/c2_test.json"
+      },
+      {
+        "name": "neighbours",
+        "set": "experiments/v8/sets/neighbours.json",
+        "variants": "original"
+      },
+      {
+        "name": "t_families",
+        "set": "experiments/v8/sets/t_families.json"
+      }
+    ]
+  },
+  "arms": [
+    {
+      "name": "R5",
+      "data": {
+        "idioms_bugfix": 1,
+        "idioms_families": "v3",
+        "basics_write": 0,
+        "basics_bugfix": 0,
+        "compose_write": 0,
+        "compose_bugfix": 0,
+        "contrast": 0,
+        "novel_write": 0,
+        "replay": 0,
+        "legacy_share": 0.5,
+        "idioms_select": "v9_grammar_train",
+        "idioms_write": 2
+      },
+      "note": "from C2: R1 plus one bug-fix example per program",
+      "data_seed_offset": 1
+    }
+  ],
+  "comparisons": [],
+  "keep_dir": "/dev/shm/ycode-keep",
+  "init_from": "/dev/shm/ycode-keep/C2/1301/model_bf16"
+}

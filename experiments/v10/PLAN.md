@@ -53,3 +53,14 @@ The order of R2-R4 depends on R1's result and is decided before each launch.
 
 Replay (A) is not rerun as its own experiment. V8 measured it (shares of 24-77%), and every V10 run
 keeps C2's 50%.
+
+## Amendment after R1 (written before R5 runs)
+
+- **R1's result:** combined 33 (dev 30, unseen-v1 3). It loses 3 instruction-following dev items round
+  54 passes: `write:remove_spaces`, `bugfix:remove_spaces` and `bugfix:longest_word`. C2 loses the
+  same 3. Under the gate above, R1 gets no second seed. The gate is unchanged.
+- **The diagnosis:** on both bug fixes, R1 returns the buggy code unchanged. Neither grammar curriculum
+  contains a find-the-bug example.
+- **R5:** R1's recipe plus one verified bug-fix example per program (`v10_r5.json`). It runs after R2.
+- **R5's rules:** the gates and rules above, unchanged. Dev items are never used to build training
+  data: the bug-fix examples come from the grammar programs, by the generator every curriculum uses.
