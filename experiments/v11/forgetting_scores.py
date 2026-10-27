@@ -23,30 +23,49 @@ sys.path.insert(0, str(ROOT))
 
 
 def example_losses(model_dir: str, examples: list, tok, log=print) -> list[float]:
+    """Weighted answer-token loss of every example, scored in packed 1,025-token rows as training packs
+    them (examples follow each other in a row; one that does not fit starts the next row; an example
+    longer than a row is cut to it)."""
     import torch
     import torch.nn.functional as F
 
     from ycode.lm.data import encode_example
     from ycode.lm.train import load_checkpoint
 
+    # bf16 weights (as kept and evaluated), computed in fp32: this host has no native bf16 matmul, and
+    # emulated bf16 is several times slower; bf16 -> fp32 is exact, so the scores are the bf16 model's
     model, _, _ = load_checkpoint(Path(model_dir), dtype=torch.bfloat16)
+    model = model.float()
     model.eval()
-    block = model.cfg.block_size
-    out, t0 = [], time.time()
+    row_len = model.cfg.block_size + 1
+    encoded = [encode_example(tok, e, weighted=True) for e in examples]
+    rows, row = [], []
+    for i, (ids, w) in enumerate(encoded):
+        ids, w = ids[:row_len], w[:row_len]
+        if sum(len(x[1]) for x in row) + len(ids) > row_len:
+            rows.append(row)
+            row = []
+        row.append((i, ids, w))
+    if row:
+        rows.append(row)
+    sums, wsums = [0.0] * len(examples), [0.0] * len(examples)
+    t0 = time.time()
     with torch.no_grad():
-        for n, e in enumerate(examples):
-            ids, w = encode_example(tok, e, weighted=True)
-            ids, w = ids[:block + 1], w[:block + 1]
-            x = torch.tensor([ids[:-1]])
-            y = torch.tensor([ids[1:]])
-            wt = torch.tensor(w[1:], dtype=torch.float32)
+        for n, row in enumerate(rows):
+            ids = [t for _, x, _ in row for t in x]
+            owner = [i for i, x, _ in row for _ in x]
+            wts = [v for _, _, w in row for v in w]
+            x, y = torch.tensor([ids[:-1]]), torch.tensor([ids[1:]])
             logits, _ = model(x, y)  # (logits, loss), as in ycode.lm.diagnose._example_loss
-            nll = F.cross_entropy(logits[0].float(), y[0], reduction="none")
-            out.append(float((nll * wt).sum() / wt.sum().clamp(min=1)))
-            if n % 200 == 0:
-                log(f"  {model_dir}: {n}/{len(examples)} ({time.time() - t0:.0f}s)")
+            nll = F.cross_entropy(logits[0].float(), y[0], reduction="none").tolist()
+            for j, (loss, wt) in enumerate(zip(nll, wts[1:])):
+                if wt > 0 and owner[j + 1] == owner[j]:  # a target inside the same example
+                    sums[owner[j + 1]] += loss * wt
+                    wsums[owner[j + 1]] += wt
+            if n % 25 == 0:
+                log(f"  {model_dir}: row {n}/{len(rows)} ({time.time() - t0:.0f}s)")
     del model
-    return out
+    return [s / w if w else 0.0 for s, w in zip(sums, wsums)]
 
 
 def main() -> None:

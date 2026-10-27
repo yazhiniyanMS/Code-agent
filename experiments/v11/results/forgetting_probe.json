@@ -1,0 +1,117 @@
+{
+ "round54": {
+  "write:remove_spaces": {
+   "correct": -36.191,
+   "own": -22.97,
+   "own_passes": true,
+   "own_code": "def remove_spaces(s):\n    return ''.join(c for c in s if c.isalpha())",
+   "diverge": {
+    "after": "`python\ndef remove_spaces(s):\n    return",
+    "correct_token": " s",
+    "correct_logp": -6.381,
+    "own_token": " ''.",
+    "own_logp": -0.006
+   }
+  },
+  "bugfix:remove_spaces": {
+   "correct": -1.971,
+   "own": -1.971,
+   "echo": -2.895,
+   "own_passes": true,
+   "own_code": "def remove_spaces(s):\n    \"\"\"Return s with all spaces removed.\"\"\"\n    return s.replace(' ', '')"
+  },
+  "bugfix:longest_word": {
+   "correct": -0.95,
+   "own": -0.95,
+   "echo": -3.754,
+   "own_passes": true,
+   "own_code": "def longest_word(text):\n    \"\"\"Return the longest word in text (the first one if there is a tie).\"\"\"\n    best = ''\n    for word in text.split():\n        if len(word) > len(best):\n            best = word\n    return best"
+  }
+ },
+ "C2": {
+  "write:remove_spaces": {
+   "correct": -21.719,
+   "own": -18.865,
+   "own_passes": false,
+   "own_code": "def remove_spaces(s):\n    return s.replace('_', '-')",
+   "diverge": {
+    "after": "remove_spaces(s):\n    return s.replace('",
+    "correct_token": " ',",
+    "correct_logp": -2.668,
+    "own_token": "_",
+    "own_logp": -0.911
+   }
+  },
+  "bugfix:remove_spaces": {
+   "correct": -3.453,
+   "own": -1.408,
+   "echo": -1.408,
+   "own_passes": false,
+   "own_code": "def remove_spaces(s):\n    \"\"\"Return s with all spaces removed.\"\"\"\n    return s.replace(' ', '_')",
+   "diverge": {
+    "after": "es removed.\"\"\"\n    return s.replace(' ',",
+    "correct_token": " '')",
+    "correct_logp": -2.287,
+    "own_token": " '",
+    "own_logp": -0.162
+   }
+  },
+  "bugfix:longest_word": {
+   "correct": -2.63,
+   "own": -1.254,
+   "echo": -1.254,
+   "own_passes": false,
+   "own_code": "def longest_word(text):\n    \"\"\"Return the longest word in text (the first one if there is a tie).\"\"\"\n    best = ''\n    for word in text.split():\n        if len(word) < len(best):\n            best = word\n    return best",
+   "diverge": {
+    "after": "rd in text.split():\n        if len(word)",
+    "correct_token": " >",
+    "correct_logp": -1.61,
+    "own_token": " <",
+    "own_logp": -0.235
+   }
+  }
+ },
+ "R1": {
+  "write:remove_spaces": {
+   "correct": -21.95,
+   "own": -16.736,
+   "own_passes": false,
+   "own_code": "def remove_spaces(s):\n    return s[0]",
+   "diverge": {
+    "after": "ython\ndef remove_spaces(s):\n    return s",
+    "correct_token": ".",
+    "correct_logp": -1.127,
+    "own_token": "[",
+    "own_logp": -0.7
+   }
+  },
+  "bugfix:remove_spaces": {
+   "correct": -2.68,
+   "own": -1.276,
+   "echo": -1.276,
+   "own_passes": false,
+   "own_code": "def remove_spaces(s):\n    \"\"\"Return s with all spaces removed.\"\"\"\n    return s.replace(' ', '_')",
+   "diverge": {
+    "after": "es removed.\"\"\"\n    return s.replace(' ',",
+    "correct_token": " '')",
+    "correct_logp": -1.986,
+    "own_token": " '",
+    "own_logp": -0.238
+   }
+  },
+  "bugfix:longest_word": {
+   "correct": -1.688,
+   "own": -1.288,
+   "echo": -1.288,
+   "own_passes": false,
+   "own_code": "def longest_word(text):\n    \"\"\"Return the longest word in text (the first one if there is a tie).\"\"\"\n    best = ''\n    for word in text.split():\n        if len(word) < len(best):\n            best = word\n    return best",
+   "diverge": {
+    "after": "rd in text.split():\n        if len(word)",
+    "correct_token": " >",
+    "correct_logp": -0.908,
+    "own_token": " <",
+    "own_logp": -0.533
+   }
+  }
+ }
+}
