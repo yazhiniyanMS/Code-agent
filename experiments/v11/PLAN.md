@@ -52,3 +52,47 @@
   examples and loss masks, the sampling frequencies, per-token losses of the correct answers, and the
   generated outputs for `remove_spaces` and the `longest_word` bug fix. It changes no gate. Dev items
   are inspected, never trained on.
+
+## Amendment 1 (written after V11-A and the forgetting probe, before V11-B started; gates unchanged)
+
+**What V11-A and the probe showed:**
+
+- R1's forgetting is reproduced at a second seed: the same 3 instruction-following dev items are lost.
+- Two of the three are bug fixes answered by returning the buggy code unchanged. At the decisive
+  token, C2 and R1 prefer the buggy token: `<` over `>` in `longest_word`, and `'_'` over `''` in
+  `remove_spaces`.
+- The training targets are correct, and their decisive tokens already weigh 8.
+- V10-R5 had already added 350 correct bug-fix examples from C2 without restoring a single item.
+- Every continuation from C2 so far inherits C2's losses: R1, R4, R5, R7 and V11-A.
+
+**Change to the run order:**
+
+- **B:** unchanged, the next run.
+- **C becomes "retention from the start."**
+  - **Hypothesis:** the loss happens while C2 is trained, so putting the examples C2 forgot into the
+    curriculum from round 54's first step prevents it. Restoring the loss afterwards from C2 has
+    failed five times.
+  - **Configuration:**
+    - from round 54, with its optimizer state, as C2 was trained;
+    - C2's and R1's grammar v2 examples in one curriculum: 5 new examples per program (C2's 3 plus
+      R1's 2);
+    - the 50% replay share drawn by forgetting score (B's weights; data seed 1302 so the weights
+      match the production round);
+    - steps covering the dataset once (`floor(tokens / 4096)`), lr 1e-4 warmup-stable-decay to 1e-5,
+      the top 24 layers, fp32, seed 1301.
+  - **Changed variable against C2 followed by R1:** one stage instead of two, and the replay drawn
+    by forgetting score.
+  - **Expected:** combined >= 32 and round 54's 3 instruction-following items kept.
+  - **Risk:** five examples per program in one stage may forget more than C2's three. Cost about
+    4 h of training and 2 h of evaluation.
+  - **When it runs:** only if B fails a gate.
+- **The correct bug-fix contrast pairs (old C) move behind C.** R5's negative result makes them the
+  less likely fix.
+- **D is unchanged:** grammar v3 on top of whichever of B or C passes.
+- **Seeds:** a run that passes the second-seed gate gets its second seed (train 1302, data 1303,
+  forgetting scores for production round 1303) before any new run.
+- **An honest note on the gate, which is not changed:**
+  - Two of the four round-54 passes the R1 recipe loses are weak: the robust tests fail round 54's
+    own code. These are `write:remove_spaces` (an `isalpha` shortcut) and unseen
+    `count_words_longer_than` (code that ignores `n`).
+  - The category rule counts official passes, as pre-registered, and stays that way in V11.
