@@ -199,3 +199,29 @@ def test_minimal_pairs_differ_in_exactly_one_part_and_in_behaviour():
         sibling = next(q for src, q in by_code.items() if src.replace(f"def {q.name}(", f"def {name}(") == e.contrast)
         assert sum(a != b for a, b in zip(G.PARTS[p.name], G.PARTS[sibling.name])) == 1
         assert idioms._run(code, name, list(p.inputs)) != idioms._run(e.contrast, name, list(p.inputs))
+
+
+def test_retention_aware_replay_draws_by_weight_at_the_same_token_share(data_dir, monkeypatch, tmp_path):
+    from ycode.lm import rounddata
+
+    production = [InstructionExample(f"Write `p{i}(x)`.", f"```python\ndef p{i}(x):\n    return x - {i}\n```") for i in range(200)]
+    monkeypatch.setattr(rounddata, "_legacy_examples", lambda seed, o: production)
+    weights = [100.0 if i < 20 else 0.01 for i in range(200)]  # the first 20 were forgotten
+    (tmp_path / "w.json").write_text(json.dumps({"seed": 1, "n": 200, "weights": weights}))
+    o = {**rounddata.DEFAULTS, "legacy_share": 0.5, "legacy_weights": str(tmp_path / "w.json")}
+    from ycode.lm.data import encode_example
+    from ycode.lm.tokenizer import BPETokenizer
+
+    tok = BPETokenizer.load(data_dir / "tokenizer.json")
+    each = len(encode_example(tok, production[0], weighted=True)[0])
+    picked, tags, _ = rounddata._legacy_sample(1, o, 40 * each, data_dir / "tokenizer.json", None, lambda *_: None)
+    uniform, _, _ = rounddata._legacy_sample(1, {**o, "legacy_weights": None}, 40 * each, data_dir / "tokenizer.json",
+                                             None, lambda *_: None)
+    assert abs(len(picked) - len(uniform)) <= 2  # the same share of the round
+    forgotten = {f"p{i}(" for i in range(20)}
+    assert sum(any(f in e.prompt for f in forgotten) for e in picked) >= 18  # weighted: nearly all 20 drawn
+    again = rounddata._legacy_sample(1, o, 40 * each, data_dir / "tokenizer.json", None, lambda *_: None)[0]
+    assert [e.prompt for e in again] == [e.prompt for e in picked]  # seeded
+    (tmp_path / "w.json").write_text(json.dumps({"seed": 2, "n": 200, "weights": weights}))
+    with pytest.raises(ValueError, match="not seed 1"):
+        rounddata._legacy_sample(1, o, 40 * each, data_dir / "tokenizer.json", None, lambda *_: None)

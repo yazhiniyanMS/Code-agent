@@ -42,6 +42,7 @@ DEFAULTS = {
     # their defaults and 200 replay rows), sampled to this share of the dataset's tokens and added to the
     # examples the other options build; 0 = off. The share reached is in the manifest (tokens_by_source).
     "legacy_share": 0.0,
+    "legacy_weights": None,   # V11: JSON of per-example replay weights for this seed's production round (retention-aware)
 }
 
 PRODUCTION = {k: DEFAULTS[k] for k in ("basics_write", "basics_bugfix", "compose_write", "compose_bugfix", "contrast",
@@ -181,12 +182,38 @@ def _legacy_sample(seed: int, o: dict, own_tokens: int, tokenizer_path, replay_d
     target = share / (1 - share) * own_tokens
     fraction = min(1.0, target / round_tokens)
     rng = random.Random(seed * 7919 + 17)
-    keep = sorted(rng.sample(range(len(production)), round(fraction * len(production))))
+    if o.get("legacy_weights"):  # V11: retention-aware replay, drawn by forgetting score (legacy_weights)
+        keep = _weighted_keep(seed, o["legacy_weights"], production, lengths, fraction, rng, log)
+    else:
+        keep = sorted(rng.sample(range(len(production)), round(fraction * len(production))))
     replay_rows = round(fraction * PRODUCTION["replay"])
     log(f"Legacy sample: {len(keep)} of {len(production)} production examples and {replay_rows} replay rows "
         f"({fraction:.1%} of a production round) for a {share:.0%} token share")
     picked = [production[i] for i in keep]
     return picked, [_legacy_tag(e) for e in picked], replay_rows
+
+
+def _weighted_keep(seed: int, weights_path, production: list, lengths: list[int], fraction: float, rng,
+                   log) -> list[int]:
+    """V11 retention-aware replay: the same token share of the production round, drawn without
+    replacement with probability proportional to each example's weight (Efraimidis-Spirakis keys,
+    seeded). The weights file (experiments/v11/forgetting_scores.py) scores this seed's round
+    example by example, and must match it."""
+    import json as _json
+
+    data = _json.loads(Path(weights_path).read_text())
+    if data["seed"] != seed or data["n"] != len(production):
+        raise ValueError(f"{weights_path} scores seed {data['seed']} ({data['n']} examples), not seed {seed} "
+                         f"({len(production)} examples)")
+    keys = sorted(range(len(production)), key=lambda i: -rng.random() ** (1.0 / data["weights"][i]))
+    budget, total, keep = fraction * sum(lengths), 0, []
+    for i in keys:
+        if total >= budget:
+            break
+        keep.append(i)
+        total += lengths[i]
+    log(f"Retention-aware replay: {len(keep)} examples ({total:,} tokens) drawn by weight from {weights_path}")
+    return sorted(keep)
 
 
 def replay_held_out_filter():
