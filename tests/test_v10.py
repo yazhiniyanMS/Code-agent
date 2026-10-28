@@ -225,3 +225,30 @@ def test_retention_aware_replay_draws_by_weight_at_the_same_token_share(data_dir
     (tmp_path / "w.json").write_text(json.dumps({"seed": 2, "n": 200, "weights": weights}))
     with pytest.raises(ValueError, match="not seed 1"):
         rounddata._legacy_sample(1, o, 40 * each, data_dir / "tokenizer.json", None, lambda *_: None)
+
+def test_retention_aware_replay_within_tag_keeps_each_kinds_share(data_dir, monkeypatch, tmp_path):
+    """V11-C: weights scaled within each tag keep the bug-fix share of a uniform draw (forgetting
+    scores weight write examples far more, which would otherwise crowd the bug fixes out)."""
+    from ycode.lm import rounddata
+
+    write = [InstructionExample(f"Write `p{i}(x)`.", f"```python\ndef p{i}(x):\n    return x - {i}\n```") for i in range(150)]
+    bugs = [InstructionExample(f"This function has a bug. Find and fix it:\n```python\ndef q{i}(x):\n    return x + {i}\n```",
+                               f"```python\ndef q{i}(x):\n    return x - {i}\n```") for i in range(50)]
+    production = write + bugs
+    monkeypatch.setattr(rounddata, "_legacy_examples", lambda seed, o: production)
+    weights = [10.0] * 150 + [0.1 if i >= 5 else 1.0 for i in range(50)]  # bug fixes scored low; q0-q4 the most
+    (tmp_path / "w.json").write_text(json.dumps({"seed": 1, "n": 200, "weights": weights}))
+    o = {**rounddata.DEFAULTS, "legacy_share": 0.5, "legacy_weights": str(tmp_path / "w.json")}
+    tok_path = data_dir / "tokenizer.json"
+    from ycode.lm.data import encode_example
+    from ycode.lm.tokenizer import BPETokenizer
+
+    each = len(encode_example(BPETokenizer.load(tok_path), production[0], weighted=True)[0])
+    by_score = rounddata._legacy_sample(1, o, 60 * each, tok_path, None, lambda *_: None)[1]
+    within = rounddata._legacy_sample(1, {**o, "legacy_weights_within_tag": True}, 60 * each, tok_path, None,
+                                      lambda *_: None)
+    assert by_score.count("legacy:bugfix") <= 2  # by raw score the bug fixes are crowded out
+    share = within[1].count("legacy:bugfix") / len(within[1])
+    assert 0.12 <= share <= 0.40  # about their 25% share of the round
+    drawn = {e.prompt.split("def ")[1][:3] for e in within[0] if e.prompt.startswith("This function")}
+    assert sum(f"q{i}(" in drawn for i in range(5)) >= 3  # inside the kind, the most forgotten are preferred

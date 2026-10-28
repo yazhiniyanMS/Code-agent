@@ -43,6 +43,8 @@ DEFAULTS = {
     # examples the other options build; 0 = off. The share reached is in the manifest (tokens_by_source).
     "legacy_share": 0.0,
     "legacy_weights": None,   # V11: JSON of per-example replay weights for this seed's production round (retention-aware)
+    "legacy_weights_within_tag": False,  # V11-C: weights normalised to mean 1 within each tag (write / bug fix), so
+                                         # each kind keeps its share of the round and only the choice inside it changes
 }
 
 PRODUCTION = {k: DEFAULTS[k] for k in ("basics_write", "basics_bugfix", "compose_write", "compose_bugfix", "contrast",
@@ -183,7 +185,8 @@ def _legacy_sample(seed: int, o: dict, own_tokens: int, tokenizer_path, replay_d
     fraction = min(1.0, target / round_tokens)
     rng = random.Random(seed * 7919 + 17)
     if o.get("legacy_weights"):  # V11: retention-aware replay, drawn by forgetting score (legacy_weights)
-        keep = _weighted_keep(seed, o["legacy_weights"], production, lengths, fraction, rng, log)
+        keep = _weighted_keep(seed, o["legacy_weights"], production, lengths, fraction, rng, log,
+                              within_tag=o["legacy_weights_within_tag"])
     else:
         keep = sorted(rng.sample(range(len(production)), round(fraction * len(production))))
     replay_rows = round(fraction * PRODUCTION["replay"])
@@ -194,18 +197,27 @@ def _legacy_sample(seed: int, o: dict, own_tokens: int, tokenizer_path, replay_d
 
 
 def _weighted_keep(seed: int, weights_path, production: list, lengths: list[int], fraction: float, rng,
-                   log) -> list[int]:
+                   log, within_tag: bool = False) -> list[int]:
     """V11 retention-aware replay: the same token share of the production round, drawn without
     replacement with probability proportional to each example's weight (Efraimidis-Spirakis keys,
     seeded). The weights file (experiments/v11/forgetting_scores.py) scores this seed's round
-    example by example, and must match it."""
+    example by example, and must match it. ``within_tag``: the weights are first scaled to mean 1
+    within each tag (write / bug fix), so each kind is drawn about as often as uniformly."""
     import json as _json
 
     data = _json.loads(Path(weights_path).read_text())
     if data["seed"] != seed or data["n"] != len(production):
         raise ValueError(f"{weights_path} scores seed {data['seed']} ({data['n']} examples), not seed {seed} "
                          f"({len(production)} examples)")
-    keys = sorted(range(len(production)), key=lambda i: -rng.random() ** (1.0 / data["weights"][i]))
+    weights = list(data["weights"])
+    if within_tag:
+        tags = [_legacy_tag(e) for e in production]
+        for t in set(tags):
+            idx = [i for i, x in enumerate(tags) if x == t]
+            mean = sum(weights[i] for i in idx) / len(idx)
+            for i in idx:
+                weights[i] /= mean
+    keys = sorted(range(len(production)), key=lambda i: -rng.random() ** (1.0 / weights[i]))
     budget, total, keep = fraction * sum(lengths), 0, []
     for i in keys:
         if total >= budget:
