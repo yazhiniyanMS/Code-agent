@@ -43,6 +43,7 @@ DEFAULTS = {
     # examples the other options build; 0 = off. The share reached is in the manifest (tokens_by_source).
     "legacy_share": 0.0,
     "legacy_weights": None,   # V11: JSON of per-example replay weights for this seed's production round (retention-aware)
+    "literal_bugfix": 0,      # V12: examples per string-literal bug (basics.literal_bugfix_examples), tagged "retention:bugfix"
     "legacy_weights_within_tag": False,  # V11-C: weights normalised to mean 1 within each tag (write / bug fix), so
                                          # each kind keeps its share of the round and only the choice inside it changes
 }
@@ -99,7 +100,15 @@ def round_examples_tagged(seed: int, options: dict) -> tuple[list, list[str]]:
     o = {**DEFAULTS, **options}
     legacy = _legacy_examples(seed, o)
     curriculum, ctags = _idiom_examples_tagged(seed, o)
-    return legacy + curriculum, [_legacy_tag(e) for e in legacy] + ctags
+    retention = []
+    if o["literal_bugfix"]:  # V12: its own random stream, so the other examples of the round are unchanged
+        import random
+
+        from ycode.lm.basics import literal_bugfix_examples
+
+        retention = literal_bugfix_examples(random.Random(seed * 1009 + 12), per_bug=o["literal_bugfix"])
+    return (legacy + curriculum + retention,
+            [_legacy_tag(e) for e in legacy] + ctags + ["retention:bugfix"] * len(retention))
 
 
 def _legacy_tag(ex) -> str:

@@ -723,6 +723,43 @@ def bugfix_examples(rng: random.Random, per_concept: int = 5) -> list[Instructio
     return out
 
 
+# V12: string-literal bugs. Round 54's mix has none whose fix is a string literal (V11: 29 of a production round's
+# 1,500 bug fixes touch a literal, none restores ''), and every model trained after it hands such a bug back
+# unchanged. A separator or filler literal is swapped for another; the fix restores it. The same swap is a bug in
+# one concept and the fix in another ('' in `initials`, '_' in `snake_to_camel`, ' ' in `reverse_words`), so which
+# literal is right has to come from the task, not from the code shown.
+_LITERAL_MUTATIONS = (("''", "' '"), ("''", "'_'"), ("' '", "''"), ("' '", "'_'"), ("'_'", "' '"), ("'_'", "''"),
+                      ("'-'", "'_'"), ("'-'", "' '"), ("', '", "','"))
+
+
+def literal_bugfix_examples(rng: random.Random, per_bug: int = 1) -> list[InstructionExample]:
+    """Bug fixes whose fix restores a string literal, for every training concept and every literal swap that
+    applies to a line of its body (never the def line or docstring) and really breaks it: valid Python that fails
+    the concept's tests. ``per_bug`` examples per swap, under the concept's names in turn; the answer is the
+    concept's reference code, checked against its tests here."""
+    out: list[InstructionExample] = []
+    for c in training_concepts():
+        names = (c.name, *c.aliases)
+        lines = _with_doc(c, names[0], c.body).splitlines(keepends=True)
+        swaps = [(i, line.replace(old, new, 1)) for i, line in enumerate(lines)
+                 if not line.lstrip().startswith(("def ", '"""'))
+                 for old, new in _LITERAL_MUTATIONS if old in line]
+        for i, mutated in swaps:
+            for k in range(per_bug):
+                name = names[k % len(names)]
+                fixed = _with_doc(c, name, c.body)
+                tests = _rename_tests(c.tests, name)
+                flines = fixed.splitlines(keepends=True)
+                buggy = "".join(flines[:i] + [mutated] + flines[i + 1:])
+                if buggy == fixed or not _parses(buggy) or _passes(buggy, tests):
+                    break  # not a real bug: the swap leaves the behaviour unchanged
+                assert _passes(fixed, tests), f"{name}: reference fails its tests"
+                out.append(neutralize(InstructionExample(BUGFIX_PROMPT.format(code=buggy), f"```python\n{fixed}\n```"),
+                                      name, rng))
+    rng.shuffle(out)
+    return out
+
+
 def basics_examples(seed: int = 1337, *, write_per_concept: int = 6,
                     bugfix_per_concept: int = 5) -> list[InstructionExample]:
     verify_concepts()
