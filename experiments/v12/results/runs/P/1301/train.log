@@ -1,0 +1,6 @@
+Loaded /dev/shm/ycode-keep/C2/1301/model_bf16 (step 56, stage sft)
+Model: YCode-LM v5, 1523.20M parameters, context 1024, device cpu, precision fp32, optimizer lion, stage sft, grad checkpointing
+step     10 | loss 0.055 | lr 1.00e-04 | gnorm 0.117 | 15 tok/s | 44.7 min
+step     20 | loss 0.075 | lr 1.00e-04 | gnorm 0.159 | 20 tok/s | 66.9 min
+step     30 | loss 0.052 | lr 9.98e-05 | gnorm 0.099 | 23 tok/s | 88.8 min
+Saved model to /dev/shm/ycode-v12/P/1301/model
