@@ -88,6 +88,18 @@ refuted at an effective learning rate.
 
 ## 4. Run L: R1 + string-literal bug fixes
 
+**Container restarts and determinism.** The container restarted at about 23:05 while L was training
+(step 24 of 42).
+
+- The restart wiped the RAM disk, which held L's working checkpoint and P's pack.
+- L was relaunched unchanged. Its dataset was rebuilt byte-identical (181,270 tokens).
+- Its per-step training losses and gradient norms equal the first attempt's to every logged digit
+  (steps 1-7, for example step 6: loss 0.02959, gradient norm 0.061001).
+- **So a V12 run is reproducible from its spec and seeds alone.** That is the fallback while the disk
+  (0.59 GB free) cannot hold a 1.3 GB pack.
+- P's pack is gone with the RAM disk. P failed its gates, its records and hashes are committed, and
+  rebuilding it costs about 80 min.
+
 L_SECTION
 
 ## 5. Comparison, decision and next experiment

@@ -142,3 +142,42 @@
 - **Next:**
   - If L passes the second-seed gate: L at seed 1302.
   - Otherwise: E.
+
+## Amendment 2 (after two container restarts killed run L, before run S1; gates unchanged)
+
+**What happened to L.**
+
+- The container restarted at about 23:05 and again at about 23:49 on 2026-10-28, three restarts in
+  under seven hours. Each one wiped the RAM disk.
+- That killed run L twice, at steps 24 and 12 of 42. The second attempt's losses equalled the
+  first's to every digit, so the runs are deterministic.
+- A run of R1's size needs about 3 h of uninterrupted uptime.
+- A durable resumable checkpoint (trained layers in fp32 plus optimizer state, about 6 GB) or even a
+  lossless pack (1.3 GB) does not fit the 0.59 GB of free disk. Making room needs your approval to
+  remove old checkpoints, which has not been given.
+- **Under the rule against jobs that cannot finish or checkpoint safely, L is not relaunched** until
+  storage allows it.
+
+**New run S1: a short staged continuation from R1 (hypothesis D with L's data).**
+
+- **Hypothesis:** R1's 36 steps at lr 1e-4 are the acquisition stage. A short second stage at a low
+  learning rate can add the missing bug-fix skill without damaging R1's gains.
+  - V10-R4 showed that 3e-5 retains more than 1e-4.
+  - V11-B showed one of R1's lost bug fixes coming back from a small replay change.
+- **Configuration (`experiments/v12/v12_s1.json`):**
+  - from R1 (pack `eb7ec595...`, content `9909c511...`);
+  - lr 3e-5 warmup-stable-decay, 7 steps (one epoch, measured by a dry run);
+  - data: the 93 string-literal bug fixes (L's) plus uniform replay of round 54's production mix
+    (data seed 1302), with no new curriculum.
+- **Cost:** about 15 min of training. Short enough to survive the restart pattern, and deterministic
+  if lost.
+- **Screen first:**
+  - dev + unseen-v1 (about 18 min) give the combined score and the category rule.
+  - Only a screen that reaches combined >= 32 with no category losing 3 or more gets the remaining
+    sets (benchmark, neighbours, new constants, reproduction, held-out sets) and then a second
+    seed (1302 / data 1303, from V11-A, R1's second seed).
+  - This saves about an hour per failing run and changes no gate: the gate depends on dev and
+    unseen-v1 only.
+- **Expected:** R1's 33 kept, plus at least one of the three instruction-following items restored.
+- **Risk:** 7 steps without curriculum examples may wear away R1's grammar gains, which the dev
+  screen measures directly.

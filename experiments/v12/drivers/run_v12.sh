@@ -19,10 +19,17 @@ R=/home/user/lmwork/v12/runs_${arm}_$seed.log
 log() { echo "[$(date -u +%Y-%m-%dT%H:%M:%S)] $*" >> $L; }
 cnt() { local n; n=$(grep -c "$1" "$2" 2>/dev/null); echo "${n:-0}"; }  # matching lines; 0 if no file
 work=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['work_dir'])" $spec)/$arm/$seed/model
-from_c2=$(python3 -c "import json,sys; s=json.load(open(sys.argv[1])); print(int('C2' in (s.get('init_from') or '')))" $spec)
-if [ "$from_c2" = 1 ] && [ ! -f $K/C2/1301/model_bf16/model.pt ] && [ ! -f $work/model.pt ]; then
-  python3 -m ycode.lm.packckpt unpack /home/user/lmwork/v10/ckpt/C2_1301.ypk $K/C2/1301/model_bf16 >> $L 2>&1 \
-    && log "C2 restored to the RAM disk from its pack (content verified on unpack)" || { log "$arm $seed: cannot restore C2"; exit 1; }
+init=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1])).get('init_from') or '')" $spec)
+from_ram=0
+# a starting checkpoint on the RAM disk (/dev/shm/ycode-keep/NAME/1301/model_bf16) is restored from its verified pack
+declare -A PACKS=([C2]=/home/user/lmwork/v10/ckpt/C2_1301.ypk [R1]=/home/user/lmwork/v10/ckpt/R1_1301.ypk)
+init_name=$(echo "$init" | sed -n 's#^/dev/shm/ycode-keep/\([^/]*\)/.*#\1#p')
+if [ -n "$init_name" ]; then
+  from_ram=1  # starts from a RAM-disk copy, dropped once the trainer has loaded it
+  if [ ! -f $init/model.pt ] && [ ! -f $work/model.pt ]; then
+    python3 -m ycode.lm.packckpt unpack ${PACKS[$init_name]} $init >> $L 2>&1 \
+      && log "$init_name restored to the RAM disk from its pack (content verified on unpack)" || { log "$arm $seed: cannot restore $init_name"; exit 1; }
+  fi
 fi
 tl=/home/user/lmwork/v12/runs/$arm/$seed/train.log
 before=$(cnt "^Loaded " $tl)
@@ -30,11 +37,11 @@ evals_before=$(cnt "evaluating dev" $R)
 log "$arm $seed start ($spec)"
 python3 -m ycode.lm.experiment $spec --arms $arm >> $R 2>&1 &
 pid=$!
-if [ "$from_c2" = 1 ]; then
+if [ "$from_ram" = 1 ]; then
   until [ "$(cnt "^Loaded " $tl)" -gt "$before" ] || ! kill -0 $pid 2>/dev/null; do sleep 15; done
   sleep 30
-  if kill -0 $pid 2>/dev/null && [ -f /home/user/lmwork/v10/ckpt/C2_1301.ypk.ok ] && [ -d $K/C2/1301/model_bf16 ]; then
-    rm -rf $K/C2/1301/model_bf16 && log "$arm $seed: trainer loaded C2; C2's RAM copy dropped (its pack is verified)"
+  if kill -0 $pid 2>/dev/null && [ -f ${PACKS[$init_name]}.ok ] && [ -d $init ]; then
+    rm -rf $init && log "$arm $seed: trainer loaded $init_name; its RAM copy dropped (its pack is verified)"
   fi
 fi
 early=$C/${arm}_$seed.ypk
