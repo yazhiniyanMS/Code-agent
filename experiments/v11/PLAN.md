@@ -138,3 +138,14 @@
 - Each kind keeps the share of the uniform draw: weights are normalised to mean 1 within a tag. So
   bug fixes stay at round 54's third, and inside each kind the most-forgotten examples are preferred.
 - Everything else as in amendment 1. C runs after W if neither B nor W passes.
+
+## Amendment 3 (a stop decision under amendment 2's rule; gates unchanged)
+
+- **W at seed 1301 (0.5·R1 + 0.5·round 54):** dev 26 + unseen-v1 1 = **27**, below round 54's 29.
+  - It restores the `longest_word` bug fix.
+  - It loses most of R1's gains: the `first_negative`, `index_of_min` and `product` bug fixes, and
+    `first_three_chars`.
+  - It does not restore `remove_spaces`.
+- **The promotion rule needs every seed to beat 29.** Seed 1301 already fails it, so W's second
+  seed cannot change W's outcome. It is not run, and its ~1.5 h goes to C.
+- W 1301's evaluation is completed for the record (benchmark and task sets).
