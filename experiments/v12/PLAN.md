@@ -100,3 +100,45 @@
 - A durable on-disk pack needs about 1.4 GB, and the disk has 0.67 GB. It is made only for a
   candidate that passes the second-seed gate, after your approval to free space. No checkpoint is
   deleted without that approval.
+
+## Amendment 1 (after run P's results, before run L starts; gates unchanged)
+
+**P's result** (seed 1301; full tables in the V12 report). It fails, and shows no transfer.
+
+| Measure | P | R1 (same seeds and programs) | Round 54 |
+| --- | --- | --- | --- |
+| Combined | 28 (dev 26, unseen-v1 2) | 33 | 29 |
+| Neighbour probe | 2/38, the trained neighbour written instead 9 times | 2/38, 8 times | 4/38, 9 times |
+| New constants within trained families | 0/24 | 4/24 | - |
+| Training-program reproduction | 38/40 | 36/40 | - |
+| Held-out combinations | 50/60 | 54/60 | - |
+
+- Contrast weighting at lr 1e-4 sharpens reproduction of the trained programs and costs
+  generalization. P passes nothing R1 fails and fails four dev items R1 passes.
+- **Hypothesis C, in this form, is refuted at an effective learning rate.**
+
+**This is branch 3 of the plan, and the order changes before the next run:**
+
+- **Run L comes before E.**
+- **E's precedent cannot pass the gate.** R6 scored dev 26, so even a fully replicated E lands near
+  combined 31, under the gate's 32. E measures transfer; it is not a route to a better checkpoint.
+- **L can.** Your stated priority is a measurably better checkpoint, and the closest recipe to the
+  gates is R1's (33 and 31). It is blocked by 3 instruction-following losses.
+  - Two of them are bug fixes that every post-round-54 model echoes.
+  - One of those, `remove_spaces` (`'_'` → `''`), belongs to a class absent from round 54's
+    training mix: no bug fix there restores a string literal.
+- **L, `experiments/v12/v12_l.json`:** R1's recipe exactly, plus `literal_bugfix: 3`.
+  - That adds 93 correct string-literal bug fixes from round 54's own training concepts
+    (`basics.literal_bugfix_examples`, PR #15).
+  - The literal to restore differs by task, so this is also a contrastive (C) intervention at the
+    decisive token.
+  - 42 steps: one epoch of a 181,270-token dataset, measured by a dry run.
+  - Seeds 1301 / data 1302, so it is item-for-item comparable with R1.
+- **Expected:** `bugfix:remove_spaces` restored, with R1's gains kept: combined at least 33 and 2
+  instruction-following losses.
+- **The known risk:** this class was found on dev, so a gain on that one item is weak evidence. It
+  needs the second seed (1302 / data 1303) and an unchanged unseen-v1 before any claim, as the gates
+  require anyway.
+- **Next:**
+  - If L passes the second-seed gate: L at seed 1302.
+  - Otherwise: E.
