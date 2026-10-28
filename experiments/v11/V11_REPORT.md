@@ -238,7 +238,46 @@ The gates were fixed before any V11 result and never changed.
 | W | `experiments/v6/soup.py`, `experiments/v11/drivers/run_w.sh`, evaluated by `experiments/v11/eval_only.py` | `experiments/v11/results/runs/W/<seed>/` |
 | C | `experiments/v11/v11_c.json` | `experiments/v11/results/runs/C/1301/` |
 
-RESULTS_SECTION
+### 4.2 Scores (the same pipeline and item sets for every row)
+
+SCORE_TABLES
+
+### 4.3 What each run showed
+
+**V11-B (replay drawn by forgetting score): combined 31 (dev 29, unseen-v1 2). Fails the second-seed
+gate on both counts.**
+
+- **Restored:** the `longest_word` bug fix (it returns `>` again), so instruction-following losses fall
+  from 3 to 2.
+- **Newly lost, both clean reasoning items:**
+  - `bugfix:sum_of_squares`
+  - `write:scale_each_by_three`
+
+  With unseen `count_words_longer_than` that makes 3 reasoning losses, so the category rule fails in
+  another category.
+- **Still lost:** `remove_spaces`, both as a bug fix and written.
+- **Reported, never used to select:** the benchmark reaches 26 · 23 · 25, and robust dev / unseen-v1
+  is 29 / 2.
+- **Reading:** redrawing the replay toward the examples C2 forgot most moves which items are lost.
+  It does not reduce the count.
+
+**V11-W (0.5 R1 + 0.5 round 54, no training): combined 27 (dev 26, unseen-v1 1). Fails, and below
+round 54.**
+
+- **Restored:** the `longest_word` bug fix. Only 3 clean losses against round 54, so the category
+  rule passes.
+- **Lost:** nearly all of R1's gains.
+  - The bug fixes `first_negative`, `index_of_min` and `product` are gone, and so is
+    `first_three_chars`.
+  - Reproduction of C2's programs falls from 36/40 to 21/40, and held-out combinations from 54/60 to
+    18/60.
+- **Kept:** round 54's neighbour score (4/38) is back, and the benchmark is 25 · 24 · 23.
+- **Reading:** halfway in weight space keeps round 54's behaviour and loses the new skills. The R1
+  recipe's gains and its losses come together.
+- **Stop:** under amendment 3, W's second seed is not run. Every seed must beat 29 and seed 1301
+  scored 27.
+
+C_RESULTS
 
 ## 5. Decision: validated best and best experimental candidate
 
