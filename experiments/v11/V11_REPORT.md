@@ -589,7 +589,15 @@ The commit is listed at the end of this section.
 
 No upload is claimed.
 
-COMMIT_LINE
+**Verified Git details:**
+
+- Remote: `https://github.com/yazhiniyanMS/Code-agent`, branch `claude/affectionate-rubin-7rl1am`.
+- The results, manifests and report were pushed in commit
+  `fcb5ec0aeaa09a693a947f3d0b5b31bb6db8446e`, which `git ls-remote` showed as the remote branch head.
+- `experiments/v11/artifacts/CHECKPOINTS.json` was downloaded back from GitHub at that commit, and its
+  SHA-256 matched the local file.
+- This line was added in the next commit.
+- Release URL: none. Uploaded checkpoint asset: none.
 
 ## 8. Next experiment
 
