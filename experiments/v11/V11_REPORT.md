@@ -213,7 +213,32 @@ passes of wrong code. The pre-registered gate counts official passes, and it is 
 
 ## 4. Experiments after the replication
 
-EXPERIMENTS_SECTION
+### 4.1 The matrix
+
+Every run was defined in `experiments/v11/PLAN.md` (and its amendments 1 and 2) before it started.
+The gates were fixed before any V11 result and never changed.
+
+| Run | Hypothesis | Changed variable (one) | Expected | Forgetting risk | Seeds | Resources (measured or estimated) | Stop / next |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| A | R1's +4 is not one seed's luck | seeds only | combined about 33 with the same losses | as R1 | train 1302, data 1303 | 83 min of training plus 145 min of evaluation, 10.9 GB peak | always run |
+| B | replaying what C2 forgot restores it | how the 50% replay is drawn: by C2's forgetting score (section 3) | combined >= 32 with the losses restored | narrower replay (fewer bug fixes, see section 3) | 1301 (data 1302) | 2 h of scoring, about 80 min of training, about 2 h of evaluation | second seed if both gates pass, else W |
+| W | round 54's behaviour and the R1 recipe's gains sit close together in weight space | the weights: 0.5 R1-recipe + 0.5 round 54, fixed in advance | bug fixes back, combined >= 32 | the gains halve | R1 (1301) and V11-A (1302) | no training, about 2.5 h of evaluation per seed | if both seeds fail, stop W |
+| C | the loss happens while C2 trains, so retention must start at round 54 | one stage from round 54 (C2's and R1's examples together) with replay drawn by forgetting score within each kind | the instruction-following items kept, combined >= 32 | 5 examples per program in one stage | 1301 (data 1302) | 88 steps (about 3 h) plus about 2 h of evaluation | only if B and W fail; second seed if it passes |
+| (D) | grammar v3 compositions add transfer once retention holds | + grammar v3's programs | unseen-v1 up (R6 reached 5/53) | dev fell in R6 | - | about 4 h | only after a run passes |
+
+- The correct bug-fix contrast pairs moved behind C (amendment 1). V10-R5 had added 350 correct
+  bug-fix examples without restoring a single item.
+- Learning rate, architecture and full retraining were not touched.
+- Each run's configuration file is listed below.
+
+| Run | Configuration | Records |
+| --- | --- | --- |
+| A | `experiments/v11/v11_a.json` | `experiments/v11/results/runs/A/1302/` |
+| B | `experiments/v11/v11_b.json` (weights `experiments/v11/results/forgetting_1302.json`) | `experiments/v11/results/runs/B/1301/` |
+| W | `experiments/v6/soup.py`, `experiments/v11/drivers/run_w.sh`, evaluated by `experiments/v11/eval_only.py` | `experiments/v11/results/runs/W/<seed>/` |
+| C | `experiments/v11/v11_c.json` | `experiments/v11/results/runs/C/1301/` |
+
+RESULTS_SECTION
 
 ## 5. Decision: validated best and best experimental candidate
 
