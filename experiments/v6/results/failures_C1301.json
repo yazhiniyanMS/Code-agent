@@ -1,0 +1,544 @@
+{
+ "model": "C1301",
+ "dev": {
+  "failures_clean": 21,
+  "root_causes": {
+   "incorrect_logic": 4,
+   "misunderstood_prompt": 16,
+   "edge_cases": 1
+  },
+  "items": [
+   {
+    "suite": "write",
+    "name": "count_greater",
+    "root_cause": "incorrect_logic",
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 12% (count_greater([1, 5, 7], 4) gave 1 (expected 2))"
+   },
+   {
+    "suite": "write",
+    "name": "first_negative",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes smallest_negative instead (agreement with the reference 0.53)"
+   },
+   {
+    "suite": "write",
+    "name": "index_of_min",
+    "root_cause": "incorrect_logic",
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 1% (IndexError on index_of_min([3, 1, 2]): list index out of range)"
+   },
+   {
+    "suite": "write",
+    "name": "is_between",
+    "root_cause": "incorrect_logic",
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 35% (is_between(2, 1, 3) gave False (expected True))"
+   },
+   {
+    "suite": "write",
+    "name": "last_word",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'second_to_last_word'"
+   },
+   {
+    "suite": "write",
+    "name": "longest_word",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'shortest_word'"
+   },
+   {
+    "suite": "write",
+    "name": "product",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes bench:count_zeros instead (agreement with the reference 0.00)"
+   },
+   {
+    "suite": "write",
+    "name": "remove_spaces",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'remove_vowels'"
+   },
+   {
+    "suite": "write",
+    "name": "running_max",
+    "root_cause": "incorrect_logic",
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 15% (running_max([1, 3, 2, 5]) gave [1, 3, 2, 5] (expected [1, 3, 3, 5]))"
+   },
+   {
+    "suite": "write",
+    "name": "sum_of_squares",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'triangular_number'"
+   },
+   {
+    "suite": "write",
+    "name": "any_zero",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'any_even'"
+   },
+   {
+    "suite": "write",
+    "name": "fourth_item",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'fifth_item'"
+   },
+   {
+    "suite": "write",
+    "name": "second_to_last_item",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'last_item'"
+   },
+   {
+    "suite": "bugfix",
+    "name": "first_negative",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "handed the buggy code back unchanged"
+   },
+   {
+    "suite": "bugfix",
+    "name": "index_of_min",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "handed the buggy code back unchanged"
+   },
+   {
+    "suite": "bugfix",
+    "name": "is_between",
+    "root_cause": "edge_cases",
+    "class": "edge_case_failure",
+    "evidence": "agrees with the reference on 82% of probes (is_between(2, 1, 3) gave False (expected True))"
+   },
+   {
+    "suite": "bugfix",
+    "name": "last_word",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'second_to_last_word'"
+   },
+   {
+    "suite": "bugfix",
+    "name": "longest_word",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "handed the buggy code back unchanged"
+   },
+   {
+    "suite": "bugfix",
+    "name": "product",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes string_length instead (agreement with the reference 0.00)"
+   },
+   {
+    "suite": "bugfix",
+    "name": "remove_spaces",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "handed the buggy code back unchanged"
+   },
+   {
+    "suite": "bugfix",
+    "name": "running_max",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes smallest_negative instead (agreement with the reference 0.00)"
+   }
+  ]
+ },
+ "unseen": {
+  "failures_clean": 52,
+  "root_causes": {
+   "misunderstood_prompt": 33,
+   "incomplete_implementation": 5,
+   "incorrect_logic": 12,
+   "syntax": 1,
+   "edge_cases": 1
+  },
+  "items": [
+   {
+    "suite": "write",
+    "name": "tens_digit",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'reverse_number'"
+   },
+   {
+    "suite": "write",
+    "name": "last_two_digits",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'count_divisors'"
+   },
+   {
+    "suite": "write",
+    "name": "round_down_to_ten",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'last_digit'"
+   },
+   {
+    "suite": "write",
+    "name": "is_teenager",
+    "root_cause": "incomplete_implementation",
+    "class": "incorrect_code_generation",
+    "evidence": "NameError: name 'globally_report_error' is not defined"
+   },
+   {
+    "suite": "write",
+    "name": "same_sign",
+    "root_cause": "incomplete_implementation",
+    "class": "incorrect_code_generation",
+    "evidence": "AttributeError: 'int' object has no attribute 'isnan'"
+   },
+   {
+    "suite": "write",
+    "name": "last_three",
+    "root_cause": "incorrect_logic",
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 1% (last_three([1, 2, 3, 4, 5]) gave [] (expected [3, 4, 5]))"
+   },
+   {
+    "suite": "write",
+    "name": "drop_first",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'first_item'"
+   },
+   {
+    "suite": "write",
+    "name": "swap_ends",
+    "root_cause": "incorrect_logic",
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 0% (IndexError on swap_ends([1, 2, 3, 4]): list index out of range)"
+   },
+   {
+    "suite": "write",
+    "name": "first_plus_last",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes count_odd instead (agreement with the reference 0.02)"
+   },
+   {
+    "suite": "write",
+    "name": "count_above_mean",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'count_positive'"
+   },
+   {
+    "suite": "write",
+    "name": "count_changes",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes sum_zero instead (agreement with the reference 0.12)"
+   },
+   {
+    "suite": "write",
+    "name": "chunk_pairs",
+    "root_cause": "syntax",
+    "class": "formatting_or_parsing",
+    "evidence": "syntax error: '[' was never closed"
+   },
+   {
+    "suite": "write",
+    "name": "count_true_values",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes index_of_max instead (agreement with the reference 0.64)"
+   },
+   {
+    "suite": "write",
+    "name": "repeat_word",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes unseen2:common_prefix instead (agreement with the reference 0.02)"
+   },
+   {
+    "suite": "write",
+    "name": "count_doubled_letters",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes count_islands_1d instead (agreement with the reference 0.72)"
+   },
+   {
+    "suite": "write",
+    "name": "dashes_for_spaces",
+    "root_cause": "incorrect_logic",
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 1% (dashes_for_spaces('a b c') gave '  ' (expected 'a-b-c'))"
+   },
+   {
+    "suite": "write",
+    "name": "longest_word_length",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes longest_word instead (agreement with the reference 0.00)"
+   },
+   {
+    "suite": "write",
+    "name": "words_starting_with_vowel",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes bench:count_words instead (agreement with the reference 0.12)"
+   },
+   {
+    "suite": "write",
+    "name": "is_all_lowercase_letters",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'is_all_lower'"
+   },
+   {
+    "suite": "write",
+    "name": "count_letter_case_insensitive",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes dot_product instead (agreement with the reference 0.74)"
+   },
+   {
+    "suite": "write",
+    "name": "alternate_case",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'remove_vowels'"
+   },
+   {
+    "suite": "write",
+    "name": "sum_at_odd_positions",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'sum_odd_abs'"
+   },
+   {
+    "suite": "write",
+    "name": "second_smallest",
+    "root_cause": "incomplete_implementation",
+    "class": "incorrect_code_generation",
+    "evidence": "TypeError on second_smallest([4, 1, 9, 1, 7]): object of type 'int' has no len()"
+   },
+   {
+    "suite": "write",
+    "name": "last_index_of",
+    "root_cause": "incorrect_logic",
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 5% (last_index_of([1, 2, 1], 1) gave 0 (expected 2))"
+   },
+   {
+    "suite": "write",
+    "name": "insert_at_front",
+    "root_cause": "incorrect_logic",
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 0% (insert_at_front([2, 3], 1) gave [2, 3] (expected [1, 2, 3]))"
+   },
+   {
+    "suite": "write",
+    "name": "count_strictly_between",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes unseen2:pairs_with_sum instead (agreement with the reference 0.51)"
+   },
+   {
+    "suite": "write",
+    "name": "is_non_increasing",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'longer_than_one'"
+   },
+   {
+    "suite": "write",
+    "name": "without_last",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'every_other'"
+   },
+   {
+    "suite": "write",
+    "name": "hours_to_seconds",
+    "root_cause": "incorrect_logic",
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 1% (hours_to_seconds(1) gave 60 (expected 3600))"
+   },
+   {
+    "suite": "write",
+    "name": "next_even",
+    "root_cause": "incorrect_logic",
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 2% (next_even(3) gave False (expected 4))"
+   },
+   {
+    "suite": "write",
+    "name": "digits_of",
+    "root_cause": "incorrect_logic",
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 1% (digits_of(123) gave [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7 (expected [1, 2, 3]))"
+   },
+   {
+    "suite": "write",
+    "name": "count_capitalized",
+    "root_cause": "incorrect_logic",
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 1% (IndexError on count_capitalized('Ada met Alan in Paris'): string index out of range)"
+   },
+   {
+    "suite": "write",
+    "name": "average_word_length",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes count_alpha_chars instead (agreement with the reference 0.14)"
+   },
+   {
+    "suite": "write",
+    "name": "is_vowel",
+    "root_cause": "edge_cases",
+    "class": "edge_case_failure",
+    "evidence": "agrees with the reference on 98% of probes (is_vowel('a') gave False (expected True))"
+   },
+   {
+    "suite": "write",
+    "name": "swap_halves",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'remove_vowels'"
+   },
+   {
+    "suite": "write",
+    "name": "step_up_to",
+    "root_cause": "incorrect_logic",
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 3% (step_up_to(3, 5) gave 8 (expected 4))"
+   },
+   {
+    "suite": "write",
+    "name": "repeat_each",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes remove_value instead (agreement with the reference 0.19)"
+   },
+   {
+    "suite": "write",
+    "name": "ends_with_vowel",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes is_one instead (agreement with the reference 0.66)"
+   },
+   {
+    "suite": "write",
+    "name": "sum_of_last_two",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'sum_odd_abs'"
+   },
+   {
+    "suite": "write",
+    "name": "first_index_above",
+    "root_cause": "incorrect_logic",
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 6% (IndexError on first_index_above([], 0): list index out of range)"
+   },
+   {
+    "suite": "write",
+    "name": "middle_of_three",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'min_of_three'"
+   },
+   {
+    "suite": "write",
+    "name": "count_words_longer_than",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes count_greater instead (agreement with the reference 0.59)"
+   },
+   {
+    "suite": "write",
+    "name": "sum_of_last_n",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'sum_odd_abs'"
+   },
+   {
+    "suite": "write",
+    "name": "contains_digit",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes bench:ends_with_dot instead (agreement with the reference 0.74)"
+   },
+   {
+    "suite": "write",
+    "name": "pad_right",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'trim'"
+   },
+   {
+    "suite": "write",
+    "name": "abbreviate",
+    "root_cause": "incorrect_logic",
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 0% (IndexError on abbreviate('dog', 5): string index out of range)"
+   },
+   {
+    "suite": "write",
+    "name": "count_increases",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'count_negative'"
+   },
+   {
+    "suite": "write",
+    "name": "same_length",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'are_equal'"
+   },
+   {
+    "suite": "write",
+    "name": "longer_of_two",
+    "root_cause": "incomplete_implementation",
+    "class": "incorrect_code_generation",
+    "evidence": "AttributeError: 'str' object has no attribute 'to_DMP_Python'"
+   },
+   {
+    "suite": "write",
+    "name": "keys_above",
+    "root_cause": "incomplete_implementation",
+    "class": "incorrect_code_generation",
+    "evidence": "TypeError on keys_above({'a': 1, 'b': 5, 'c': 9}, 4): 'int' object is not subscriptable"
+   },
+   {
+    "suite": "write",
+    "name": "first_repeated",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'first_item'"
+   },
+   {
+    "suite": "write",
+    "name": "count_distinct",
+    "root_cause": "misunderstood_prompt",
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes sum_zero instead (agreement with the reference 0.01)"
+   }
+  ]
+ },
+ "total": {
+  "misunderstood_prompt": 49,
+  "incorrect_logic": 16,
+  "edge_cases": 2,
+  "syntax": 1,
+  "incomplete_implementation": 5,
+  "evaluation": 0
+ }
+}

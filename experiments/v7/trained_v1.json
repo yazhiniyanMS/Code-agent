@@ -1,0 +1,1128 @@
+{
+ "version": "trained-v1",
+ "variants": [
+  "original"
+ ],
+ "tasks": [
+  {
+   "group": "trained",
+   "name": "last_four_reversed",
+   "params": "items",
+   "neighbour": "last_two_reversed",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `last_four_reversed(items)` that returns the last four items of the list in reverse order, the last item first (all of them if the list is shorter)."
+   },
+   "tests": "assert last_four_reversed([]) == []\nassert last_four_reversed([9]) == [9]\nassert last_four_reversed([4]) == [4]\nassert last_four_reversed([18, -6, 8, 8]) == [8, 8, -6, 18]\nassert last_four_reversed([18, 15, 8, 2]) == [2, 8, 15, 18]\nassert last_four_reversed([-6, 5, 5, -3]) == [-3, 5, 5, -6]",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      9
+     ]
+    ],
+    [
+     [
+      4
+     ]
+    ],
+    [
+     [
+      18,
+      -6,
+      8,
+      8
+     ]
+    ],
+    [
+     [
+      18,
+      15,
+      8,
+      2
+     ]
+    ],
+    [
+     [
+      -6,
+      5,
+      5,
+      -3
+     ]
+    ]
+   ],
+   "reference": "def last_four_reversed(items):\n    return items[::-1][:4]",
+   "wrong": "def last_four_reversed(items):\n    return items[::-1][:2]",
+   "expected": [
+    "[]",
+    "[9]",
+    "[4]",
+    "[8, 8, -6, 18]",
+    "[2, 8, 15, 18]",
+    "[-3, 5, 5, -6]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[9]",
+    "[4]",
+    "[8, 8]",
+    "[2, 8]",
+    "[-3, 5]"
+   ]
+  },
+  {
+   "group": "trained",
+   "name": "max_digit",
+   "params": "n",
+   "neighbour": "min_digit",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `max_digit(n)` that returns the largest digit of the non-negative integer n."
+   },
+   "tests": "assert max_digit(5) == 5\nassert max_digit(4) == 4\nassert max_digit(0) == 0\nassert max_digit(704) == 7\nassert max_digit(319) == 9\nassert max_digit(258) == 8",
+   "test_inputs": [
+    [
+     5
+    ],
+    [
+     4
+    ],
+    [
+     0
+    ],
+    [
+     704
+    ],
+    [
+     319
+    ],
+    [
+     258
+    ]
+   ],
+   "reference": "def max_digit(n):\n    return max(int(d) for d in str(n))",
+   "wrong": "def max_digit(n):\n    return min(int(d) for d in str(n))",
+   "expected": [
+    "5",
+    "4",
+    "0",
+    "7",
+    "9",
+    "8"
+   ],
+   "wrong_outputs": [
+    "5",
+    "4",
+    "0",
+    "0",
+    "1",
+    "2"
+   ]
+  },
+  {
+   "group": "trained",
+   "name": "rotate_left_one",
+   "params": "items",
+   "neighbour": "rotate_left_two",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `rotate_left_one(items)` that returns the list rotated left by one step(s): each step moves the first item to the end (an empty list stays empty)."
+   },
+   "tests": "assert rotate_left_one([]) == []\nassert rotate_left_one([4]) == [4]\nassert rotate_left_one([-6]) == [-6]\nassert rotate_left_one([5, 20, 0, -7, 12]) == [20, 0, -7, 12, 5]\nassert rotate_left_one([-1, 9, 6, -3, 10]) == [9, 6, -3, 10, -1]\nassert rotate_left_one([-2, -7, 18, 10, 1]) == [-7, 18, 10, 1, -2]",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      4
+     ]
+    ],
+    [
+     [
+      -6
+     ]
+    ],
+    [
+     [
+      5,
+      20,
+      0,
+      -7,
+      12
+     ]
+    ],
+    [
+     [
+      -1,
+      9,
+      6,
+      -3,
+      10
+     ]
+    ],
+    [
+     [
+      -2,
+      -7,
+      18,
+      10,
+      1
+     ]
+    ]
+   ],
+   "reference": "def rotate_left_one(items):\n    if not items:\n        return []\n    k = 1 % len(items)\n    return items[k:] + items[:k]",
+   "wrong": "def rotate_left_one(items):\n    if not items:\n        return []\n    k = 2 % len(items)\n    return items[k:] + items[:k]",
+   "expected": [
+    "[]",
+    "[4]",
+    "[-6]",
+    "[20, 0, -7, 12, 5]",
+    "[9, 6, -3, 10, -1]",
+    "[-7, 18, 10, 1, -2]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[4]",
+    "[-6]",
+    "[0, -7, 12, 5, 20]",
+    "[6, -3, 10, -1, 9]",
+    "[18, 10, 1, -2, -7]"
+   ]
+  },
+  {
+   "group": "trained",
+   "name": "clip_low",
+   "params": "numbers, limit",
+   "neighbour": "clip_high",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `clip_low(numbers, limit)` that returns a new list in which every number smaller than limit is replaced by limit."
+   },
+   "tests": "assert clip_low([], 21) == []\nassert clip_low([], 17) == []\nassert clip_low([], 19) == []\nassert clip_low([17, 16, 1, 12], 20) == [20, 20, 20, 20]\nassert clip_low([-5, -5, -3, -5], 46) == [46, 46, 46, 46]\nassert clip_low([4, -6, 4, -6, 8], 53) == [53, 53, 53, 53, 53]",
+   "test_inputs": [
+    [
+     [],
+     21
+    ],
+    [
+     [],
+     17
+    ],
+    [
+     [],
+     19
+    ],
+    [
+     [
+      17,
+      16,
+      1,
+      12
+     ],
+     20
+    ],
+    [
+     [
+      -5,
+      -5,
+      -3,
+      -5
+     ],
+     46
+    ],
+    [
+     [
+      4,
+      -6,
+      4,
+      -6,
+      8
+     ],
+     53
+    ]
+   ],
+   "reference": "def clip_low(numbers, limit):\n    return [max(x, limit) for x in numbers]",
+   "wrong": "def clip_low(numbers, limit):\n    return [min(x, limit) for x in numbers]",
+   "expected": [
+    "[]",
+    "[]",
+    "[]",
+    "[20, 20, 20, 20]",
+    "[46, 46, 46, 46]",
+    "[53, 53, 53, 53, 53]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[]",
+    "[]",
+    "[17, 16, 1, 12]",
+    "[-5, -5, -3, -5]",
+    "[4, -6, 4, -6, 8]"
+   ]
+  },
+  {
+   "group": "trained",
+   "name": "sum_after_first_two",
+   "params": "numbers",
+   "neighbour": "sum_after_first_one",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `sum_after_first_two(numbers)` that returns the sum of the numbers that come after the first two in the list (0 if there are none)."
+   },
+   "tests": "assert sum_after_first_two([]) == 0\nassert sum_after_first_two([1]) == 0\nassert sum_after_first_two([0]) == 0\nassert sum_after_first_two([0, 4, -6, -6, 8]) == -4\nassert sum_after_first_two([16, 2, 13, -7, 1]) == 7\nassert sum_after_first_two([3, 17, 12, -1, -5]) == 6",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      1
+     ]
+    ],
+    [
+     [
+      0
+     ]
+    ],
+    [
+     [
+      0,
+      4,
+      -6,
+      -6,
+      8
+     ]
+    ],
+    [
+     [
+      16,
+      2,
+      13,
+      -7,
+      1
+     ]
+    ],
+    [
+     [
+      3,
+      17,
+      12,
+      -1,
+      -5
+     ]
+    ]
+   ],
+   "reference": "def sum_after_first_two(numbers):\n    return sum(numbers[2:])",
+   "wrong": "def sum_after_first_two(numbers):\n    return sum(numbers[1:])",
+   "expected": [
+    "0",
+    "0",
+    "0",
+    "-4",
+    "7",
+    "6"
+   ],
+   "wrong_outputs": [
+    "0",
+    "0",
+    "0",
+    "0",
+    "9",
+    "23"
+   ]
+  },
+  {
+   "group": "trained",
+   "name": "digits_above_5",
+   "params": "n",
+   "neighbour": "digits_above_4",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `digits_above_5(n)` that returns how many digits of the non-negative integer n are greater than 5."
+   },
+   "tests": "assert digits_above_5(3) == 0\nassert digits_above_5(5) == 0\nassert digits_above_5(6) == 1\nassert digits_above_5(785) == 2\nassert digits_above_5(6463) == 2\nassert digits_above_5(6006) == 2",
+   "test_inputs": [
+    [
+     3
+    ],
+    [
+     5
+    ],
+    [
+     6
+    ],
+    [
+     785
+    ],
+    [
+     6463
+    ],
+    [
+     6006
+    ]
+   ],
+   "reference": "def digits_above_5(n):\n    return sum(1 for d in str(n) if int(d) > 5)",
+   "wrong": "def digits_above_5(n):\n    return sum(1 for d in str(n) if int(d) > 4)",
+   "expected": [
+    "0",
+    "0",
+    "1",
+    "2",
+    "2",
+    "2"
+   ],
+   "wrong_outputs": [
+    "0",
+    "1",
+    "1",
+    "3",
+    "2",
+    "2"
+   ]
+  },
+  {
+   "group": "trained",
+   "name": "last_zero_position",
+   "params": "numbers",
+   "neighbour": "last_even_position",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `last_zero_position(numbers)` that returns the position of the last zero number in the list, or -1 if there is none."
+   },
+   "tests": "assert last_zero_position([]) == -1\nassert last_zero_position([20]) == -1\nassert last_zero_position([-1]) == -1\nassert last_zero_position([4, 9, 18, 6]) == -1\nassert last_zero_position([0, 8, -2, -8]) == 0\nassert last_zero_position([17, 9, 14, 14]) == -1",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      20
+     ]
+    ],
+    [
+     [
+      -1
+     ]
+    ],
+    [
+     [
+      4,
+      9,
+      18,
+      6
+     ]
+    ],
+    [
+     [
+      0,
+      8,
+      -2,
+      -8
+     ]
+    ],
+    [
+     [
+      17,
+      9,
+      14,
+      14
+     ]
+    ]
+   ],
+   "reference": "def last_zero_position(numbers):\n    result = -1\n    for i, x in enumerate(numbers):\n        if x == 0:\n            result = i\n    return result",
+   "wrong": "def last_zero_position(numbers):\n    result = -1\n    for i, x in enumerate(numbers):\n        if x % 2 == 0:\n            result = i\n    return result",
+   "expected": [
+    "-1",
+    "-1",
+    "-1",
+    "-1",
+    "0",
+    "-1"
+   ],
+   "wrong_outputs": [
+    "-1",
+    "0",
+    "-1",
+    "3",
+    "3",
+    "3"
+   ]
+  },
+  {
+   "group": "trained",
+   "name": "plus_one_of_odd",
+   "params": "numbers",
+   "neighbour": "squares_of_even",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `plus_one_of_odd(numbers)` that returns the successors of the odd numbers in the list, in order."
+   },
+   "tests": "assert plus_one_of_odd([]) == []\nassert plus_one_of_odd([4]) == []\nassert plus_one_of_odd([9]) == [10]\nassert plus_one_of_odd([2, 13, 18, 9, 19]) == [14, 10, 20]\nassert plus_one_of_odd([13, 20, 8, 8, -7]) == [14, -6]\nassert plus_one_of_odd([4, -6, 12, -6, 9]) == [10]",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      4
+     ]
+    ],
+    [
+     [
+      9
+     ]
+    ],
+    [
+     [
+      2,
+      13,
+      18,
+      9,
+      19
+     ]
+    ],
+    [
+     [
+      13,
+      20,
+      8,
+      8,
+      -7
+     ]
+    ],
+    [
+     [
+      4,
+      -6,
+      12,
+      -6,
+      9
+     ]
+    ]
+   ],
+   "reference": "def plus_one_of_odd(numbers):\n    return [x + 1 for x in numbers if x % 2 == 1]",
+   "wrong": "def plus_one_of_odd(numbers):\n    return [x * x for x in numbers if x % 2 == 0]",
+   "expected": [
+    "[]",
+    "[]",
+    "[10]",
+    "[14, 10, 20]",
+    "[14, -6]",
+    "[10]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[16]",
+    "[]",
+    "[4, 324]",
+    "[400, 64, 64]",
+    "[16, 36, 144, 36]"
+   ]
+  },
+  {
+   "group": "trained",
+   "name": "neighbour_sums",
+   "params": "numbers",
+   "neighbour": "neighbour_products",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `neighbour_sums(numbers)` that returns a list with the sum of each number and the number after it (one item fewer than the list)."
+   },
+   "tests": "assert neighbour_sums([]) == []\nassert neighbour_sums([0]) == []\nassert neighbour_sums([9]) == []\nassert neighbour_sums([4, -5, 7, 0, 20]) == [-1, 2, 7, 20]\nassert neighbour_sums([-8, -8, 2, 11, 16]) == [-16, -6, 13, 27]\nassert neighbour_sums([10, 0, 5, 1, 11, -9]) == [10, 5, 6, 12, 2]",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      0
+     ]
+    ],
+    [
+     [
+      9
+     ]
+    ],
+    [
+     [
+      4,
+      -5,
+      7,
+      0,
+      20
+     ]
+    ],
+    [
+     [
+      -8,
+      -8,
+      2,
+      11,
+      16
+     ]
+    ],
+    [
+     [
+      10,
+      0,
+      5,
+      1,
+      11,
+      -9
+     ]
+    ]
+   ],
+   "reference": "def neighbour_sums(numbers):\n    return [a + b for a, b in zip(numbers, numbers[1:])]",
+   "wrong": "def neighbour_sums(numbers):\n    return [a * b for a, b in zip(numbers, numbers[1:])]",
+   "expected": [
+    "[]",
+    "[]",
+    "[]",
+    "[-1, 2, 7, 20]",
+    "[-16, -6, 13, 27]",
+    "[10, 5, 6, 12, 2]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[]",
+    "[]",
+    "[-20, -35, 0, 0]",
+    "[64, -16, 22, 176]",
+    "[0, 0, 5, 11, -99]"
+   ]
+  },
+  {
+   "group": "trained",
+   "name": "digits_above_4",
+   "params": "n",
+   "neighbour": "digits_above_7",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `digits_above_4(n)` that returns how many digits of the non-negative integer n are greater than 4."
+   },
+   "tests": "assert digits_above_4(9) == 1\nassert digits_above_4(6) == 1\nassert digits_above_4(0) == 0\nassert digits_above_4(816) == 2\nassert digits_above_4(621) == 1\nassert digits_above_4(838) == 2",
+   "test_inputs": [
+    [
+     9
+    ],
+    [
+     6
+    ],
+    [
+     0
+    ],
+    [
+     816
+    ],
+    [
+     621
+    ],
+    [
+     838
+    ]
+   ],
+   "reference": "def digits_above_4(n):\n    return sum(1 for d in str(n) if int(d) > 4)",
+   "wrong": "def digits_above_4(n):\n    return sum(1 for d in str(n) if int(d) > 7)",
+   "expected": [
+    "1",
+    "1",
+    "0",
+    "2",
+    "1",
+    "2"
+   ],
+   "wrong_outputs": [
+    "1",
+    "0",
+    "0",
+    "1",
+    "0",
+    "2"
+   ]
+  },
+  {
+   "group": "trained",
+   "name": "min_digit",
+   "params": "n",
+   "neighbour": "max_digit",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `min_digit(n)` that returns the smallest digit of the non-negative integer n."
+   },
+   "tests": "assert min_digit(2) == 2\nassert min_digit(1) == 1\nassert min_digit(7) == 7\nassert min_digit(999) == 9\nassert min_digit(122) == 1\nassert min_digit(409) == 0",
+   "test_inputs": [
+    [
+     2
+    ],
+    [
+     1
+    ],
+    [
+     7
+    ],
+    [
+     999
+    ],
+    [
+     122
+    ],
+    [
+     409
+    ]
+   ],
+   "reference": "def min_digit(n):\n    return min(int(d) for d in str(n))",
+   "wrong": "def min_digit(n):\n    return max(int(d) for d in str(n))",
+   "expected": [
+    "2",
+    "1",
+    "7",
+    "9",
+    "1",
+    "0"
+   ],
+   "wrong_outputs": [
+    "2",
+    "1",
+    "7",
+    "9",
+    "2",
+    "9"
+   ]
+  },
+  {
+   "group": "trained",
+   "name": "max_of_first_two",
+   "params": "numbers",
+   "neighbour": "max_of_first_three",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `max_of_first_two(numbers)` that returns the largest of the first two numbers in the non-empty list (of all of them if there are fewer)."
+   },
+   "tests": "assert max_of_first_two([17]) == 17\nassert max_of_first_two([10]) == 10\nassert max_of_first_two([8, 3]) == 8\nassert max_of_first_two([-4, -4, 1, 6]) == -4\nassert max_of_first_two([20, -6, 13, 5]) == 20\nassert max_of_first_two([11, 7, 15, -8]) == 11",
+   "test_inputs": [
+    [
+     [
+      17
+     ]
+    ],
+    [
+     [
+      10
+     ]
+    ],
+    [
+     [
+      8,
+      3
+     ]
+    ],
+    [
+     [
+      -4,
+      -4,
+      1,
+      6
+     ]
+    ],
+    [
+     [
+      20,
+      -6,
+      13,
+      5
+     ]
+    ],
+    [
+     [
+      11,
+      7,
+      15,
+      -8
+     ]
+    ]
+   ],
+   "reference": "def max_of_first_two(numbers):\n    return max(numbers[:2])",
+   "wrong": "def max_of_first_two(numbers):\n    return max(numbers[:3])",
+   "expected": [
+    "17",
+    "10",
+    "8",
+    "-4",
+    "20",
+    "11"
+   ],
+   "wrong_outputs": [
+    "17",
+    "10",
+    "8",
+    "1",
+    "20",
+    "15"
+   ]
+  },
+  {
+   "group": "trained",
+   "name": "sum_of_first_five",
+   "params": "numbers",
+   "neighbour": "sum_of_first_two",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `sum_of_first_five(numbers)` that returns the sum of the first five numbers of the list (of all of them if the list is shorter)."
+   },
+   "tests": "assert sum_of_first_five([]) == 0\nassert sum_of_first_five([4]) == 4\nassert sum_of_first_five([2]) == 2\nassert sum_of_first_five([-8, -9, 3, 1]) == -13\nassert sum_of_first_five([1, 13, 13, -1]) == 26\nassert sum_of_first_five([16, 3, 20, -8]) == 31",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      4
+     ]
+    ],
+    [
+     [
+      2
+     ]
+    ],
+    [
+     [
+      -8,
+      -9,
+      3,
+      1
+     ]
+    ],
+    [
+     [
+      1,
+      13,
+      13,
+      -1
+     ]
+    ],
+    [
+     [
+      16,
+      3,
+      20,
+      -8
+     ]
+    ]
+   ],
+   "reference": "def sum_of_first_five(numbers):\n    return sum(numbers[:5])",
+   "wrong": "def sum_of_first_five(numbers):\n    return sum(numbers[:2])",
+   "expected": [
+    "0",
+    "4",
+    "2",
+    "-13",
+    "26",
+    "31"
+   ],
+   "wrong_outputs": [
+    "0",
+    "4",
+    "2",
+    "-17",
+    "14",
+    "19"
+   ]
+  },
+  {
+   "group": "trained",
+   "name": "pairwise_max",
+   "params": "a, b",
+   "neighbour": "pairwise_min",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `pairwise_max(a, b)` that returns a list with the largest of a[i] and b[i] at each position i (a and b are equally long)."
+   },
+   "tests": "assert pairwise_max([], []) == []\nassert pairwise_max([5], [8]) == [8]\nassert pairwise_max([1], [-9]) == [1]\nassert pairwise_max([16, -9], [-9, -6]) == [16, -6]\nassert pairwise_max([-1, -5], [16, -7]) == [16, -5]\nassert pairwise_max([-9, 1, 6], [3, 7, 4]) == [3, 7, 6]",
+   "test_inputs": [
+    [
+     [],
+     []
+    ],
+    [
+     [
+      5
+     ],
+     [
+      8
+     ]
+    ],
+    [
+     [
+      1
+     ],
+     [
+      -9
+     ]
+    ],
+    [
+     [
+      16,
+      -9
+     ],
+     [
+      -9,
+      -6
+     ]
+    ],
+    [
+     [
+      -1,
+      -5
+     ],
+     [
+      16,
+      -7
+     ]
+    ],
+    [
+     [
+      -9,
+      1,
+      6
+     ],
+     [
+      3,
+      7,
+      4
+     ]
+    ]
+   ],
+   "reference": "def pairwise_max(a, b):\n    return [max(x, y) for x, y in zip(a, b)]",
+   "wrong": "def pairwise_max(a, b):\n    return [min(x, y) for x, y in zip(a, b)]",
+   "expected": [
+    "[]",
+    "[8]",
+    "[1]",
+    "[16, -6]",
+    "[16, -5]",
+    "[3, 7, 6]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[5]",
+    "[-9]",
+    "[-9, -9]",
+    "[-1, -7]",
+    "[-9, 1, 4]"
+   ]
+  },
+  {
+   "group": "trained",
+   "name": "plus_one_of_even",
+   "params": "numbers",
+   "neighbour": "squares_of_even",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `plus_one_of_even(numbers)` that returns the successors of the even numbers in the list, in order."
+   },
+   "tests": "assert plus_one_of_even([]) == []\nassert plus_one_of_even([5]) == []\nassert plus_one_of_even([-7]) == []\nassert plus_one_of_even([5, 9, 11, 13]) == []\nassert plus_one_of_even([-6, -9, 8, -1]) == [-5, 9]\nassert plus_one_of_even([7, 3, 0, 9, 2]) == [1, 3]",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      5
+     ]
+    ],
+    [
+     [
+      -7
+     ]
+    ],
+    [
+     [
+      5,
+      9,
+      11,
+      13
+     ]
+    ],
+    [
+     [
+      -6,
+      -9,
+      8,
+      -1
+     ]
+    ],
+    [
+     [
+      7,
+      3,
+      0,
+      9,
+      2
+     ]
+    ]
+   ],
+   "reference": "def plus_one_of_even(numbers):\n    return [x + 1 for x in numbers if x % 2 == 0]",
+   "wrong": "def plus_one_of_even(numbers):\n    return [x * x for x in numbers if x % 2 == 0]",
+   "expected": [
+    "[]",
+    "[]",
+    "[]",
+    "[]",
+    "[-5, 9]",
+    "[1, 3]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[]",
+    "[]",
+    "[]",
+    "[36, 64]",
+    "[0, 4]"
+   ]
+  },
+  {
+   "group": "trained",
+   "name": "every_four_from_0",
+   "params": "items",
+   "neighbour": "every_three_from_0",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `every_four_from_0(items)` that returns the items at positions 0, 0 + 4, 0 + 2 * 4, ... of the list (positions start at 0)."
+   },
+   "tests": "assert every_four_from_0([]) == []\nassert every_four_from_0([5]) == [5]\nassert every_four_from_0([8]) == [8]\nassert every_four_from_0([15, 1, -1, 5]) == [15]\nassert every_four_from_0([-3, 15, 11, 2]) == [-3]\nassert every_four_from_0([14, 16, 14, 13]) == [14]",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      5
+     ]
+    ],
+    [
+     [
+      8
+     ]
+    ],
+    [
+     [
+      15,
+      1,
+      -1,
+      5
+     ]
+    ],
+    [
+     [
+      -3,
+      15,
+      11,
+      2
+     ]
+    ],
+    [
+     [
+      14,
+      16,
+      14,
+      13
+     ]
+    ]
+   ],
+   "reference": "def every_four_from_0(items):\n    return items[0::4]",
+   "wrong": "def every_four_from_0(items):\n    return items[0::3]",
+   "expected": [
+    "[]",
+    "[5]",
+    "[8]",
+    "[15]",
+    "[-3]",
+    "[14]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[5]",
+    "[8]",
+    "[15, 5]",
+    "[-3, 2]",
+    "[14, 13]"
+   ]
+  },
+  {
+   "group": "trained",
+   "name": "squares_of_odd",
+   "params": "numbers",
+   "neighbour": "squares_of_even",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `squares_of_odd(numbers)` that returns the squares of the odd numbers in the list, in order."
+   },
+   "tests": "assert squares_of_odd([]) == []\nassert squares_of_odd([3]) == [9]\nassert squares_of_odd([9, 0]) == [81]\nassert squares_of_odd([19, 17, -9, -1, -5]) == [361, 289, 81, 1, 25]\nassert squares_of_odd([13, 15, -9, 18, 12]) == [169, 225, 81]\nassert squares_of_odd([7, 14, 13, 5, 7, 7]) == [49, 169, 25, 49, 49]",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      3
+     ]
+    ],
+    [
+     [
+      9,
+      0
+     ]
+    ],
+    [
+     [
+      19,
+      17,
+      -9,
+      -1,
+      -5
+     ]
+    ],
+    [
+     [
+      13,
+      15,
+      -9,
+      18,
+      12
+     ]
+    ],
+    [
+     [
+      7,
+      14,
+      13,
+      5,
+      7,
+      7
+     ]
+    ]
+   ],
+   "reference": "def squares_of_odd(numbers):\n    return [x * x for x in numbers if x % 2 == 1]",
+   "wrong": "def squares_of_odd(numbers):\n    return [x * x for x in numbers if x % 2 == 0]",
+   "expected": [
+    "[]",
+    "[9]",
+    "[81]",
+    "[361, 289, 81, 1, 25]",
+    "[169, 225, 81]",
+    "[49, 169, 25, 49, 49]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[]",
+    "[0]",
+    "[]",
+    "[324, 144]",
+    "[196]"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,75 @@
+{
+  "name": "v7-learnability",
+  "note": "V7 diagnostic, not a candidate. Evidence: no V6 or V7 model writes the programs it was trained on: the V6 curriculum model D (72 steps, each v1 program seen ~5 times) passes 1/17 of its own trained programs (code loss 0.39 nats/token), P1 0/17, round 54 0/17; new constants of trained families: D 3/22, P1 1/22, round 54 1/22. Round 54's v5 functions were trained hundreds of times. Question: with the same 24-step budget spent on few programs (the 36 trained programs of the 12 curriculum families parameterised by a constant, 16 write examples per name, ~27 exposures per behaviour), (1) does the model learn them to generation level, (2) does it then write new constants of those families (family_new, never trained), (3) does anything reach the neighbour set? Recipe identical to v7-pairs P1 (seed 1301, 24 steps, lr 1.5e-5, top 24 layers, final_bf16); only the data differs. A small legacy share (1 write per basics concept, 50 replay rows) keeps the answer format.",
+  "decision": "Diagnostic: not compared with round 54 for adoption. Read: pass on the trained k-family programs (memorization), on family_new (within-family generalization) and on the neighbour set's original prompts (transfer), each against round 54 and D; dev + unseen-v1 for forgetting.",
+  "anchor": "/home/user/lmwork/loop/anchor",
+  "tokenizer": "/home/user/lmwork/data/tokenizer.json",
+  "replay_dir": "/home/user/lmwork/data",
+  "average_script": "/home/user/lmwork/average.py",
+  "out": "/home/user/lmwork/v7/runs",
+  "seeds": [
+    1301
+  ],
+  "metric": "unseen_clean",
+  "category_rule": "items_lost",
+  "keep_models": "compact",
+  "train": {
+    "steps": 24,
+    "lr": 1.5e-05,
+    "batch": 4,
+    "train_layers": 24,
+    "warmup": 2,
+    "precision": "fp32",
+    "init_optim": true,
+    "compact": true,
+    "save_every": 24,
+    "final_bf16": true
+  },
+  "eval": {
+    "dev": true,
+    "unseen": true,
+    "unseen2": false,
+    "bench": false,
+    "diagnose": 0
+  },
+  "arms": [
+    {
+      "name": "L1",
+      "data": {
+        "idioms_write": 16,
+        "idioms_bugfix": 0,
+        "idioms_select": "k_families",
+        "idioms_families": "v1",
+        "basics_write": 1,
+        "basics_bugfix": 0,
+        "compose_write": 0,
+        "compose_bugfix": 0,
+        "contrast": 0,
+        "novel_write": 0,
+        "replay": 50
+      },
+      "note": "few programs, many exposures"
+    },
+    {
+      "name": "L2",
+      "data": {
+        "idioms_write": 16,
+        "idioms_bugfix": 0,
+        "idioms_select": "k_families",
+        "idioms_families": "v1",
+        "basics_write": 1,
+        "basics_bugfix": 0,
+        "compose_write": 0,
+        "compose_bugfix": 0,
+        "contrast": 0,
+        "novel_write": 0,
+        "replay": 50
+      },
+      "train": {
+        "lr": 0.0001
+      },
+      "note": "L1 with the learning rate x6.7 (1e-4): the one variable. Added after L1 passed 1/30 of its own trained programs (code loss 0.49 nats/token after ~24 exposures): is the mapping learnable with a stronger update?"
+    }
+  ],
+  "comparisons": []
+}

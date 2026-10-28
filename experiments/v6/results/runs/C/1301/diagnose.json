@@ -1,0 +1,98 @@
+{
+ "model": "/home/user/lmwork/v6/runs/C/1301/model",
+ "data": "/home/user/lmwork/v6/runs/C/1301/data",
+ "seed": 0,
+ "trained_on": true,
+ "weights_dtype": "fp32",
+ "note": null,
+ "train": {
+  "examples": 16,
+  "answer_tokens": 744,
+  "token_loss": 0.7635,
+  "token_loss_ci95": [
+   0.2052,
+   1.2652
+  ],
+  "example_loss_mean": 0.4094,
+  "example_loss_sd": 0.5169,
+  "by_kind": {
+   "bugfix": {
+    "examples": 5,
+    "token_loss": 0.0159
+   },
+   "explain": {
+    "examples": 1,
+    "token_loss": 0.7555
+   },
+   "write": {
+    "examples": 10,
+    "token_loss": 1.0191
+   }
+  }
+ },
+ "heldout_rows": {
+  "examples": 16,
+  "answer_tokens": 591,
+  "token_loss": 0.524,
+  "token_loss_ci95": [
+   0.2704,
+   0.7738
+  ],
+  "example_loss_mean": 0.4672,
+  "example_loss_sd": 0.4197,
+  "by_kind": {
+   "bugfix": {
+    "examples": 4,
+    "token_loss": 0.008
+   },
+   "explain": {
+    "examples": 1,
+    "token_loss": 0.5553
+   },
+   "write": {
+    "examples": 11,
+    "token_loss": 0.7027
+   }
+  }
+ },
+ "unseen_dev_clean": {
+  "examples": 34,
+  "answer_tokens": 988,
+  "token_loss": 0.1512,
+  "token_loss_ci95": [
+   0.0875,
+   0.224
+  ],
+  "example_loss_mean": 0.1328,
+  "example_loss_sd": 0.1787,
+  "by_kind": {
+   "write": {
+    "examples": 34,
+    "token_loss": 0.1512
+   }
+  },
+  "code_token_loss_plain": 0.1906,
+  "code_token_loss_spec_first": 0.2787
+ },
+ "unseen_new": {
+  "examples": 53,
+  "answer_tokens": 1766,
+  "token_loss": 0.6058,
+  "token_loss_ci95": [
+   0.5356,
+   0.6773
+  ],
+  "example_loss_mean": 0.5852,
+  "example_loss_sd": 0.2578,
+  "by_kind": {
+   "write": {
+    "examples": 53,
+    "token_loss": 0.6058
+   }
+  },
+  "code_token_loss_plain": 0.7389,
+  "code_token_loss_spec_first": 0.7241
+ },
+ "gap_train_to_heldout": -0.2395,
+ "gap_heldout_to_unseen": -0.3728
+}

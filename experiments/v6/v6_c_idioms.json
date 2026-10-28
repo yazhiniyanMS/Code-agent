@@ -1,0 +1,50 @@
+{
+  "name": "v6-c-idioms",
+  "note": "V6 iteration 1, data only. Arm C replaces most of the v5 fine-tuning mix (concepts the round-54 checkpoint has seen ~54 times, loss ~0.01) with the idiom curriculum (ycode.lm.idioms, idioms-v1): 233 verified programs from 64 families of general idioms, 2 write + 1 bug-fix example each, several phrasings, implementations and prompt templates, none a near-twin (same AST skeleton) of any held-out item. Legacy kept at 1 write + 1 bug fix per concept, 1 novel exercise per exercise, 100 replay rows. Recipe identical to control A of v51-m3 (same seeds), so C vs A isolates the data.",
+  "decision": "Pre-registered before any V6 result. Primary metric all_clean = clean dev (/44) + unseen-v1 (/53) + unseen-v2 (/71, written independently, frozen before this data was built), out of 168. A candidate replaces round 54 only if, over its seeds: every seed beats round 54's all_clean, the mean gain is >= 3 items, and no failure category loses >= 3 clean items that round 54 passes (items_lost rule). C vs A (same recipe, existing A runs) is compared on unseen_clean, the metric both have. The benchmark is reported, never used to decide.",
+  "anchor": "/home/user/lmwork/loop/anchor",
+  "tokenizer": "/home/user/lmwork/data/tokenizer.json",
+  "replay_dir": "/home/user/lmwork/data",
+  "average_script": "/home/user/lmwork/average.py",
+  "out": "/home/user/lmwork/v6/runs",
+  "seeds": [
+    1301
+  ],
+  "metric": "all_clean",
+  "category_rule": "items_lost",
+  "train": {
+    "steps": 24,
+    "lr": 1.5e-05,
+    "batch": 4,
+    "train_layers": 24,
+    "warmup": 2,
+    "precision": "fp32",
+    "init_optim": true
+  },
+  "eval": {
+    "dev": true,
+    "unseen": true,
+    "unseen2": true,
+    "bench": true,
+    "diagnose": 16
+  },
+  "arms": [
+    {
+      "name": "C",
+      "data": {
+        "idioms_write": 2,
+        "idioms_bugfix": 1,
+        "basics_write": 1,
+        "basics_bugfix": 1,
+        "compose_write": 0,
+        "compose_bugfix": 0,
+        "contrast": 0,
+        "novel_write": 1,
+        "replay": 100,
+        "idioms_families": "v1"
+      },
+      "note": "idiom curriculum (54% of tokens) + reduced legacy mix"
+    }
+  ],
+  "comparisons": []
+}

@@ -1,0 +1,74 @@
+{
+ "seed": 1302,
+ "options": {
+  "skills": false,
+  "basics_write": 0,
+  "basics_bugfix": 0,
+  "compose_write": 0,
+  "compose_bugfix": 0,
+  "contrast": 0,
+  "novel_write": 0,
+  "novel_draws": 6,
+  "novel_ordinals": 4,
+  "replay": 0,
+  "dedup": false,
+  "contradictions": false,
+  "spec_first": false,
+  "idioms_write": 2,
+  "idioms_bugfix": 0,
+  "idioms_contrast": 0,
+  "idioms_io": 0.0,
+  "idioms_families": "v3",
+  "idioms_pairs": 0,
+  "pair_weight": 0,
+  "idioms_select": "v9_grammar_train",
+  "legacy_share": 0.5,
+  "legacy_weights": "/home/user/lmwork/v11/forgetting_1302.json"
+ },
+ "code_version": "ee58215ecac76aa6cd0c600d7af4a886013f5495",
+ "generated": 1740,
+ "removed": {},
+ "kept": 1740,
+ "basics": 1740,
+ "replay": 44,
+ "tokens": 160102,
+ "replay_dropped": {
+  "benchmark name": 0,
+  "prose bug fix": 47,
+  "garbled prompt": 10,
+  "prose over cap": 83
+ },
+ "replay_kinds": {
+  "write": 20,
+  "explain": 8,
+  "class": 4,
+  "docstring": 1,
+  "complete": 11
+ },
+ "tokens_by_source": {
+  "curriculum": {
+   "examples": 700,
+   "tokens": 74295,
+   "answer_tokens": 40145,
+   "token_share": 0.464
+  },
+  "legacy": {
+   "examples": 1040,
+   "tokens": 79407,
+   "answer_tokens": 37165,
+   "token_share": 0.496
+  },
+  "replay": {
+   "examples": 44,
+   "tokens": 6400,
+   "answer_tokens": 3783,
+   "token_share": 0.04
+  }
+ },
+ "files": {
+  "sft_tokens.bin": "29d6adab188442bf2c9af533ce7712d605782664c78bd098e42c53b5999353f0",
+  "sft_mask.bin": "85ebd5a885abe3fa6bbc546e1d93ccd8765a1cb14e2212f2465c06a8c769b12b",
+  "sft_index.npy": "e2609e93ef77e715ec6188a63fc5459a4df239b0be6dae39a9bbb92100ed9750",
+  "tokenizer.json": "7079ff7b8546a23c5416f8ae08adcb636ec69da4c14cd964114f12cee9745341"
+ }
+}

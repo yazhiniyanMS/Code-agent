@@ -1,0 +1,73 @@
+{
+ "seed": 1301,
+ "options": {
+  "skills": false,
+  "basics_write": 0,
+  "basics_bugfix": 0,
+  "compose_write": 0,
+  "compose_bugfix": 0,
+  "contrast": 0,
+  "novel_write": 0,
+  "novel_draws": 6,
+  "novel_ordinals": 4,
+  "replay": 0,
+  "dedup": false,
+  "contradictions": false,
+  "spec_first": false,
+  "idioms_write": 3,
+  "idioms_bugfix": 0,
+  "idioms_contrast": 0,
+  "idioms_io": 0.0,
+  "idioms_families": "v3",
+  "idioms_pairs": 0,
+  "pair_weight": 0,
+  "idioms_select": "v9_grammar_train",
+  "legacy_share": 0.5
+ },
+ "code_version": "8cc77bec241ad0c9461c402b6f14f8744f45123c",
+ "generated": 2523,
+ "removed": {},
+ "kept": 2523,
+ "basics": 2523,
+ "replay": 64,
+ "tokens": 238237,
+ "replay_dropped": {
+  "benchmark name": 0,
+  "prose bug fix": 65,
+  "garbled prompt": 5,
+  "prose over cap": 74
+ },
+ "replay_kinds": {
+  "docstring": 2,
+  "explain": 13,
+  "class": 4,
+  "write": 25,
+  "complete": 20
+ },
+ "tokens_by_source": {
+  "legacy": {
+   "examples": 1473,
+   "tokens": 115785,
+   "answer_tokens": 51484,
+   "token_share": 0.486
+  },
+  "curriculum": {
+   "examples": 1050,
+   "tokens": 111820,
+   "answer_tokens": 60382,
+   "token_share": 0.4694
+  },
+  "replay": {
+   "examples": 64,
+   "tokens": 10632,
+   "answer_tokens": 5922,
+   "token_share": 0.0446
+  }
+ },
+ "files": {
+  "sft_tokens.bin": "d9d73a2dee18885c1c93210056f3af6ad04ac8bd16d2d07b99f4ab62afbc7021",
+  "sft_mask.bin": "4df6484308212723f6fa3da5a5877cb258ef1946f8a868a16d758fb6899d4829",
+  "sft_index.npy": "6403a43f69a25790051d43779824ed7178c4b6c1d6af3ff3ecee963800559363",
+  "tokenizer.json": "7079ff7b8546a23c5416f8ae08adcb636ec69da4c14cd964114f12cee9745341"
+ }
+}

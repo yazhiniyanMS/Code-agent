@@ -1,0 +1,1232 @@
+{
+ "arm": "C2",
+ "seed": 1301,
+ "smoke": false,
+ "data_options": {
+  "idioms_bugfix": 0,
+  "idioms_families": "v3",
+  "basics_write": 0,
+  "basics_bugfix": 0,
+  "compose_write": 0,
+  "compose_bugfix": 0,
+  "contrast": 0,
+  "novel_write": 0,
+  "replay": 0,
+  "legacy_share": 0.5,
+  "idioms_select": "v9_grammar_train",
+  "idioms_write": 3
+ },
+ "train": {
+  "steps": 56,
+  "lr": 0.0001,
+  "batch": 4,
+  "train_layers": 24,
+  "warmup": 2,
+  "precision": "fp32",
+  "init_optim": true,
+  "seq_len": null,
+  "average": null,
+  "save_every": 56,
+  "compact": true,
+  "final_bf16": true
+ },
+ "eval": {
+  "dev": true,
+  "unseen": true,
+  "unseen2": false,
+  "bench": true,
+  "limit": null,
+  "diagnose": 0,
+  "sets": [
+   {
+    "name": "c2_test",
+    "set": "experiments/v9/sets/c2_test.json"
+   },
+   {
+    "name": "c2_trained",
+    "set": "experiments/v9/sets/c2_trained.json"
+   },
+   {
+    "name": "t_families",
+    "set": "experiments/v8/sets/t_families.json"
+   },
+   {
+    "name": "neighbours",
+    "set": "experiments/v8/sets/neighbours.json",
+    "variants": "original"
+   }
+  ]
+ },
+ "anchor": "/home/user/lmwork/loop/anchor",
+ "anchor_sha256": "2538b55d5aee371899a988799168042af4da27c03cafff3417a3c9925b8e8e98",
+ "data": {
+  "seed": 1301,
+  "code_version": "4dc2702e1c1c97203231b6493d56659c9b6c0e0c",
+  "generated": 2523,
+  "removed": {},
+  "kept": 2523,
+  "basics": 2523,
+  "replay": 64,
+  "tokens": 238237,
+  "replay_dropped": {
+   "benchmark name": 0,
+   "prose bug fix": 65,
+   "garbled prompt": 5,
+   "prose over cap": 74
+  },
+  "replay_kinds": {
+   "docstring": 2,
+   "explain": 13,
+   "class": 4,
+   "write": 25,
+   "complete": 20
+  },
+  "tokens_by_source": {
+   "legacy": {
+    "examples": 1473,
+    "tokens": 115785,
+    "answer_tokens": 51484,
+    "token_share": 0.486
+   },
+   "curriculum": {
+    "examples": 1050,
+    "tokens": 111820,
+    "answer_tokens": 60382,
+    "token_share": 0.4694
+   },
+   "replay": {
+    "examples": 64,
+    "tokens": 10632,
+    "answer_tokens": 5922,
+    "token_share": 0.0446
+   }
+  },
+  "files": {
+   "sft_tokens.bin": "d9d73a2dee18885c1c93210056f3af6ad04ac8bd16d2d07b99f4ab62afbc7021",
+   "sft_mask.bin": "4df6484308212723f6fa3da5a5877cb258ef1946f8a868a16d758fb6899d4829",
+   "sft_index.npy": "6403a43f69a25790051d43779824ed7178c4b6c1d6af3ff3ecee963800559363",
+   "tokenizer.json": "7079ff7b8546a23c5416f8ae08adcb636ec69da4c14cd964114f12cee9745341"
+  },
+  "minutes": 4.82
+ },
+ "training": {
+  "exit": 0,
+  "minutes": 165.7,
+  "peak_rss_mb": 11311,
+  "steps": 56,
+  "loss_last10_mean": 0.0993,
+  "loss_first": 0.861192,
+  "grad_norm_last10_mean": 0.0724,
+  "tok_per_s": 23.8,
+  "answer_tokens": 110362,
+  "empty_batches": 0,
+  "checkpoint_sha256": "9c1384982c9b95eb67819fd60b9b5fe5ced0973356dc16199eb3b4c683160d6f",
+  "init_sha256": null,
+  "tokens": 229376
+ },
+ "exposures": {
+  "trained_tokens": 229600,
+  "by_source": {
+   "legacy": {
+    "tokens": 112183,
+    "answer_tokens": 48771,
+    "examples_touched": 1397,
+    "token_share": 0.4886
+   },
+   "curriculum": {
+    "tokens": 107489,
+    "answer_tokens": 56466,
+    "examples_touched": 999,
+    "token_share": 0.4682
+   },
+   "replay": {
+    "tokens": 9928,
+    "answer_tokens": 5125,
+    "examples_touched": 62,
+    "token_share": 0.0432
+   }
+  },
+  "curriculum_behaviours": 350,
+  "exposures_per_behaviour": {
+   "mean": 2.81,
+   "min": 1.0,
+   "median": 3.0,
+   "max": 5.0,
+   "never_seen": 0
+  }
+ },
+ "dev_run": {
+  "exit": 0,
+  "minutes": 9.44,
+  "peak_rss_mb": 3603
+ },
+ "dev": {
+  "points": 41,
+  "of": 62,
+  "clean": 28,
+  "clean_of": 44,
+  "robust": 41,
+  "robust_of": 62,
+  "robust_clean": 28,
+  "weak_passes": [],
+  "fingerprint": "b4b74aeae38725c94e45ed408ba2598bf0746776dbb79014b16f14fa50bdce8a",
+  "eval_version": "eval-v5.1-1",
+  "groups": {
+   "dev_concept": 4,
+   "dev_fix": 9,
+   "dev_slot": 28
+  },
+  "lost_by_category": {
+   "formatting": 0,
+   "instruction_following": 13,
+   "hallucination": 0,
+   "coding": 1,
+   "factual": 0,
+   "reasoning": 7
+  },
+  "hallucinations": 0,
+  "invalid_outputs": 0,
+  "passed": [
+   "bugfix:count_greater",
+   "bugfix:count_uppercase",
+   "bugfix:cube",
+   "bugfix:double_all",
+   "bugfix:first_negative",
+   "bugfix:index_of_min",
+   "bugfix:is_negative",
+   "bugfix:product",
+   "bugfix:sum_of_squares",
+   "write:above_six",
+   "write:add_seven",
+   "write:all_odd",
+   "write:any_zero",
+   "write:below_two",
+   "write:count_greater",
+   "write:count_o",
+   "write:count_odd",
+   "write:count_uppercase",
+   "write:divisible_by_five",
+   "write:double_all",
+   "write:ends_with_ing",
+   "write:first_three_chars",
+   "write:floor_div_four",
+   "write:has_two_items",
+   "write:has_x",
+   "write:is_negative",
+   "write:keep_gt5",
+   "write:keep_negative",
+   "write:largest_even",
+   "write:longer_than_three",
+   "write:not_three",
+   "write:remainder_three",
+   "write:scale_each_by_three",
+   "write:smallest_positive",
+   "write:starts_with_the",
+   "write:subtract_five",
+   "write:subtract_three_each",
+   "write:sum_multiples_of_five",
+   "write:sum_odd",
+   "write:sum_positive_square",
+   "write:times_four"
+  ],
+  "categories": {
+   "write:cube": "instruction_following",
+   "write:first_negative": "instruction_following",
+   "write:index_of_min": "instruction_following",
+   "write:is_between": "reasoning",
+   "write:last_word": "instruction_following",
+   "write:longest_word": "instruction_following",
+   "write:product": "instruction_following",
+   "write:remove_spaces": "reasoning",
+   "write:running_max": "reasoning",
+   "write:smaller": "instruction_following",
+   "write:sum_of_squares": "instruction_following",
+   "write:multiply_three_numbers": "reasoning",
+   "write:fourth_item": "coding",
+   "write:second_to_last_item": "instruction_following",
+   "write:weeks_to_days": "reasoning",
+   "bugfix:is_between": "reasoning",
+   "bugfix:last_word": "instruction_following",
+   "bugfix:longest_word": "instruction_following",
+   "bugfix:remove_spaces": "instruction_following",
+   "bugfix:running_max": "reasoning",
+   "bugfix:smaller": "instruction_following"
+  },
+  "contaminated": [
+   "bugfix:count_uppercase",
+   "bugfix:cube",
+   "bugfix:double_all",
+   "bugfix:is_negative",
+   "bugfix:smaller",
+   "write:above_six",
+   "write:below_two",
+   "write:count_uppercase",
+   "write:cube",
+   "write:double_all",
+   "write:is_negative",
+   "write:keep_gt5",
+   "write:keep_negative",
+   "write:longer_than_three",
+   "write:multiply_three_numbers",
+   "write:smaller",
+   "write:smallest_positive",
+   "write:weeks_to_days"
+  ],
+  "failure_classes": {
+   "incorrect_task_interpretation": 14,
+   "algorithmic_or_logic_error": 6,
+   "incorrect_code_generation": 1
+  },
+  "failure_classes_clean": {
+   "incorrect_task_interpretation": 11,
+   "algorithmic_or_logic_error": 4,
+   "incorrect_code_generation": 1
+  },
+  "failures": [
+   {
+    "suite": "write",
+    "name": "cube",
+    "contaminated": true,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'divide_by_eight'"
+   },
+   {
+    "suite": "write",
+    "name": "first_negative",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'loop_smallest_negative'"
+   },
+   {
+    "suite": "write",
+    "name": "index_of_min",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'smallest_nonzero'"
+   },
+   {
+    "suite": "write",
+    "name": "is_between",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 68% (is_between(1, 1, 3) gave False (expected True))"
+   },
+   {
+    "suite": "write",
+    "name": "last_word",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'second_to_last_word'"
+   },
+   {
+    "suite": "write",
+    "name": "longest_word",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'shortest_word'"
+   },
+   {
+    "suite": "write",
+    "name": "product",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'square_each'"
+   },
+   {
+    "suite": "write",
+    "name": "remove_spaces",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 18% (remove_spaces('a b  c') gave 'a b  c' (expected 'abc'))"
+   },
+   {
+    "suite": "write",
+    "name": "running_max",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes bench:add_one instead (agreement with the reference 0.01)"
+   },
+   {
+    "suite": "write",
+    "name": "smaller",
+    "contaminated": true,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'multiply'"
+   },
+   {
+    "suite": "write",
+    "name": "sum_of_squares",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'triangular_number'"
+   },
+   {
+    "suite": "write",
+    "name": "multiply_three_numbers",
+    "contaminated": true,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 1% (multiply_three_numbers(1, 2, 3) gave 5 (expected 6))"
+   },
+   {
+    "suite": "write",
+    "name": "fourth_item",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "TypeError on fourth_item((5, 6, 7, 8, 9)): cannot unpack non-iterable int object"
+   },
+   {
+    "suite": "write",
+    "name": "second_to_last_item",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'every_other'"
+   },
+   {
+    "suite": "write",
+    "name": "weeks_to_days",
+    "contaminated": true,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 1% (weeks_to_days(1) gave 1 (expected 7))"
+   },
+   {
+    "suite": "bugfix",
+    "name": "is_between",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 31% (is_between(2, 1, 3) gave False (expected True))"
+   },
+   {
+    "suite": "bugfix",
+    "name": "last_word",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'second_to_last_word'"
+   },
+   {
+    "suite": "bugfix",
+    "name": "longest_word",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "handed the buggy code back unchanged"
+   },
+   {
+    "suite": "bugfix",
+    "name": "remove_spaces",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "handed the buggy code back unchanged"
+   },
+   {
+    "suite": "bugfix",
+    "name": "running_max",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 1% (running_max([1, 3, 2, 5]) gave [True, True, True, True] (expected [1, 3, 3, 5]))"
+   },
+   {
+    "suite": "bugfix",
+    "name": "smaller",
+    "contaminated": true,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'larger'"
+   }
+  ]
+ },
+ "unseen_run": {
+  "exit": 0,
+  "minutes": 8.54,
+  "peak_rss_mb": 3583
+ },
+ "unseen": {
+  "points": 3,
+  "of": 53,
+  "clean": 3,
+  "clean_of": 53,
+  "robust": 2,
+  "robust_of": 53,
+  "robust_clean": 2,
+  "weak_passes": [
+   "write:count_capitalized"
+  ],
+  "fingerprint": "6cbdf2425f1d8c084b94d1492a1e8162e271d1e998006b02ec529eeffd332399",
+  "eval_version": "eval-v5.1-1",
+  "groups": {
+   "unseen": 3
+  },
+  "lost_by_category": {
+   "formatting": 1,
+   "instruction_following": 10,
+   "hallucination": 3,
+   "coding": 6,
+   "factual": 0,
+   "reasoning": 30
+  },
+  "hallucinations": 3,
+  "invalid_outputs": 1,
+  "passed": [
+   "write:count_capitalized",
+   "write:double_plus_one",
+   "write:sum_at_odd_positions"
+  ],
+  "categories": {
+   "write:tens_digit": "reasoning",
+   "write:last_two_digits": "reasoning",
+   "write:round_down_to_ten": "instruction_following",
+   "write:is_teenager": "reasoning",
+   "write:same_sign": "hallucination",
+   "write:last_three": "coding",
+   "write:drop_first": "instruction_following",
+   "write:swap_ends": "hallucination",
+   "write:first_plus_last": "reasoning",
+   "write:count_above_mean": "reasoning",
+   "write:count_changes": "instruction_following",
+   "write:chunk_pairs": "coding",
+   "write:count_true_values": "reasoning",
+   "write:repeat_word": "coding",
+   "write:count_doubled_letters": "reasoning",
+   "write:dashes_for_spaces": "reasoning",
+   "write:longest_word_length": "reasoning",
+   "write:words_starting_with_vowel": "reasoning",
+   "write:is_all_lowercase_letters": "instruction_following",
+   "write:count_letter_case_insensitive": "coding",
+   "write:alternate_case": "reasoning",
+   "write:second_smallest": "instruction_following",
+   "write:last_index_of": "reasoning",
+   "write:insert_at_front": "reasoning",
+   "write:count_strictly_between": "reasoning",
+   "write:is_non_increasing": "hallucination",
+   "write:without_last": "reasoning",
+   "write:hours_to_seconds": "instruction_following",
+   "write:next_even": "coding",
+   "write:digits_of": "reasoning",
+   "write:average_word_length": "reasoning",
+   "write:is_vowel": "reasoning",
+   "write:swap_halves": "reasoning",
+   "write:step_up_to": "reasoning",
+   "write:repeat_each": "reasoning",
+   "write:ends_with_vowel": "reasoning",
+   "write:sum_of_last_two": "reasoning",
+   "write:first_index_above": "reasoning",
+   "write:middle_of_three": "instruction_following",
+   "write:count_words_longer_than": "reasoning",
+   "write:sum_of_last_n": "reasoning",
+   "write:contains_digit": "reasoning",
+   "write:pad_right": "reasoning",
+   "write:abbreviate": "formatting",
+   "write:count_increases": "instruction_following",
+   "write:same_length": "reasoning",
+   "write:longer_of_two": "reasoning",
+   "write:keys_above": "coding",
+   "write:first_repeated": "instruction_following",
+   "write:count_distinct": "instruction_following"
+  },
+  "contaminated": [],
+  "failure_classes": {
+   "incorrect_task_interpretation": 21,
+   "algorithmic_or_logic_error": 18,
+   "incorrect_code_generation": 6,
+   "edge_case_failure": 4,
+   "formatting_or_parsing": 1
+  },
+  "failure_classes_clean": {
+   "incorrect_task_interpretation": 21,
+   "algorithmic_or_logic_error": 18,
+   "incorrect_code_generation": 6,
+   "edge_case_failure": 4,
+   "formatting_or_parsing": 1
+  },
+  "failures": [
+   {
+    "suite": "write",
+    "name": "tens_digit",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 1% (tens_digit(47) gave 47 (expected 4))"
+   },
+   {
+    "suite": "write",
+    "name": "last_two_digits",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 1% (last_two_digits(1234) gave 2 (expected 34))"
+   },
+   {
+    "suite": "write",
+    "name": "round_down_to_ten",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'last_digit'"
+   },
+   {
+    "suite": "write",
+    "name": "is_teenager",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 3% (is_teenager(12) gave True (expected False))"
+   },
+   {
+    "suite": "write",
+    "name": "same_sign",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "AttributeError: 'int' object has no attribute 'isnan'"
+   },
+   {
+    "suite": "write",
+    "name": "last_three",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 0% (IndexError on last_three([1, 2]): list index out of range)"
+   },
+   {
+    "suite": "write",
+    "name": "drop_first",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'every_other'"
+   },
+   {
+    "suite": "write",
+    "name": "swap_ends",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "AttributeError: 'int' object has no attribute 'isalpha'"
+   },
+   {
+    "suite": "write",
+    "name": "first_plus_last",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes last_char instead (agreement with the reference 0.02)"
+   },
+   {
+    "suite": "write",
+    "name": "count_above_mean",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes count_positive instead (agreement with the reference 0.29)"
+   },
+   {
+    "suite": "write",
+    "name": "count_changes",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'count_items'"
+   },
+   {
+    "suite": "write",
+    "name": "chunk_pairs",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "TypeError on chunk_pairs([1, 2, 3, 4]): 'list' object cannot be interpreted as an integer"
+   },
+   {
+    "suite": "write",
+    "name": "count_true_values",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes string_length instead (agreement with the reference 0.01)"
+   },
+   {
+    "suite": "write",
+    "name": "repeat_word",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "TypeError on repeat_word('hi', 3): can only concatenate str (not \"int\") to str"
+   },
+   {
+    "suite": "write",
+    "name": "count_doubled_letters",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 2% (count_doubled_letters('balloon') gave 5 (expected 2))"
+   },
+   {
+    "suite": "write",
+    "name": "dashes_for_spaces",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes is_one instead (agreement with the reference 0.00)"
+   },
+   {
+    "suite": "write",
+    "name": "longest_word_length",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 6% (longest_word_length('a bb ccc') gave 2 (expected 3))"
+   },
+   {
+    "suite": "write",
+    "name": "words_starting_with_vowel",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 28% (words_starting_with_vowel('an apple is red') gave 0 (expected 3))"
+   },
+   {
+    "suite": "write",
+    "name": "is_all_lowercase_letters",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'is_all_lower'"
+   },
+   {
+    "suite": "write",
+    "name": "count_letter_case_insensitive",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes count_occurrences instead (agreement with the reference 0.11)"
+   },
+   {
+    "suite": "write",
+    "name": "alternate_case",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 1% (alternate_case('hello') gave 'eo' (expected 'HeLlO'))"
+   },
+   {
+    "suite": "write",
+    "name": "second_smallest",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'smallest_even'"
+   },
+   {
+    "suite": "write",
+    "name": "last_index_of",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 8% (last_index_of([3], 4) gave 5 (expected -1))"
+   },
+   {
+    "suite": "write",
+    "name": "insert_at_front",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes positions_of instead (agreement with the reference 0.00)"
+   },
+   {
+    "suite": "write",
+    "name": "count_strictly_between",
+    "contaminated": false,
+    "class": "edge_case_failure",
+    "evidence": "agrees with the reference on 80% of probes (count_strictly_between([1, 5, 10, 3], 2, 8) gave 3 (expected 2))"
+   },
+   {
+    "suite": "write",
+    "name": "is_non_increasing",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "NameError: name 'item' is not defined"
+   },
+   {
+    "suite": "write",
+    "name": "without_last",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 12% (without_last([1, 2, 3]) gave [] (expected [1, 2]))"
+   },
+   {
+    "suite": "write",
+    "name": "hours_to_seconds",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'hours_to_minutes'"
+   },
+   {
+    "suite": "write",
+    "name": "next_even",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 0% (ValueError on next_even(3): min() arg is an empty sequence)"
+   },
+   {
+    "suite": "write",
+    "name": "digits_of",
+    "contaminated": false,
+    "class": "edge_case_failure",
+    "evidence": "agrees with the reference on 79% of probes (digits_of(0) gave [] (expected [0]))"
+   },
+   {
+    "suite": "write",
+    "name": "average_word_length",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 8% (average_word_length('a bb ccc') gave 1 (expected 2))"
+   },
+   {
+    "suite": "write",
+    "name": "is_vowel",
+    "contaminated": false,
+    "class": "edge_case_failure",
+    "evidence": "agrees with the reference on 97% of probes (is_vowel('a') gave False (expected True))"
+   },
+   {
+    "suite": "write",
+    "name": "swap_halves",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 2% (swap_halves('abcd') gave 'a' (expected 'cdab'))"
+   },
+   {
+    "suite": "write",
+    "name": "step_up_to",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 41% (step_up_to(5, 5) gave 6 (expected 5))"
+   },
+   {
+    "suite": "write",
+    "name": "repeat_each",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes remove_value instead (agreement with the reference 0.19)"
+   },
+   {
+    "suite": "write",
+    "name": "ends_with_vowel",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes is_one instead (agreement with the reference 0.66)"
+   },
+   {
+    "suite": "write",
+    "name": "sum_of_last_two",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes bench:sum_of_evens instead (agreement with the reference 0.07)"
+   },
+   {
+    "suite": "write",
+    "name": "first_index_above",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 4% (first_index_above([1, 2], 5) gave 1 (expected -1))"
+   },
+   {
+    "suite": "write",
+    "name": "middle_of_three",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'sum_three_numbers'"
+   },
+   {
+    "suite": "write",
+    "name": "count_words_longer_than",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes count_greater instead (agreement with the reference 0.24)"
+   },
+   {
+    "suite": "write",
+    "name": "sum_of_last_n",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 20% (sum_of_last_n([1, 2, 3, 4], 2) gave 20 (expected 7))"
+   },
+   {
+    "suite": "write",
+    "name": "contains_digit",
+    "contaminated": false,
+    "class": "edge_case_failure",
+    "evidence": "agrees with the reference on 78% of probes (contains_digit('abc1') gave False (expected True))"
+   },
+   {
+    "suite": "write",
+    "name": "pad_right",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 0% (pad_right('ab', 4) gave 'ab]ab]' (expected 'ab  '))"
+   },
+   {
+    "suite": "write",
+    "name": "abbreviate",
+    "contaminated": false,
+    "class": "formatting_or_parsing",
+    "evidence": "syntax error: '[' was never closed"
+   },
+   {
+    "suite": "write",
+    "name": "count_increases",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'count_negative'"
+   },
+   {
+    "suite": "write",
+    "name": "same_length",
+    "contaminated": false,
+    "class": "algorithmic_or_logic_error",
+    "evidence": "agreement with the reference 55% (same_length('abc', 'xyz') gave False (expected True))"
+   },
+   {
+    "suite": "write",
+    "name": "longer_of_two",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "computes first_multiple_of instead (agreement with the reference 0.00)"
+   },
+   {
+    "suite": "write",
+    "name": "keys_above",
+    "contaminated": false,
+    "class": "incorrect_code_generation",
+    "evidence": "TypeError on keys_above({'a': 1, 'b': 5, 'c': 9}, 4): '>' not supported between instances of 'str' and 'int'"
+   },
+   {
+    "suite": "write",
+    "name": "first_repeated",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'every_other'"
+   },
+   {
+    "suite": "write",
+    "name": "count_distinct",
+    "contaminated": false,
+    "class": "incorrect_task_interpretation",
+    "evidence": "wrote the body of training function 'count_items'"
+   }
+  ]
+ },
+ "bench_run": {
+  "exit": 0,
+  "minutes": 9.14,
+  "peak_rss_mb": 3596
+ },
+ "bench": {
+  "points": 21,
+  "of": 65,
+  "clean": 18,
+  "clean_of": 61,
+  "robust": 20,
+  "robust_of": 65,
+  "robust_clean": 17,
+  "weak_passes": [
+   "write:first_word"
+  ],
+  "fingerprint": "c41681ec4ac20ed3ff3f5e19074f84804b391c6ebabc277d947495ffc27b14c0",
+  "eval_version": "eval-v5.1-1",
+  "groups": {
+   "fixed": 5,
+   "fresh": 8,
+   "standard": 8
+  },
+  "lost_by_category": {
+   "formatting": 1,
+   "instruction_following": 14,
+   "hallucination": 4,
+   "coding": 8,
+   "factual": 4,
+   "reasoning": 13
+  },
+  "hallucinations": 4,
+  "invalid_outputs": 1,
+  "passed": [
+   "bugfix:add",
+   "bugfix:factorial",
+   "bugfix:filter_even",
+   "bugfix:is_even",
+   "bugfix:subtract",
+   "write:add",
+   "write:add_one",
+   "write:count_letter_a",
+   "write:dict_size",
+   "write:filter_even",
+   "write:first_word",
+   "write:halve_all",
+   "write:is_even",
+   "write:is_zero",
+   "write:square",
+   "write:subtract",
+   "write:sum_of_cubes",
+   "write:sum_of_evens",
+   "write:to_upper",
+   "write:total",
+   "write:triple"
+  ],
+  "categories": {
+   "write:maximum": "coding",
+   "write:minimum": "coding",
+   "write:average": "reasoning",
+   "write:reverse_string": "formatting",
+   "write:is_palindrome": "reasoning",
+   "write:factorial": "factual",
+   "write:fibonacci": "coding",
+   "write:count_vowels": "instruction_following",
+   "write:is_prime": "factual",
+   "write:gcd": "instruction_following",
+   "write:celsius_to_fahrenheit": "instruction_following",
+   "write:unique": "hallucination",
+   "write:count_words": "reasoning",
+   "write:flatten": "reasoning",
+   "write:clamp": "reasoning",
+   "write:char_count": "reasoning",
+   "write:merge_dicts": "coding",
+   "write:is_sorted": "instruction_following",
+   "write:second_largest": "instruction_following",
+   "write:binary_search": "hallucination",
+   "write:is_anagram": "reasoning",
+   "write:digit_sum": "instruction_following",
+   "write:area_of_square": "hallucination",
+   "write:count_spaces": "instruction_following",
+   "write:ends_with_dot": "reasoning",
+   "write:second_item": "instruction_following",
+   "write:count_zeros": "reasoning",
+   "write:max_length": "reasoning",
+   "write:seconds_to_minutes": "factual",
+   "write:is_empty": "instruction_following",
+   "write:starts_with_vowel": "factual",
+   "write:middle_item": "instruction_following",
+   "write:all_strings_short": "reasoning",
+   "write:join_words": "instruction_following",
+   "bugfix:square": "hallucination",
+   "bugfix:total": "reasoning",
+   "bugfix:maximum": "coding",
+   "bugfix:minimum": "coding",
+   "bugfix:count_vowels": "instruction_following",
+   "bugfix:is_sorted": "coding",
+   "bugfix:celsius_to_fahrenheit": "instruction_following",
+   "bugfix:char_count": "instruction_following",
+   "bugfix:clamp": "reasoning",
+   "bugfix:is_palindrome": "coding"
+  },
+  "contaminated": [
+   "bugfix:total",
+   "write:dict_size",
+   "write:sum_of_cubes",
+   "write:total"
+  ]
+ },
+ "sets": {
+  "c2_test": {
+   "run": {
+    "exit": 0,
+    "minutes": 23.67,
+    "peak_rss_mb": 3606
+   },
+   "scores": {
+    "original": {
+     "tasks": 60,
+     "strict": 32,
+     "tests": 33,
+     "wrong": 1,
+     "strict_names": [
+      "last_doubles_after_first",
+      "last_pair_sums",
+      "sorted_distinct_abs_steps",
+      "first_abs_odd_positions",
+      "prod_pair_sums",
+      "sorted_distinct_doubles_last_three",
+      "count_above_3_abs_steps",
+      "ndistinct_squares_odd_positions",
+      "count_above_3_squares_last_three",
+      "prod_capped_odd_positions",
+      "first_capped_odd_positions",
+      "prod_squares_after_first",
+      "first_doubles_odd_digits",
+      "prod_squares_odd_digits",
+      "list_even_digits",
+      "sorted_distinct_even_digits",
+      "last_doubles_even_digits",
+      "max_even_digits",
+      "last_digits_above_4",
+      "sum_digits_above_4",
+      "prod_doubles_digits_above_4",
+      "list_uppercase_letters",
+      "sorted_distinct_lowercase_first_half_chars",
+      "join_uppercase_letters",
+      "sorted_distinct_digit_chars",
+      "first_lowercase_first_half_chars",
+      "ndistinct_letters",
+      "sorted_distinct_upper_letters",
+      "sorted_distinct_lengths_words_with_a",
+      "first_initials_sorted_words",
+      "list_long_words",
+      "ndistinct_words_with_a"
+     ]
+    },
+    "original:c2_test": {
+     "tasks": 60,
+     "strict": 32,
+     "tests": 33,
+     "wrong": 1,
+     "strict_names": [
+      "last_doubles_after_first",
+      "last_pair_sums",
+      "sorted_distinct_abs_steps",
+      "first_abs_odd_positions",
+      "prod_pair_sums",
+      "sorted_distinct_doubles_last_three",
+      "count_above_3_abs_steps",
+      "ndistinct_squares_odd_positions",
+      "count_above_3_squares_last_three",
+      "prod_capped_odd_positions",
+      "first_capped_odd_positions",
+      "prod_squares_after_first",
+      "first_doubles_odd_digits",
+      "prod_squares_odd_digits",
+      "list_even_digits",
+      "sorted_distinct_even_digits",
+      "last_doubles_even_digits",
+      "max_even_digits",
+      "last_digits_above_4",
+      "sum_digits_above_4",
+      "prod_doubles_digits_above_4",
+      "list_uppercase_letters",
+      "sorted_distinct_lowercase_first_half_chars",
+      "join_uppercase_letters",
+      "sorted_distinct_digit_chars",
+      "first_lowercase_first_half_chars",
+      "ndistinct_letters",
+      "sorted_distinct_upper_letters",
+      "sorted_distinct_lengths_words_with_a",
+      "first_initials_sorted_words",
+      "list_long_words",
+      "ndistinct_words_with_a"
+     ]
+    }
+   }
+  },
+  "c2_trained": {
+   "run": {
+    "exit": 0,
+    "minutes": 15.71,
+    "peak_rss_mb": 3605
+   },
+   "scores": {
+    "original": {
+     "tasks": 40,
+     "strict": 26,
+     "tests": 26,
+     "wrong": 0,
+     "strict_names": [
+      "list_capped_after_first",
+      "list_squares_pair_sums",
+      "prod_abs_last_three",
+      "min_doubles",
+      "sum_capped_odd_positions",
+      "prod_squares_before_negative",
+      "prod_squares_even_digits",
+      "min_digits_above_4",
+      "min_squares_digits_above_4",
+      "prod_even_digits",
+      "first_squares_odd_digits",
+      "max_doubles_digits_above_4",
+      "first_lowercase_chars_reversed",
+      "join_lowercase_chars_reversed",
+      "list_digit_chars",
+      "ndistinct_vowels",
+      "last_digit_chars",
+      "list_vowels",
+      "max_lengths_words_with_a",
+      "ndistinct_lengths_first_two_words",
+      "ndistinct_lengths_words",
+      "first_uppercase_words_with_a",
+      "sorted_distinct_lengths_long_words",
+      "join_uppercase_first_two_words",
+      "list_backwards_capitalized_words",
+      "min_lengths_first_two_words"
+     ]
+    },
+    "original:c2_trained": {
+     "tasks": 40,
+     "strict": 26,
+     "tests": 26,
+     "wrong": 0,
+     "strict_names": [
+      "list_capped_after_first",
+      "list_squares_pair_sums",
+      "prod_abs_last_three",
+      "min_doubles",
+      "sum_capped_odd_positions",
+      "prod_squares_before_negative",
+      "prod_squares_even_digits",
+      "min_digits_above_4",
+      "min_squares_digits_above_4",
+      "prod_even_digits",
+      "first_squares_odd_digits",
+      "max_doubles_digits_above_4",
+      "first_lowercase_chars_reversed",
+      "join_lowercase_chars_reversed",
+      "list_digit_chars",
+      "ndistinct_vowels",
+      "last_digit_chars",
+      "list_vowels",
+      "max_lengths_words_with_a",
+      "ndistinct_lengths_first_two_words",
+      "ndistinct_lengths_words",
+      "first_uppercase_words_with_a",
+      "sorted_distinct_lengths_long_words",
+      "join_uppercase_first_two_words",
+      "list_backwards_capitalized_words",
+      "min_lengths_first_two_words"
+     ]
+    }
+   }
+  },
+  "t_families": {
+   "run": {
+    "exit": 0,
+    "minutes": 21.27,
+    "peak_rss_mb": 3627
+   },
+   "scores": {
+    "original": {
+     "tasks": 66,
+     "strict": 1,
+     "tests": 2,
+     "wrong": 1,
+     "strict_names": [
+      "keep_big_values"
+     ]
+    },
+    "original:t_families": {
+     "tasks": 66,
+     "strict": 1,
+     "tests": 2,
+     "wrong": 1,
+     "strict_names": [
+      "keep_big_values"
+     ]
+    }
+   }
+  },
+  "neighbours": {
+   "run": {
+    "exit": 0,
+    "minutes": 10.04,
+    "peak_rss_mb": 3600
+   },
+   "scores": {
+    "original": {
+     "tasks": 38,
+     "strict": 2,
+     "tests": 2,
+     "wrong": 8,
+     "strict_names": [
+      "bracketed",
+      "has_366_days"
+     ]
+    },
+    "original:same_wording": {
+     "tasks": 19,
+     "strict": 0,
+     "tests": 0,
+     "wrong": 7,
+     "strict_names": []
+    },
+    "original:new_wording": {
+     "tasks": 19,
+     "strict": 2,
+     "tests": 2,
+     "wrong": 1,
+     "strict_names": [
+      "bracketed",
+      "has_366_days"
+     ]
+    }
+   }
+  }
+ },
+ "minutes_total": 268.3
+}

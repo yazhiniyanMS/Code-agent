@@ -84,7 +84,15 @@ class TrainConfig:
     grad_checkpoint: bool = False  # recompute activations in backward: much less memory, ~30% slower
     save_interval: int | None = None  # checkpoint every N steps without evaluating (cheap crash safety)
     save_in_place: bool = False  # replace checkpoints in place: half the disk, no atomic swap
+    compact_checkpoints: bool = False  # with train_layers + init_from: save only the trained tensors (the
+    # frozen ones are init_from's, referenced by path): ~1 GB less per checkpoint for 24 of 34 layers. Full
+    # checkpoints round frozen weights to bf16; these keep init_from's values, the same when init_from stores
+    # them in bf16 (as fine-tuned checkpoints such as round 54 do)
     init_optim: bool = False  # also start the optimizer state from init_from/optim.pt (if it matches)
+    # The save after the last step writes the trained tensors in bf16 (the precision evaluation loads)
+    # and no optimizer state: an inference checkpoint, ~2.1 GB instead of ~6.4 for 24 of 34 layers of
+    # round 54, for disk-limited hosts. Earlier interval saves are full; the run cannot resume past its end.
+    final_bf16: bool = False
     seq_len: int | None = None  # sft: pack rows to this many tokens instead of the model's block size
     until_step: int | None = None  # stop early at this step (segmented runs); schedule still spans max_steps
     # adamw | muon (Muon for hidden matrices + AdamW for the rest) | lion (low memory: one bf16
@@ -116,7 +124,7 @@ def _load_optimizer(optimizer, state, model, cfg, dev_type, log):
 
 def save_checkpoint(out_dir: Path, model: GPT, tok: BPETokenizer, *, step: int, stage: str,
                     val_loss: float | None, optimizer=None, state: dict | None = None,
-                    in_place: bool = False) -> Path:
+                    in_place: bool = False, base: dict | None = None) -> Path:
     """Write model.pt (+ optim.pt). ``state`` overrides model.state_dict() (sharded training).
 
     ``in_place`` deletes the previous files first, so a save needs disk for one checkpoint, not two
@@ -136,6 +144,8 @@ def save_checkpoint(out_dir: Path, model: GPT, tok: BPETokenizer, *, step: int, 
         "stage": stage,
         "val_loss": val_loss,
     }
+    if base is not None:
+        payload["base"] = base
     path = out_dir / CHECKPOINT_NAME
     tmp = path.with_suffix(".tmp")
     torch.save(payload, tmp)
@@ -201,6 +211,44 @@ def check_batch(x: torch.Tensor, y: torch.Tensor, m: torch.Tensor | None, vocab_
     return True
 
 
+def base_reference(base_dir: Path | str) -> dict:
+    """How a base-referenced checkpoint names its base: path and size of the base's model.pt."""
+    path = Path(base_dir).resolve() / CHECKPOINT_NAME
+    return {"path": str(path.parent), "size": path.stat().st_size}
+
+
+def plain_base(init_dir: Path | str, trained: set[str]) -> Path:
+    """The plain checkpoint a compact checkpoint of a run from ``init_dir`` references. A plain
+    ``init_dir`` is its own base. A base-referenced one (a compact fine-tune, e.g. V9's C2) stores
+    only its trained tensors; when this run trains every one of them, all the tensors it does not
+    train are that checkpoint's base's, so the base stands in for it."""
+    payload = torch.load(Path(init_dir) / CHECKPOINT_NAME, map_location="cpu", weights_only=True, mmap=True)
+    base = payload.get("base")
+    if not base:
+        return Path(init_dir)
+    untrained = sorted(set(payload["model"]) - trained)
+    if untrained:
+        raise ValueError(f"{init_dir} stores tensors this run does not train ({', '.join(untrained[:3])}, ...): "
+                         "a compact checkpoint cannot reference its base for them")
+    return Path(base["path"])
+
+
+def base_state(payload: dict, device: str = "cpu", mmap: dict | None = None) -> dict:
+    """The base checkpoint's tensors, for a payload that stores only what differs from it (the
+    layers a fine-tuning run trained): its frozen layers are the base's, byte for byte."""
+    base = payload["base"]
+    path = Path(base["path"]) / CHECKPOINT_NAME
+    if not path.is_file():
+        raise FileNotFoundError(f"missing base checkpoint {path}")
+    if base.get("size") is not None and path.stat().st_size != base["size"]:
+        raise ValueError(f"base checkpoint {path} changed since this checkpoint was saved")
+    loaded = torch.load(path, map_location=device, weights_only=True,
+                        **(mmap if mmap is not None else {"mmap": device == "cpu"}))
+    if "shards" in loaded or loaded.get("base"):
+        raise ValueError(f"base checkpoint {path} must be a plain checkpoint")
+    return loaded["model"]
+
+
 def load_checkpoint(path: Path, device: str = "cpu", *,
                     dtype: torch.dtype | None = None) -> tuple[GPT, BPETokenizer, dict]:
     """Load a model. ``dtype`` (e.g. torch.bfloat16) keeps the weights in that precision: a 1.5B
@@ -225,6 +273,8 @@ def load_checkpoint(path: Path, device: str = "cpu", *,
         for key, source in payload.get("tied", {}).items():
             state[key] = state[source]
         payload["model"] = state
+    if payload.get("base"):  # base-referenced: only the tensors that differ from the base are stored
+        payload["model"] = {**base_state(payload, device, mmap), **payload["model"]}
     if dtype is not None:
         # Build without allocating weights, then adopt the checkpoint's tensors directly.
         with torch.device("meta"):
@@ -243,10 +293,14 @@ def load_checkpoint(path: Path, device: str = "cpu", *,
     return model, tok, payload
 
 
-def export_checkpoint(src: Path, dst: Path, *, dtype: str = "bf16", max_shard_mb: float | None = None) -> Path:
+def export_checkpoint(src: Path, dst: Path, *, dtype: str = "bf16", max_shard_mb: float | None = None,
+                      base: Path | str | None = None) -> Path:
     """Write a slim, inference-only copy of a checkpoint (no optimizer state).
 
-    bf16 halves the file size; weights are converted back to float32 on load."""
+    bf16 halves the file size; weights are converted back to float32 on load. With ``base`` (the
+    checkpoint a fine-tuning run started from), only the tensors that differ from the base's are
+    written and loading takes the rest from the base: a run that trained 24 of 34 layers keeps
+    ~2.2 GB instead of ~3.1 GB."""
     src = Path(src)
     path = src / CHECKPOINT_NAME if src.is_dir() else src
     if not path.is_file():
@@ -254,6 +308,9 @@ def export_checkpoint(src: Path, dst: Path, *, dtype: str = "bf16", max_shard_mb
     payload = torch.load(path, map_location="cpu", weights_only=True)
     if payload.get("format") != "ycode-lm":
         raise ValueError(f"{path} is not a YCode model checkpoint")
+    if payload.get("base"):
+        payload["model"] = {**base_state(payload), **payload["model"]}
+        payload.pop("base")
     if dtype not in ("bf16", "fp32"):
         raise ValueError("dtype must be bf16 or fp32")
     target = torch.bfloat16 if dtype == "bf16" else torch.float32
@@ -264,6 +321,14 @@ def export_checkpoint(src: Path, dst: Path, *, dtype: str = "bf16", max_shard_mb
         if ptr not in converted:
             converted[ptr] = tensor.to(target) if tensor.is_floating_point() else tensor
         model_state[key] = converted[ptr]
+    if base is not None:
+        if max_shard_mb is not None:
+            raise ValueError("a base-referenced export is not sharded")
+        reference = base_reference(base)
+        frozen = base_state({"base": reference})
+        model_state = {k: v for k, v in model_state.items()
+                       if not (k in frozen and frozen[k].shape == v.shape and torch.equal(frozen[k].to(v.dtype), v))}
+        payload["base"] = reference
     payload["model"] = model_state
     shard_files: list[str] = []
     if max_shard_mb is not None:
@@ -370,6 +435,10 @@ class SFTData:
         self.seed, self.rank, self.world = seed, rank, world
         self.epoch, self.cursor = 0, 0
         self._order: np.ndarray | None = None
+        self.n_val = n_val
+        # training rows consumed: file row index -> [tokens, answer tokens] actually trained (a packed row
+        # cuts its last example short, so partly seen examples count partly)
+        self.consumed: dict[int, list[int]] = {}
 
     def state_dict(self) -> dict:
         return {"epoch": self.epoch, "cursor": self.cursor}
@@ -400,17 +469,28 @@ class SFTData:
         else:
             i = int(torch.randint(len(index), (1,), generator=gen))
         start, length = index[i]
+        self._last = i + (self.n_val if split == "train" else 0)  # row index in the data files
         return (self.tokens[start: start + length].astype(np.int64),
                 self.mask[start: start + length].astype(np.int64))  # integer weights, never clamped
 
+    def _count(self, row: int, mask: np.ndarray, used: int) -> None:
+        seen = self.consumed.setdefault(row, [0, 0])
+        seen[0] += used
+        seen[1] += int((mask[1:used] > 0).sum())  # targets are shifted by one: token 0 is never a target
+
     def _row(self, split: str, gen: torch.Generator, ordered: bool):
         need = self.block_size + 1
+        count = ordered and split == "train"
         if not self.pack:
             t, m = self._example(split, gen, ordered)
+            if count:
+                self._count(self._last, m, min(len(t), need))
             return t[:need], m[:need]
         toks, masks, size = [], [], 0
         while size < need:
             t, m = self._example(split, gen, ordered)
+            if count:
+                self._count(self._last, m, min(len(t), need - size))
             toks.append(t)
             masks.append(m)
             size += len(t)
@@ -488,6 +568,12 @@ def freeze_below(model: GPT, train_layers: int) -> None:
             p.requires_grad_(True)
     for p in model.norm.parameters():
         p.requires_grad_(True)
+
+
+def trained_state(model: GPT) -> dict:
+    """Only the trained tensors (fp32): the rest are the run's init_from checkpoint's."""
+    trained = {name for name, p in model.named_parameters() if p.requires_grad}
+    return {k: v for k, v in model.state_dict().items() if k in trained}
 
 
 def compact_state(model: GPT) -> dict:
@@ -645,6 +731,10 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
     model.grad_checkpoint = cfg.grad_checkpoint
     if cfg.train_layers:
         freeze_below(model, cfg.train_layers)
+    # what compact checkpoints reference, resolved now: the init checkpoint is not read again after loading
+    # (V10: a run from C2 can drop C2's RAM-disk copy while it trains)
+    base_ref = (base_reference(plain_base(cfg.init_from, {n for n, p in model.named_parameters() if p.requires_grad}))
+                if cfg.compact_checkpoints and cfg.train_layers and cfg.init_from else None)
     precision = pick_precision(cfg.precision, dev_type)
     amp_dtype = torch.float16 if precision == "fp16" else torch.bfloat16
     if shard:
@@ -728,13 +818,20 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
         dist.all_reduce(flag, op=dist.ReduceOp.MIN)
         return bool(flag.item())
 
-    def checkpoint(val_loss: float | None) -> None:
+    def checkpoint(val_loss: float | None, final: bool = False) -> None:
         """Save model + optimizer (+ the example order). Sharded: every rank joins the gather and
-        writes its optimizer shard."""
+        writes its optimizer shard. ``final`` with cfg.final_bf16: trained tensors in bf16, no optimizer."""
         if not shard:
+            compact = bool(cfg.compact_checkpoints and cfg.train_layers and cfg.init_from)
+            state = (trained_state(model) if compact else compact_state(model)) if cfg.train_layers else None
+            inference = final and cfg.final_bf16
+            if inference:
+                state = {k: (v.to(torch.bfloat16) if v.is_floating_point() else v)
+                         for k, v in (state if state is not None else model.state_dict()).items()}
+                (out_dir / "optim.pt").unlink(missing_ok=True)
             save_checkpoint(out_dir, model, tok, step=step, stage=cfg.stage, val_loss=val_loss,
-                            optimizer=optimizer, state=compact_state(model) if cfg.train_layers else None,
-                            in_place=cfg.save_in_place)
+                            optimizer=None if inference else optimizer, state=state,
+                            in_place=cfg.save_in_place or inference, base=base_ref if compact else None)
             save_sampler()
             return
         full = _full_state_dict(model)
@@ -864,10 +961,17 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
             losses = estimate_loss(model, data, cfg, eval_gen, autocast)
             history.append({"step": step, **losses})
             log(f"final eval step {step}: train {losses['train']:.3f} | val {losses['val']:.3f}")
-            checkpoint(losses["val"])
+            checkpoint(losses["val"], final=step >= cfg.max_steps)
         else:  # --eval-iters 0: no validation passes (they cost minutes on a CPU), just save
             history.append({"step": step})
-            checkpoint(None)
+            checkpoint(None, final=step >= cfg.max_steps)
+    if main and getattr(data, "consumed", None) is not None:
+        exp_path = out_dir / "exposures.json"
+        merged = {int(k): v for k, v in json.loads(exp_path.read_text())["rows"]} if (start_step and exp_path.is_file()) else {}
+        for k, (t, a) in data.consumed.items():
+            old_t, old_a = merged.get(k, [0, 0])
+            merged[k] = [old_t + t, old_a + a]
+        exp_path.write_text(json.dumps({"n_val": data.n_val, "rows": sorted([k, v] for k, v in merged.items())}))
     if main:
         import resource
         from dataclasses import asdict

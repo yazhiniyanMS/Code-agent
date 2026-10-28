@@ -155,7 +155,7 @@ def test_round_dataset_writes_manifest_and_hygiene(data_dir, tmp_path, monkeypat
                                 "```python\ndef f(numbers):\n    return sum(x for x in numbers if x != 0)\n```"),
              InstructionExample("Write a Python function `neg(x)` that returns minus x.",
                                 "```python\ndef neg(x):\n    return -x\n```")]
-    monkeypatch.setattr(rounddata, "round_examples", lambda seed, options: small + small[1:])
+    monkeypatch.setattr(rounddata, "round_examples_tagged", lambda seed, options: (small + small[1:], ["legacy:write"] * 3))
     manifest = rounddata.write_round_dataset(tmp_path, 5, data_dir / "tokenizer.json", options={"dedup": True, "replay": 0},
                                              log=lambda *_: None)
     assert manifest["removed"] == {"held-out equivalent": 1, "duplicate": 1} and manifest["kept"] == 1
@@ -323,6 +323,50 @@ def test_experiment_runner_end_to_end_with_a_tiny_model(data_dir, base_model, tm
     assert "Verdict" in experiment.render(summary)
 
 
+@pytest.mark.parametrize("final_bf16", [False, True])
+def test_v6_runner_path_scores_unseen2_and_keeps_a_bf16_model(data_dir, base_model, tmp_path, monkeypatch, final_bf16):
+    """V6 options on a tiny model: unseen-v2 evaluation, the all_clean metric and a kept bf16 copy
+    (V7: with final_bf16 the final checkpoint itself is kept)."""
+    import json
+    from pathlib import Path
+
+    from ycode.lm import experiment, rounddata
+    from ycode.lm.train import file_sha256
+
+    def fake_round(out_dir, seed, tokenizer_path, **kwargs):
+        import shutil
+
+        shutil.copytree(data_dir, out_dir, dirs_exist_ok=True)
+        manifest = {"seed": seed, "options": kwargs.get("options") or {}}
+        (Path(out_dir) / "manifest.json").write_text(json.dumps(manifest))
+        (Path(out_dir) / "hygiene.json").write_text("[]")
+        return manifest
+
+    monkeypatch.setattr(rounddata, "write_round_dataset", fake_round)
+    spec = {"name": "tiny6", "anchor": str(base_model), "anchor_sha256": "x", "tokenizer": str(data_dir / "tokenizer.json"),
+            "out": str(tmp_path / "exp"), "seeds": [1], "metric": "all_clean", "category_rule": "items_lost",
+            "keep_models": "compact", "train": {"steps": 1, "precision": "fp32", "train_layers": 2, "init_optim": False,
+                                                "compact": True, "final_bf16": final_bf16},
+            "eval": {"limit": 2, "diagnose": 0, "unseen2": True}, "arms": [{"name": "C"}], "comparisons": []}
+    record = experiment.run_one(spec, spec["arms"][0], 1, tmp_path / "exp", log=lambda *_: None)
+    assert record["unseen2"]["of"] == 2 and "failure_classes" in record["unseen2"]
+    assert "categories" in record["dev"] and "contaminated" in record["dev"]
+    kept = Path(record["kept_model"]["path"])
+    assert kept.is_file() and file_sha256(kept) == record["kept_model"]["sha256"]
+    import torch
+
+    from ycode.lm.train import load_checkpoint
+
+    assert torch.load(kept, weights_only=True)["base"]["path"] == str(Path(base_model).resolve())  # compact copy
+    load_checkpoint(kept.parent)  # loads with the anchor's frozen tensors
+    payload = torch.load(kept, weights_only=True)
+    assert {v.dtype for v in payload["model"].values() if v.is_floating_point()} == {torch.bfloat16}
+    assert not (tmp_path / "exp" / "C" / "1" / "model").exists()  # the full checkpoint is still deleted
+    summary = experiment.summarize(spec, tmp_path / "exp")
+    assert summary["arms"]["C"]["all_clean"]["values"] == [record["dev"]["clean"] + record["unseen"]["clean"]
+                                                           + record["unseen2"]["clean"]]
+
+
 def test_paired_comparison_needs_more_than_one_lucky_seed():
     from ycode.lm.experiment import compare
 
@@ -370,6 +414,97 @@ def test_interrupted_experiment_run_resumes_training(data_dir, base_model, tmp_p
     record = experiment.run_one(spec, spec["arms"][0], 1, tmp_path / "exp", log=lambda *_: None)
     steps = [json.loads(line)["step"] for line in (run_dir / "metrics.jsonl").read_text().splitlines()]
     assert steps == [1, 2, 3, 4] and record["training"]["steps"] == 4
+
+
+def _sft(data, out, base_model, **kw):
+    from ycode.lm.train import TrainConfig, train
+
+    cfg = dict(stage="sft", init_from=str(base_model), max_steps=4, batch_size=4, warmup_steps=2, eval_iters=0,
+               eval_interval=100000, device="cpu", precision="fp32", optimizer="lion", lr=1e-3, train_layers=2,
+               seed=1, save_interval=2, save_in_place=True)
+    train(data, out, TrainConfig(**{**cfg, **kw}), log=lambda *_: None)
+    return out
+
+
+def _weights(path):
+    from ycode.lm.train import load_checkpoint
+
+    model, _, _ = load_checkpoint(path)
+    return {k: v.detach().clone() for k, v in model.state_dict().items()}
+
+
+def _bf16_base(base_model, tmp_path):
+    """A base that stores its weights in bf16, like round 54's frozen layers: full checkpoints round
+    frozen weights to bf16, base-referenced ones keep the base's, so the two agree exactly here."""
+    from ycode.lm.train import export_checkpoint
+
+    return export_checkpoint(base_model, tmp_path / "base16", dtype="bf16").parent
+
+
+def test_compact_checkpoints_train_and_resume_exactly_like_full_ones(data_dir, base_model, tmp_path):
+    """Base-referenced training checkpoints (only the trained tensors; the frozen ones are the
+    init_from checkpoint's) give the same weights as full ones, also across an interrupted run."""
+    import torch
+
+    base_model = _bf16_base(base_model, tmp_path)
+
+    full = _sft(data_dir, tmp_path / "full", base_model)
+    _sft(data_dir, tmp_path / "compact", base_model, compact_checkpoints=True, until_step=2)  # interrupted at 2
+    compact = _sft(data_dir, tmp_path / "compact", base_model, compact_checkpoints=True, resume=True)
+    payload = torch.load(compact / "model.pt", weights_only=True)
+    assert payload["base"]["path"] == str(base_model.resolve()) and payload["step"] == 4
+    assert (compact / "model.pt").stat().st_size < (full / "model.pt").stat().st_size
+    a, b = _weights(full), _weights(compact)
+    assert a.keys() == b.keys() and all(torch.equal(a[k], b[k]) for k in a)
+
+
+def test_final_bf16_checkpoint_is_the_bf16_load_of_a_full_one(data_dir, base_model, tmp_path):
+    """--final-bf16: the last save holds the trained tensors in bf16 and no optimizer state, and the
+    weights it loads are exactly those evaluation loads (bf16) from an ordinary compact checkpoint."""
+    import torch
+
+    from ycode.lm.train import load_checkpoint
+
+    base_model = _bf16_base(base_model, tmp_path)
+    full = _sft(data_dir, tmp_path / "full", base_model, compact_checkpoints=True)
+    final = _sft(data_dir, tmp_path / "final", base_model, compact_checkpoints=True, final_bf16=True, save_interval=4)
+    assert (full / "optim.pt").is_file() and not (final / "optim.pt").exists()
+    payload = torch.load(final / "model.pt", weights_only=True)
+    assert payload["base"] and payload["step"] == 4
+    assert {v.dtype for v in payload["model"].values() if v.is_floating_point()} == {torch.bfloat16}
+    assert (final / "model.pt").stat().st_size < (full / "model.pt").stat().st_size
+    a = load_checkpoint(full, dtype=torch.bfloat16)[0].state_dict()
+    b = load_checkpoint(final, dtype=torch.bfloat16)[0].state_dict()
+    assert a.keys() == b.keys() and all(torch.equal(a[k], b[k]) for k in a)
+
+
+def test_base_referenced_export_and_soup_match_full_ones(data_dir, base_model, tmp_path):
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    import torch
+
+    from ycode.lm.train import export_checkpoint
+
+    base_model = _bf16_base(base_model, tmp_path)
+    one = _sft(data_dir, tmp_path / "one", base_model)
+    two = _sft(data_dir, tmp_path / "two", base_model, seed=2, lr=3e-3)
+    for run in (one, two):
+        export_checkpoint(run, run / "full", dtype="bf16")
+        export_checkpoint(run, run / "compact", dtype="bf16", base=base_model)
+        assert (run / "compact" / "model.pt").stat().st_size < (run / "full" / "model.pt").stat().st_size
+        a, b = _weights(run / "full"), _weights(run / "compact")
+        assert a.keys() == b.keys() and all(torch.equal(a[k], b[k]) for k in a)
+    soup = Path(__file__).resolve().parents[1] / "experiments" / "v6" / "soup.py"
+    for kind in ("full", "compact"):
+        subprocess.run([sys.executable, str(soup), str(tmp_path / f"soup_{kind}"), str(one / kind), str(two / kind)],
+                       check=True, capture_output=True)
+    a, b = _weights(tmp_path / "soup_full"), _weights(tmp_path / "soup_compact")
+    assert all(torch.equal(a[k], b[k]) for k in a)
+    w1, w2 = _weights(one / "full"), _weights(two / "full")
+    k = next(k for k in a if not torch.equal(w1[k], w2[k]))  # a trained tensor: the soup is their mean
+    assert torch.equal(a[k], ((w1[k] + w2[k]) / 2).to(torch.bfloat16).float())  # stored in the inputs' bf16
 
 
 # ------------------------------------------------------- evaluation reliability (v5.1 mission)

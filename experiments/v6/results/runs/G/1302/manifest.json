@@ -1,0 +1,49 @@
+{
+ "seed": 1302,
+ "options": {
+  "skills": false,
+  "basics_write": 2,
+  "basics_bugfix": 2,
+  "compose_write": 1,
+  "compose_bugfix": 0,
+  "contrast": 0,
+  "novel_write": 1,
+  "novel_draws": 6,
+  "novel_ordinals": 4,
+  "replay": 200,
+  "dedup": false,
+  "contradictions": false,
+  "spec_first": false,
+  "idioms_write": 4,
+  "idioms_bugfix": 2,
+  "idioms_contrast": 0,
+  "idioms_io": 0.0,
+  "idioms_families": "v1"
+ },
+ "code_version": "4527168252f09178581038e83e5d65c30f9a2ee0",
+ "generated": 2695,
+ "removed": {},
+ "kept": 2695,
+ "basics": 2695,
+ "replay": 200,
+ "tokens": 249164,
+ "replay_dropped": {
+  "benchmark name": 3,
+  "prose bug fix": 210,
+  "garbled prompt": 37,
+  "prose over cap": 333
+ },
+ "replay_kinds": {
+  "write": 78,
+  "explain": 38,
+  "class": 7,
+  "docstring": 15,
+  "complete": 62
+ },
+ "files": {
+  "sft_tokens.bin": "4accfc9574f43d47c4307c2af3551f5abaf4e5d316e5d83993ad0848f24f88a2",
+  "sft_mask.bin": "dcae9dce7db9aa94529cfdfee2de6309f3f96279fcbd0319abfc6fe225f86f58",
+  "sft_index.npy": "a23e738ca84c9708e59e0d3fb0f783cdc8b06fd2d421b410d187656d3803046d",
+  "tokenizer.json": "7079ff7b8546a23c5416f8ae08adcb636ec69da4c14cd964114f12cee9745341"
+ }
+}

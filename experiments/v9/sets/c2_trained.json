@@ -1,0 +1,5559 @@
+{
+ "version": "c2_trained-v1",
+ "variants": [
+  "original"
+ ],
+ "probes": 40,
+ "tasks": [
+  {
+   "group": "c2_trained",
+   "family": "comp2:numbers:list",
+   "name": "list_capped_after_first",
+   "params": "numbers",
+   "neighbour": "list_pair_sums",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `list_capped_after_first(numbers)` that returns a list of the numbers after the first one in the list, each capped at 5."
+   },
+   "tests": "assert list_capped_after_first([]) == []\nassert list_capped_after_first([10]) == []\nassert list_capped_after_first([19]) == []\nassert list_capped_after_first([2, 4, -4, -8]) == [4, -4, -8]\nassert list_capped_after_first([20, 8, 13, 16]) == [5, 5, 5]\nassert list_capped_after_first([-8, 16, 20, 8]) == [5, 5, 5]",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      10
+     ]
+    ],
+    [
+     [
+      19
+     ]
+    ],
+    [
+     [
+      2,
+      4,
+      -4,
+      -8
+     ]
+    ],
+    [
+     [
+      20,
+      8,
+      13,
+      16
+     ]
+    ],
+    [
+     [
+      -8,
+      16,
+      20,
+      8
+     ]
+    ]
+   ],
+   "reference": "def list_capped_after_first(numbers):\n    ys = [min(x, 5) for x in numbers[1:]]\n    return ys",
+   "wrong": "def list_capped_after_first(numbers):\n    ys = [sum(numbers[i:i + 2]) for i in range(0, len(numbers), 2)]\n    return ys",
+   "expected": [
+    "[]",
+    "[]",
+    "[]",
+    "[4, -4, -8]",
+    "[5, 5, 5]",
+    "[5, 5, 5]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[10]",
+    "[19]",
+    "[6, -12]",
+    "[28, 29]",
+    "[8, 28]"
+   ],
+   "probe_args": [
+    "([15, 19, 4, -8, -1, 7],)",
+    "([20, 16, 17, 0, 6, 2],)",
+    "([7, -5, 0],)",
+    "([10],)",
+    "([20, 8, 13, 16],)",
+    "([0, -6],)",
+    "([19],)",
+    "([6, 8, -6, 2, 4],)",
+    "([8, 6, 5],)",
+    "([-8, 16, 20, 8],)",
+    "([14],)",
+    "([13, 17, 16, 12, 11, -9],)",
+    "([17, 18, 1, -2, 14, 1, 13],)",
+    "([-3],)",
+    "([-2, 16, -5],)",
+    "([-7, -7, 1, 19, 7, 20, 6],)",
+    "([8, 0, 13, -6],)",
+    "([17, 20, 8, -3, 16],)",
+    "([5, -7, 10, 16],)",
+    "([9, -2, 0, -4, -3],)",
+    "([-8, 10],)",
+    "([6, -7, -7, 12],)",
+    "([19, -5],)",
+    "([17, 13, 7, -1, 7, 16],)",
+    "([19, 12, 9],)",
+    "([9, -1, 5, 6, 12, 11],)",
+    "([-7, 1, 10, -6, 6],)",
+    "([18, -3, -2, -9, 14],)",
+    "([13],)",
+    "([16, -4, 1, 4, 17],)",
+    "([16],)",
+    "([-8, 17, 9],)",
+    "([-9],)",
+    "([10, 17, 9],)",
+    "([-7, 2, 17, -6, -8, 10],)",
+    "([-4, 13, -6],)",
+    "([14, 16, -8],)",
+    "([],)",
+    "([10, -6, 17, -1, -7, -2],)",
+    "([2, 4, -4, -8],)"
+   ],
+   "probe_expected": [
+    "[5, 4, -8, -1, 5]",
+    "[5, 5, 0, 5, 2]",
+    "[-5, 0]",
+    "[]",
+    "[5, 5, 5]",
+    "[-6]",
+    "[]",
+    "[5, -6, 2, 4]",
+    "[5, 5]",
+    "[5, 5, 5]",
+    "[]",
+    "[5, 5, 5, 5, -9]",
+    "[5, 1, -2, 5, 1, 5]",
+    "[]",
+    "[5, -5]",
+    "[-7, 1, 5, 5, 5, 5]",
+    "[0, 5, -6]",
+    "[5, 5, -3, 5]",
+    "[-7, 5, 5]",
+    "[-2, 0, -4, -3]",
+    "[5]",
+    "[-7, -7, 5]",
+    "[-5]",
+    "[5, 5, -1, 5, 5]",
+    "[5, 5]",
+    "[-1, 5, 5, 5, 5]",
+    "[1, 5, -6, 5]",
+    "[-3, -2, -9, 5]",
+    "[]",
+    "[-4, 1, 4, 5]",
+    "[]",
+    "[5, 5]",
+    "[]",
+    "[5, 5]",
+    "[2, 5, -6, -8, 5]",
+    "[5, -6]",
+    "[5, -8]",
+    "[]",
+    "[-6, 5, -1, -7, -2]",
+    "[4, -4, -8]"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:numbers:first",
+   "name": "first_capped_before_negative",
+   "params": "numbers",
+   "neighbour": "first_steps",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `first_capped_before_negative(numbers)` that returns the first of the numbers that come before the first negative number of the list, each capped at 5 (None if there are none)."
+   },
+   "tests": "assert first_capped_before_negative([]) == None\nassert first_capped_before_negative([10]) == 5\nassert first_capped_before_negative([19]) == 5\nassert first_capped_before_negative([2, 4, -4, -8]) == 2\nassert first_capped_before_negative([20, 8, 13, 16]) == 5\nassert first_capped_before_negative([-8, 16, 20, 8]) == None",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      10
+     ]
+    ],
+    [
+     [
+      19
+     ]
+    ],
+    [
+     [
+      2,
+      4,
+      -4,
+      -8
+     ]
+    ],
+    [
+     [
+      20,
+      8,
+      13,
+      16
+     ]
+    ],
+    [
+     [
+      -8,
+      16,
+      20,
+      8
+     ]
+    ]
+   ],
+   "reference": "def first_capped_before_negative(numbers):\n    xs = []\n    for x in numbers:\n        if x < 0:\n            break\n        xs.append(x)\n    ys = [min(x, 5) for x in xs]\n    return ys[0] if ys else None",
+   "wrong": "def first_capped_before_negative(numbers):\n    ys = [b - a for a, b in zip(numbers, numbers[1:])]\n    return ys[0] if ys else None",
+   "expected": [
+    "None",
+    "5",
+    "5",
+    "2",
+    "5",
+    "None"
+   ],
+   "wrong_outputs": [
+    "None",
+    "None",
+    "None",
+    "2",
+    "-12",
+    "24"
+   ],
+   "probe_args": [
+    "([15, 19, 4, -8, -1, 7],)",
+    "([20, 16, 17, 0, 6, 2],)",
+    "([7, -5, 0],)",
+    "([10],)",
+    "([20, 8, 13, 16],)",
+    "([0, -6],)",
+    "([19],)",
+    "([6, 8, -6, 2, 4],)",
+    "([8, 6, 5],)",
+    "([-8, 16, 20, 8],)",
+    "([14],)",
+    "([13, 17, 16, 12, 11, -9],)",
+    "([17, 18, 1, -2, 14, 1, 13],)",
+    "([-3],)",
+    "([-2, 16, -5],)",
+    "([-7, -7, 1, 19, 7, 20, 6],)",
+    "([8, 0, 13, -6],)",
+    "([17, 20, 8, -3, 16],)",
+    "([5, -7, 10, 16],)",
+    "([9, -2, 0, -4, -3],)",
+    "([-8, 10],)",
+    "([6, -7, -7, 12],)",
+    "([19, -5],)",
+    "([17, 13, 7, -1, 7, 16],)",
+    "([19, 12, 9],)",
+    "([9, -1, 5, 6, 12, 11],)",
+    "([-7, 1, 10, -6, 6],)",
+    "([18, -3, -2, -9, 14],)",
+    "([13],)",
+    "([16, -4, 1, 4, 17],)",
+    "([16],)",
+    "([-8, 17, 9],)",
+    "([-9],)",
+    "([10, 17, 9],)",
+    "([-7, 2, 17, -6, -8, 10],)",
+    "([-4, 13, -6],)",
+    "([14, 16, -8],)",
+    "([],)",
+    "([10, -6, 17, -1, -7, -2],)",
+    "([2, 4, -4, -8],)"
+   ],
+   "probe_expected": [
+    "5",
+    "5",
+    "5",
+    "5",
+    "5",
+    "0",
+    "5",
+    "5",
+    "5",
+    "None",
+    "5",
+    "5",
+    "5",
+    "None",
+    "None",
+    "None",
+    "5",
+    "5",
+    "5",
+    "5",
+    "None",
+    "5",
+    "5",
+    "5",
+    "5",
+    "5",
+    "None",
+    "5",
+    "5",
+    "5",
+    "5",
+    "None",
+    "None",
+    "5",
+    "None",
+    "None",
+    "5",
+    "None",
+    "5",
+    "2"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:numbers:list",
+   "name": "list_squares_pair_sums",
+   "params": "numbers",
+   "neighbour": "list_pair_sums",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `list_squares_pair_sums(numbers)` that returns a list of the squares of the sums of the consecutive pairs of the list (positions 0 and 1, 2 and 3, ...; a last number without a partner counts alone)."
+   },
+   "tests": "assert list_squares_pair_sums([]) == []\nassert list_squares_pair_sums([10]) == [100]\nassert list_squares_pair_sums([19]) == [361]\nassert list_squares_pair_sums([2, 4, -4, -8]) == [36, 144]\nassert list_squares_pair_sums([20, 8, 13, 16]) == [784, 841]\nassert list_squares_pair_sums([-8, 16, 20, 8]) == [64, 784]",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      10
+     ]
+    ],
+    [
+     [
+      19
+     ]
+    ],
+    [
+     [
+      2,
+      4,
+      -4,
+      -8
+     ]
+    ],
+    [
+     [
+      20,
+      8,
+      13,
+      16
+     ]
+    ],
+    [
+     [
+      -8,
+      16,
+      20,
+      8
+     ]
+    ]
+   ],
+   "reference": "def list_squares_pair_sums(numbers):\n    ys = [x * x for x in [sum(numbers[i:i + 2]) for i in range(0, len(numbers), 2)]]\n    return ys",
+   "wrong": "def list_squares_pair_sums(numbers):\n    ys = [sum(numbers[i:i + 2]) for i in range(0, len(numbers), 2)]\n    return ys",
+   "expected": [
+    "[]",
+    "[100]",
+    "[361]",
+    "[36, 144]",
+    "[784, 841]",
+    "[64, 784]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[10]",
+    "[19]",
+    "[6, -12]",
+    "[28, 29]",
+    "[8, 28]"
+   ],
+   "probe_args": [
+    "([15, 19, 4, -8, -1, 7],)",
+    "([20, 16, 17, 0, 6, 2],)",
+    "([7, -5, 0],)",
+    "([10],)",
+    "([20, 8, 13, 16],)",
+    "([0, -6],)",
+    "([19],)",
+    "([6, 8, -6, 2, 4],)",
+    "([8, 6, 5],)",
+    "([-8, 16, 20, 8],)",
+    "([14],)",
+    "([13, 17, 16, 12, 11, -9],)",
+    "([17, 18, 1, -2, 14, 1, 13],)",
+    "([-3],)",
+    "([-2, 16, -5],)",
+    "([-7, -7, 1, 19, 7, 20, 6],)",
+    "([8, 0, 13, -6],)",
+    "([17, 20, 8, -3, 16],)",
+    "([5, -7, 10, 16],)",
+    "([9, -2, 0, -4, -3],)",
+    "([-8, 10],)",
+    "([6, -7, -7, 12],)",
+    "([19, -5],)",
+    "([17, 13, 7, -1, 7, 16],)",
+    "([19, 12, 9],)",
+    "([9, -1, 5, 6, 12, 11],)",
+    "([-7, 1, 10, -6, 6],)",
+    "([18, -3, -2, -9, 14],)",
+    "([13],)",
+    "([16, -4, 1, 4, 17],)",
+    "([16],)",
+    "([-8, 17, 9],)",
+    "([-9],)",
+    "([10, 17, 9],)",
+    "([-7, 2, 17, -6, -8, 10],)",
+    "([-4, 13, -6],)",
+    "([14, 16, -8],)",
+    "([],)",
+    "([10, -6, 17, -1, -7, -2],)",
+    "([2, 4, -4, -8],)"
+   ],
+   "probe_expected": [
+    "[1156, 16, 36]",
+    "[1296, 289, 64]",
+    "[4, 0]",
+    "[100]",
+    "[784, 841]",
+    "[36]",
+    "[361]",
+    "[196, 16, 16]",
+    "[196, 25]",
+    "[64, 784]",
+    "[196]",
+    "[900, 784, 4]",
+    "[1225, 1, 225, 169]",
+    "[9]",
+    "[196, 25]",
+    "[196, 400, 729, 36]",
+    "[64, 49]",
+    "[1369, 25, 256]",
+    "[4, 676]",
+    "[49, 16, 9]",
+    "[4]",
+    "[1, 25]",
+    "[196]",
+    "[900, 36, 529]",
+    "[961, 81]",
+    "[64, 121, 529]",
+    "[36, 16, 36]",
+    "[225, 121, 196]",
+    "[169]",
+    "[144, 25, 289]",
+    "[256]",
+    "[81, 81]",
+    "[81]",
+    "[729, 81]",
+    "[25, 121, 4]",
+    "[81, 36]",
+    "[900, 64]",
+    "[]",
+    "[16, 256, 81]",
+    "[36, 144]"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:numbers:prod",
+   "name": "prod_abs_last_three",
+   "params": "numbers",
+   "neighbour": "prod_steps",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `prod_abs_last_three(numbers)` that returns the product of the absolute values of the last three numbers of the list (1 if there are none)."
+   },
+   "tests": "assert prod_abs_last_three([]) == 1\nassert prod_abs_last_three([10]) == 10\nassert prod_abs_last_three([19]) == 19\nassert prod_abs_last_three([2, 4, -4, -8]) == 128\nassert prod_abs_last_three([20, 8, 13, 16]) == 1664\nassert prod_abs_last_three([-8, 16, 20, 8]) == 2560",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      10
+     ]
+    ],
+    [
+     [
+      19
+     ]
+    ],
+    [
+     [
+      2,
+      4,
+      -4,
+      -8
+     ]
+    ],
+    [
+     [
+      20,
+      8,
+      13,
+      16
+     ]
+    ],
+    [
+     [
+      -8,
+      16,
+      20,
+      8
+     ]
+    ]
+   ],
+   "reference": "def prod_abs_last_three(numbers):\n    ys = [abs(x) for x in numbers[-3:]]\n    result = 1\n    for y in ys:\n        result *= y\n    return result",
+   "wrong": "def prod_abs_last_three(numbers):\n    ys = [b - a for a, b in zip(numbers, numbers[1:])]\n    result = 1\n    for y in ys:\n        result *= y\n    return result",
+   "expected": [
+    "1",
+    "10",
+    "19",
+    "128",
+    "1664",
+    "2560"
+   ],
+   "wrong_outputs": [
+    "1",
+    "1",
+    "1",
+    "64",
+    "-180",
+    "-1152"
+   ],
+   "probe_args": [
+    "([15, 19, 4, -8, -1, 7],)",
+    "([20, 16, 17, 0, 6, 2],)",
+    "([7, -5, 0],)",
+    "([10],)",
+    "([20, 8, 13, 16],)",
+    "([0, -6],)",
+    "([19],)",
+    "([6, 8, -6, 2, 4],)",
+    "([8, 6, 5],)",
+    "([-8, 16, 20, 8],)",
+    "([14],)",
+    "([13, 17, 16, 12, 11, -9],)",
+    "([17, 18, 1, -2, 14, 1, 13],)",
+    "([-3],)",
+    "([-2, 16, -5],)",
+    "([-7, -7, 1, 19, 7, 20, 6],)",
+    "([8, 0, 13, -6],)",
+    "([17, 20, 8, -3, 16],)",
+    "([5, -7, 10, 16],)",
+    "([9, -2, 0, -4, -3],)",
+    "([-8, 10],)",
+    "([6, -7, -7, 12],)",
+    "([19, -5],)",
+    "([17, 13, 7, -1, 7, 16],)",
+    "([19, 12, 9],)",
+    "([9, -1, 5, 6, 12, 11],)",
+    "([-7, 1, 10, -6, 6],)",
+    "([18, -3, -2, -9, 14],)",
+    "([13],)",
+    "([16, -4, 1, 4, 17],)",
+    "([16],)",
+    "([-8, 17, 9],)",
+    "([-9],)",
+    "([10, 17, 9],)",
+    "([-7, 2, 17, -6, -8, 10],)",
+    "([-4, 13, -6],)",
+    "([14, 16, -8],)",
+    "([],)",
+    "([10, -6, 17, -1, -7, -2],)",
+    "([2, 4, -4, -8],)"
+   ],
+   "probe_expected": [
+    "56",
+    "0",
+    "0",
+    "10",
+    "1664",
+    "0",
+    "19",
+    "48",
+    "240",
+    "2560",
+    "14",
+    "1188",
+    "182",
+    "3",
+    "160",
+    "840",
+    "0",
+    "384",
+    "1120",
+    "0",
+    "80",
+    "588",
+    "95",
+    "112",
+    "2052",
+    "792",
+    "360",
+    "252",
+    "13",
+    "68",
+    "16",
+    "1224",
+    "9",
+    "1530",
+    "480",
+    "312",
+    "1792",
+    "1",
+    "14",
+    "128"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:numbers:first",
+   "name": "first_steps",
+   "params": "numbers",
+   "neighbour": "first_pair_sums",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `first_steps(numbers)` that returns the first of the differences between neighbouring numbers of the list (each number minus the one before it) (None if there are none)."
+   },
+   "tests": "assert first_steps([]) == None\nassert first_steps([10]) == None\nassert first_steps([19]) == None\nassert first_steps([2, 4, -4, -8]) == 2\nassert first_steps([20, 8, 13, 16]) == -12\nassert first_steps([-8, 16, 20, 8]) == 24",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      10
+     ]
+    ],
+    [
+     [
+      19
+     ]
+    ],
+    [
+     [
+      2,
+      4,
+      -4,
+      -8
+     ]
+    ],
+    [
+     [
+      20,
+      8,
+      13,
+      16
+     ]
+    ],
+    [
+     [
+      -8,
+      16,
+      20,
+      8
+     ]
+    ]
+   ],
+   "reference": "def first_steps(numbers):\n    ys = [b - a for a, b in zip(numbers, numbers[1:])]\n    return ys[0] if ys else None",
+   "wrong": "def first_steps(numbers):\n    ys = [sum(numbers[i:i + 2]) for i in range(0, len(numbers), 2)]\n    return ys[0] if ys else None",
+   "expected": [
+    "None",
+    "None",
+    "None",
+    "2",
+    "-12",
+    "24"
+   ],
+   "wrong_outputs": [
+    "None",
+    "10",
+    "19",
+    "6",
+    "28",
+    "8"
+   ],
+   "probe_args": [
+    "([15, 19, 4, -8, -1, 7],)",
+    "([20, 16, 17, 0, 6, 2],)",
+    "([7, -5, 0],)",
+    "([10],)",
+    "([20, 8, 13, 16],)",
+    "([0, -6],)",
+    "([19],)",
+    "([6, 8, -6, 2, 4],)",
+    "([8, 6, 5],)",
+    "([-8, 16, 20, 8],)",
+    "([14],)",
+    "([13, 17, 16, 12, 11, -9],)",
+    "([17, 18, 1, -2, 14, 1, 13],)",
+    "([-3],)",
+    "([-2, 16, -5],)",
+    "([-7, -7, 1, 19, 7, 20, 6],)",
+    "([8, 0, 13, -6],)",
+    "([17, 20, 8, -3, 16],)",
+    "([5, -7, 10, 16],)",
+    "([9, -2, 0, -4, -3],)",
+    "([-8, 10],)",
+    "([6, -7, -7, 12],)",
+    "([19, -5],)",
+    "([17, 13, 7, -1, 7, 16],)",
+    "([19, 12, 9],)",
+    "([9, -1, 5, 6, 12, 11],)",
+    "([-7, 1, 10, -6, 6],)",
+    "([18, -3, -2, -9, 14],)",
+    "([13],)",
+    "([16, -4, 1, 4, 17],)",
+    "([16],)",
+    "([-8, 17, 9],)",
+    "([-9],)",
+    "([10, 17, 9],)",
+    "([-7, 2, 17, -6, -8, 10],)",
+    "([-4, 13, -6],)",
+    "([14, 16, -8],)",
+    "([],)",
+    "([10, -6, 17, -1, -7, -2],)",
+    "([2, 4, -4, -8],)"
+   ],
+   "probe_expected": [
+    "4",
+    "-4",
+    "-12",
+    "None",
+    "-12",
+    "-6",
+    "None",
+    "2",
+    "-2",
+    "24",
+    "None",
+    "4",
+    "1",
+    "None",
+    "18",
+    "0",
+    "-8",
+    "3",
+    "-12",
+    "-11",
+    "18",
+    "-13",
+    "-24",
+    "-4",
+    "-7",
+    "-10",
+    "8",
+    "-21",
+    "None",
+    "-20",
+    "None",
+    "25",
+    "None",
+    "7",
+    "9",
+    "17",
+    "2",
+    "None",
+    "-16",
+    "2"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:numbers:min",
+   "name": "min_doubles",
+   "params": "numbers",
+   "neighbour": "min_steps",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `min_doubles(numbers)` that returns the smallest of the doubles of the numbers in the list (None if there are none)."
+   },
+   "tests": "assert min_doubles([]) == None\nassert min_doubles([10]) == 20\nassert min_doubles([19]) == 38\nassert min_doubles([2, 4, -4, -8]) == -16\nassert min_doubles([20, 8, 13, 16]) == 16\nassert min_doubles([-8, 16, 20, 8]) == -16",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      10
+     ]
+    ],
+    [
+     [
+      19
+     ]
+    ],
+    [
+     [
+      2,
+      4,
+      -4,
+      -8
+     ]
+    ],
+    [
+     [
+      20,
+      8,
+      13,
+      16
+     ]
+    ],
+    [
+     [
+      -8,
+      16,
+      20,
+      8
+     ]
+    ]
+   ],
+   "reference": "def min_doubles(numbers):\n    ys = [2 * x for x in numbers]\n    return min(ys) if ys else None",
+   "wrong": "def min_doubles(numbers):\n    ys = [b - a for a, b in zip(numbers, numbers[1:])]\n    return min(ys) if ys else None",
+   "expected": [
+    "None",
+    "20",
+    "38",
+    "-16",
+    "16",
+    "-16"
+   ],
+   "wrong_outputs": [
+    "None",
+    "None",
+    "None",
+    "-8",
+    "-12",
+    "-12"
+   ],
+   "probe_args": [
+    "([15, 19, 4, -8, -1, 7],)",
+    "([20, 16, 17, 0, 6, 2],)",
+    "([7, -5, 0],)",
+    "([10],)",
+    "([20, 8, 13, 16],)",
+    "([0, -6],)",
+    "([19],)",
+    "([6, 8, -6, 2, 4],)",
+    "([8, 6, 5],)",
+    "([-8, 16, 20, 8],)",
+    "([14],)",
+    "([13, 17, 16, 12, 11, -9],)",
+    "([17, 18, 1, -2, 14, 1, 13],)",
+    "([-3],)",
+    "([-2, 16, -5],)",
+    "([-7, -7, 1, 19, 7, 20, 6],)",
+    "([8, 0, 13, -6],)",
+    "([17, 20, 8, -3, 16],)",
+    "([5, -7, 10, 16],)",
+    "([9, -2, 0, -4, -3],)",
+    "([-8, 10],)",
+    "([6, -7, -7, 12],)",
+    "([19, -5],)",
+    "([17, 13, 7, -1, 7, 16],)",
+    "([19, 12, 9],)",
+    "([9, -1, 5, 6, 12, 11],)",
+    "([-7, 1, 10, -6, 6],)",
+    "([18, -3, -2, -9, 14],)",
+    "([13],)",
+    "([16, -4, 1, 4, 17],)",
+    "([16],)",
+    "([-8, 17, 9],)",
+    "([-9],)",
+    "([10, 17, 9],)",
+    "([-7, 2, 17, -6, -8, 10],)",
+    "([-4, 13, -6],)",
+    "([14, 16, -8],)",
+    "([],)",
+    "([10, -6, 17, -1, -7, -2],)",
+    "([2, 4, -4, -8],)"
+   ],
+   "probe_expected": [
+    "-16",
+    "0",
+    "-10",
+    "20",
+    "16",
+    "-12",
+    "38",
+    "-12",
+    "10",
+    "-16",
+    "28",
+    "-18",
+    "-4",
+    "-6",
+    "-10",
+    "-14",
+    "-12",
+    "-6",
+    "-14",
+    "-8",
+    "-16",
+    "-14",
+    "-10",
+    "-2",
+    "18",
+    "-2",
+    "-14",
+    "-18",
+    "26",
+    "-8",
+    "32",
+    "-16",
+    "-18",
+    "18",
+    "-16",
+    "-12",
+    "-16",
+    "None",
+    "-14",
+    "-16"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:numbers:prod",
+   "name": "prod_doubles_running_max",
+   "params": "numbers",
+   "neighbour": "prod_steps",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `prod_doubles_running_max(numbers)` that returns the product of the doubles of the running largest values of the list (at each position, the largest number so far) (1 if there are none)."
+   },
+   "tests": "assert prod_doubles_running_max([]) == 1\nassert prod_doubles_running_max([10]) == 20\nassert prod_doubles_running_max([19]) == 38\nassert prod_doubles_running_max([2, 4, -4, -8]) == 2048\nassert prod_doubles_running_max([20, 8, 13, 16]) == 2560000\nassert prod_doubles_running_max([-8, 16, 20, 8]) == -819200",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      10
+     ]
+    ],
+    [
+     [
+      19
+     ]
+    ],
+    [
+     [
+      2,
+      4,
+      -4,
+      -8
+     ]
+    ],
+    [
+     [
+      20,
+      8,
+      13,
+      16
+     ]
+    ],
+    [
+     [
+      -8,
+      16,
+      20,
+      8
+     ]
+    ]
+   ],
+   "reference": "def prod_doubles_running_max(numbers):\n    xs = []\n    for x in numbers:\n        xs.append(x if not xs or x > xs[-1] else xs[-1])\n    ys = [2 * x for x in xs]\n    result = 1\n    for y in ys:\n        result *= y\n    return result",
+   "wrong": "def prod_doubles_running_max(numbers):\n    ys = [b - a for a, b in zip(numbers, numbers[1:])]\n    result = 1\n    for y in ys:\n        result *= y\n    return result",
+   "expected": [
+    "1",
+    "20",
+    "38",
+    "2048",
+    "2560000",
+    "-819200"
+   ],
+   "wrong_outputs": [
+    "1",
+    "1",
+    "1",
+    "64",
+    "-180",
+    "-1152"
+   ],
+   "probe_args": [
+    "([15, 19, 4, -8, -1, 7],)",
+    "([20, 16, 17, 0, 6, 2],)",
+    "([7, -5, 0],)",
+    "([10],)",
+    "([20, 8, 13, 16],)",
+    "([0, -6],)",
+    "([19],)",
+    "([6, 8, -6, 2, 4],)",
+    "([8, 6, 5],)",
+    "([-8, 16, 20, 8],)",
+    "([14],)",
+    "([13, 17, 16, 12, 11, -9],)",
+    "([17, 18, 1, -2, 14, 1, 13],)",
+    "([-3],)",
+    "([-2, 16, -5],)",
+    "([-7, -7, 1, 19, 7, 20, 6],)",
+    "([8, 0, 13, -6],)",
+    "([17, 20, 8, -3, 16],)",
+    "([5, -7, 10, 16],)",
+    "([9, -2, 0, -4, -3],)",
+    "([-8, 10],)",
+    "([6, -7, -7, 12],)",
+    "([19, -5],)",
+    "([17, 13, 7, -1, 7, 16],)",
+    "([19, 12, 9],)",
+    "([9, -1, 5, 6, 12, 11],)",
+    "([-7, 1, 10, -6, 6],)",
+    "([18, -3, -2, -9, 14],)",
+    "([13],)",
+    "([16, -4, 1, 4, 17],)",
+    "([16],)",
+    "([-8, 17, 9],)",
+    "([-9],)",
+    "([10, 17, 9],)",
+    "([-7, 2, 17, -6, -8, 10],)",
+    "([-4, 13, -6],)",
+    "([14, 16, -8],)",
+    "([],)",
+    "([10, -6, 17, -1, -7, -2],)",
+    "([2, 4, -4, -8],)"
+   ],
+   "probe_expected": [
+    "2377055040",
+    "4096000000",
+    "2744",
+    "20",
+    "2560000",
+    "0",
+    "38",
+    "786432",
+    "4096",
+    "-819200",
+    "28",
+    "1181321024",
+    "74010599424",
+    "-6",
+    "-4096",
+    "905676800",
+    "173056",
+    "87040000",
+    "64000",
+    "1889568",
+    "-320",
+    "41472",
+    "1444",
+    "1544804416",
+    "54872",
+    "60466176",
+    "-224000",
+    "60466176",
+    "26",
+    "35651584",
+    "32",
+    "-18496",
+    "-18",
+    "23120",
+    "-74834816",
+    "-5408",
+    "28672",
+    "1",
+    "534534400",
+    "2048"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:numbers:sum",
+   "name": "sum_capped_odd_positions",
+   "params": "numbers",
+   "neighbour": "sum_steps",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `sum_capped_odd_positions(numbers)` that returns the sum of the numbers at odd positions of the list (1, 3, 5, ...), each capped at 5."
+   },
+   "tests": "assert sum_capped_odd_positions([]) == 0\nassert sum_capped_odd_positions([10]) == 0\nassert sum_capped_odd_positions([19]) == 0\nassert sum_capped_odd_positions([2, 4, -4, -8]) == -4\nassert sum_capped_odd_positions([20, 8, 13, 16]) == 10\nassert sum_capped_odd_positions([-8, 16, 20, 8]) == 10",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      10
+     ]
+    ],
+    [
+     [
+      19
+     ]
+    ],
+    [
+     [
+      2,
+      4,
+      -4,
+      -8
+     ]
+    ],
+    [
+     [
+      20,
+      8,
+      13,
+      16
+     ]
+    ],
+    [
+     [
+      -8,
+      16,
+      20,
+      8
+     ]
+    ]
+   ],
+   "reference": "def sum_capped_odd_positions(numbers):\n    ys = [min(x, 5) for x in numbers[1::2]]\n    return sum(ys)",
+   "wrong": "def sum_capped_odd_positions(numbers):\n    ys = [b - a for a, b in zip(numbers, numbers[1:])]\n    return sum(ys)",
+   "expected": [
+    "0",
+    "0",
+    "0",
+    "-4",
+    "10",
+    "10"
+   ],
+   "wrong_outputs": [
+    "0",
+    "0",
+    "0",
+    "-10",
+    "-4",
+    "16"
+   ],
+   "probe_args": [
+    "([15, 19, 4, -8, -1, 7],)",
+    "([20, 16, 17, 0, 6, 2],)",
+    "([7, -5, 0],)",
+    "([10],)",
+    "([20, 8, 13, 16],)",
+    "([0, -6],)",
+    "([19],)",
+    "([6, 8, -6, 2, 4],)",
+    "([8, 6, 5],)",
+    "([-8, 16, 20, 8],)",
+    "([14],)",
+    "([13, 17, 16, 12, 11, -9],)",
+    "([17, 18, 1, -2, 14, 1, 13],)",
+    "([-3],)",
+    "([-2, 16, -5],)",
+    "([-7, -7, 1, 19, 7, 20, 6],)",
+    "([8, 0, 13, -6],)",
+    "([17, 20, 8, -3, 16],)",
+    "([5, -7, 10, 16],)",
+    "([9, -2, 0, -4, -3],)",
+    "([-8, 10],)",
+    "([6, -7, -7, 12],)",
+    "([19, -5],)",
+    "([17, 13, 7, -1, 7, 16],)",
+    "([19, 12, 9],)",
+    "([9, -1, 5, 6, 12, 11],)",
+    "([-7, 1, 10, -6, 6],)",
+    "([18, -3, -2, -9, 14],)",
+    "([13],)",
+    "([16, -4, 1, 4, 17],)",
+    "([16],)",
+    "([-8, 17, 9],)",
+    "([-9],)",
+    "([10, 17, 9],)",
+    "([-7, 2, 17, -6, -8, 10],)",
+    "([-4, 13, -6],)",
+    "([14, 16, -8],)",
+    "([],)",
+    "([10, -6, 17, -1, -7, -2],)",
+    "([2, 4, -4, -8],)"
+   ],
+   "probe_expected": [
+    "2",
+    "7",
+    "-5",
+    "0",
+    "10",
+    "-6",
+    "0",
+    "7",
+    "5",
+    "10",
+    "0",
+    "1",
+    "4",
+    "0",
+    "5",
+    "3",
+    "-6",
+    "2",
+    "-2",
+    "-6",
+    "5",
+    "-2",
+    "-5",
+    "9",
+    "5",
+    "9",
+    "-5",
+    "-12",
+    "0",
+    "0",
+    "0",
+    "5",
+    "0",
+    "5",
+    "1",
+    "5",
+    "5",
+    "0",
+    "-9",
+    "-4"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:numbers:prod",
+   "name": "prod_squares_before_negative",
+   "params": "numbers",
+   "neighbour": "prod_steps",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `prod_squares_before_negative(numbers)` that returns the product of the squares of the numbers that come before the first negative number of the list (1 if there are none)."
+   },
+   "tests": "assert prod_squares_before_negative([]) == 1\nassert prod_squares_before_negative([10]) == 100\nassert prod_squares_before_negative([19]) == 361\nassert prod_squares_before_negative([2, 4, -4, -8]) == 64\nassert prod_squares_before_negative([20, 8, 13, 16]) == 1107558400\nassert prod_squares_before_negative([-8, 16, 20, 8]) == 1",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      10
+     ]
+    ],
+    [
+     [
+      19
+     ]
+    ],
+    [
+     [
+      2,
+      4,
+      -4,
+      -8
+     ]
+    ],
+    [
+     [
+      20,
+      8,
+      13,
+      16
+     ]
+    ],
+    [
+     [
+      -8,
+      16,
+      20,
+      8
+     ]
+    ]
+   ],
+   "reference": "def prod_squares_before_negative(numbers):\n    xs = []\n    for x in numbers:\n        if x < 0:\n            break\n        xs.append(x)\n    ys = [x * x for x in xs]\n    result = 1\n    for y in ys:\n        result *= y\n    return result",
+   "wrong": "def prod_squares_before_negative(numbers):\n    ys = [b - a for a, b in zip(numbers, numbers[1:])]\n    result = 1\n    for y in ys:\n        result *= y\n    return result",
+   "expected": [
+    "1",
+    "100",
+    "361",
+    "64",
+    "1107558400",
+    "1"
+   ],
+   "wrong_outputs": [
+    "1",
+    "1",
+    "1",
+    "64",
+    "-180",
+    "-1152"
+   ],
+   "probe_args": [
+    "([15, 19, 4, -8, -1, 7],)",
+    "([20, 16, 17, 0, 6, 2],)",
+    "([7, -5, 0],)",
+    "([10],)",
+    "([20, 8, 13, 16],)",
+    "([0, -6],)",
+    "([19],)",
+    "([6, 8, -6, 2, 4],)",
+    "([8, 6, 5],)",
+    "([-8, 16, 20, 8],)",
+    "([14],)",
+    "([13, 17, 16, 12, 11, -9],)",
+    "([17, 18, 1, -2, 14, 1, 13],)",
+    "([-3],)",
+    "([-2, 16, -5],)",
+    "([-7, -7, 1, 19, 7, 20, 6],)",
+    "([8, 0, 13, -6],)",
+    "([17, 20, 8, -3, 16],)",
+    "([5, -7, 10, 16],)",
+    "([9, -2, 0, -4, -3],)",
+    "([-8, 10],)",
+    "([6, -7, -7, 12],)",
+    "([19, -5],)",
+    "([17, 13, 7, -1, 7, 16],)",
+    "([19, 12, 9],)",
+    "([9, -1, 5, 6, 12, 11],)",
+    "([-7, 1, 10, -6, 6],)",
+    "([18, -3, -2, -9, 14],)",
+    "([13],)",
+    "([16, -4, 1, 4, 17],)",
+    "([16],)",
+    "([-8, 17, 9],)",
+    "([-9],)",
+    "([10, 17, 9],)",
+    "([-7, 2, 17, -6, -8, 10],)",
+    "([-4, 13, -6],)",
+    "([14, 16, -8],)",
+    "([],)",
+    "([10, -6, 17, -1, -7, -2],)",
+    "([2, 4, -4, -8],)"
+   ],
+   "probe_expected": [
+    "1299600",
+    "0",
+    "49",
+    "100",
+    "1107558400",
+    "0",
+    "361",
+    "2304",
+    "57600",
+    "1",
+    "196",
+    "217857429504",
+    "93636",
+    "1",
+    "1",
+    "1",
+    "0",
+    "7398400",
+    "25",
+    "81",
+    "1",
+    "36",
+    "361",
+    "2393209",
+    "4210704",
+    "81",
+    "1",
+    "324",
+    "169",
+    "256",
+    "256",
+    "1",
+    "1",
+    "2340900",
+    "1",
+    "1",
+    "50176",
+    "1",
+    "100",
+    "64"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:numbers:prod",
+   "name": "prod_doubles_before_negative",
+   "params": "numbers",
+   "neighbour": "prod_steps",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `prod_doubles_before_negative(numbers)` that returns the product of the doubles of the numbers that come before the first negative number of the list (1 if there are none)."
+   },
+   "tests": "assert prod_doubles_before_negative([]) == 1\nassert prod_doubles_before_negative([10]) == 20\nassert prod_doubles_before_negative([19]) == 38\nassert prod_doubles_before_negative([2, 4, -4, -8]) == 32\nassert prod_doubles_before_negative([20, 8, 13, 16]) == 532480\nassert prod_doubles_before_negative([-8, 16, 20, 8]) == 1",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      10
+     ]
+    ],
+    [
+     [
+      19
+     ]
+    ],
+    [
+     [
+      2,
+      4,
+      -4,
+      -8
+     ]
+    ],
+    [
+     [
+      20,
+      8,
+      13,
+      16
+     ]
+    ],
+    [
+     [
+      -8,
+      16,
+      20,
+      8
+     ]
+    ]
+   ],
+   "reference": "def prod_doubles_before_negative(numbers):\n    xs = []\n    for x in numbers:\n        if x < 0:\n            break\n        xs.append(x)\n    ys = [2 * x for x in xs]\n    result = 1\n    for y in ys:\n        result *= y\n    return result",
+   "wrong": "def prod_doubles_before_negative(numbers):\n    ys = [b - a for a, b in zip(numbers, numbers[1:])]\n    result = 1\n    for y in ys:\n        result *= y\n    return result",
+   "expected": [
+    "1",
+    "20",
+    "38",
+    "32",
+    "532480",
+    "1"
+   ],
+   "wrong_outputs": [
+    "1",
+    "1",
+    "1",
+    "64",
+    "-180",
+    "-1152"
+   ],
+   "probe_args": [
+    "([15, 19, 4, -8, -1, 7],)",
+    "([20, 16, 17, 0, 6, 2],)",
+    "([7, -5, 0],)",
+    "([10],)",
+    "([20, 8, 13, 16],)",
+    "([0, -6],)",
+    "([19],)",
+    "([6, 8, -6, 2, 4],)",
+    "([8, 6, 5],)",
+    "([-8, 16, 20, 8],)",
+    "([14],)",
+    "([13, 17, 16, 12, 11, -9],)",
+    "([17, 18, 1, -2, 14, 1, 13],)",
+    "([-3],)",
+    "([-2, 16, -5],)",
+    "([-7, -7, 1, 19, 7, 20, 6],)",
+    "([8, 0, 13, -6],)",
+    "([17, 20, 8, -3, 16],)",
+    "([5, -7, 10, 16],)",
+    "([9, -2, 0, -4, -3],)",
+    "([-8, 10],)",
+    "([6, -7, -7, 12],)",
+    "([19, -5],)",
+    "([17, 13, 7, -1, 7, 16],)",
+    "([19, 12, 9],)",
+    "([9, -1, 5, 6, 12, 11],)",
+    "([-7, 1, 10, -6, 6],)",
+    "([18, -3, -2, -9, 14],)",
+    "([13],)",
+    "([16, -4, 1, 4, 17],)",
+    "([16],)",
+    "([-8, 17, 9],)",
+    "([-9],)",
+    "([10, 17, 9],)",
+    "([-7, 2, 17, -6, -8, 10],)",
+    "([-4, 13, -6],)",
+    "([14, 16, -8],)",
+    "([],)",
+    "([10, -6, 17, -1, -7, -2],)",
+    "([2, 4, -4, -8],)"
+   ],
+   "probe_expected": [
+    "9120",
+    "0",
+    "14",
+    "20",
+    "532480",
+    "0",
+    "38",
+    "192",
+    "1920",
+    "1",
+    "28",
+    "14936064",
+    "2448",
+    "1",
+    "1",
+    "1",
+    "0",
+    "21760",
+    "10",
+    "18",
+    "1",
+    "12",
+    "38",
+    "12376",
+    "16416",
+    "18",
+    "1",
+    "36",
+    "26",
+    "32",
+    "32",
+    "1",
+    "1",
+    "12240",
+    "1",
+    "1",
+    "896",
+    "1",
+    "20",
+    "32"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:digits:first",
+   "name": "first_doubles_digits_reversed",
+   "params": "n",
+   "neighbour": "first_digits",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `first_doubles_digits_reversed(n)` that returns the first of the doubles of the digits of n from the last to the first (None if there are none)."
+   },
+   "tests": "assert first_doubles_digits_reversed(2) == 4\nassert first_doubles_digits_reversed(9) == 18\nassert first_doubles_digits_reversed(7) == 14\nassert first_doubles_digits_reversed(555) == 10\nassert first_doubles_digits_reversed(422) == 4\nassert first_doubles_digits_reversed(568) == 16",
+   "test_inputs": [
+    [
+     2
+    ],
+    [
+     9
+    ],
+    [
+     7
+    ],
+    [
+     555
+    ],
+    [
+     422
+    ],
+    [
+     568
+    ]
+   ],
+   "reference": "def first_doubles_digits_reversed(n):\n    ys = [2 * d for d in [int(c) for c in str(n)[::-1]]]\n    return ys[0] if ys else None",
+   "wrong": "def first_doubles_digits_reversed(n):\n    ys = [int(c) for c in str(n)]\n    return ys[0] if ys else None",
+   "expected": [
+    "4",
+    "18",
+    "14",
+    "10",
+    "4",
+    "16"
+   ],
+   "wrong_outputs": [
+    "2",
+    "9",
+    "7",
+    "5",
+    "4",
+    "5"
+   ],
+   "probe_args": [
+    "(916,)",
+    "(579,)",
+    "(2,)",
+    "(58,)",
+    "(9,)",
+    "(7,)",
+    "(9845,)",
+    "(280,)",
+    "(5,)",
+    "(8,)",
+    "(37,)",
+    "(45992,)",
+    "(661,)",
+    "(35233,)",
+    "(6960,)",
+    "(60271,)",
+    "(78,)",
+    "(90075,)",
+    "(638,)",
+    "(6503,)",
+    "(3,)",
+    "(34421,)",
+    "(1047,)",
+    "(4,)",
+    "(51240,)",
+    "(855,)",
+    "(7658,)",
+    "(69,)",
+    "(555,)",
+    "(422,)",
+    "(568,)",
+    "(173,)",
+    "(281,)",
+    "(5461,)",
+    "(77551,)",
+    "(29,)",
+    "(1,)",
+    "(6,)",
+    "(47793,)",
+    "(926,)"
+   ],
+   "probe_expected": [
+    "12",
+    "18",
+    "4",
+    "16",
+    "18",
+    "14",
+    "10",
+    "0",
+    "10",
+    "16",
+    "14",
+    "4",
+    "2",
+    "6",
+    "0",
+    "2",
+    "16",
+    "10",
+    "16",
+    "6",
+    "6",
+    "2",
+    "14",
+    "8",
+    "0",
+    "10",
+    "16",
+    "18",
+    "10",
+    "4",
+    "16",
+    "6",
+    "2",
+    "2",
+    "2",
+    "18",
+    "2",
+    "12",
+    "6",
+    "12"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:digits:prod",
+   "name": "prod_squares_even_digits",
+   "params": "n",
+   "neighbour": "prod_even_digits",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `prod_squares_even_digits(n)` that returns the product of the squares of the even digits of n (1 if there are none)."
+   },
+   "tests": "assert prod_squares_even_digits(2) == 4\nassert prod_squares_even_digits(9) == 1\nassert prod_squares_even_digits(7) == 1\nassert prod_squares_even_digits(555) == 1\nassert prod_squares_even_digits(422) == 256\nassert prod_squares_even_digits(568) == 2304",
+   "test_inputs": [
+    [
+     2
+    ],
+    [
+     9
+    ],
+    [
+     7
+    ],
+    [
+     555
+    ],
+    [
+     422
+    ],
+    [
+     568
+    ]
+   ],
+   "reference": "def prod_squares_even_digits(n):\n    ys = [d * d for d in [int(c) for c in str(n) if int(c) % 2 == 0]]\n    result = 1\n    for y in ys:\n        result *= y\n    return result",
+   "wrong": "def prod_squares_even_digits(n):\n    ys = [int(c) for c in str(n) if int(c) % 2 == 0]\n    result = 1\n    for y in ys:\n        result *= y\n    return result",
+   "expected": [
+    "4",
+    "1",
+    "1",
+    "1",
+    "256",
+    "2304"
+   ],
+   "wrong_outputs": [
+    "2",
+    "1",
+    "1",
+    "1",
+    "16",
+    "48"
+   ],
+   "probe_args": [
+    "(916,)",
+    "(579,)",
+    "(2,)",
+    "(58,)",
+    "(9,)",
+    "(7,)",
+    "(9845,)",
+    "(280,)",
+    "(5,)",
+    "(8,)",
+    "(37,)",
+    "(45992,)",
+    "(661,)",
+    "(35233,)",
+    "(6960,)",
+    "(60271,)",
+    "(78,)",
+    "(90075,)",
+    "(638,)",
+    "(6503,)",
+    "(3,)",
+    "(34421,)",
+    "(1047,)",
+    "(4,)",
+    "(51240,)",
+    "(855,)",
+    "(7658,)",
+    "(69,)",
+    "(555,)",
+    "(422,)",
+    "(568,)",
+    "(173,)",
+    "(281,)",
+    "(5461,)",
+    "(77551,)",
+    "(29,)",
+    "(1,)",
+    "(6,)",
+    "(47793,)",
+    "(926,)"
+   ],
+   "probe_expected": [
+    "36",
+    "1",
+    "4",
+    "64",
+    "1",
+    "1",
+    "1024",
+    "0",
+    "1",
+    "64",
+    "1",
+    "64",
+    "1296",
+    "4",
+    "0",
+    "0",
+    "64",
+    "0",
+    "2304",
+    "0",
+    "1",
+    "1024",
+    "0",
+    "16",
+    "0",
+    "64",
+    "2304",
+    "36",
+    "1",
+    "256",
+    "2304",
+    "1",
+    "256",
+    "576",
+    "1",
+    "4",
+    "1",
+    "36",
+    "16",
+    "144"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:digits:min",
+   "name": "min_digits_above_4",
+   "params": "n",
+   "neighbour": "min_even_digits",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `min_digits_above_4(n)` that returns the smallest of the digits of n that are greater than 4 (None if there are none)."
+   },
+   "tests": "assert min_digits_above_4(2) == None\nassert min_digits_above_4(9) == 9\nassert min_digits_above_4(7) == 7\nassert min_digits_above_4(555) == 5\nassert min_digits_above_4(422) == None\nassert min_digits_above_4(568) == 5",
+   "test_inputs": [
+    [
+     2
+    ],
+    [
+     9
+    ],
+    [
+     7
+    ],
+    [
+     555
+    ],
+    [
+     422
+    ],
+    [
+     568
+    ]
+   ],
+   "reference": "def min_digits_above_4(n):\n    ys = [int(c) for c in str(n) if int(c) > 4]\n    return min(ys) if ys else None",
+   "wrong": "def min_digits_above_4(n):\n    ys = [int(c) for c in str(n) if int(c) % 2 == 0]\n    return min(ys) if ys else None",
+   "expected": [
+    "None",
+    "9",
+    "7",
+    "5",
+    "None",
+    "5"
+   ],
+   "wrong_outputs": [
+    "2",
+    "None",
+    "None",
+    "None",
+    "2",
+    "6"
+   ],
+   "probe_args": [
+    "(916,)",
+    "(579,)",
+    "(2,)",
+    "(58,)",
+    "(9,)",
+    "(7,)",
+    "(9845,)",
+    "(280,)",
+    "(5,)",
+    "(8,)",
+    "(37,)",
+    "(45992,)",
+    "(661,)",
+    "(35233,)",
+    "(6960,)",
+    "(60271,)",
+    "(78,)",
+    "(90075,)",
+    "(638,)",
+    "(6503,)",
+    "(3,)",
+    "(34421,)",
+    "(1047,)",
+    "(4,)",
+    "(51240,)",
+    "(855,)",
+    "(7658,)",
+    "(69,)",
+    "(555,)",
+    "(422,)",
+    "(568,)",
+    "(173,)",
+    "(281,)",
+    "(5461,)",
+    "(77551,)",
+    "(29,)",
+    "(1,)",
+    "(6,)",
+    "(47793,)",
+    "(926,)"
+   ],
+   "probe_expected": [
+    "6",
+    "5",
+    "None",
+    "5",
+    "9",
+    "7",
+    "5",
+    "8",
+    "5",
+    "8",
+    "7",
+    "5",
+    "6",
+    "5",
+    "6",
+    "6",
+    "7",
+    "5",
+    "6",
+    "5",
+    "None",
+    "None",
+    "7",
+    "None",
+    "5",
+    "5",
+    "5",
+    "6",
+    "5",
+    "None",
+    "5",
+    "7",
+    "8",
+    "5",
+    "5",
+    "9",
+    "None",
+    "6",
+    "7",
+    "6"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:digits:min",
+   "name": "min_squares_digits_above_4",
+   "params": "n",
+   "neighbour": "min_even_digits",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `min_squares_digits_above_4(n)` that returns the smallest of the squares of the digits of n that are greater than 4 (None if there are none)."
+   },
+   "tests": "assert min_squares_digits_above_4(2) == None\nassert min_squares_digits_above_4(9) == 81\nassert min_squares_digits_above_4(7) == 49\nassert min_squares_digits_above_4(555) == 25\nassert min_squares_digits_above_4(422) == None\nassert min_squares_digits_above_4(568) == 25",
+   "test_inputs": [
+    [
+     2
+    ],
+    [
+     9
+    ],
+    [
+     7
+    ],
+    [
+     555
+    ],
+    [
+     422
+    ],
+    [
+     568
+    ]
+   ],
+   "reference": "def min_squares_digits_above_4(n):\n    ys = [d * d for d in [int(c) for c in str(n) if int(c) > 4]]\n    return min(ys) if ys else None",
+   "wrong": "def min_squares_digits_above_4(n):\n    ys = [int(c) for c in str(n) if int(c) % 2 == 0]\n    return min(ys) if ys else None",
+   "expected": [
+    "None",
+    "81",
+    "49",
+    "25",
+    "None",
+    "25"
+   ],
+   "wrong_outputs": [
+    "2",
+    "None",
+    "None",
+    "None",
+    "2",
+    "6"
+   ],
+   "probe_args": [
+    "(916,)",
+    "(579,)",
+    "(2,)",
+    "(58,)",
+    "(9,)",
+    "(7,)",
+    "(9845,)",
+    "(280,)",
+    "(5,)",
+    "(8,)",
+    "(37,)",
+    "(45992,)",
+    "(661,)",
+    "(35233,)",
+    "(6960,)",
+    "(60271,)",
+    "(78,)",
+    "(90075,)",
+    "(638,)",
+    "(6503,)",
+    "(3,)",
+    "(34421,)",
+    "(1047,)",
+    "(4,)",
+    "(51240,)",
+    "(855,)",
+    "(7658,)",
+    "(69,)",
+    "(555,)",
+    "(422,)",
+    "(568,)",
+    "(173,)",
+    "(281,)",
+    "(5461,)",
+    "(77551,)",
+    "(29,)",
+    "(1,)",
+    "(6,)",
+    "(47793,)",
+    "(926,)"
+   ],
+   "probe_expected": [
+    "36",
+    "25",
+    "None",
+    "25",
+    "81",
+    "49",
+    "25",
+    "64",
+    "25",
+    "64",
+    "49",
+    "25",
+    "36",
+    "25",
+    "36",
+    "36",
+    "49",
+    "25",
+    "36",
+    "25",
+    "None",
+    "None",
+    "49",
+    "None",
+    "25",
+    "25",
+    "25",
+    "36",
+    "25",
+    "None",
+    "25",
+    "49",
+    "64",
+    "25",
+    "25",
+    "81",
+    "None",
+    "36",
+    "49",
+    "36"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:digits:prod",
+   "name": "prod_even_digits",
+   "params": "n",
+   "neighbour": "prod_odd_digits",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `prod_even_digits(n)` that returns the product of the even digits of n (1 if there are none)."
+   },
+   "tests": "assert prod_even_digits(2) == 2\nassert prod_even_digits(9) == 1\nassert prod_even_digits(7) == 1\nassert prod_even_digits(555) == 1\nassert prod_even_digits(422) == 16\nassert prod_even_digits(568) == 48",
+   "test_inputs": [
+    [
+     2
+    ],
+    [
+     9
+    ],
+    [
+     7
+    ],
+    [
+     555
+    ],
+    [
+     422
+    ],
+    [
+     568
+    ]
+   ],
+   "reference": "def prod_even_digits(n):\n    ys = [int(c) for c in str(n) if int(c) % 2 == 0]\n    result = 1\n    for y in ys:\n        result *= y\n    return result",
+   "wrong": "def prod_even_digits(n):\n    ys = [int(c) for c in str(n) if int(c) % 2 == 1]\n    result = 1\n    for y in ys:\n        result *= y\n    return result",
+   "expected": [
+    "2",
+    "1",
+    "1",
+    "1",
+    "16",
+    "48"
+   ],
+   "wrong_outputs": [
+    "1",
+    "9",
+    "7",
+    "125",
+    "1",
+    "5"
+   ],
+   "probe_args": [
+    "(916,)",
+    "(579,)",
+    "(2,)",
+    "(58,)",
+    "(9,)",
+    "(7,)",
+    "(9845,)",
+    "(280,)",
+    "(5,)",
+    "(8,)",
+    "(37,)",
+    "(45992,)",
+    "(661,)",
+    "(35233,)",
+    "(6960,)",
+    "(60271,)",
+    "(78,)",
+    "(90075,)",
+    "(638,)",
+    "(6503,)",
+    "(3,)",
+    "(34421,)",
+    "(1047,)",
+    "(4,)",
+    "(51240,)",
+    "(855,)",
+    "(7658,)",
+    "(69,)",
+    "(555,)",
+    "(422,)",
+    "(568,)",
+    "(173,)",
+    "(281,)",
+    "(5461,)",
+    "(77551,)",
+    "(29,)",
+    "(1,)",
+    "(6,)",
+    "(47793,)",
+    "(926,)"
+   ],
+   "probe_expected": [
+    "6",
+    "1",
+    "2",
+    "8",
+    "1",
+    "1",
+    "32",
+    "0",
+    "1",
+    "8",
+    "1",
+    "8",
+    "36",
+    "2",
+    "0",
+    "0",
+    "8",
+    "0",
+    "48",
+    "0",
+    "1",
+    "32",
+    "0",
+    "4",
+    "0",
+    "8",
+    "48",
+    "6",
+    "1",
+    "16",
+    "48",
+    "1",
+    "16",
+    "24",
+    "1",
+    "2",
+    "1",
+    "6",
+    "4",
+    "12"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:digits:min",
+   "name": "min_doubles_nonzero_digits",
+   "params": "n",
+   "neighbour": "min_even_digits",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `min_doubles_nonzero_digits(n)` that returns the smallest of the doubles of the non-zero digits of n (None if there are none)."
+   },
+   "tests": "assert min_doubles_nonzero_digits(2) == 4\nassert min_doubles_nonzero_digits(9) == 18\nassert min_doubles_nonzero_digits(7) == 14\nassert min_doubles_nonzero_digits(555) == 10\nassert min_doubles_nonzero_digits(422) == 4\nassert min_doubles_nonzero_digits(568) == 10",
+   "test_inputs": [
+    [
+     2
+    ],
+    [
+     9
+    ],
+    [
+     7
+    ],
+    [
+     555
+    ],
+    [
+     422
+    ],
+    [
+     568
+    ]
+   ],
+   "reference": "def min_doubles_nonzero_digits(n):\n    ys = [2 * d for d in [int(c) for c in str(n) if c != '0']]\n    return min(ys) if ys else None",
+   "wrong": "def min_doubles_nonzero_digits(n):\n    ys = [int(c) for c in str(n) if int(c) % 2 == 0]\n    return min(ys) if ys else None",
+   "expected": [
+    "4",
+    "18",
+    "14",
+    "10",
+    "4",
+    "10"
+   ],
+   "wrong_outputs": [
+    "2",
+    "None",
+    "None",
+    "None",
+    "2",
+    "6"
+   ],
+   "probe_args": [
+    "(916,)",
+    "(579,)",
+    "(2,)",
+    "(58,)",
+    "(9,)",
+    "(7,)",
+    "(9845,)",
+    "(280,)",
+    "(5,)",
+    "(8,)",
+    "(37,)",
+    "(45992,)",
+    "(661,)",
+    "(35233,)",
+    "(6960,)",
+    "(60271,)",
+    "(78,)",
+    "(90075,)",
+    "(638,)",
+    "(6503,)",
+    "(3,)",
+    "(34421,)",
+    "(1047,)",
+    "(4,)",
+    "(51240,)",
+    "(855,)",
+    "(7658,)",
+    "(69,)",
+    "(555,)",
+    "(422,)",
+    "(568,)",
+    "(173,)",
+    "(281,)",
+    "(5461,)",
+    "(77551,)",
+    "(29,)",
+    "(1,)",
+    "(6,)",
+    "(47793,)",
+    "(926,)"
+   ],
+   "probe_expected": [
+    "2",
+    "10",
+    "4",
+    "10",
+    "18",
+    "14",
+    "8",
+    "4",
+    "10",
+    "16",
+    "6",
+    "4",
+    "2",
+    "4",
+    "12",
+    "2",
+    "14",
+    "10",
+    "6",
+    "6",
+    "6",
+    "2",
+    "2",
+    "8",
+    "2",
+    "10",
+    "10",
+    "12",
+    "10",
+    "4",
+    "10",
+    "2",
+    "2",
+    "2",
+    "2",
+    "4",
+    "2",
+    "12",
+    "6",
+    "4"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:digits:list",
+   "name": "list_squares_digits_reversed",
+   "params": "n",
+   "neighbour": "list_even_digits",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `list_squares_digits_reversed(n)` that returns a list of the squares of the digits of n from the last to the first."
+   },
+   "tests": "assert list_squares_digits_reversed(2) == [4]\nassert list_squares_digits_reversed(9) == [81]\nassert list_squares_digits_reversed(7) == [49]\nassert list_squares_digits_reversed(555) == [25, 25, 25]\nassert list_squares_digits_reversed(422) == [4, 4, 16]\nassert list_squares_digits_reversed(568) == [64, 36, 25]",
+   "test_inputs": [
+    [
+     2
+    ],
+    [
+     9
+    ],
+    [
+     7
+    ],
+    [
+     555
+    ],
+    [
+     422
+    ],
+    [
+     568
+    ]
+   ],
+   "reference": "def list_squares_digits_reversed(n):\n    ys = [d * d for d in [int(c) for c in str(n)[::-1]]]\n    return ys",
+   "wrong": "def list_squares_digits_reversed(n):\n    ys = [int(c) for c in str(n) if int(c) % 2 == 0]\n    return ys",
+   "expected": [
+    "[4]",
+    "[81]",
+    "[49]",
+    "[25, 25, 25]",
+    "[4, 4, 16]",
+    "[64, 36, 25]"
+   ],
+   "wrong_outputs": [
+    "[2]",
+    "[]",
+    "[]",
+    "[]",
+    "[4, 2, 2]",
+    "[6, 8]"
+   ],
+   "probe_args": [
+    "(916,)",
+    "(579,)",
+    "(2,)",
+    "(58,)",
+    "(9,)",
+    "(7,)",
+    "(9845,)",
+    "(280,)",
+    "(5,)",
+    "(8,)",
+    "(37,)",
+    "(45992,)",
+    "(661,)",
+    "(35233,)",
+    "(6960,)",
+    "(60271,)",
+    "(78,)",
+    "(90075,)",
+    "(638,)",
+    "(6503,)",
+    "(3,)",
+    "(34421,)",
+    "(1047,)",
+    "(4,)",
+    "(51240,)",
+    "(855,)",
+    "(7658,)",
+    "(69,)",
+    "(555,)",
+    "(422,)",
+    "(568,)",
+    "(173,)",
+    "(281,)",
+    "(5461,)",
+    "(77551,)",
+    "(29,)",
+    "(1,)",
+    "(6,)",
+    "(47793,)",
+    "(926,)"
+   ],
+   "probe_expected": [
+    "[36, 1, 81]",
+    "[81, 49, 25]",
+    "[4]",
+    "[64, 25]",
+    "[81]",
+    "[49]",
+    "[25, 16, 64, 81]",
+    "[0, 64, 4]",
+    "[25]",
+    "[64]",
+    "[49, 9]",
+    "[4, 81, 81, 25, 16]",
+    "[1, 36, 36]",
+    "[9, 9, 4, 25, 9]",
+    "[0, 36, 81, 36]",
+    "[1, 49, 4, 0, 36]",
+    "[64, 49]",
+    "[25, 49, 0, 0, 81]",
+    "[64, 9, 36]",
+    "[9, 0, 25, 36]",
+    "[9]",
+    "[1, 4, 16, 16, 9]",
+    "[49, 16, 0, 1]",
+    "[16]",
+    "[0, 16, 4, 1, 25]",
+    "[25, 25, 64]",
+    "[64, 25, 36, 49]",
+    "[81, 36]",
+    "[25, 25, 25]",
+    "[4, 4, 16]",
+    "[64, 36, 25]",
+    "[9, 49, 1]",
+    "[1, 64, 4]",
+    "[1, 36, 16, 25]",
+    "[1, 25, 25, 49, 49]",
+    "[81, 4]",
+    "[1]",
+    "[36]",
+    "[9, 81, 49, 49, 16]",
+    "[36, 4, 81]"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:digits:first",
+   "name": "first_squares_odd_digits",
+   "params": "n",
+   "neighbour": "first_digits",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `first_squares_odd_digits(n)` that returns the first of the squares of the odd digits of n (None if there are none)."
+   },
+   "tests": "assert first_squares_odd_digits(2) == None\nassert first_squares_odd_digits(9) == 81\nassert first_squares_odd_digits(7) == 49\nassert first_squares_odd_digits(555) == 25\nassert first_squares_odd_digits(422) == None\nassert first_squares_odd_digits(568) == 25",
+   "test_inputs": [
+    [
+     2
+    ],
+    [
+     9
+    ],
+    [
+     7
+    ],
+    [
+     555
+    ],
+    [
+     422
+    ],
+    [
+     568
+    ]
+   ],
+   "reference": "def first_squares_odd_digits(n):\n    ys = [d * d for d in [int(c) for c in str(n) if int(c) % 2 == 1]]\n    return ys[0] if ys else None",
+   "wrong": "def first_squares_odd_digits(n):\n    ys = [int(c) for c in str(n)]\n    return ys[0] if ys else None",
+   "expected": [
+    "None",
+    "81",
+    "49",
+    "25",
+    "None",
+    "25"
+   ],
+   "wrong_outputs": [
+    "2",
+    "9",
+    "7",
+    "5",
+    "4",
+    "5"
+   ],
+   "probe_args": [
+    "(916,)",
+    "(579,)",
+    "(2,)",
+    "(58,)",
+    "(9,)",
+    "(7,)",
+    "(9845,)",
+    "(280,)",
+    "(5,)",
+    "(8,)",
+    "(37,)",
+    "(45992,)",
+    "(661,)",
+    "(35233,)",
+    "(6960,)",
+    "(60271,)",
+    "(78,)",
+    "(90075,)",
+    "(638,)",
+    "(6503,)",
+    "(3,)",
+    "(34421,)",
+    "(1047,)",
+    "(4,)",
+    "(51240,)",
+    "(855,)",
+    "(7658,)",
+    "(69,)",
+    "(555,)",
+    "(422,)",
+    "(568,)",
+    "(173,)",
+    "(281,)",
+    "(5461,)",
+    "(77551,)",
+    "(29,)",
+    "(1,)",
+    "(6,)",
+    "(47793,)",
+    "(926,)"
+   ],
+   "probe_expected": [
+    "81",
+    "25",
+    "None",
+    "25",
+    "81",
+    "49",
+    "81",
+    "None",
+    "25",
+    "None",
+    "9",
+    "25",
+    "1",
+    "9",
+    "81",
+    "49",
+    "49",
+    "81",
+    "9",
+    "25",
+    "9",
+    "9",
+    "1",
+    "None",
+    "25",
+    "25",
+    "49",
+    "81",
+    "25",
+    "None",
+    "25",
+    "1",
+    "1",
+    "25",
+    "49",
+    "81",
+    "1",
+    "None",
+    "49",
+    "81"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:digits:last",
+   "name": "last_squares_nonzero_digits",
+   "params": "n",
+   "neighbour": "last_even_digits",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `last_squares_nonzero_digits(n)` that returns the last of the squares of the non-zero digits of n (None if there are none)."
+   },
+   "tests": "assert last_squares_nonzero_digits(2) == 4\nassert last_squares_nonzero_digits(9) == 81\nassert last_squares_nonzero_digits(7) == 49\nassert last_squares_nonzero_digits(555) == 25\nassert last_squares_nonzero_digits(422) == 4\nassert last_squares_nonzero_digits(568) == 64",
+   "test_inputs": [
+    [
+     2
+    ],
+    [
+     9
+    ],
+    [
+     7
+    ],
+    [
+     555
+    ],
+    [
+     422
+    ],
+    [
+     568
+    ]
+   ],
+   "reference": "def last_squares_nonzero_digits(n):\n    ys = [d * d for d in [int(c) for c in str(n) if c != '0']]\n    return ys[-1] if ys else None",
+   "wrong": "def last_squares_nonzero_digits(n):\n    ys = [int(c) for c in str(n) if int(c) % 2 == 0]\n    return ys[-1] if ys else None",
+   "expected": [
+    "4",
+    "81",
+    "49",
+    "25",
+    "4",
+    "64"
+   ],
+   "wrong_outputs": [
+    "2",
+    "None",
+    "None",
+    "None",
+    "2",
+    "8"
+   ],
+   "probe_args": [
+    "(916,)",
+    "(579,)",
+    "(2,)",
+    "(58,)",
+    "(9,)",
+    "(7,)",
+    "(9845,)",
+    "(280,)",
+    "(5,)",
+    "(8,)",
+    "(37,)",
+    "(45992,)",
+    "(661,)",
+    "(35233,)",
+    "(6960,)",
+    "(60271,)",
+    "(78,)",
+    "(90075,)",
+    "(638,)",
+    "(6503,)",
+    "(3,)",
+    "(34421,)",
+    "(1047,)",
+    "(4,)",
+    "(51240,)",
+    "(855,)",
+    "(7658,)",
+    "(69,)",
+    "(555,)",
+    "(422,)",
+    "(568,)",
+    "(173,)",
+    "(281,)",
+    "(5461,)",
+    "(77551,)",
+    "(29,)",
+    "(1,)",
+    "(6,)",
+    "(47793,)",
+    "(926,)"
+   ],
+   "probe_expected": [
+    "36",
+    "81",
+    "4",
+    "64",
+    "81",
+    "49",
+    "25",
+    "64",
+    "25",
+    "64",
+    "49",
+    "4",
+    "1",
+    "9",
+    "36",
+    "1",
+    "64",
+    "25",
+    "64",
+    "9",
+    "9",
+    "1",
+    "49",
+    "16",
+    "16",
+    "25",
+    "64",
+    "81",
+    "25",
+    "4",
+    "64",
+    "9",
+    "1",
+    "1",
+    "1",
+    "81",
+    "1",
+    "36",
+    "9",
+    "36"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:digits:max",
+   "name": "max_doubles_digits_above_4",
+   "params": "n",
+   "neighbour": "max_even_digits",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `max_doubles_digits_above_4(n)` that returns the largest of the doubles of the digits of n that are greater than 4 (None if there are none)."
+   },
+   "tests": "assert max_doubles_digits_above_4(2) == None\nassert max_doubles_digits_above_4(9) == 18\nassert max_doubles_digits_above_4(7) == 14\nassert max_doubles_digits_above_4(555) == 10\nassert max_doubles_digits_above_4(422) == None\nassert max_doubles_digits_above_4(568) == 16",
+   "test_inputs": [
+    [
+     2
+    ],
+    [
+     9
+    ],
+    [
+     7
+    ],
+    [
+     555
+    ],
+    [
+     422
+    ],
+    [
+     568
+    ]
+   ],
+   "reference": "def max_doubles_digits_above_4(n):\n    ys = [2 * d for d in [int(c) for c in str(n) if int(c) > 4]]\n    return max(ys) if ys else None",
+   "wrong": "def max_doubles_digits_above_4(n):\n    ys = [int(c) for c in str(n) if int(c) % 2 == 0]\n    return max(ys) if ys else None",
+   "expected": [
+    "None",
+    "18",
+    "14",
+    "10",
+    "None",
+    "16"
+   ],
+   "wrong_outputs": [
+    "2",
+    "None",
+    "None",
+    "None",
+    "4",
+    "8"
+   ],
+   "probe_args": [
+    "(916,)",
+    "(579,)",
+    "(2,)",
+    "(58,)",
+    "(9,)",
+    "(7,)",
+    "(9845,)",
+    "(280,)",
+    "(5,)",
+    "(8,)",
+    "(37,)",
+    "(45992,)",
+    "(661,)",
+    "(35233,)",
+    "(6960,)",
+    "(60271,)",
+    "(78,)",
+    "(90075,)",
+    "(638,)",
+    "(6503,)",
+    "(3,)",
+    "(34421,)",
+    "(1047,)",
+    "(4,)",
+    "(51240,)",
+    "(855,)",
+    "(7658,)",
+    "(69,)",
+    "(555,)",
+    "(422,)",
+    "(568,)",
+    "(173,)",
+    "(281,)",
+    "(5461,)",
+    "(77551,)",
+    "(29,)",
+    "(1,)",
+    "(6,)",
+    "(47793,)",
+    "(926,)"
+   ],
+   "probe_expected": [
+    "18",
+    "18",
+    "None",
+    "16",
+    "18",
+    "14",
+    "18",
+    "16",
+    "10",
+    "16",
+    "14",
+    "18",
+    "12",
+    "10",
+    "18",
+    "14",
+    "16",
+    "18",
+    "16",
+    "12",
+    "None",
+    "None",
+    "14",
+    "None",
+    "10",
+    "16",
+    "16",
+    "18",
+    "10",
+    "None",
+    "16",
+    "14",
+    "16",
+    "12",
+    "14",
+    "18",
+    "None",
+    "12",
+    "18",
+    "18"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:chars:first",
+   "name": "first_lowercase_chars_reversed",
+   "params": "s",
+   "neighbour": "first_chars",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `first_lowercase_chars_reversed(s)` that returns the first of the characters of s from the last to the first in lower case (None if there are none)."
+   },
+   "tests": "assert first_lowercase_chars_reversed('') == None\nassert first_lowercase_chars_reversed('Y') == 'y'\nassert first_lowercase_chars_reversed('a') == 'a'\nassert first_lowercase_chars_reversed('1eXo1') == '1'\nassert first_lowercase_chars_reversed('9X91uZ') == 'z'\nassert first_lowercase_chars_reversed('ac !ce') == 'e'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "Y"
+    ],
+    [
+     "a"
+    ],
+    [
+     "1eXo1"
+    ],
+    [
+     "9X91uZ"
+    ],
+    [
+     "ac !ce"
+    ]
+   ],
+   "reference": "def first_lowercase_chars_reversed(s):\n    ys = [c.lower() for c in list(s[::-1])]\n    return ys[0] if ys else None",
+   "wrong": "def first_lowercase_chars_reversed(s):\n    ys = list(s)\n    return ys[0] if ys else None",
+   "expected": [
+    "None",
+    "'y'",
+    "'a'",
+    "'1'",
+    "'z'",
+    "'e'"
+   ],
+   "wrong_outputs": [
+    "None",
+    "'Y'",
+    "'a'",
+    "'1'",
+    "'9'",
+    "'a'"
+   ],
+   "probe_args": [
+    "('bb999',)",
+    "('',)",
+    "('1 ebXui',)",
+    "('a1eZcbeXuo',)",
+    "('bZ',)",
+    "('Zu',)",
+    "('u!YX !!o9X',)",
+    "(' 9eYZ!eao0',)",
+    "('9oaYc',)",
+    "('Z1c9',)",
+    "('i001Xb1bY',)",
+    "('cai',)",
+    "('o9c1c9 ',)",
+    "('Yu!YY',)",
+    "('b 11Y1Zb0',)",
+    "('iY!',)",
+    "('9X91uZ',)",
+    "('991',)",
+    "('!a0ciYZiob',)",
+    "('9i1u',)",
+    "('ac !ce',)",
+    "('aaXuc',)",
+    "('0b 0c1oua',)",
+    "('uXabX1c',)",
+    "('c ob0Y oe',)",
+    "('b!aZ0XZ',)",
+    "(' b 0Z',)",
+    "('!u',)",
+    "('!09 ',)",
+    "('Y',)",
+    "('a1u',)",
+    "('1eXo1',)",
+    "('a',)",
+    "('i!aY ZZ',)",
+    "('b19',)",
+    "('0YuYibcu',)",
+    "('!b!bub',)",
+    "('1c0a1X',)",
+    "('uaX!9o0ibo',)",
+    "('o',)"
+   ],
+   "probe_expected": [
+    "'9'",
+    "None",
+    "'i'",
+    "'o'",
+    "'z'",
+    "'u'",
+    "'x'",
+    "'0'",
+    "'c'",
+    "'9'",
+    "'y'",
+    "'i'",
+    "' '",
+    "'y'",
+    "'0'",
+    "'!'",
+    "'z'",
+    "'1'",
+    "'b'",
+    "'u'",
+    "'e'",
+    "'c'",
+    "'a'",
+    "'c'",
+    "'e'",
+    "'z'",
+    "'z'",
+    "'u'",
+    "' '",
+    "'y'",
+    "'u'",
+    "'1'",
+    "'a'",
+    "'z'",
+    "'9'",
+    "'u'",
+    "'b'",
+    "'x'",
+    "'o'",
+    "'o'"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:chars:join",
+   "name": "join_lowercase_chars_reversed",
+   "params": "s",
+   "neighbour": "join_vowels",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `join_lowercase_chars_reversed(s)` that returns the characters of s from the last to the first in lower case joined into one string."
+   },
+   "tests": "assert join_lowercase_chars_reversed('') == ''\nassert join_lowercase_chars_reversed('Y') == 'y'\nassert join_lowercase_chars_reversed('a') == 'a'\nassert join_lowercase_chars_reversed('1eXo1') == '1oxe1'\nassert join_lowercase_chars_reversed('9X91uZ') == 'zu19x9'\nassert join_lowercase_chars_reversed('ac !ce') == 'ec! ca'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "Y"
+    ],
+    [
+     "a"
+    ],
+    [
+     "1eXo1"
+    ],
+    [
+     "9X91uZ"
+    ],
+    [
+     "ac !ce"
+    ]
+   ],
+   "reference": "def join_lowercase_chars_reversed(s):\n    ys = [c.lower() for c in list(s[::-1])]\n    return ''.join(ys)",
+   "wrong": "def join_lowercase_chars_reversed(s):\n    ys = [c for c in s if c.lower() in 'aeiou']\n    return ''.join(ys)",
+   "expected": [
+    "''",
+    "'y'",
+    "'a'",
+    "'1oxe1'",
+    "'zu19x9'",
+    "'ec! ca'"
+   ],
+   "wrong_outputs": [
+    "''",
+    "''",
+    "'a'",
+    "'eo'",
+    "'u'",
+    "'ae'"
+   ],
+   "probe_args": [
+    "('bb999',)",
+    "('',)",
+    "('1 ebXui',)",
+    "('a1eZcbeXuo',)",
+    "('bZ',)",
+    "('Zu',)",
+    "('u!YX !!o9X',)",
+    "(' 9eYZ!eao0',)",
+    "('9oaYc',)",
+    "('Z1c9',)",
+    "('i001Xb1bY',)",
+    "('cai',)",
+    "('o9c1c9 ',)",
+    "('Yu!YY',)",
+    "('b 11Y1Zb0',)",
+    "('iY!',)",
+    "('9X91uZ',)",
+    "('991',)",
+    "('!a0ciYZiob',)",
+    "('9i1u',)",
+    "('ac !ce',)",
+    "('aaXuc',)",
+    "('0b 0c1oua',)",
+    "('uXabX1c',)",
+    "('c ob0Y oe',)",
+    "('b!aZ0XZ',)",
+    "(' b 0Z',)",
+    "('!u',)",
+    "('!09 ',)",
+    "('Y',)",
+    "('a1u',)",
+    "('1eXo1',)",
+    "('a',)",
+    "('i!aY ZZ',)",
+    "('b19',)",
+    "('0YuYibcu',)",
+    "('!b!bub',)",
+    "('1c0a1X',)",
+    "('uaX!9o0ibo',)",
+    "('o',)"
+   ],
+   "probe_expected": [
+    "'999bb'",
+    "''",
+    "'iuxbe 1'",
+    "'ouxebcze1a'",
+    "'zb'",
+    "'uz'",
+    "'x9o!! xy!u'",
+    "'0oae!zye9 '",
+    "'cyao9'",
+    "'9c1z'",
+    "'yb1bx100i'",
+    "'iac'",
+    "' 9c1c9o'",
+    "'yy!uy'",
+    "'0bz1y11 b'",
+    "'!yi'",
+    "'zu19x9'",
+    "'199'",
+    "'boizyic0a!'",
+    "'u1i9'",
+    "'ec! ca'",
+    "'cuxaa'",
+    "'auo1c0 b0'",
+    "'c1xbaxu'",
+    "'eo y0bo c'",
+    "'zx0za!b'",
+    "'z0 b '",
+    "'u!'",
+    "' 90!'",
+    "'y'",
+    "'u1a'",
+    "'1oxe1'",
+    "'a'",
+    "'zz ya!i'",
+    "'91b'",
+    "'ucbiyuy0'",
+    "'bub!b!'",
+    "'x1a0c1'",
+    "'obi0o9!xau'",
+    "'o'"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:chars:list",
+   "name": "list_digit_chars",
+   "params": "s",
+   "neighbour": "list_vowels",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `list_digit_chars(s)` that returns a list of the digit characters of s."
+   },
+   "tests": "assert list_digit_chars('') == []\nassert list_digit_chars('Y') == []\nassert list_digit_chars('a') == []\nassert list_digit_chars('1eXo1') == ['1', '1']\nassert list_digit_chars('9X91uZ') == ['9', '9', '1']\nassert list_digit_chars('ac !ce') == []",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "Y"
+    ],
+    [
+     "a"
+    ],
+    [
+     "1eXo1"
+    ],
+    [
+     "9X91uZ"
+    ],
+    [
+     "ac !ce"
+    ]
+   ],
+   "reference": "def list_digit_chars(s):\n    ys = [c for c in s if c.isdigit()]\n    return ys",
+   "wrong": "def list_digit_chars(s):\n    ys = [c for c in s if c.lower() in 'aeiou']\n    return ys",
+   "expected": [
+    "[]",
+    "[]",
+    "[]",
+    "['1', '1']",
+    "['9', '9', '1']",
+    "[]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[]",
+    "['a']",
+    "['e', 'o']",
+    "['u']",
+    "['a', 'e']"
+   ],
+   "probe_args": [
+    "('bb999',)",
+    "('',)",
+    "('1 ebXui',)",
+    "('a1eZcbeXuo',)",
+    "('bZ',)",
+    "('Zu',)",
+    "('u!YX !!o9X',)",
+    "(' 9eYZ!eao0',)",
+    "('9oaYc',)",
+    "('Z1c9',)",
+    "('i001Xb1bY',)",
+    "('cai',)",
+    "('o9c1c9 ',)",
+    "('Yu!YY',)",
+    "('b 11Y1Zb0',)",
+    "('iY!',)",
+    "('9X91uZ',)",
+    "('991',)",
+    "('!a0ciYZiob',)",
+    "('9i1u',)",
+    "('ac !ce',)",
+    "('aaXuc',)",
+    "('0b 0c1oua',)",
+    "('uXabX1c',)",
+    "('c ob0Y oe',)",
+    "('b!aZ0XZ',)",
+    "(' b 0Z',)",
+    "('!u',)",
+    "('!09 ',)",
+    "('Y',)",
+    "('a1u',)",
+    "('1eXo1',)",
+    "('a',)",
+    "('i!aY ZZ',)",
+    "('b19',)",
+    "('0YuYibcu',)",
+    "('!b!bub',)",
+    "('1c0a1X',)",
+    "('uaX!9o0ibo',)",
+    "('o',)"
+   ],
+   "probe_expected": [
+    "['9', '9', '9']",
+    "[]",
+    "['1']",
+    "['1']",
+    "[]",
+    "[]",
+    "['9']",
+    "['9', '0']",
+    "['9']",
+    "['1', '9']",
+    "['0', '0', '1', '1']",
+    "[]",
+    "['9', '1', '9']",
+    "[]",
+    "['1', '1', '1', '0']",
+    "[]",
+    "['9', '9', '1']",
+    "['9', '9', '1']",
+    "['0']",
+    "['9', '1']",
+    "[]",
+    "[]",
+    "['0', '0', '1']",
+    "['1']",
+    "['0']",
+    "['0']",
+    "['0']",
+    "[]",
+    "['0', '9']",
+    "[]",
+    "['1']",
+    "['1', '1']",
+    "[]",
+    "[]",
+    "['1', '9']",
+    "['0']",
+    "[]",
+    "['1', '0', '1']",
+    "['9', '0']",
+    "[]"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:chars:first",
+   "name": "first_first_half_chars",
+   "params": "s",
+   "neighbour": "first_chars",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `first_first_half_chars(s)` that returns the first of the characters of the first half of s (for an odd length, the middle character belongs to the second half) (None if there are none)."
+   },
+   "tests": "assert first_first_half_chars('') == None\nassert first_first_half_chars('Y') == None\nassert first_first_half_chars('a') == None\nassert first_first_half_chars('1eXo1') == '1'\nassert first_first_half_chars('9X91uZ') == '9'\nassert first_first_half_chars('ac !ce') == 'a'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "Y"
+    ],
+    [
+     "a"
+    ],
+    [
+     "1eXo1"
+    ],
+    [
+     "9X91uZ"
+    ],
+    [
+     "ac !ce"
+    ]
+   ],
+   "reference": "def first_first_half_chars(s):\n    ys = list(s[:len(s) // 2])\n    return ys[0] if ys else None",
+   "wrong": "def first_first_half_chars(s):\n    ys = list(s)\n    return ys[0] if ys else None",
+   "expected": [
+    "None",
+    "None",
+    "None",
+    "'1'",
+    "'9'",
+    "'a'"
+   ],
+   "wrong_outputs": [
+    "None",
+    "'Y'",
+    "'a'",
+    "'1'",
+    "'9'",
+    "'a'"
+   ],
+   "probe_args": [
+    "('bb999',)",
+    "('',)",
+    "('1 ebXui',)",
+    "('a1eZcbeXuo',)",
+    "('bZ',)",
+    "('Zu',)",
+    "('u!YX !!o9X',)",
+    "(' 9eYZ!eao0',)",
+    "('9oaYc',)",
+    "('Z1c9',)",
+    "('i001Xb1bY',)",
+    "('cai',)",
+    "('o9c1c9 ',)",
+    "('Yu!YY',)",
+    "('b 11Y1Zb0',)",
+    "('iY!',)",
+    "('9X91uZ',)",
+    "('991',)",
+    "('!a0ciYZiob',)",
+    "('9i1u',)",
+    "('ac !ce',)",
+    "('aaXuc',)",
+    "('0b 0c1oua',)",
+    "('uXabX1c',)",
+    "('c ob0Y oe',)",
+    "('b!aZ0XZ',)",
+    "(' b 0Z',)",
+    "('!u',)",
+    "('!09 ',)",
+    "('Y',)",
+    "('a1u',)",
+    "('1eXo1',)",
+    "('a',)",
+    "('i!aY ZZ',)",
+    "('b19',)",
+    "('0YuYibcu',)",
+    "('!b!bub',)",
+    "('1c0a1X',)",
+    "('uaX!9o0ibo',)",
+    "('o',)"
+   ],
+   "probe_expected": [
+    "'b'",
+    "None",
+    "'1'",
+    "'a'",
+    "'b'",
+    "'Z'",
+    "'u'",
+    "' '",
+    "'9'",
+    "'Z'",
+    "'i'",
+    "'c'",
+    "'o'",
+    "'Y'",
+    "'b'",
+    "'i'",
+    "'9'",
+    "'9'",
+    "'!'",
+    "'9'",
+    "'a'",
+    "'a'",
+    "'0'",
+    "'u'",
+    "'c'",
+    "'b'",
+    "' '",
+    "'!'",
+    "'!'",
+    "None",
+    "'a'",
+    "'1'",
+    "None",
+    "'i'",
+    "'b'",
+    "'0'",
+    "'!'",
+    "'1'",
+    "'u'",
+    "None"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:chars:ndistinct",
+   "name": "ndistinct_vowels",
+   "params": "s",
+   "neighbour": "ndistinct_upper_letters",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `ndistinct_vowels(s)` that returns how many different values there are among the vowels of s (a, e, i, o and u, in either case)."
+   },
+   "tests": "assert ndistinct_vowels('') == 0\nassert ndistinct_vowels('Y') == 0\nassert ndistinct_vowels('a') == 1\nassert ndistinct_vowels('1eXo1') == 2\nassert ndistinct_vowels('9X91uZ') == 1\nassert ndistinct_vowels('ac !ce') == 2",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "Y"
+    ],
+    [
+     "a"
+    ],
+    [
+     "1eXo1"
+    ],
+    [
+     "9X91uZ"
+    ],
+    [
+     "ac !ce"
+    ]
+   ],
+   "reference": "def ndistinct_vowels(s):\n    ys = [c for c in s if c.lower() in 'aeiou']\n    return len(set(ys))",
+   "wrong": "def ndistinct_vowels(s):\n    ys = [c for c in s if c.isupper()]\n    return len(set(ys))",
+   "expected": [
+    "0",
+    "0",
+    "1",
+    "2",
+    "1",
+    "2"
+   ],
+   "wrong_outputs": [
+    "0",
+    "1",
+    "0",
+    "1",
+    "2",
+    "0"
+   ],
+   "probe_args": [
+    "('bb999',)",
+    "('',)",
+    "('1 ebXui',)",
+    "('a1eZcbeXuo',)",
+    "('bZ',)",
+    "('Zu',)",
+    "('u!YX !!o9X',)",
+    "(' 9eYZ!eao0',)",
+    "('9oaYc',)",
+    "('Z1c9',)",
+    "('i001Xb1bY',)",
+    "('cai',)",
+    "('o9c1c9 ',)",
+    "('Yu!YY',)",
+    "('b 11Y1Zb0',)",
+    "('iY!',)",
+    "('9X91uZ',)",
+    "('991',)",
+    "('!a0ciYZiob',)",
+    "('9i1u',)",
+    "('ac !ce',)",
+    "('aaXuc',)",
+    "('0b 0c1oua',)",
+    "('uXabX1c',)",
+    "('c ob0Y oe',)",
+    "('b!aZ0XZ',)",
+    "(' b 0Z',)",
+    "('!u',)",
+    "('!09 ',)",
+    "('Y',)",
+    "('a1u',)",
+    "('1eXo1',)",
+    "('a',)",
+    "('i!aY ZZ',)",
+    "('b19',)",
+    "('0YuYibcu',)",
+    "('!b!bub',)",
+    "('1c0a1X',)",
+    "('uaX!9o0ibo',)",
+    "('o',)"
+   ],
+   "probe_expected": [
+    "0",
+    "0",
+    "3",
+    "4",
+    "0",
+    "1",
+    "2",
+    "3",
+    "2",
+    "0",
+    "1",
+    "2",
+    "1",
+    "1",
+    "0",
+    "1",
+    "1",
+    "0",
+    "3",
+    "2",
+    "2",
+    "2",
+    "3",
+    "2",
+    "2",
+    "1",
+    "0",
+    "1",
+    "0",
+    "0",
+    "2",
+    "2",
+    "1",
+    "2",
+    "0",
+    "2",
+    "1",
+    "1",
+    "4",
+    "1"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:chars:last",
+   "name": "last_digit_chars",
+   "params": "s",
+   "neighbour": "last_vowels",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `last_digit_chars(s)` that returns the last of the digit characters of s (None if there are none)."
+   },
+   "tests": "assert last_digit_chars('') == None\nassert last_digit_chars('Y') == None\nassert last_digit_chars('a') == None\nassert last_digit_chars('1eXo1') == '1'\nassert last_digit_chars('9X91uZ') == '1'\nassert last_digit_chars('ac !ce') == None",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "Y"
+    ],
+    [
+     "a"
+    ],
+    [
+     "1eXo1"
+    ],
+    [
+     "9X91uZ"
+    ],
+    [
+     "ac !ce"
+    ]
+   ],
+   "reference": "def last_digit_chars(s):\n    ys = [c for c in s if c.isdigit()]\n    return ys[-1] if ys else None",
+   "wrong": "def last_digit_chars(s):\n    ys = [c for c in s if c.lower() in 'aeiou']\n    return ys[-1] if ys else None",
+   "expected": [
+    "None",
+    "None",
+    "None",
+    "'1'",
+    "'1'",
+    "None"
+   ],
+   "wrong_outputs": [
+    "None",
+    "None",
+    "'a'",
+    "'o'",
+    "'u'",
+    "'e'"
+   ],
+   "probe_args": [
+    "('bb999',)",
+    "('',)",
+    "('1 ebXui',)",
+    "('a1eZcbeXuo',)",
+    "('bZ',)",
+    "('Zu',)",
+    "('u!YX !!o9X',)",
+    "(' 9eYZ!eao0',)",
+    "('9oaYc',)",
+    "('Z1c9',)",
+    "('i001Xb1bY',)",
+    "('cai',)",
+    "('o9c1c9 ',)",
+    "('Yu!YY',)",
+    "('b 11Y1Zb0',)",
+    "('iY!',)",
+    "('9X91uZ',)",
+    "('991',)",
+    "('!a0ciYZiob',)",
+    "('9i1u',)",
+    "('ac !ce',)",
+    "('aaXuc',)",
+    "('0b 0c1oua',)",
+    "('uXabX1c',)",
+    "('c ob0Y oe',)",
+    "('b!aZ0XZ',)",
+    "(' b 0Z',)",
+    "('!u',)",
+    "('!09 ',)",
+    "('Y',)",
+    "('a1u',)",
+    "('1eXo1',)",
+    "('a',)",
+    "('i!aY ZZ',)",
+    "('b19',)",
+    "('0YuYibcu',)",
+    "('!b!bub',)",
+    "('1c0a1X',)",
+    "('uaX!9o0ibo',)",
+    "('o',)"
+   ],
+   "probe_expected": [
+    "'9'",
+    "None",
+    "'1'",
+    "'1'",
+    "None",
+    "None",
+    "'9'",
+    "'0'",
+    "'9'",
+    "'9'",
+    "'1'",
+    "None",
+    "'9'",
+    "None",
+    "'0'",
+    "None",
+    "'1'",
+    "'1'",
+    "'0'",
+    "'1'",
+    "None",
+    "None",
+    "'1'",
+    "'1'",
+    "'0'",
+    "'0'",
+    "'0'",
+    "None",
+    "'9'",
+    "None",
+    "'1'",
+    "'1'",
+    "None",
+    "None",
+    "'9'",
+    "'0'",
+    "None",
+    "'1'",
+    "'0'",
+    "None"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:chars:sorted_distinct",
+   "name": "sorted_distinct_chars",
+   "params": "s",
+   "neighbour": "sorted_distinct_vowels",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `sorted_distinct_chars(s)` that returns the different characters of s in increasing order, each once."
+   },
+   "tests": "assert sorted_distinct_chars('') == []\nassert sorted_distinct_chars('Y') == ['Y']\nassert sorted_distinct_chars('a') == ['a']\nassert sorted_distinct_chars('1eXo1') == ['1', 'X', 'e', 'o']\nassert sorted_distinct_chars('9X91uZ') == ['1', '9', 'X', 'Z', 'u']\nassert sorted_distinct_chars('ac !ce') == [' ', '!', 'a', 'c', 'e']",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "Y"
+    ],
+    [
+     "a"
+    ],
+    [
+     "1eXo1"
+    ],
+    [
+     "9X91uZ"
+    ],
+    [
+     "ac !ce"
+    ]
+   ],
+   "reference": "def sorted_distinct_chars(s):\n    ys = list(s)\n    return sorted(set(ys))",
+   "wrong": "def sorted_distinct_chars(s):\n    ys = [c for c in s if c.lower() in 'aeiou']\n    return sorted(set(ys))",
+   "expected": [
+    "[]",
+    "['Y']",
+    "['a']",
+    "['1', 'X', 'e', 'o']",
+    "['1', '9', 'X', 'Z', 'u']",
+    "[' ', '!', 'a', 'c', 'e']"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[]",
+    "['a']",
+    "['e', 'o']",
+    "['u']",
+    "['a', 'e']"
+   ],
+   "probe_args": [
+    "('bb999',)",
+    "('',)",
+    "('1 ebXui',)",
+    "('a1eZcbeXuo',)",
+    "('bZ',)",
+    "('Zu',)",
+    "('u!YX !!o9X',)",
+    "(' 9eYZ!eao0',)",
+    "('9oaYc',)",
+    "('Z1c9',)",
+    "('i001Xb1bY',)",
+    "('cai',)",
+    "('o9c1c9 ',)",
+    "('Yu!YY',)",
+    "('b 11Y1Zb0',)",
+    "('iY!',)",
+    "('9X91uZ',)",
+    "('991',)",
+    "('!a0ciYZiob',)",
+    "('9i1u',)",
+    "('ac !ce',)",
+    "('aaXuc',)",
+    "('0b 0c1oua',)",
+    "('uXabX1c',)",
+    "('c ob0Y oe',)",
+    "('b!aZ0XZ',)",
+    "(' b 0Z',)",
+    "('!u',)",
+    "('!09 ',)",
+    "('Y',)",
+    "('a1u',)",
+    "('1eXo1',)",
+    "('a',)",
+    "('i!aY ZZ',)",
+    "('b19',)",
+    "('0YuYibcu',)",
+    "('!b!bub',)",
+    "('1c0a1X',)",
+    "('uaX!9o0ibo',)",
+    "('o',)"
+   ],
+   "probe_expected": [
+    "['9', 'b']",
+    "[]",
+    "[' ', '1', 'X', 'b', 'e', 'i', 'u']",
+    "['1', 'X', 'Z', 'a', 'b', 'c', 'e', 'o', 'u']",
+    "['Z', 'b']",
+    "['Z', 'u']",
+    "[' ', '!', '9', 'X', 'Y', 'o', 'u']",
+    "[' ', '!', '0', '9', 'Y', 'Z', 'a', 'e', 'o']",
+    "['9', 'Y', 'a', 'c', 'o']",
+    "['1', '9', 'Z', 'c']",
+    "['0', '1', 'X', 'Y', 'b', 'i']",
+    "['a', 'c', 'i']",
+    "[' ', '1', '9', 'c', 'o']",
+    "['!', 'Y', 'u']",
+    "[' ', '0', '1', 'Y', 'Z', 'b']",
+    "['!', 'Y', 'i']",
+    "['1', '9', 'X', 'Z', 'u']",
+    "['1', '9']",
+    "['!', '0', 'Y', 'Z', 'a', 'b', 'c', 'i', 'o']",
+    "['1', '9', 'i', 'u']",
+    "[' ', '!', 'a', 'c', 'e']",
+    "['X', 'a', 'c', 'u']",
+    "[' ', '0', '1', 'a', 'b', 'c', 'o', 'u']",
+    "['1', 'X', 'a', 'b', 'c', 'u']",
+    "[' ', '0', 'Y', 'b', 'c', 'e', 'o']",
+    "['!', '0', 'X', 'Z', 'a', 'b']",
+    "[' ', '0', 'Z', 'b']",
+    "['!', 'u']",
+    "[' ', '!', '0', '9']",
+    "['Y']",
+    "['1', 'a', 'u']",
+    "['1', 'X', 'e', 'o']",
+    "['a']",
+    "[' ', '!', 'Y', 'Z', 'a', 'i']",
+    "['1', '9', 'b']",
+    "['0', 'Y', 'b', 'c', 'i', 'u']",
+    "['!', 'b', 'u']",
+    "['0', '1', 'X', 'a', 'c']",
+    "['!', '0', '9', 'X', 'a', 'b', 'i', 'o', 'u']",
+    "['o']"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:chars:join",
+   "name": "join_uppercase_first_half_chars",
+   "params": "s",
+   "neighbour": "join_vowels",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `join_uppercase_first_half_chars(s)` that returns the characters of the first half of s (for an odd length, the middle character belongs to the second half) in upper case joined into one string."
+   },
+   "tests": "assert join_uppercase_first_half_chars('') == ''\nassert join_uppercase_first_half_chars('Y') == ''\nassert join_uppercase_first_half_chars('a') == ''\nassert join_uppercase_first_half_chars('1eXo1') == '1E'\nassert join_uppercase_first_half_chars('9X91uZ') == '9X9'\nassert join_uppercase_first_half_chars('ac !ce') == 'AC '",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "Y"
+    ],
+    [
+     "a"
+    ],
+    [
+     "1eXo1"
+    ],
+    [
+     "9X91uZ"
+    ],
+    [
+     "ac !ce"
+    ]
+   ],
+   "reference": "def join_uppercase_first_half_chars(s):\n    ys = [c.upper() for c in list(s[:len(s) // 2])]\n    return ''.join(ys)",
+   "wrong": "def join_uppercase_first_half_chars(s):\n    ys = [c for c in s if c.lower() in 'aeiou']\n    return ''.join(ys)",
+   "expected": [
+    "''",
+    "''",
+    "''",
+    "'1E'",
+    "'9X9'",
+    "'AC '"
+   ],
+   "wrong_outputs": [
+    "''",
+    "''",
+    "'a'",
+    "'eo'",
+    "'u'",
+    "'ae'"
+   ],
+   "probe_args": [
+    "('bb999',)",
+    "('',)",
+    "('1 ebXui',)",
+    "('a1eZcbeXuo',)",
+    "('bZ',)",
+    "('Zu',)",
+    "('u!YX !!o9X',)",
+    "(' 9eYZ!eao0',)",
+    "('9oaYc',)",
+    "('Z1c9',)",
+    "('i001Xb1bY',)",
+    "('cai',)",
+    "('o9c1c9 ',)",
+    "('Yu!YY',)",
+    "('b 11Y1Zb0',)",
+    "('iY!',)",
+    "('9X91uZ',)",
+    "('991',)",
+    "('!a0ciYZiob',)",
+    "('9i1u',)",
+    "('ac !ce',)",
+    "('aaXuc',)",
+    "('0b 0c1oua',)",
+    "('uXabX1c',)",
+    "('c ob0Y oe',)",
+    "('b!aZ0XZ',)",
+    "(' b 0Z',)",
+    "('!u',)",
+    "('!09 ',)",
+    "('Y',)",
+    "('a1u',)",
+    "('1eXo1',)",
+    "('a',)",
+    "('i!aY ZZ',)",
+    "('b19',)",
+    "('0YuYibcu',)",
+    "('!b!bub',)",
+    "('1c0a1X',)",
+    "('uaX!9o0ibo',)",
+    "('o',)"
+   ],
+   "probe_expected": [
+    "'BB'",
+    "''",
+    "'1 E'",
+    "'A1EZC'",
+    "'B'",
+    "'Z'",
+    "'U!YX '",
+    "' 9EYZ'",
+    "'9O'",
+    "'Z1'",
+    "'I001'",
+    "'C'",
+    "'O9C'",
+    "'YU'",
+    "'B 11'",
+    "'I'",
+    "'9X9'",
+    "'9'",
+    "'!A0CI'",
+    "'9I'",
+    "'AC '",
+    "'AA'",
+    "'0B 0'",
+    "'UXA'",
+    "'C OB'",
+    "'B!A'",
+    "' B'",
+    "'!'",
+    "'!0'",
+    "''",
+    "'A'",
+    "'1E'",
+    "''",
+    "'I!A'",
+    "'B'",
+    "'0YUY'",
+    "'!B!'",
+    "'1C0'",
+    "'UAX!9'",
+    "''"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:chars:join",
+   "name": "join_first_half_chars",
+   "params": "s",
+   "neighbour": "join_vowels",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `join_first_half_chars(s)` that returns the characters of the first half of s (for an odd length, the middle character belongs to the second half) joined into one string."
+   },
+   "tests": "assert join_first_half_chars('') == ''\nassert join_first_half_chars('Y') == ''\nassert join_first_half_chars('a') == ''\nassert join_first_half_chars('1eXo1') == '1e'\nassert join_first_half_chars('9X91uZ') == '9X9'\nassert join_first_half_chars('ac !ce') == 'ac '",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "Y"
+    ],
+    [
+     "a"
+    ],
+    [
+     "1eXo1"
+    ],
+    [
+     "9X91uZ"
+    ],
+    [
+     "ac !ce"
+    ]
+   ],
+   "reference": "def join_first_half_chars(s):\n    ys = list(s[:len(s) // 2])\n    return ''.join(ys)",
+   "wrong": "def join_first_half_chars(s):\n    ys = [c for c in s if c.lower() in 'aeiou']\n    return ''.join(ys)",
+   "expected": [
+    "''",
+    "''",
+    "''",
+    "'1e'",
+    "'9X9'",
+    "'ac '"
+   ],
+   "wrong_outputs": [
+    "''",
+    "''",
+    "'a'",
+    "'eo'",
+    "'u'",
+    "'ae'"
+   ],
+   "probe_args": [
+    "('bb999',)",
+    "('',)",
+    "('1 ebXui',)",
+    "('a1eZcbeXuo',)",
+    "('bZ',)",
+    "('Zu',)",
+    "('u!YX !!o9X',)",
+    "(' 9eYZ!eao0',)",
+    "('9oaYc',)",
+    "('Z1c9',)",
+    "('i001Xb1bY',)",
+    "('cai',)",
+    "('o9c1c9 ',)",
+    "('Yu!YY',)",
+    "('b 11Y1Zb0',)",
+    "('iY!',)",
+    "('9X91uZ',)",
+    "('991',)",
+    "('!a0ciYZiob',)",
+    "('9i1u',)",
+    "('ac !ce',)",
+    "('aaXuc',)",
+    "('0b 0c1oua',)",
+    "('uXabX1c',)",
+    "('c ob0Y oe',)",
+    "('b!aZ0XZ',)",
+    "(' b 0Z',)",
+    "('!u',)",
+    "('!09 ',)",
+    "('Y',)",
+    "('a1u',)",
+    "('1eXo1',)",
+    "('a',)",
+    "('i!aY ZZ',)",
+    "('b19',)",
+    "('0YuYibcu',)",
+    "('!b!bub',)",
+    "('1c0a1X',)",
+    "('uaX!9o0ibo',)",
+    "('o',)"
+   ],
+   "probe_expected": [
+    "'bb'",
+    "''",
+    "'1 e'",
+    "'a1eZc'",
+    "'b'",
+    "'Z'",
+    "'u!YX '",
+    "' 9eYZ'",
+    "'9o'",
+    "'Z1'",
+    "'i001'",
+    "'c'",
+    "'o9c'",
+    "'Yu'",
+    "'b 11'",
+    "'i'",
+    "'9X9'",
+    "'9'",
+    "'!a0ci'",
+    "'9i'",
+    "'ac '",
+    "'aa'",
+    "'0b 0'",
+    "'uXa'",
+    "'c ob'",
+    "'b!a'",
+    "' b'",
+    "'!'",
+    "'!0'",
+    "''",
+    "'a'",
+    "'1e'",
+    "''",
+    "'i!a'",
+    "'b'",
+    "'0YuY'",
+    "'!b!'",
+    "'1c0'",
+    "'uaX!9'",
+    "''"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:chars:list",
+   "name": "list_vowels",
+   "params": "s",
+   "neighbour": "list_upper_letters",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `list_vowels(s)` that returns a list of the vowels of s (a, e, i, o and u, in either case)."
+   },
+   "tests": "assert list_vowels('') == []\nassert list_vowels('Y') == []\nassert list_vowels('a') == ['a']\nassert list_vowels('1eXo1') == ['e', 'o']\nassert list_vowels('9X91uZ') == ['u']\nassert list_vowels('ac !ce') == ['a', 'e']",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "Y"
+    ],
+    [
+     "a"
+    ],
+    [
+     "1eXo1"
+    ],
+    [
+     "9X91uZ"
+    ],
+    [
+     "ac !ce"
+    ]
+   ],
+   "reference": "def list_vowels(s):\n    ys = [c for c in s if c.lower() in 'aeiou']\n    return ys",
+   "wrong": "def list_vowels(s):\n    ys = [c for c in s if c.isupper()]\n    return ys",
+   "expected": [
+    "[]",
+    "[]",
+    "['a']",
+    "['e', 'o']",
+    "['u']",
+    "['a', 'e']"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "['Y']",
+    "[]",
+    "['X']",
+    "['X', 'Z']",
+    "[]"
+   ],
+   "probe_args": [
+    "('bb999',)",
+    "('',)",
+    "('1 ebXui',)",
+    "('a1eZcbeXuo',)",
+    "('bZ',)",
+    "('Zu',)",
+    "('u!YX !!o9X',)",
+    "(' 9eYZ!eao0',)",
+    "('9oaYc',)",
+    "('Z1c9',)",
+    "('i001Xb1bY',)",
+    "('cai',)",
+    "('o9c1c9 ',)",
+    "('Yu!YY',)",
+    "('b 11Y1Zb0',)",
+    "('iY!',)",
+    "('9X91uZ',)",
+    "('991',)",
+    "('!a0ciYZiob',)",
+    "('9i1u',)",
+    "('ac !ce',)",
+    "('aaXuc',)",
+    "('0b 0c1oua',)",
+    "('uXabX1c',)",
+    "('c ob0Y oe',)",
+    "('b!aZ0XZ',)",
+    "(' b 0Z',)",
+    "('!u',)",
+    "('!09 ',)",
+    "('Y',)",
+    "('a1u',)",
+    "('1eXo1',)",
+    "('a',)",
+    "('i!aY ZZ',)",
+    "('b19',)",
+    "('0YuYibcu',)",
+    "('!b!bub',)",
+    "('1c0a1X',)",
+    "('uaX!9o0ibo',)",
+    "('o',)"
+   ],
+   "probe_expected": [
+    "[]",
+    "[]",
+    "['e', 'u', 'i']",
+    "['a', 'e', 'e', 'u', 'o']",
+    "[]",
+    "['u']",
+    "['u', 'o']",
+    "['e', 'e', 'a', 'o']",
+    "['o', 'a']",
+    "[]",
+    "['i']",
+    "['a', 'i']",
+    "['o']",
+    "['u']",
+    "[]",
+    "['i']",
+    "['u']",
+    "[]",
+    "['a', 'i', 'i', 'o']",
+    "['i', 'u']",
+    "['a', 'e']",
+    "['a', 'a', 'u']",
+    "['o', 'u', 'a']",
+    "['u', 'a']",
+    "['o', 'o', 'e']",
+    "['a']",
+    "[]",
+    "['u']",
+    "[]",
+    "[]",
+    "['a', 'u']",
+    "['e', 'o']",
+    "['a']",
+    "['i', 'a']",
+    "[]",
+    "['u', 'i', 'u']",
+    "['u']",
+    "['a']",
+    "['u', 'a', 'o', 'i', 'o']",
+    "['o']"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:words:join",
+   "name": "join_uppercase_words",
+   "params": "text",
+   "neighbour": "join_capitalized_words",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `join_uppercase_words(text)` that returns the words of text (separated by spaces) in upper case joined into one string, separated by single spaces."
+   },
+   "tests": "assert join_uppercase_words('') == ''\nassert join_uppercase_words('a') == 'A'\nassert join_uppercase_words('zoo') == 'ZOO'\nassert join_uppercase_words('Echo apple') == 'ECHO APPLE'\nassert join_uppercase_words('queen Echo') == 'QUEEN ECHO'\nassert join_uppercase_words('fig yes nut') == 'FIG YES NUT'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "a"
+    ],
+    [
+     "zoo"
+    ],
+    [
+     "Echo apple"
+    ],
+    [
+     "queen Echo"
+    ],
+    [
+     "fig yes nut"
+    ]
+   ],
+   "reference": "def join_uppercase_words(text):\n    ys = [w.upper() for w in text.split()]\n    return ' '.join(ys)",
+   "wrong": "def join_uppercase_words(text):\n    ys = [w for w in text.split() if w[0].isupper()]\n    return ' '.join(ys)",
+   "expected": [
+    "''",
+    "'A'",
+    "'ZOO'",
+    "'ECHO APPLE'",
+    "'QUEEN ECHO'",
+    "'FIG YES NUT'"
+   ],
+   "wrong_outputs": [
+    "''",
+    "''",
+    "''",
+    "'Echo'",
+    "'Echo'",
+    "''"
+   ],
+   "probe_args": [
+    "('',)",
+    "('fig apple',)",
+    "('a',)",
+    "('grape',)",
+    "('vine',)",
+    "('sky dog x apple jam',)",
+    "('apple tree Hat I Echo',)",
+    "('dog Pear Lemon',)",
+    "('Echo apple',)",
+    "('kiwi Pear',)",
+    "('sky rose',)",
+    "('fig sun',)",
+    "('jam fig moon sky',)",
+    "('zoo',)",
+    "('queen Hat',)",
+    "('jam',)",
+    "('vine Banana I',)",
+    "('apple moon cat wolf',)",
+    "('nut',)",
+    "('nut x Echo sun',)",
+    "('Umbrella Lemon',)",
+    "('owl',)",
+    "('Umbrella queen',)",
+    "('nut apple nut',)",
+    "('owl grape',)",
+    "('Pear cat',)",
+    "('wolf Echo zoo wolf',)",
+    "('fig yes nut',)",
+    "('Hat',)",
+    "('queen Echo',)",
+    "('Umbrella Umbrella cat',)",
+    "('owl tree owl apple grape',)",
+    "('jam rose tree Echo nut',)",
+    "('cat vine Pear',)",
+    "('rose',)",
+    "('ice Umbrella apple',)",
+    "('sky vine',)",
+    "('queen sky sun',)",
+    "('owl dog x',)",
+    "('jam I',)"
+   ],
+   "probe_expected": [
+    "''",
+    "'FIG APPLE'",
+    "'A'",
+    "'GRAPE'",
+    "'VINE'",
+    "'SKY DOG X APPLE JAM'",
+    "'APPLE TREE HAT I ECHO'",
+    "'DOG PEAR LEMON'",
+    "'ECHO APPLE'",
+    "'KIWI PEAR'",
+    "'SKY ROSE'",
+    "'FIG SUN'",
+    "'JAM FIG MOON SKY'",
+    "'ZOO'",
+    "'QUEEN HAT'",
+    "'JAM'",
+    "'VINE BANANA I'",
+    "'APPLE MOON CAT WOLF'",
+    "'NUT'",
+    "'NUT X ECHO SUN'",
+    "'UMBRELLA LEMON'",
+    "'OWL'",
+    "'UMBRELLA QUEEN'",
+    "'NUT APPLE NUT'",
+    "'OWL GRAPE'",
+    "'PEAR CAT'",
+    "'WOLF ECHO ZOO WOLF'",
+    "'FIG YES NUT'",
+    "'HAT'",
+    "'QUEEN ECHO'",
+    "'UMBRELLA UMBRELLA CAT'",
+    "'OWL TREE OWL APPLE GRAPE'",
+    "'JAM ROSE TREE ECHO NUT'",
+    "'CAT VINE PEAR'",
+    "'ROSE'",
+    "'ICE UMBRELLA APPLE'",
+    "'SKY VINE'",
+    "'QUEEN SKY SUN'",
+    "'OWL DOG X'",
+    "'JAM I'"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:words:ndistinct",
+   "name": "ndistinct_words",
+   "params": "text",
+   "neighbour": "ndistinct_capitalized_words",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `ndistinct_words(text)` that returns how many different values there are among the words of text (separated by spaces)."
+   },
+   "tests": "assert ndistinct_words('') == 0\nassert ndistinct_words('a') == 1\nassert ndistinct_words('zoo') == 1\nassert ndistinct_words('Echo apple') == 2\nassert ndistinct_words('queen Echo') == 2\nassert ndistinct_words('fig yes nut') == 3",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "a"
+    ],
+    [
+     "zoo"
+    ],
+    [
+     "Echo apple"
+    ],
+    [
+     "queen Echo"
+    ],
+    [
+     "fig yes nut"
+    ]
+   ],
+   "reference": "def ndistinct_words(text):\n    ys = text.split()\n    return len(set(ys))",
+   "wrong": "def ndistinct_words(text):\n    ys = [w for w in text.split() if w[0].isupper()]\n    return len(set(ys))",
+   "expected": [
+    "0",
+    "1",
+    "1",
+    "2",
+    "2",
+    "3"
+   ],
+   "wrong_outputs": [
+    "0",
+    "0",
+    "0",
+    "1",
+    "1",
+    "0"
+   ],
+   "probe_args": [
+    "('',)",
+    "('fig apple',)",
+    "('a',)",
+    "('grape',)",
+    "('vine',)",
+    "('sky dog x apple jam',)",
+    "('apple tree Hat I Echo',)",
+    "('dog Pear Lemon',)",
+    "('Echo apple',)",
+    "('kiwi Pear',)",
+    "('sky rose',)",
+    "('fig sun',)",
+    "('jam fig moon sky',)",
+    "('zoo',)",
+    "('queen Hat',)",
+    "('jam',)",
+    "('vine Banana I',)",
+    "('apple moon cat wolf',)",
+    "('nut',)",
+    "('nut x Echo sun',)",
+    "('Umbrella Lemon',)",
+    "('owl',)",
+    "('Umbrella queen',)",
+    "('nut apple nut',)",
+    "('owl grape',)",
+    "('Pear cat',)",
+    "('wolf Echo zoo wolf',)",
+    "('fig yes nut',)",
+    "('Hat',)",
+    "('queen Echo',)",
+    "('Umbrella Umbrella cat',)",
+    "('owl tree owl apple grape',)",
+    "('jam rose tree Echo nut',)",
+    "('cat vine Pear',)",
+    "('rose',)",
+    "('ice Umbrella apple',)",
+    "('sky vine',)",
+    "('queen sky sun',)",
+    "('owl dog x',)",
+    "('jam I',)"
+   ],
+   "probe_expected": [
+    "0",
+    "2",
+    "1",
+    "1",
+    "1",
+    "5",
+    "5",
+    "3",
+    "2",
+    "2",
+    "2",
+    "2",
+    "4",
+    "1",
+    "2",
+    "1",
+    "3",
+    "4",
+    "1",
+    "4",
+    "2",
+    "1",
+    "2",
+    "2",
+    "2",
+    "2",
+    "3",
+    "3",
+    "1",
+    "2",
+    "2",
+    "4",
+    "5",
+    "3",
+    "1",
+    "3",
+    "2",
+    "3",
+    "3",
+    "2"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:words:max",
+   "name": "max_lengths_words_with_a",
+   "params": "text",
+   "neighbour": "max_lengths_words",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `max_lengths_words_with_a(text)` that returns the largest of the lengths of the words of text that contain the letter a (None if there are none)."
+   },
+   "tests": "assert max_lengths_words_with_a('') == None\nassert max_lengths_words_with_a('a') == 1\nassert max_lengths_words_with_a('zoo') == None\nassert max_lengths_words_with_a('Echo apple') == 5\nassert max_lengths_words_with_a('queen Echo') == None\nassert max_lengths_words_with_a('fig yes nut') == None",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "a"
+    ],
+    [
+     "zoo"
+    ],
+    [
+     "Echo apple"
+    ],
+    [
+     "queen Echo"
+    ],
+    [
+     "fig yes nut"
+    ]
+   ],
+   "reference": "def max_lengths_words_with_a(text):\n    ys = [len(w) for w in [w for w in text.split() if 'a' in w]]\n    return max(ys) if ys else None",
+   "wrong": "def max_lengths_words_with_a(text):\n    ys = [len(w) for w in text.split()]\n    return max(ys) if ys else None",
+   "expected": [
+    "None",
+    "1",
+    "None",
+    "5",
+    "None",
+    "None"
+   ],
+   "wrong_outputs": [
+    "None",
+    "1",
+    "3",
+    "5",
+    "5",
+    "3"
+   ],
+   "probe_args": [
+    "('',)",
+    "('fig apple',)",
+    "('a',)",
+    "('grape',)",
+    "('vine',)",
+    "('sky dog x apple jam',)",
+    "('apple tree Hat I Echo',)",
+    "('dog Pear Lemon',)",
+    "('Echo apple',)",
+    "('kiwi Pear',)",
+    "('sky rose',)",
+    "('fig sun',)",
+    "('jam fig moon sky',)",
+    "('zoo',)",
+    "('queen Hat',)",
+    "('jam',)",
+    "('vine Banana I',)",
+    "('apple moon cat wolf',)",
+    "('nut',)",
+    "('nut x Echo sun',)",
+    "('Umbrella Lemon',)",
+    "('owl',)",
+    "('Umbrella queen',)",
+    "('nut apple nut',)",
+    "('owl grape',)",
+    "('Pear cat',)",
+    "('wolf Echo zoo wolf',)",
+    "('fig yes nut',)",
+    "('Hat',)",
+    "('queen Echo',)",
+    "('Umbrella Umbrella cat',)",
+    "('owl tree owl apple grape',)",
+    "('jam rose tree Echo nut',)",
+    "('cat vine Pear',)",
+    "('rose',)",
+    "('ice Umbrella apple',)",
+    "('sky vine',)",
+    "('queen sky sun',)",
+    "('owl dog x',)",
+    "('jam I',)"
+   ],
+   "probe_expected": [
+    "None",
+    "5",
+    "1",
+    "5",
+    "None",
+    "5",
+    "5",
+    "4",
+    "5",
+    "4",
+    "None",
+    "None",
+    "3",
+    "None",
+    "3",
+    "3",
+    "6",
+    "5",
+    "None",
+    "None",
+    "8",
+    "None",
+    "8",
+    "5",
+    "5",
+    "4",
+    "None",
+    "None",
+    "3",
+    "None",
+    "8",
+    "5",
+    "3",
+    "4",
+    "None",
+    "8",
+    "None",
+    "None",
+    "None",
+    "3"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:words:ndistinct",
+   "name": "ndistinct_lengths_first_two_words",
+   "params": "text",
+   "neighbour": "ndistinct_words",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `ndistinct_lengths_first_two_words(text)` that returns how many different values there are among the lengths of the first two words of text."
+   },
+   "tests": "assert ndistinct_lengths_first_two_words('') == 0\nassert ndistinct_lengths_first_two_words('a') == 1\nassert ndistinct_lengths_first_two_words('zoo') == 1\nassert ndistinct_lengths_first_two_words('Echo apple') == 2\nassert ndistinct_lengths_first_two_words('queen Echo') == 2\nassert ndistinct_lengths_first_two_words('fig yes nut') == 1",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "a"
+    ],
+    [
+     "zoo"
+    ],
+    [
+     "Echo apple"
+    ],
+    [
+     "queen Echo"
+    ],
+    [
+     "fig yes nut"
+    ]
+   ],
+   "reference": "def ndistinct_lengths_first_two_words(text):\n    ys = [len(w) for w in text.split()[:2]]\n    return len(set(ys))",
+   "wrong": "def ndistinct_lengths_first_two_words(text):\n    ys = text.split()\n    return len(set(ys))",
+   "expected": [
+    "0",
+    "1",
+    "1",
+    "2",
+    "2",
+    "1"
+   ],
+   "wrong_outputs": [
+    "0",
+    "1",
+    "1",
+    "2",
+    "2",
+    "3"
+   ],
+   "probe_args": [
+    "('',)",
+    "('fig apple',)",
+    "('a',)",
+    "('grape',)",
+    "('vine',)",
+    "('sky dog x apple jam',)",
+    "('apple tree Hat I Echo',)",
+    "('dog Pear Lemon',)",
+    "('Echo apple',)",
+    "('kiwi Pear',)",
+    "('sky rose',)",
+    "('fig sun',)",
+    "('jam fig moon sky',)",
+    "('zoo',)",
+    "('queen Hat',)",
+    "('jam',)",
+    "('vine Banana I',)",
+    "('apple moon cat wolf',)",
+    "('nut',)",
+    "('nut x Echo sun',)",
+    "('Umbrella Lemon',)",
+    "('owl',)",
+    "('Umbrella queen',)",
+    "('nut apple nut',)",
+    "('owl grape',)",
+    "('Pear cat',)",
+    "('wolf Echo zoo wolf',)",
+    "('fig yes nut',)",
+    "('Hat',)",
+    "('queen Echo',)",
+    "('Umbrella Umbrella cat',)",
+    "('owl tree owl apple grape',)",
+    "('jam rose tree Echo nut',)",
+    "('cat vine Pear',)",
+    "('rose',)",
+    "('ice Umbrella apple',)",
+    "('sky vine',)",
+    "('queen sky sun',)",
+    "('owl dog x',)",
+    "('jam I',)"
+   ],
+   "probe_expected": [
+    "0",
+    "2",
+    "1",
+    "1",
+    "1",
+    "1",
+    "2",
+    "2",
+    "2",
+    "1",
+    "2",
+    "1",
+    "1",
+    "1",
+    "2",
+    "1",
+    "2",
+    "2",
+    "1",
+    "2",
+    "2",
+    "1",
+    "2",
+    "2",
+    "2",
+    "2",
+    "1",
+    "1",
+    "1",
+    "2",
+    "1",
+    "2",
+    "2",
+    "2",
+    "1",
+    "2",
+    "2",
+    "2",
+    "1",
+    "2"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:words:ndistinct",
+   "name": "ndistinct_lengths_words",
+   "params": "text",
+   "neighbour": "ndistinct_words",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `ndistinct_lengths_words(text)` that returns how many different values there are among the lengths of the words of text (separated by spaces)."
+   },
+   "tests": "assert ndistinct_lengths_words('') == 0\nassert ndistinct_lengths_words('a') == 1\nassert ndistinct_lengths_words('zoo') == 1\nassert ndistinct_lengths_words('Echo apple') == 2\nassert ndistinct_lengths_words('queen Echo') == 2\nassert ndistinct_lengths_words('fig yes nut') == 1",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "a"
+    ],
+    [
+     "zoo"
+    ],
+    [
+     "Echo apple"
+    ],
+    [
+     "queen Echo"
+    ],
+    [
+     "fig yes nut"
+    ]
+   ],
+   "reference": "def ndistinct_lengths_words(text):\n    ys = [len(w) for w in text.split()]\n    return len(set(ys))",
+   "wrong": "def ndistinct_lengths_words(text):\n    ys = text.split()\n    return len(set(ys))",
+   "expected": [
+    "0",
+    "1",
+    "1",
+    "2",
+    "2",
+    "1"
+   ],
+   "wrong_outputs": [
+    "0",
+    "1",
+    "1",
+    "2",
+    "2",
+    "3"
+   ],
+   "probe_args": [
+    "('',)",
+    "('fig apple',)",
+    "('a',)",
+    "('grape',)",
+    "('vine',)",
+    "('sky dog x apple jam',)",
+    "('apple tree Hat I Echo',)",
+    "('dog Pear Lemon',)",
+    "('Echo apple',)",
+    "('kiwi Pear',)",
+    "('sky rose',)",
+    "('fig sun',)",
+    "('jam fig moon sky',)",
+    "('zoo',)",
+    "('queen Hat',)",
+    "('jam',)",
+    "('vine Banana I',)",
+    "('apple moon cat wolf',)",
+    "('nut',)",
+    "('nut x Echo sun',)",
+    "('Umbrella Lemon',)",
+    "('owl',)",
+    "('Umbrella queen',)",
+    "('nut apple nut',)",
+    "('owl grape',)",
+    "('Pear cat',)",
+    "('wolf Echo zoo wolf',)",
+    "('fig yes nut',)",
+    "('Hat',)",
+    "('queen Echo',)",
+    "('Umbrella Umbrella cat',)",
+    "('owl tree owl apple grape',)",
+    "('jam rose tree Echo nut',)",
+    "('cat vine Pear',)",
+    "('rose',)",
+    "('ice Umbrella apple',)",
+    "('sky vine',)",
+    "('queen sky sun',)",
+    "('owl dog x',)",
+    "('jam I',)"
+   ],
+   "probe_expected": [
+    "0",
+    "2",
+    "1",
+    "1",
+    "1",
+    "3",
+    "4",
+    "3",
+    "2",
+    "1",
+    "2",
+    "1",
+    "2",
+    "1",
+    "2",
+    "1",
+    "3",
+    "3",
+    "1",
+    "3",
+    "2",
+    "1",
+    "2",
+    "2",
+    "2",
+    "2",
+    "2",
+    "1",
+    "1",
+    "2",
+    "2",
+    "3",
+    "2",
+    "2",
+    "1",
+    "3",
+    "2",
+    "2",
+    "2",
+    "2"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:words:first",
+   "name": "first_uppercase_words_with_a",
+   "params": "text",
+   "neighbour": "first_capitalized_words",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `first_uppercase_words_with_a(text)` that returns the first of the words of text that contain the letter a in upper case (None if there are none)."
+   },
+   "tests": "assert first_uppercase_words_with_a('') == None\nassert first_uppercase_words_with_a('a') == 'A'\nassert first_uppercase_words_with_a('zoo') == None\nassert first_uppercase_words_with_a('Echo apple') == 'APPLE'\nassert first_uppercase_words_with_a('queen Echo') == None\nassert first_uppercase_words_with_a('fig yes nut') == None",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "a"
+    ],
+    [
+     "zoo"
+    ],
+    [
+     "Echo apple"
+    ],
+    [
+     "queen Echo"
+    ],
+    [
+     "fig yes nut"
+    ]
+   ],
+   "reference": "def first_uppercase_words_with_a(text):\n    ys = [w.upper() for w in [w for w in text.split() if 'a' in w]]\n    return ys[0] if ys else None",
+   "wrong": "def first_uppercase_words_with_a(text):\n    ys = [w for w in text.split() if w[0].isupper()]\n    return ys[0] if ys else None",
+   "expected": [
+    "None",
+    "'A'",
+    "None",
+    "'APPLE'",
+    "None",
+    "None"
+   ],
+   "wrong_outputs": [
+    "None",
+    "None",
+    "None",
+    "'Echo'",
+    "'Echo'",
+    "None"
+   ],
+   "probe_args": [
+    "('',)",
+    "('fig apple',)",
+    "('a',)",
+    "('grape',)",
+    "('vine',)",
+    "('sky dog x apple jam',)",
+    "('apple tree Hat I Echo',)",
+    "('dog Pear Lemon',)",
+    "('Echo apple',)",
+    "('kiwi Pear',)",
+    "('sky rose',)",
+    "('fig sun',)",
+    "('jam fig moon sky',)",
+    "('zoo',)",
+    "('queen Hat',)",
+    "('jam',)",
+    "('vine Banana I',)",
+    "('apple moon cat wolf',)",
+    "('nut',)",
+    "('nut x Echo sun',)",
+    "('Umbrella Lemon',)",
+    "('owl',)",
+    "('Umbrella queen',)",
+    "('nut apple nut',)",
+    "('owl grape',)",
+    "('Pear cat',)",
+    "('wolf Echo zoo wolf',)",
+    "('fig yes nut',)",
+    "('Hat',)",
+    "('queen Echo',)",
+    "('Umbrella Umbrella cat',)",
+    "('owl tree owl apple grape',)",
+    "('jam rose tree Echo nut',)",
+    "('cat vine Pear',)",
+    "('rose',)",
+    "('ice Umbrella apple',)",
+    "('sky vine',)",
+    "('queen sky sun',)",
+    "('owl dog x',)",
+    "('jam I',)"
+   ],
+   "probe_expected": [
+    "None",
+    "'APPLE'",
+    "'A'",
+    "'GRAPE'",
+    "None",
+    "'APPLE'",
+    "'APPLE'",
+    "'PEAR'",
+    "'APPLE'",
+    "'PEAR'",
+    "None",
+    "None",
+    "'JAM'",
+    "None",
+    "'HAT'",
+    "'JAM'",
+    "'BANANA'",
+    "'APPLE'",
+    "None",
+    "None",
+    "'UMBRELLA'",
+    "None",
+    "'UMBRELLA'",
+    "'APPLE'",
+    "'GRAPE'",
+    "'PEAR'",
+    "None",
+    "None",
+    "'HAT'",
+    "None",
+    "'UMBRELLA'",
+    "'APPLE'",
+    "'JAM'",
+    "'CAT'",
+    "None",
+    "'UMBRELLA'",
+    "None",
+    "None",
+    "None",
+    "'JAM'"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:words:sorted_distinct",
+   "name": "sorted_distinct_lengths_long_words",
+   "params": "text",
+   "neighbour": "sorted_distinct_words",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `sorted_distinct_lengths_long_words(text)` that returns the different lengths of the words of text that are longer than 3 letters in increasing order, each once."
+   },
+   "tests": "assert sorted_distinct_lengths_long_words('') == []\nassert sorted_distinct_lengths_long_words('a') == []\nassert sorted_distinct_lengths_long_words('zoo') == []\nassert sorted_distinct_lengths_long_words('Echo apple') == [4, 5]\nassert sorted_distinct_lengths_long_words('queen Echo') == [4, 5]\nassert sorted_distinct_lengths_long_words('fig yes nut') == []",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "a"
+    ],
+    [
+     "zoo"
+    ],
+    [
+     "Echo apple"
+    ],
+    [
+     "queen Echo"
+    ],
+    [
+     "fig yes nut"
+    ]
+   ],
+   "reference": "def sorted_distinct_lengths_long_words(text):\n    ys = [len(w) for w in [w for w in text.split() if len(w) > 3]]\n    return sorted(set(ys))",
+   "wrong": "def sorted_distinct_lengths_long_words(text):\n    ys = text.split()\n    return sorted(set(ys))",
+   "expected": [
+    "[]",
+    "[]",
+    "[]",
+    "[4, 5]",
+    "[4, 5]",
+    "[]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "['a']",
+    "['zoo']",
+    "['Echo', 'apple']",
+    "['Echo', 'queen']",
+    "['fig', 'nut', 'yes']"
+   ],
+   "probe_args": [
+    "('',)",
+    "('fig apple',)",
+    "('a',)",
+    "('grape',)",
+    "('vine',)",
+    "('sky dog x apple jam',)",
+    "('apple tree Hat I Echo',)",
+    "('dog Pear Lemon',)",
+    "('Echo apple',)",
+    "('kiwi Pear',)",
+    "('sky rose',)",
+    "('fig sun',)",
+    "('jam fig moon sky',)",
+    "('zoo',)",
+    "('queen Hat',)",
+    "('jam',)",
+    "('vine Banana I',)",
+    "('apple moon cat wolf',)",
+    "('nut',)",
+    "('nut x Echo sun',)",
+    "('Umbrella Lemon',)",
+    "('owl',)",
+    "('Umbrella queen',)",
+    "('nut apple nut',)",
+    "('owl grape',)",
+    "('Pear cat',)",
+    "('wolf Echo zoo wolf',)",
+    "('fig yes nut',)",
+    "('Hat',)",
+    "('queen Echo',)",
+    "('Umbrella Umbrella cat',)",
+    "('owl tree owl apple grape',)",
+    "('jam rose tree Echo nut',)",
+    "('cat vine Pear',)",
+    "('rose',)",
+    "('ice Umbrella apple',)",
+    "('sky vine',)",
+    "('queen sky sun',)",
+    "('owl dog x',)",
+    "('jam I',)"
+   ],
+   "probe_expected": [
+    "[]",
+    "[5]",
+    "[]",
+    "[5]",
+    "[4]",
+    "[5]",
+    "[4, 5]",
+    "[4, 5]",
+    "[4, 5]",
+    "[4]",
+    "[4]",
+    "[]",
+    "[4]",
+    "[]",
+    "[5]",
+    "[]",
+    "[4, 6]",
+    "[4, 5]",
+    "[]",
+    "[4]",
+    "[5, 8]",
+    "[]",
+    "[5, 8]",
+    "[5]",
+    "[5]",
+    "[4]",
+    "[4]",
+    "[]",
+    "[]",
+    "[4, 5]",
+    "[8]",
+    "[4, 5]",
+    "[4]",
+    "[4]",
+    "[4]",
+    "[5, 8]",
+    "[4]",
+    "[5]",
+    "[]",
+    "[]"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:words:join",
+   "name": "join_uppercase_first_two_words",
+   "params": "text",
+   "neighbour": "join_capitalized_words",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `join_uppercase_first_two_words(text)` that returns the first two words of text in upper case joined into one string, separated by single spaces."
+   },
+   "tests": "assert join_uppercase_first_two_words('') == ''\nassert join_uppercase_first_two_words('a') == 'A'\nassert join_uppercase_first_two_words('zoo') == 'ZOO'\nassert join_uppercase_first_two_words('Echo apple') == 'ECHO APPLE'\nassert join_uppercase_first_two_words('queen Echo') == 'QUEEN ECHO'\nassert join_uppercase_first_two_words('fig yes nut') == 'FIG YES'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "a"
+    ],
+    [
+     "zoo"
+    ],
+    [
+     "Echo apple"
+    ],
+    [
+     "queen Echo"
+    ],
+    [
+     "fig yes nut"
+    ]
+   ],
+   "reference": "def join_uppercase_first_two_words(text):\n    ys = [w.upper() for w in text.split()[:2]]\n    return ' '.join(ys)",
+   "wrong": "def join_uppercase_first_two_words(text):\n    ys = [w for w in text.split() if w[0].isupper()]\n    return ' '.join(ys)",
+   "expected": [
+    "''",
+    "'A'",
+    "'ZOO'",
+    "'ECHO APPLE'",
+    "'QUEEN ECHO'",
+    "'FIG YES'"
+   ],
+   "wrong_outputs": [
+    "''",
+    "''",
+    "''",
+    "'Echo'",
+    "'Echo'",
+    "''"
+   ],
+   "probe_args": [
+    "('',)",
+    "('fig apple',)",
+    "('a',)",
+    "('grape',)",
+    "('vine',)",
+    "('sky dog x apple jam',)",
+    "('apple tree Hat I Echo',)",
+    "('dog Pear Lemon',)",
+    "('Echo apple',)",
+    "('kiwi Pear',)",
+    "('sky rose',)",
+    "('fig sun',)",
+    "('jam fig moon sky',)",
+    "('zoo',)",
+    "('queen Hat',)",
+    "('jam',)",
+    "('vine Banana I',)",
+    "('apple moon cat wolf',)",
+    "('nut',)",
+    "('nut x Echo sun',)",
+    "('Umbrella Lemon',)",
+    "('owl',)",
+    "('Umbrella queen',)",
+    "('nut apple nut',)",
+    "('owl grape',)",
+    "('Pear cat',)",
+    "('wolf Echo zoo wolf',)",
+    "('fig yes nut',)",
+    "('Hat',)",
+    "('queen Echo',)",
+    "('Umbrella Umbrella cat',)",
+    "('owl tree owl apple grape',)",
+    "('jam rose tree Echo nut',)",
+    "('cat vine Pear',)",
+    "('rose',)",
+    "('ice Umbrella apple',)",
+    "('sky vine',)",
+    "('queen sky sun',)",
+    "('owl dog x',)",
+    "('jam I',)"
+   ],
+   "probe_expected": [
+    "''",
+    "'FIG APPLE'",
+    "'A'",
+    "'GRAPE'",
+    "'VINE'",
+    "'SKY DOG'",
+    "'APPLE TREE'",
+    "'DOG PEAR'",
+    "'ECHO APPLE'",
+    "'KIWI PEAR'",
+    "'SKY ROSE'",
+    "'FIG SUN'",
+    "'JAM FIG'",
+    "'ZOO'",
+    "'QUEEN HAT'",
+    "'JAM'",
+    "'VINE BANANA'",
+    "'APPLE MOON'",
+    "'NUT'",
+    "'NUT X'",
+    "'UMBRELLA LEMON'",
+    "'OWL'",
+    "'UMBRELLA QUEEN'",
+    "'NUT APPLE'",
+    "'OWL GRAPE'",
+    "'PEAR CAT'",
+    "'WOLF ECHO'",
+    "'FIG YES'",
+    "'HAT'",
+    "'QUEEN ECHO'",
+    "'UMBRELLA UMBRELLA'",
+    "'OWL TREE'",
+    "'JAM ROSE'",
+    "'CAT VINE'",
+    "'ROSE'",
+    "'ICE UMBRELLA'",
+    "'SKY VINE'",
+    "'QUEEN SKY'",
+    "'OWL DOG'",
+    "'JAM I'"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:words:list",
+   "name": "list_backwards_capitalized_words",
+   "params": "text",
+   "neighbour": "list_capitalized_words",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `list_backwards_capitalized_words(text)` that returns a list of the words of text that start with an upper-case letter, each spelled backwards."
+   },
+   "tests": "assert list_backwards_capitalized_words('') == []\nassert list_backwards_capitalized_words('a') == []\nassert list_backwards_capitalized_words('zoo') == []\nassert list_backwards_capitalized_words('Echo apple') == ['ohcE']\nassert list_backwards_capitalized_words('queen Echo') == ['ohcE']\nassert list_backwards_capitalized_words('fig yes nut') == []",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "a"
+    ],
+    [
+     "zoo"
+    ],
+    [
+     "Echo apple"
+    ],
+    [
+     "queen Echo"
+    ],
+    [
+     "fig yes nut"
+    ]
+   ],
+   "reference": "def list_backwards_capitalized_words(text):\n    ys = [w[::-1] for w in [w for w in text.split() if w[0].isupper()]]\n    return ys",
+   "wrong": "def list_backwards_capitalized_words(text):\n    ys = [w for w in text.split() if w[0].isupper()]\n    return ys",
+   "expected": [
+    "[]",
+    "[]",
+    "[]",
+    "['ohcE']",
+    "['ohcE']",
+    "[]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[]",
+    "[]",
+    "['Echo']",
+    "['Echo']",
+    "[]"
+   ],
+   "probe_args": [
+    "('',)",
+    "('fig apple',)",
+    "('a',)",
+    "('grape',)",
+    "('vine',)",
+    "('sky dog x apple jam',)",
+    "('apple tree Hat I Echo',)",
+    "('dog Pear Lemon',)",
+    "('Echo apple',)",
+    "('kiwi Pear',)",
+    "('sky rose',)",
+    "('fig sun',)",
+    "('jam fig moon sky',)",
+    "('zoo',)",
+    "('queen Hat',)",
+    "('jam',)",
+    "('vine Banana I',)",
+    "('apple moon cat wolf',)",
+    "('nut',)",
+    "('nut x Echo sun',)",
+    "('Umbrella Lemon',)",
+    "('owl',)",
+    "('Umbrella queen',)",
+    "('nut apple nut',)",
+    "('owl grape',)",
+    "('Pear cat',)",
+    "('wolf Echo zoo wolf',)",
+    "('fig yes nut',)",
+    "('Hat',)",
+    "('queen Echo',)",
+    "('Umbrella Umbrella cat',)",
+    "('owl tree owl apple grape',)",
+    "('jam rose tree Echo nut',)",
+    "('cat vine Pear',)",
+    "('rose',)",
+    "('ice Umbrella apple',)",
+    "('sky vine',)",
+    "('queen sky sun',)",
+    "('owl dog x',)",
+    "('jam I',)"
+   ],
+   "probe_expected": [
+    "[]",
+    "[]",
+    "[]",
+    "[]",
+    "[]",
+    "[]",
+    "['taH', 'I', 'ohcE']",
+    "['raeP', 'nomeL']",
+    "['ohcE']",
+    "['raeP']",
+    "[]",
+    "[]",
+    "[]",
+    "[]",
+    "['taH']",
+    "[]",
+    "['ananaB', 'I']",
+    "[]",
+    "[]",
+    "['ohcE']",
+    "['allerbmU', 'nomeL']",
+    "[]",
+    "['allerbmU']",
+    "[]",
+    "[]",
+    "['raeP']",
+    "['ohcE']",
+    "[]",
+    "['taH']",
+    "['ohcE']",
+    "['allerbmU', 'allerbmU']",
+    "[]",
+    "['ohcE']",
+    "['raeP']",
+    "[]",
+    "['allerbmU']",
+    "[]",
+    "[]",
+    "[]",
+    "['I']"
+   ]
+  },
+  {
+   "group": "c2_trained",
+   "family": "comp2:words:min",
+   "name": "min_lengths_first_two_words",
+   "params": "text",
+   "neighbour": "min_lengths_capitalized_words",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `min_lengths_first_two_words(text)` that returns the smallest of the lengths of the first two words of text (None if there are none)."
+   },
+   "tests": "assert min_lengths_first_two_words('') == None\nassert min_lengths_first_two_words('a') == 1\nassert min_lengths_first_two_words('zoo') == 3\nassert min_lengths_first_two_words('Echo apple') == 4\nassert min_lengths_first_two_words('queen Echo') == 4\nassert min_lengths_first_two_words('fig yes nut') == 3",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "a"
+    ],
+    [
+     "zoo"
+    ],
+    [
+     "Echo apple"
+    ],
+    [
+     "queen Echo"
+    ],
+    [
+     "fig yes nut"
+    ]
+   ],
+   "reference": "def min_lengths_first_two_words(text):\n    ys = [len(w) for w in text.split()[:2]]\n    return min(ys) if ys else None",
+   "wrong": "def min_lengths_first_two_words(text):\n    ys = [len(w) for w in [w for w in text.split() if w[0].isupper()]]\n    return min(ys) if ys else None",
+   "expected": [
+    "None",
+    "1",
+    "3",
+    "4",
+    "4",
+    "3"
+   ],
+   "wrong_outputs": [
+    "None",
+    "None",
+    "None",
+    "4",
+    "4",
+    "None"
+   ],
+   "probe_args": [
+    "('',)",
+    "('fig apple',)",
+    "('a',)",
+    "('grape',)",
+    "('vine',)",
+    "('sky dog x apple jam',)",
+    "('apple tree Hat I Echo',)",
+    "('dog Pear Lemon',)",
+    "('Echo apple',)",
+    "('kiwi Pear',)",
+    "('sky rose',)",
+    "('fig sun',)",
+    "('jam fig moon sky',)",
+    "('zoo',)",
+    "('queen Hat',)",
+    "('jam',)",
+    "('vine Banana I',)",
+    "('apple moon cat wolf',)",
+    "('nut',)",
+    "('nut x Echo sun',)",
+    "('Umbrella Lemon',)",
+    "('owl',)",
+    "('Umbrella queen',)",
+    "('nut apple nut',)",
+    "('owl grape',)",
+    "('Pear cat',)",
+    "('wolf Echo zoo wolf',)",
+    "('fig yes nut',)",
+    "('Hat',)",
+    "('queen Echo',)",
+    "('Umbrella Umbrella cat',)",
+    "('owl tree owl apple grape',)",
+    "('jam rose tree Echo nut',)",
+    "('cat vine Pear',)",
+    "('rose',)",
+    "('ice Umbrella apple',)",
+    "('sky vine',)",
+    "('queen sky sun',)",
+    "('owl dog x',)",
+    "('jam I',)"
+   ],
+   "probe_expected": [
+    "None",
+    "3",
+    "1",
+    "5",
+    "4",
+    "3",
+    "4",
+    "3",
+    "4",
+    "4",
+    "3",
+    "3",
+    "3",
+    "3",
+    "3",
+    "3",
+    "4",
+    "4",
+    "3",
+    "1",
+    "5",
+    "3",
+    "5",
+    "3",
+    "3",
+    "3",
+    "4",
+    "3",
+    "3",
+    "4",
+    "8",
+    "3",
+    "3",
+    "3",
+    "4",
+    "3",
+    "3",
+    "3",
+    "3",
+    "1"
+   ]
+  }
+ ]
+}

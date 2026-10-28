@@ -1,0 +1,33 @@
+{
+  "step": 72,
+  "stage": "sft",
+  "val_loss": null,
+  "version": 5,
+  "params": 1539979520,
+  "dtype": "bf16",
+  "config": {
+    "vocab_size": 8192,
+    "block_size": 1024,
+    "n_layer": 34,
+    "n_head": 32,
+    "n_embd": 2048,
+    "dropout": 0.0,
+    "n_kv_head": 8,
+    "qk_norm": true,
+    "arch_version": 5
+  },
+  "files": [
+    "model.pt"
+  ],
+  "soup": {
+    "sources": [
+      "/home/user/lmwork/v6/runs/D/1301/model_bf16",
+      "/home/user/lmwork/v6/runs/G/1301/model_bf16"
+    ],
+    "weights": [
+      0.5,
+      0.5
+    ]
+  },
+  "sha256": "e736ca59d4c1992833b55f991cc065512185b370d3aa8e469de2dc1ed9592026"
+}

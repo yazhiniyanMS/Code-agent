@@ -1,0 +1,83 @@
+{
+  "name": "v11-a-replicate-r1",
+  "note": "V11-A: R1 replicated with other seeds. Everything is R1's (v10_r1.json): from C2 (tensor content sha256 cc2f2fa0..., the pack of checkpoint file 9c138498..., verified before training), 2 new examples of each of C2's 350 grammar v2 programs, 50% replay of round 54's production mix, 36 steps (one epoch), lr 1e-4 WSD, Lion, top 24 layers, fp32, fresh optimizer. Changed: training seed 1302 (R1: 1301) and data seed 1303 (R1: 1302; data_seed_offset 1 as in R1).",
+  "decision": "experiments/v11/PLAN.md: the gates are V10's, unchanged.",
+  "anchor": "/home/user/lmwork/loop/anchor",
+  "tokenizer": "/home/user/lmwork/data/tokenizer.json",
+  "replay_dir": "/home/user/lmwork/data",
+  "average_script": "/home/user/lmwork/average.py",
+  "work_dir": "/dev/shm/ycode-v11",
+  "metric": "unseen_clean",
+  "category_rule": "items_lost",
+  "out": "/home/user/lmwork/v11/runs",
+  "seeds": [
+    1302
+  ],
+  "keep_models": "compact",
+  "train": {
+    "steps": 36,
+    "lr": 0.0001,
+    "batch": 4,
+    "train_layers": 24,
+    "warmup": 2,
+    "precision": "fp32",
+    "init_optim": false,
+    "compact": true,
+    "save_every": 36,
+    "final_bf16": true
+  },
+  "eval": {
+    "dev": true,
+    "unseen": true,
+    "unseen2": false,
+    "bench": true,
+    "diagnose": 0,
+    "sets": [
+      {
+        "name": "family_new",
+        "set": "experiments/v8/sets/family_new.json"
+      },
+      {
+        "name": "c2_trained",
+        "set": "experiments/v9/sets/c2_trained.json"
+      },
+      {
+        "name": "c2_test",
+        "set": "experiments/v9/sets/c2_test.json"
+      },
+      {
+        "name": "neighbours",
+        "set": "experiments/v8/sets/neighbours.json",
+        "variants": "original"
+      },
+      {
+        "name": "t_families",
+        "set": "experiments/v8/sets/t_families.json"
+      }
+    ]
+  },
+  "arms": [
+    {
+      "name": "A",
+      "data": {
+        "idioms_bugfix": 0,
+        "idioms_families": "v3",
+        "basics_write": 0,
+        "basics_bugfix": 0,
+        "compose_write": 0,
+        "compose_bugfix": 0,
+        "contrast": 0,
+        "novel_write": 0,
+        "replay": 0,
+        "legacy_share": 0.5,
+        "idioms_select": "v9_grammar_train",
+        "idioms_write": 2
+      },
+      "note": "R1 at training seed 1302, data seed 1303",
+      "data_seed_offset": 1
+    }
+  ],
+  "comparisons": [],
+  "keep_dir": "/dev/shm/ycode-keep",
+  "init_from": "/dev/shm/ycode-keep/C2/1301/model_bf16"
+}

@@ -1,0 +1,66 @@
+{
+ "name": "Round 54",
+ "parent": "YCode-LM v5 (models/ycode-lm-v5, step 60) + 72 fine-tuning steps (the V5 round loop)",
+ "config": null,
+ "seeds": null,
+ "gate": "validated: checkpoint of record (V5.1), unchanged; combined 29",
+ "role": "checkpoint of record (V5.1); the base every pack references",
+ "storage": "fp32 training checkpoint (trained layers fp32, frozen bf16)",
+ "files": [
+  {
+   "path": "/home/user/lmwork/loop/anchor/model.pt",
+   "bytes": 5206846811,
+   "sha256": "2538b55d5aee371899a988799168042af4da27c03cafff3417a3c9925b8e8e98"
+  },
+  {
+   "path": "/home/user/lmwork/loop/anchor/optim.pt",
+   "bytes": 2126780908,
+   "sha256": "bf51203b1f882b808c8b801d3dbe4cd5285972580af0a36c844fd83747638da2"
+  },
+  {
+   "path": "/home/user/lmwork/loop/anchor/info.json",
+   "bytes": 285,
+   "sha256": "bcd985c6677b05b7fa9bb5c8571d1fa3e2075d448b91a6dd50c2dfc079f93634"
+  },
+  {
+   "path": "/home/user/lmwork/loop/anchor/sampler.json",
+   "bytes": 28,
+   "sha256": "d4c8f80cf3635a13b1401e99883fadbbfbdbfee6752c9b9603c8ab151ff88ad3"
+  }
+ ],
+ "restore": "python -c \"from pathlib import Path; from ycode.lm.train import load_checkpoint; load_checkpoint(Path('/home/user/lmwork/loop/anchor'))\"",
+ "evaluate": "python -m ycode.lm.cli eval --model OUT_DIR --problems dev --device cpu --answers-out dev.jsonl",
+ "evaluation": {
+  "dev": {
+   "points": 39,
+   "of": 62,
+   "clean": 27,
+   "clean_of": 44,
+   "robust": 38,
+   "robust_of": 62,
+   "robust_clean": 26
+  },
+  "unseen": {
+   "points": 2,
+   "of": 53,
+   "clean": 2,
+   "clean_of": 53,
+   "robust": 1,
+   "robust_of": 53,
+   "robust_clean": 1
+  },
+  "bench": {
+   "points": 22,
+   "of": 65,
+   "clean": 19,
+   "clean_of": 61,
+   "robust": 20,
+   "robust_of": 65,
+   "robust_clean": 17
+  },
+  "combined_clean": 29,
+  "training": {}
+ },
+ "record": "experiments/v51/results/m4/anchor",
+ "label": "validated best"
+}

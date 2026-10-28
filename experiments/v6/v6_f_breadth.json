@@ -1,0 +1,52 @@
+{
+  "name": "v6-f-breadth",
+  "note": "V6 iteration 4. Evidence on the development tasks: D (curriculum v1 = 76 families, 4 write + 2 bug-fix examples each, full budget, half legacy) is the best candidate (all_clean 30 vs 29) and learns its families well (new family members: code loss 1.32 -> 0.45), but transfer to unseen-v1 plateaued (C 0.739 -> D 0.676 -> E 0.672): more depth on the same families no longer helps. E's additions (plausible-but-wrong repairs, worked examples) cost 4 dev bug fixes (whole-body rewrites taught rewriting instead of minimal edits) without more transfer. Changed variable vs D: breadth - the same curriculum budget spread over curriculum v3 (215 families: v1 + 19 algorithm families + 120 families written without reading any evaluation set), 1 write + 1 bug-fix example each (~133k curriculum tokens, about D's 129k: v3 programs are longer), D's answer formats only (no repairs, no worked examples). Recipe, legacy share and evaluation as D.",
+  "decision": "Same pre-registered rule as v6-c-idioms: replaces round 54 only if every seed beats its all_clean (29/168), the mean gain is >= 3 items, and no category loses >= 3 clean items round 54 passes. unseen-v2 is the fixed holdout: never trained on, never used to choose between experiments. The benchmark is reported only.",
+  "anchor": "/home/user/lmwork/loop/anchor",
+  "tokenizer": "/home/user/lmwork/data/tokenizer.json",
+  "replay_dir": "/home/user/lmwork/data",
+  "average_script": "/home/user/lmwork/average.py",
+  "out": "/home/user/lmwork/v6/runs",
+  "seeds": [
+    1301
+  ],
+  "metric": "all_clean",
+  "category_rule": "items_lost",
+  "keep_models": true,
+  "train": {
+    "steps": 72,
+    "lr": 1.5e-05,
+    "batch": 4,
+    "train_layers": 24,
+    "warmup": 2,
+    "precision": "fp32",
+    "init_optim": true,
+    "save_every": 12
+  },
+  "eval": {
+    "dev": true,
+    "unseen": true,
+    "unseen2": true,
+    "bench": true,
+    "diagnose": 16
+  },
+  "arms": [
+    {
+      "name": "F",
+      "data": {
+        "idioms_write": 1,
+        "idioms_bugfix": 1,
+        "idioms_families": "v3",
+        "basics_write": 2,
+        "basics_bugfix": 2,
+        "compose_write": 1,
+        "compose_bugfix": 0,
+        "contrast": 0,
+        "novel_write": 1,
+        "replay": 200
+      },
+      "note": "curriculum breadth: 215 families at the same curriculum token budget as D, D's formats"
+    }
+  ],
+  "comparisons": []
+}

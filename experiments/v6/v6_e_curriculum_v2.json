@@ -1,0 +1,53 @@
+{
+  "name": "v6-e-curriculum-v2",
+  "note": "V6 iteration 3. Failure loop on the development tasks (dev + unseen-v1; experiments/v6/failure_loop.py): 68% of round 54's clean failures misunderstand the prompt (they write another known function), 16% are incorrect logic. Changed variable vs D: the curriculum content (idioms-v2) - 19 multi-step algorithm families added; plausible-but-wrong repairs (the task's docstring over a sibling program's body, fixed to the program; 1 per program) aimed at the dominant failure; worked input-output examples with a boundary case in 40% of write prompts; 3 write + 1 bug-fix examples per program (~150k curriculum tokens vs D's ~129k). Budget, legacy share and recipe as D.",
+  "decision": "Same pre-registered rule as v6-c-idioms: replaces round 54 only if every seed beats its all_clean (29/168), the mean gain is >= 3 items, and no category loses >= 3 clean items round 54 passes. unseen-v2 is the fixed holdout: never trained on, never used to choose between experiments. The benchmark is reported only.",
+  "anchor": "/home/user/lmwork/loop/anchor",
+  "tokenizer": "/home/user/lmwork/data/tokenizer.json",
+  "replay_dir": "/home/user/lmwork/data",
+  "average_script": "/home/user/lmwork/average.py",
+  "out": "/home/user/lmwork/v6/runs",
+  "seeds": [
+    1301
+  ],
+  "metric": "all_clean",
+  "category_rule": "items_lost",
+  "keep_models": true,
+  "train": {
+    "steps": 72,
+    "lr": 1.5e-05,
+    "batch": 4,
+    "train_layers": 24,
+    "warmup": 2,
+    "precision": "fp32",
+    "init_optim": true
+  },
+  "eval": {
+    "dev": true,
+    "unseen": true,
+    "unseen2": true,
+    "bench": true,
+    "diagnose": 16
+  },
+  "arms": [
+    {
+      "name": "E",
+      "data": {
+        "idioms_write": 3,
+        "idioms_bugfix": 1,
+        "idioms_contrast": 1,
+        "idioms_io": 0.4,
+        "basics_write": 2,
+        "basics_bugfix": 2,
+        "compose_write": 1,
+        "compose_bugfix": 0,
+        "contrast": 0,
+        "novel_write": 1,
+        "replay": 200,
+        "idioms_families": "v2"
+      },
+      "note": "curriculum v2: algorithms, plausible-but-wrong repairs, worked examples"
+    }
+  ],
+  "comparisons": []
+}

@@ -17,6 +17,7 @@ exists: 20 problems whose concepts appear nowhere in this file's training set.
 
 from __future__ import annotations
 
+import json
 import random
 import re
 from dataclasses import dataclass
@@ -565,12 +566,13 @@ def verify_concepts(concepts=CONCEPTS) -> None:
 
 def held_out_names() -> set[str]:
     """Function names of every benchmark item (standard 30, the 15 bug fixes, fresh 20) and of the
-    unseen-concept set (ycode.lm.unseen)."""
+    unseen-concept sets (ycode.lm.unseen, ycode.lm.unseen2)."""
     from ycode.lm.evaluate import BUGGY, PROBLEMS
     from ycode.lm.unseen import unseen_names
+    from ycode.lm.unseen2 import unseen2_names
 
     return ({p.name for p in PROBLEMS} | {sig.split("(")[0] for sig, _ in BUGGY} | {p[0] for p in FRESH_PROBLEMS}
-            | unseen_names())
+            | unseen_names() | unseen2_names())
 
 
 def dev_names() -> set[str]:
@@ -752,7 +754,7 @@ def replay_kind(prompt: str) -> str:
 
 
 def write_basics_dataset(out_dir, tokenizer_path, *, replay_dir=None, replay: int = 0, seed: int = 1337,
-                         examples=None, log=print, replay_filter=None) -> dict:
+                         examples=None, log=print, replay_filter=None, tags: list[str] | None = None) -> dict:
     """Write an SFT dataset of basics examples, optionally mixed with ``replay`` examples drawn from
     an earlier SFT dataset (so fine-tuning does not erase what the model already learned).
 
@@ -773,6 +775,8 @@ def write_basics_dataset(out_dir, tokenizer_path, *, replay_dir=None, replay: in
     rows = [encode_example(tok, ex, weighted=True)
             for ex in (examples if examples is not None else basics_examples(seed))]
     n_basics = len(rows)
+    if tags is not None and len(tags) != n_basics:
+        raise ValueError("one tag per example")
     if replay_dir and replay:
         from ycode.lm.data import ASSISTANT, END, USER
 
@@ -825,7 +829,12 @@ def write_basics_dataset(out_dir, tokenizer_path, *, replay_dir=None, replay: in
                 rows.append((t, mask[start:start + length].tolist()))
             kept += 1
         log(f"Replay: kept {kept} ({rewritten} written functions re-encoded), dropped {dropped}, mix {kinds}")
-    rng.shuffle(rows)
+    # shuffle rows and their source tags together (the same permutation as shuffling the rows alone)
+    tagged = list(zip(rows, (tags or ["generated"] * n_basics) + ["replay"] * (len(rows) - n_basics)))
+    rng.shuffle(tagged)
+    rows = [r for r, _ in tagged]
+    if tags is not None:
+        (out_dir / "sft_tags.json").write_text(json.dumps([t for _, t in tagged]))
     all_tokens, all_mask, idx = [], [], []
     for t, m in rows:
         idx.append((len(all_tokens), len(t)))

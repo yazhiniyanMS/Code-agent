@@ -1,0 +1,12 @@
+Loaded /home/user/lmwork/loop/anchor (step 72, stage sft)
+Optimizer state continued from /home/user/lmwork/loop/anchor.
+Model: YCode-LM v5, 1523.20M parameters, context 1024, device cpu, precision fp32, optimizer lion, stage sft, grad checkpointing
+step     10 | loss 0.322 | lr 1.00e-04 | gnorm 0.160 | 27 tok/s | 25.1 min
+step     20 | loss 0.151 | lr 1.00e-04 | gnorm 0.114 | 27 tok/s | 50.2 min
+step     30 | loss 0.111 | lr 1.00e-04 | gnorm 0.112 | 28 tok/s | 74.2 min
+step     40 | loss 0.074 | lr 1.00e-04 | gnorm 0.117 | 27 tok/s | 99.3 min
+step     50 | loss 0.062 | lr 1.00e-04 | gnorm 0.079 | 28 tok/s | 123.9 min
+step     60 | loss 0.132 | lr 1.00e-04 | gnorm 0.085 | 27 tok/s | 150.3 min
+step     70 | loss 0.028 | lr 1.00e-04 | gnorm 0.062 | 27 tok/s | 175.5 min
+step     80 | loss 0.050 | lr 5.66e-05 | gnorm 0.047 | 27 tok/s | 199.6 min
+Saved model to /dev/shm/ycode-v11/C/1301/model

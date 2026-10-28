@@ -1,0 +1,9 @@
+{"content_sha256": "31e81f364766bdd863294ea422a07b4ce505eda51b7e1fbc936483ef7ff67f52", "packed_bytes": 1058332025, "source_bytes": 2126862031}
+[04:12:50] /home/user/lmwork/v6/runs/D/1302/model_bf16: packed 1058332025 bytes, verified 31e81f364766bdd863294ea422a07b4ce505eda51b7e1fbc936483ef7ff67f52, original 81425c6a288205eb76882b5bcc108e3f959d8c0ae453367193fb0c37b40ab75d removed
+{"content_sha256": "2e16e8a69f92ebb813e214ac7802460bcaa028c0c65b5f07e3462431544a3369", "packed_bytes": 1179107543, "source_bytes": 2126862031}
+[04:18:08] /home/user/lmwork/v6/runs/G/1302/model_bf16: packed 1179107543 bytes, verified 2e16e8a69f92ebb813e214ac7802460bcaa028c0c65b5f07e3462431544a3369, original 489f6f65ac38f9d751190ab398458f1b1283d680b2461d7ed2f8d0124cfd071b removed
+{"content_sha256": "85b6dc8a825538129779975ec9014d00ffecc1c8cd716197849e2e55783d49c8", "packed_bytes": 1120448578, "source_bytes": 2126862223}
+[04:23:11] /home/user/lmwork/v6/soups/DG1301c: packed 1120448578 bytes, verified 85b6dc8a825538129779975ec9014d00ffecc1c8cd716197849e2e55783d49c8, original d84d20977148fbd148eb74440f9244b8018d7c68039c3e8a38826247ba6bfa68 removed
+{"content_sha256": "b8e5a149844d3569be4c6f2587c4ccccabb88ef59049329da9218fb91bf8253e", "packed_bytes": 1126258920, "source_bytes": 2126862223}
+[04:28:09] /home/user/lmwork/v6/soups/DG1302c: packed 1126258920 bytes, verified b8e5a149844d3569be4c6f2587c4ccccabb88ef59049329da9218fb91bf8253e, original 357872cb796770e328fae4bc411cc2b1ea305fda15e7f10aab8c70c93025ecac removed
+[04:28:09] all packed

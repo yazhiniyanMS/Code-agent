@@ -1,0 +1,151 @@
+# V11 plan and decision rules (written before any V11 result)
+
+## Scope and storage
+
+- **Repositories:** the Git repository is `/home/user/Code-agent`, branch
+  `claude/affectionate-rubin-7rl1am`, remote `github.com/yazhiniyanMS/Code-agent`.
+  `/home/user/lmwork` is the (non-Git) working area for checkpoints, data and run outputs.
+- **Disk space** came from the main worktree's working copy of `models/`, about 3.2 GB of published
+  v2-v5 model files. It now uses the same sparse checkout as the staging worktree (`'/*' '!/models/'`).
+  - All 120 blobs were checked present in the local Git store first, and they are also on the remote.
+  - `git sparse-checkout disable` restores them. No checkpoint was moved or deleted.
+- **Training runs one at a time** on the RAM disk (`/dev/shm`, 16 GB; training peaks at about 11 GB).
+- **Every kept candidate is stored as a verified lossless pack** (`ycode/lm/packckpt.py`) in
+  `/home/user/lmwork/v11/ckpt`.
+- **Runs are watched actively.** The container restarted twice while idle in V10, killing runs.
+
+## Gates (unchanged from V6/V10; not to be changed after results)
+
+- **Selection metric:** clean dev /44 + clean unseen-v1 /53 = combined /97.
+- **Second-seed gate** for a one-seed candidate, both required:
+  - combined >= 32;
+  - no failure category loses 3 or more of round 54's clean passes (`items_lost`, official passes).
+- **Promotion** (replaces round 54 as the checkpoint of record), the V6 rule:
+  - every seed beats 29;
+  - mean combined >= 32 (a mean gain >= 3);
+  - mean `items_lost` < 3 in every category, over the seeds.
+- **Always reported, never used to select:**
+  - the benchmark (official, clean and robust);
+  - the new-family probe /24, neighbours /38 and held-out families /66;
+  - reproduction and held-out-combination sets;
+  - robust dev and unseen-v1 passes.
+- **Audit of every promoted candidate's gained items, before promotion:**
+  - no training example shares the item's name, AST skeleton or behaviour (the built-in hygiene
+    check, rerun);
+  - no duplicate of the item in the data;
+  - whether each gain is robust (robust tests).
+  - A gain from leakage voids the candidate. A weak gain is reported as such.
+- **unseen-v2 and the benchmark are never used to choose.** unseen-v2 is never evaluated. The training
+  data's decontamination against it stays on.
+
+## Runs (sequential; each from the verified C2 unless stated; one principal change each)
+
+| Run | Hypothesis | Changed variable | Expected | Forgetting risk | Seeds | Cost | Stop / next |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| A | R1's +4 over round 54 is not one seed's luck | R1's seeds only | combined about 33, the same 3 inherited losses | same as R1 | train 1302, data 1303 | ~1.3 h train + ~1.6 h eval | always run |
+| B | A curriculum that restores what C2 forgot keeps R1's gains without its losses | how the 50% replay is drawn: weighted by C2's forgetting of each example (C2's loss minus round 54's, on a fresh production round; never dev, unseen or benchmark items) | combined >= 32 with the 3 losses restored | lower than R1; risk of narrowing replay | 1301 (data 1302) | +~0.5 h scoring, ~3 h run | second seed if both gates pass; otherwise C |
+| C | Correct bug-fix contrast pairs stop the echo (returning the buggy code): pairs whose buggy code differs from the fix by one token, from round 54's own bug-fix generators, with the decisive tokens weighted | B's recipe plus those pairs | the bug-fix echo removed | low | 1301 | ~3 h | only if B leaves the bug-fix losses; second seed if gates pass |
+| D | Cross-family compositions (grammar v3) add transfer once retention holds | the best of B/C plus grammar v3 (R6's addition) | unseen-v1 above R1 (R6 reached 5/53) | dev fell in R6 | 1301 | ~4 h | only if B or C passes the gates |
+
+- A second seed of any run that passes the second-seed gate comes before any new run.
+- The forgetting investigation runs alongside A. It covers the training targets, the tokenized
+  examples and loss masks, the sampling frequencies, per-token losses of the correct answers, and the
+  generated outputs for `remove_spaces` and the `longest_word` bug fix. It changes no gate. Dev items
+  are inspected, never trained on.
+
+## Amendment 1 (written after V11-A and the forgetting probe, before V11-B started; gates unchanged)
+
+**What V11-A and the probe showed:**
+
+- R1's forgetting is reproduced at a second seed: the same 3 instruction-following dev items are lost.
+- Two of the three are bug fixes answered by returning the buggy code unchanged. At the decisive
+  token, C2 and R1 prefer the buggy token: `<` over `>` in `longest_word`, and `'_'` over `''` in
+  `remove_spaces`.
+- The training targets are correct, and their decisive tokens already weigh 8.
+- V10-R5 had already added 350 correct bug-fix examples from C2 without restoring a single item.
+- Every continuation from C2 so far inherits C2's losses: R1, R4, R5, R7 and V11-A.
+
+**Change to the run order:**
+
+- **B:** unchanged, the next run.
+- **C becomes "retention from the start."**
+  - **Hypothesis:** the loss happens while C2 is trained, so putting the examples C2 forgot into the
+    curriculum from round 54's first step prevents it. Restoring the loss afterwards from C2 has
+    failed five times.
+  - **Configuration:**
+    - from round 54, with its optimizer state, as C2 was trained;
+    - C2's and R1's grammar v2 examples in one curriculum: 5 new examples per program (C2's 3 plus
+      R1's 2);
+    - the 50% replay share drawn by forgetting score (B's weights; data seed 1302 so the weights
+      match the production round);
+    - steps covering the dataset once (`floor(tokens / 4096)`), lr 1e-4 warmup-stable-decay to 1e-5,
+      the top 24 layers, fp32, seed 1301.
+  - **Changed variable against C2 followed by R1:** one stage instead of two, and the replay drawn
+    by forgetting score.
+  - **Expected:** combined >= 32 and round 54's 3 instruction-following items kept.
+  - **Risk:** five examples per program in one stage may forget more than C2's three. Cost about
+    4 h of training and 2 h of evaluation.
+  - **When it runs:** only if B fails a gate.
+- **The correct bug-fix contrast pairs (old C) move behind C.** R5's negative result makes them the
+  less likely fix.
+- **D is unchanged:** grammar v3 on top of whichever of B or C passes.
+- **Seeds:** a run that passes the second-seed gate gets its second seed (train 1302, data 1303,
+  forgetting scores for production round 1303) before any new run.
+- **An honest note on the gate, which is not changed:**
+  - Two of the four round-54 passes the R1 recipe loses are weak: the robust tests fail round 54's
+    own code. These are `write:remove_spaces` (an `isalpha` shortcut) and unseen
+    `count_words_longer_than` (code that ignores `n`).
+  - The category rule counts official passes, as pre-registered, and stays that way in V11.
+
+## Amendment 2 (written while V11-B trains, before any V11-B result; gates unchanged)
+
+**Two new findings:**
+
+- **Forgetting by average loss.** Scored on one production round of round 54's own mix (seed 1302),
+  C2's mean answer loss rose on 95% of the examples. It rose most on write examples (+0.019) and
+  least on bug fixes (+0.004 for comparison-only fixes).
+  - So V11-B's sampler, which draws by that score, cuts bug fixes in the replay: 20 comparison fixes
+    instead of 56, and 205 bug fixes instead of 320.
+  - The decisive-token copy bias of the lost bug fixes is invisible to an average over about 60
+    answer tokens.
+  - V11-B still runs as pre-registered. It now tests the write side of retention.
+- **No curriculum interference.** C2's grammar v2 examples contain no `'_'`, no `replace(' ', ...)`
+  and no `len(x) < len(y)`, so the wrong tokens are not taught by similar curriculum code.
+
+**New run W, after B and before C: interpolation with round 54 (WiSE-FT style), no training.**
+
+- **Hypothesis:** the R1 recipe's grammar gains and round 54's bug-fixing behaviour live in nearby
+  weights. Halfway between R1 and round 54 keeps most of the gains and the round-54 behaviour.
+  - Evidence: R1's decisive-token probability on `longest_word` is 0.40 against round 54's fix, so
+    the fix is close.
+- **Changed variable:** the weights only:
+  - θ = 0.5·θ(R1 recipe) + 0.5·θ(round 54), computed in fp32 and stored in bf16 like every kept
+    model;
+  - built by `experiments/v6/soup.py`;
+  - **0.5 is fixed now and not tuned.** There is no sweep, because a sweep would select on the
+    evaluation sets.
+- **Seeds:** both trained seeds of the R1 recipe, R1 (1301) and V11-A (1302). That is two seeds
+  straight away, so the promotion rule applies directly to the pair.
+- **Expected:** round 54's bug fixes back (both, or one) with combined >= 32.
+- **Risk:** the grammar gains halve or vanish (combined back to about 29-31).
+- **Cost:** no training; about 2.5 h of evaluation per seed.
+- **Stop:** if both seeds fail the second-seed gate, W is not pursued further. No other weight is
+  tried in V11.
+
+**C (retention from the start) is revised before it runs:**
+
+- The replay is drawn by forgetting score **within** each kind, write and bug fix.
+- Each kind keeps the share of the uniform draw: weights are normalised to mean 1 within a tag. So
+  bug fixes stay at round 54's third, and inside each kind the most-forgotten examples are preferred.
+- Everything else as in amendment 1. C runs after W if neither B nor W passes.
+
+## Amendment 3 (a stop decision under amendment 2's rule; gates unchanged)
+
+- **W at seed 1301 (0.5·R1 + 0.5·round 54):** dev 26 + unseen-v1 1 = **27**, below round 54's 29.
+  - It restores the `longest_word` bug fix.
+  - It loses most of R1's gains: the `first_negative`, `index_of_min` and `product` bug fixes, and
+    `first_three_chars`.
+  - It does not restore `remove_spaces`.
+- **The promotion rule needs every seed to beat 29.** Seed 1301 already fails it, so W's second
+  seed cannot change W's outcome. It is not run, and its ~1.5 h goes to C.
+- W 1301's evaluation is completed for the record (benchmark and task sets).

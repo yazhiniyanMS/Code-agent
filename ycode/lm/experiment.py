@@ -40,8 +40,15 @@ REPO = Path(__file__).resolve().parents[2]  # subprocesses run this checkout's y
 T975 = {1: 12.706, 2: 4.303, 3: 3.182, 4: 2.776, 5: 2.571, 6: 2.447, 7: 2.365, 8: 2.306, 9: 2.262, 10: 2.228}
 T95 = {1: 6.314, 2: 2.920, 3: 2.353, 4: 2.132, 5: 2.015, 6: 1.943, 7: 1.895, 8: 1.860, 9: 1.833, 10: 1.812}
 TRAIN_DEFAULTS = {"steps": 72, "lr": 1.5e-5, "batch": 4, "train_layers": 24, "warmup": 2, "precision": "bf16",
-                  "init_optim": True, "seq_len": None, "average": None}
-EVAL_DEFAULTS = {"dev": True, "unseen": True, "bench": True, "limit": None, "diagnose": 32}
+                  "init_optim": True, "seq_len": None, "average": None,
+                  "save_every": None,  # checkpoint interval in steps (default: half the run)
+                  "compact": False,  # checkpoints store only the trained tensors, referencing the anchor
+                  "final_bf16": False,  # the final checkpoint is bf16 without optimizer state (train.TrainConfig)
+                  "schedule": None}  # V10: the trainer's LR schedule (None: its default, wsd)
+EVAL_DEFAULTS = {"dev": True, "unseen": True, "unseen2": False, "bench": True, "limit": None, "diagnose": 32,
+                 # V8: task sets scored on the trained model (experiments/v7/prompt_diagnostic.py), each
+                 # {"name", "set" (path from the repo root), "variants" (comma-separated, default original)}
+                 "sets": []}
 DISK_NEEDED_GB = 8
 SMOKE = {"train": {"steps": 2}, "eval": {"limit": 4, "diagnose": 4}}
 
@@ -90,8 +97,11 @@ def scores(answers_path: Path, which: str, *, classify: bool = True) -> dict:
         "hallucinations": result["lost_by_category"].get("hallucination", 0),
         "invalid_outputs": result["lost_by_category"].get("formatting", 0),
         "passed": sorted(f"{i['suite']}:{i['name']}" for i in result["items"] if i["pass"]),
+        # v5 error category of every failed item (for the items-lost category rule)
+        "categories": {f"{i['suite']}:{i['name']}": i.get("category") for i in result["items"] if not i["pass"]},
+        "contaminated": sorted(f"{i['suite']}:{i['name']}" for i in s["items"] if i["contaminated"]),
     }
-    if classify and which in ("dev", "unseen"):
+    if classify and which in ("dev", "unseen", "unseen2"):
         from ycode.lm.failures import classify_answers
 
         failures = classify_answers(answers, which)
@@ -100,6 +110,24 @@ def scores(answers_path: Path, which: str, *, classify: bool = True) -> dict:
         out["failures"] = [{k: f[k] for k in ("suite", "name", "contaminated", "class", "evidence")}
                            for f in failures["items"]]
     return out
+
+
+def set_scores(rows_path: Path) -> dict:
+    """Pass counts of a task-set run (prompt_diagnostic rows) per variant and group, with denominators:
+    ``strict`` = correct on all probe inputs, ``tests`` = passes the task's tests, ``wrong`` = computes
+    the contrasting program."""
+    rows = [json.loads(line) for line in rows_path.read_text().splitlines()]
+    out: dict = {}
+    for r in rows:
+        for key in (r["variant"], f"{r['variant']}:{r['group']}"):
+            e = out.setdefault(key, {"tasks": 0, "strict": 0, "tests": 0, "wrong": 0, "strict_names": []})
+            e["tasks"] += 1
+            e["tests"] += bool(r.get("pass"))
+            e["wrong"] += bool(r.get("wrong"))
+            if r.get("strict"):
+                e["strict"] += 1
+                e["strict_names"].append(r["name"])
+    return {"scores": out}
 
 
 def _metrics_tail(path: Path, n: int = 10) -> dict:
@@ -111,6 +139,25 @@ def _metrics_tail(path: Path, n: int = 10) -> dict:
             "loss_first": rows[0]["loss"], "grad_norm_last10_mean": round(
                 sum(r["grad_norm"] or 0 for r in last) / len(last), 4), "tok_per_s": rows[-1]["tok_per_s"],
             "answer_tokens": rows[-1]["answer_tokens"]}
+
+
+def _checkpoint_gb(anchor: Path, train: dict) -> float:
+    """Size of the checkpoint a run writes: the anchor's, or with compact checkpoints only its trained
+    blocks and final norm in fp32 (the rest stays referenced), plus the optimizer state."""
+    optim = (anchor / "optim.pt").stat().st_size if (anchor / "optim.pt").is_file() else 0
+    model = sum(f.stat().st_size for f in anchor.glob("*.pt") if f.name != "optim.pt")
+    steps = train.get("steps") or 0
+    final_only = train.get("final_bf16") and (train.get("save_every") or max(1, steps // 2)) >= steps
+    if train.get("compact") and train.get("train_layers"):
+        import torch
+
+        payload = torch.load(anchor / "model.pt", map_location="cpu", weights_only=True, mmap=True)
+        first = payload["config"]["n_layer"] - train["train_layers"]
+        model = sum(v.numel() * (2 if final_only else 4) for k, v in payload["model"].items()
+                    if k.startswith("norm.") or (k.startswith("blocks.") and int(k.split(".")[1]) >= first))
+    if final_only:  # the only save is the bf16 inference checkpoint, without optimizer state
+        optim = 0
+    return (model + optim) / 1e9
 
 
 def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False, log=print) -> dict:
@@ -128,6 +175,9 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
                     "train": train, "eval": evaluation, "anchor": spec["anchor"], "anchor_sha256": spec["anchor_sha256"]}
 
     data, cur = run_dir / "data", run_dir / "model"
+    if spec.get("work_dir"):  # the model lives elsewhere, e.g. a RAM disk when the disk is short (V8)
+        cur = Path(spec["work_dir"]) / arm["name"] / str(seed) / "model"
+        cur.parent.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
     if (data / "manifest.json").is_file() and (cur / "model.pt").is_file():
         # an interrupted run (e.g. a container restart): its data is reused and training resumes
@@ -137,26 +187,36 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
         log(f"{arm['name']} seed {seed}: building data {arm.get('data', {})}")
         shutil.rmtree(data, ignore_errors=True)
         shutil.rmtree(cur, ignore_errors=True)
-        manifest = write_round_dataset(data, seed, spec["tokenizer"], replay_dir=spec.get("replay_dir"),
-                                       options=arm.get("data", {}), log=lambda m: log(f"  {m}"))
+        # V10: data_seed_offset draws other examples (prompts, names, replay sample) than a run with this seed
+        manifest = write_round_dataset(data, seed + arm.get("data_seed_offset", 0), spec["tokenizer"],
+                                       replay_dir=spec.get("replay_dir"), options=arm.get("data", {}),
+                                       log=lambda m: log(f"  {m}"))
     record["data"] = {k: v for k, v in manifest.items() if k != "options"}
     record["data"]["minutes"] = round((time.time() - t0) / 60, 2)
     shutil.copy(data / "hygiene.json", run_dir / "hygiene.json")
     shutil.copy(data / "manifest.json", run_dir / "manifest.json")
 
-    free_gb = shutil.disk_usage(run_dir).free / 1e9
-    if free_gb < DISK_NEEDED_GB:  # a checkpoint is ~7 GB; failing at the first save wastes the whole run
-        raise RuntimeError(f"only {free_gb:.1f} GB free under {run_dir}; training needs {DISK_NEEDED_GB} GB "
+    free_gb = shutil.disk_usage(cur.parent).free / 1e9
+    # a run writes one checkpoint the size of the one it starts from (weights + optimizer state), plus margin
+    needed_gb = min(DISK_NEEDED_GB, 1.02 * _checkpoint_gb(Path(spec["anchor"]), train) + 0.5)
+    if free_gb < needed_gb:  # a checkpoint is ~7 GB; failing at the first save wastes the whole run
+        raise RuntimeError(f"only {free_gb:.1f} GB free under {cur.parent}; training needs {needed_gb:.1f} GB "
                            "(remove leftover checkpoints, e.g. of an interrupted smoke run)")
     log(f"{arm['name']} seed {seed}: training {train['steps']} steps")
-    cmd = [sys.executable, "-m", "ycode.lm.cli", "sft", "--data", str(data), "--init-from", spec["anchor"],
+    # V10: a run can start from another checkpoint than the anchor (e.g. C2); the anchor stays the reference
+    init = arm.get("init_from") or spec.get("init_from") or spec["anchor"]
+    record["init_from"] = init
+    cmd = [sys.executable, "-m", "ycode.lm.cli", "sft", "--data", str(data), "--init-from", init,
            "--out", str(cur), "--steps", str(train["steps"]), "--warmup", str(train["warmup"]),
            "--batch-size", str(train["batch"]), "--optimizer", "lion", "--lr", str(train["lr"]),
            "--train-layers", str(train["train_layers"]), "--grad-checkpoint", "--eval-interval", "100000",
            "--eval-iters", "0", "--seed", str(seed), "--device", "cpu", "--precision", train["precision"]]
     cmd += ["--init-optim"] if train["init_optim"] else []
-    # checkpoint halfway (in place: one copy on disk) so a restart costs at most half a run
-    cmd += ["--resume", "--save-interval", str(max(1, train["steps"] // 2)), "--save-in-place"]
+    cmd += ["--schedule", train["schedule"]] if train["schedule"] else []
+    cmd += ["--compact-checkpoints"] if train["compact"] else []
+    cmd += ["--final-bf16"] if train["final_bf16"] else []
+    # checkpoint every save_every steps (default halfway; in place: one copy on disk), so a restart costs at most that much
+    cmd += ["--resume", "--save-interval", str(train["save_every"] or max(1, train["steps"] // 2)), "--save-in-place"]
     cmd += ["--seq-len", str(train["seq_len"])] if train["seq_len"] else []
     record["training"] = run_measured(cmd, run_dir / "train.log")
     if record["training"]["exit"] != 0:
@@ -173,15 +233,23 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
                                                             "tokens", "answer_tokens")})
     shutil.copy(cur / "metrics.jsonl", run_dir / "metrics.jsonl")
     shutil.copy(cur / "train_log.json", run_dir / "train_log.json")
+    if (cur / "exposures.json").is_file() and (data / "sft_tags.json").is_file():
+        from ycode.lm.rounddata import exposure_summary
+
+        shutil.copy(cur / "exposures.json", run_dir / "exposures.json")
+        record["exposures"] = exposure_summary(data, cur / "exposures.json")
     if not train["average"]:
         verify_checkpoint(cur)  # the file evaluated is the file training wrote
+    # the optimizer state (~2 GB) only serves resuming training, which is complete: free it for the
+    # bf16 export (a re-run of an interrupted evaluation resumes at the final step and trains nothing)
+    (cur / "optim.pt").unlink(missing_ok=True)
     import torch
 
     model, _, _ = load_checkpoint(cur, dtype=torch.bfloat16)  # half the memory; NaN/Inf survive the cast
     assert_finite_weights(model)
     del model
 
-    for which, problems in (("dev", "dev"), ("unseen", "unseen"), ("bench", "both")):
+    for which, problems in (("dev", "dev"), ("unseen", "unseen"), ("unseen2", "unseen2"), ("bench", "both")):
         if not evaluation.get(which):
             continue
         log(f"{arm['name']} seed {seed}: evaluating {which}")
@@ -193,6 +261,16 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
         if record[f"{which}_run"]["exit"] != 0:
             raise RuntimeError(f"{which} evaluation failed; see {run_dir / f'{which}.log'}")
         record[which] = scores(answers, which)
+    root = Path(__file__).resolve().parents[2]
+    for ts in evaluation.get("sets") or []:
+        log(f"{arm['name']} seed {seed}: task set {ts['name']}")
+        rows_path = run_dir / f"set_{ts['name']}.jsonl"
+        cmd = [sys.executable, str(root / "experiments" / "v7" / "prompt_diagnostic.py"), str(cur), str(rows_path),
+               "--set", str(root / ts["set"]), "--variants", ts.get("variants", "original")]
+        record.setdefault("sets", {})[ts["name"]] = {"run": run_measured(cmd, run_dir / f"set_{ts['name']}.log")}
+        if record["sets"][ts["name"]]["run"]["exit"] != 0:
+            raise RuntimeError(f"task set {ts['name']} failed; see {run_dir / ('set_' + ts['name'] + '.log')}")
+        record["sets"][ts["name"]].update(set_scores(rows_path))
     if evaluation["diagnose"]:
         log(f"{arm['name']} seed {seed}: answer loss on train / held-out / unseen")
         diag = run_dir / "diagnose.json"
@@ -203,7 +281,26 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
         if diag.is_file():
             record["diagnose"] = json.loads(diag.read_text())
     record["minutes_total"] = round(sum(record.get(k, {}).get("minutes", 0) for k in
-                                        ("data", "training", "dev_run", "unseen_run", "bench_run", "diagnose_run")), 1)
+                                        ("data", "training", "dev_run", "unseen_run", "unseen2_run", "bench_run",
+                                         "diagnose_run"))
+                                    + sum(v["run"].get("minutes", 0) for v in record.get("sets", {}).values()), 1)
+    if spec.get("keep_models"):  # a bf16 inference copy (~3 GB; evaluation runs in bf16 too) survives the cleanup
+        from ycode.lm.train import export_checkpoint, file_sha256
+
+        # "compact": only the tensors that differ from the anchor (the trained layers), ~2.2 GB instead of ~3.1
+        # keep_dir (V10): where kept models go, e.g. a RAM disk when the disk has no room for them
+        keep = (Path(spec["keep_dir"]) / arm["name"] / str(seed) if spec.get("keep_dir") else run_dir) / "model_bf16"
+        keep.mkdir(parents=True, exist_ok=True)
+        if train["final_bf16"] and train["compact"] and spec["keep_models"] == "compact":
+            # the final checkpoint already is that file (bf16 trained tensors referencing the anchor): keep it
+            # instead of writing a second copy
+            for name in ("model.pt", "info.json"):
+                shutil.move(str(cur / name), str(keep / name))  # cur may be on a RAM disk
+            kept = keep / "model.pt"
+        else:
+            kept = export_checkpoint(cur, keep, dtype="bf16",
+                                     base=spec["anchor"] if spec["keep_models"] == "compact" else None)
+        record["kept_model"] = {"path": str(kept), "sha256": file_sha256(kept)}
     result_path.write_text(json.dumps(record, indent=1))
     shutil.rmtree(cur, ignore_errors=True)  # 7 GB per checkpoint: kept only while scoring
     shutil.rmtree(data, ignore_errors=True)
@@ -224,11 +321,15 @@ def _mean_sd(values: list[float]) -> tuple[float, float]:
     return mean, sd
 
 
+METRIC_SETS = {"unseen_clean": ("dev", "unseen"),  # v5.1 primary: clean dev (/44) + unseen-v1 (/53)
+               "all_clean": ("dev", "unseen", "unseen2")}  # V6 primary: + unseen-v2 (/71), out of 168
+
+
 def _metric(record: dict, metric: str) -> float | None:
-    if metric == "unseen_clean":  # the primary metric: clean dev + unseen-concept set
-        if not record.get("dev") or not record.get("unseen"):
+    if metric in METRIC_SETS:
+        if not all(record.get(w) for w in METRIC_SETS[metric]):
             return None
-        return record["dev"]["clean"] + record["unseen"]["clean"]
+        return sum(record[w]["clean"] for w in METRIC_SETS[metric])
     which, _, kind = metric.partition("_")
     block = record.get(which)
     if not block:
@@ -236,24 +337,42 @@ def _metric(record: dict, metric: str) -> float | None:
     return block["points"] if not kind else block[kind]
 
 
-def compare(a_runs: dict[int, dict], b_runs: dict[int, dict], metric: str) -> dict:
+ITEMS_LOST_LIMIT = 3  # mean clean items lost per category (items_lost rule); seed-to-seed churn is ~1 item
+
+
+def compare(a_runs: dict[int, dict], b_runs: dict[int, dict], metric: str,
+            category_rule: str = "failure_counts") -> dict:
     """Arm A against arm B, seed by seed, on ``metric`` (e.g. "dev_clean")."""
     seeds = sorted(set(a_runs) & set(b_runs))
     diffs = [_metric(a_runs[s], metric) - _metric(b_runs[s], metric) for s in seeds]
     n = len(diffs)
     mean, sd = _mean_sd(diffs)
-    whiches = ("dev", "unseen") if metric == "unseen_clean" else (metric.split("_")[0],)
-
-    def lost(run: dict, c: str) -> int:
-        return sum(run[w]["lost_by_category"][c] for w in whiches)
-
+    whiches = METRIC_SETS.get(metric, (metric.split("_")[0],))
     cats = a_runs[seeds[0]][whiches[0]]["lost_by_category"] if seeds else {}
-    damage = {c: round(sum(lost(a_runs[s], c) - lost(b_runs[s], c) for s in seeds) / n, 2) for c in cats} if n else {}
+    if category_rule == "items_lost":
+        # per category: clean items the baseline (b) passes and the candidate (a) fails, by the
+        # candidate's failure category; failures that only change type do not count
+        def lost_items(a: dict, b: dict, c: str) -> int:
+            count = 0
+            for w in whiches:
+                dirty = set(a[w].get("contaminated", []))
+                count += sum(1 for k in set(b[w]["passed"]) - set(a[w]["passed"])
+                             if k not in dirty and a[w]["categories"].get(k) == c)
+            return count
+
+        damage = {c: round(sum(lost_items(a_runs[s], b_runs[s], c) for s in seeds) / n, 2) for c in cats} if n else {}
+        limit = ITEMS_LOST_LIMIT
+    else:  # "failure_counts" (v5.1): change in failures per category, which also moves when a failure changes type
+        def lost(run: dict, c: str) -> int:
+            return sum(run[w]["lost_by_category"][c] for w in whiches)
+
+        damage = {c: round(sum(lost(a_runs[s], c) - lost(b_runs[s], c) for s in seeds) / n, 2) for c in cats} if n else {}
+        limit = 2
     if n < 2:
         verdict, margin = "inconclusive (fewer than 2 paired seeds)", None
     else:
         margin = T95.get(n - 1, 1.8) * (sd if sd > 0 else 0.0) / math.sqrt(n)
-        if any(v >= 2 for v in damage.values()) or mean < -margin or (sd == 0 and mean < 0):
+        if any(v >= limit for v in damage.values()) or mean < -margin or (sd == 0 and mean < 0):
             verdict = "rejected"
         elif mean > margin and mean > 0:
             verdict = "retained"
@@ -265,7 +384,7 @@ def compare(a_runs: dict[int, dict], b_runs: dict[int, dict], metric: str) -> di
         ci = [round(mean - half, 2), round(mean + half, 2)]
     return {"seeds": seeds, "diffs": diffs, "mean": None if not n else round(mean, 2),
             "sd": None if n < 2 else round(sd, 2), "margin": None if margin is None else round(margin, 2), "ci95": ci,
-            "category_change": damage, "verdict": verdict}
+            "category_change": damage, "category_rule": category_rule, "verdict": verdict}
 
 
 def summarize(spec: dict, out: Path) -> dict:
@@ -280,12 +399,12 @@ def summarize(spec: dict, out: Path) -> dict:
     for name, by_seed in runs.items():
         rs = list(by_seed.values())
         row = {"seeds": sorted(by_seed)}
-        for m in ("unseen_clean", "dev", "dev_clean", "dev_robust", "unseen", "unseen_robust", "bench", "bench_clean",
-                  "bench_robust"):
+        for m in ("unseen_clean", "all_clean", "dev", "dev_clean", "dev_robust", "unseen", "unseen_robust", "unseen2",
+                  "bench", "bench_clean", "bench_robust"):
             vals = [v for r in rs if (v := _metric(r, m)) is not None]
             mean, sd = _mean_sd(vals)
             row[m] = {"values": vals, "mean": round(mean, 2), "sd": None if math.isnan(sd) else round(sd, 2)}
-        for which in ("dev", "unseen", "bench"):
+        for which in ("dev", "unseen", "unseen2", "bench"):
             cats = [r[which]["lost_by_category"] for r in rs if which in r]
             if cats:
                 row[f"{which}_lost_by_category"] = {c: round(sum(x[c] for x in cats) / len(cats), 2) for c in cats[0]}
@@ -309,7 +428,7 @@ def summarize(spec: dict, out: Path) -> dict:
                                   if all(split in d for d in diags)}
         row["train_tokens"] = [r["training"].get("tokens") for r in rs]
         arms[name] = row
-    comparisons = [{"arm": a, "against": b, **compare(runs[a], runs[b], metric)}
+    comparisons = [{"arm": a, "against": b, **compare(runs[a], runs[b], metric, spec.get("category_rule", "failure_counts"))}
                    for a, b in spec.get("comparisons", []) if a in runs and b in runs]
     return {"name": spec["name"], "metric": metric, "arms": arms, "comparisons": comparisons}
 

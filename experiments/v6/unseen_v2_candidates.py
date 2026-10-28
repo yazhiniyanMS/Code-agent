@@ -1,0 +1,458 @@
+_TASKS = (
+    # ---------------------------------------------------------------- integers and digits
+    ('digit_product', 'digit_product(n)',
+     'returns the product of the decimal digits of the non-negative integer n (so any zero digit makes the product 0, and digit_product(0) is 0).',
+     'p = 1\nfor ch in str(n):\n    p *= int(ch)\nreturn p',
+     'assert digit_product(234) == 24\nassert digit_product(0) == 0\nassert digit_product(7) == 7\nassert digit_product(105) == 0\nassert digit_product(1111) == 1'),
+
+    ('count_even_digits', 'count_even_digits(n)',
+     'returns how many decimal digits of the non-negative integer n are even, counting 0 as an even digit (so n = 0 has one even digit).',
+     'return sum(1 for ch in str(n) if int(ch) % 2 == 0)',
+     'assert count_even_digits(2468) == 4\nassert count_even_digits(1357) == 0\nassert count_even_digits(0) == 1\nassert count_even_digits(102) == 2'),
+
+    ('swap_first_last_digit', 'swap_first_last_digit(n)',
+     'returns the integer obtained by swapping the first and last decimal digits of the positive integer n; a single-digit n is returned unchanged, and leading zeros in the result are dropped (120 becomes 21).',
+     's = str(n)\nif len(s) == 1:\n    return n\nreturn int(s[-1] + s[1:-1] + s[0])',
+     'assert swap_first_last_digit(1234) == 4231\nassert swap_first_last_digit(5) == 5\nassert swap_first_last_digit(120) == 21\nassert swap_first_last_digit(98) == 89\nassert swap_first_last_digit(101) == 101'),
+
+    ('alternating_digit_sum', 'alternating_digit_sum(n)',
+     'returns the alternating sum of the decimal digits of the non-negative integer n, adding the leftmost digit, subtracting the next one, adding the next one and so on (1234 gives 1 - 2 + 3 - 4 = -2).',
+     'total = 0\nfor i, ch in enumerate(str(n)):\n    if i % 2 == 0:\n        total += int(ch)\n    else:\n        total -= int(ch)\nreturn total',
+     'assert alternating_digit_sum(1234) == -2\nassert alternating_digit_sum(7) == 7\nassert alternating_digit_sum(0) == 0\nassert alternating_digit_sum(918) == 16\nassert alternating_digit_sum(10) == 1'),
+
+    ('strip_trailing_zeros', 'strip_trailing_zeros(n)',
+     'returns the positive integer n with all trailing zeros of its decimal representation removed (1200 becomes 12; a number without trailing zeros is returned unchanged).',
+     'while n % 10 == 0:\n    n //= 10\nreturn n',
+     'assert strip_trailing_zeros(1200) == 12\nassert strip_trailing_zeros(105) == 105\nassert strip_trailing_zeros(7) == 7\nassert strip_trailing_zeros(1000) == 1\nassert strip_trailing_zeros(3030) == 303'),
+
+    ('distinct_digit_count', 'distinct_digit_count(n)',
+     'returns the number of different decimal digits that appear in the non-negative integer n (0 has one distinct digit).',
+     'return len(set(str(n)))',
+     'assert distinct_digit_count(1123) == 3\nassert distinct_digit_count(0) == 1\nassert distinct_digit_count(9999) == 1\nassert distinct_digit_count(1234567890) == 10'),
+
+    ('count_digit_changes', 'count_digit_changes(n)',
+     'returns how many times two neighbouring decimal digits of the non-negative integer n differ from each other (1122 gives 1, 1212 gives 3, and a single-digit number gives 0).',
+     's = str(n)\nreturn sum(1 for i in range(len(s) - 1) if s[i] != s[i + 1])',
+     'assert count_digit_changes(1122) == 1\nassert count_digit_changes(1212) == 3\nassert count_digit_changes(7) == 0\nassert count_digit_changes(5555) == 0\nassert count_digit_changes(10) == 1'),
+
+    ('sum_proper_divisors', 'sum_proper_divisors(n)',
+     'returns the sum of all positive divisors of the positive integer n that are smaller than n itself (the result for 1 is 0).',
+     'return sum(d for d in range(1, n) if n % d == 0)',
+     'assert sum_proper_divisors(6) == 6\nassert sum_proper_divisors(12) == 16\nassert sum_proper_divisors(1) == 0\nassert sum_proper_divisors(7) == 1\nassert sum_proper_divisors(28) == 28'),
+
+    ('count_multiples_in_range', 'count_multiples_in_range(a, b, k)',
+     'returns how many integers x with a <= x <= b are divisible by the positive integer k, where a <= b and a may be negative or zero (0 counts as divisible by every k).',
+     'return sum(1 for x in range(a, b + 1) if x % k == 0)',
+     'assert count_multiples_in_range(1, 10, 3) == 3\nassert count_multiples_in_range(0, 0, 5) == 1\nassert count_multiples_in_range(5, 9, 10) == 0\nassert count_multiples_in_range(-6, 6, 3) == 5\nassert count_multiples_in_range(7, 7, 7) == 1'),
+
+    ('binary_one_count', 'binary_one_count(n)',
+     'returns the number of 1 bits in the binary representation of the non-negative integer n (0 gives 0).',
+     "return bin(n).count('1')",
+     'assert binary_one_count(0) == 0\nassert binary_one_count(7) == 3\nassert binary_one_count(8) == 1\nassert binary_one_count(255) == 8\nassert binary_one_count(10) == 2'),
+
+    ('nearest_square_below', 'nearest_square_below(n)',
+     'returns the largest perfect square (0, 1, 4, 9, ...) that is less than or equal to the non-negative integer n; if n is itself a perfect square, n is returned.',
+     'r = 0\nwhile (r + 1) * (r + 1) <= n:\n    r += 1\nreturn r * r',
+     'assert nearest_square_below(10) == 9\nassert nearest_square_below(16) == 16\nassert nearest_square_below(0) == 0\nassert nearest_square_below(1) == 1\nassert nearest_square_below(99) == 81\nassert nearest_square_below(2) == 1'),
+
+    ('odd_digits_number', 'odd_digits_number(n)',
+     'returns the integer formed by keeping only the odd decimal digits of the non-negative integer n, in their original order (9081 gives 91); if n has no odd digits, returns 0.',
+     "s = ''.join(ch for ch in str(n) if ch in '13579')\nreturn int(s) if s else 0",
+     'assert odd_digits_number(123456) == 135\nassert odd_digits_number(2468) == 0\nassert odd_digits_number(7) == 7\nassert odd_digits_number(9081) == 91\nassert odd_digits_number(0) == 0'),
+
+    ('place_value', 'place_value(n, k)',
+     'returns the value contributed by the digit at position k of the non-negative integer n, where position 0 is the ones digit, position 1 the tens digit and so on (place_value(4721, 2) is 700); a position beyond the length of n contributes 0.',
+     'return (n // 10 ** k) % 10 * 10 ** k',
+     'assert place_value(4721, 2) == 700\nassert place_value(4721, 0) == 1\nassert place_value(4721, 5) == 0\nassert place_value(305, 1) == 0\nassert place_value(305, 2) == 300'),
+
+    # ---------------------------------------------------------------- arithmetic and unit conversion
+    ('kmh_to_ms', 'kmh_to_ms(v)',
+     'converts a speed v given in kilometres per hour to metres per second and returns it (1 km = 1000 m, 1 hour = 3600 s).',
+     'return v * 1000 / 3600',
+     'assert abs(kmh_to_ms(36) - 10.0) < 1e-9\nassert abs(kmh_to_ms(0) - 0.0) < 1e-9\nassert abs(kmh_to_ms(90) - 25.0) < 1e-9\nassert abs(kmh_to_ms(18) - 5.0) < 1e-9\nassert abs(kmh_to_ms(1) - 0.2777777777777778) < 1e-9'),
+
+    ('percent_change', 'percent_change(old, new)',
+     'returns the percentage change from old to new as a float, i.e. (new - old) / old * 100, so a decrease gives a negative result and no change gives 0.0; old is never zero.',
+     'return (new - old) / old * 100',
+     'assert abs(percent_change(50, 75) - 50.0) < 1e-9\nassert abs(percent_change(200, 150) - (-25.0)) < 1e-9\nassert abs(percent_change(10, 10) - 0.0) < 1e-9\nassert abs(percent_change(4, 5) - 25.0) < 1e-9\nassert abs(percent_change(80, 0) - (-100.0)) < 1e-9'),
+
+    ('split_bill', 'split_bill(total, people, tip_percent)',
+     'returns how much each of people persons pays when the bill total plus a tip of tip_percent percent of total is split equally among them, rounded to 2 decimal places.',
+     'return round(total * (1 + tip_percent / 100) / people, 2)',
+     'assert abs(split_bill(100, 4, 10) - 27.5) < 1e-9\nassert abs(split_bill(90, 3, 0) - 30.0) < 1e-9\nassert abs(split_bill(50, 2, 20) - 30.0) < 1e-9\nassert abs(split_bill(10, 3, 0) - 3.33) < 1e-9\nassert abs(split_bill(100, 1, 15) - 115.0) < 1e-9'),
+
+    ('feet_inches_to_cm', 'feet_inches_to_cm(feet, inches)',
+     'converts a length of feet feet plus inches inches to centimetres and returns it (1 foot = 12 inches, 1 inch = 2.54 cm).',
+     'return (feet * 12 + inches) * 2.54',
+     'assert abs(feet_inches_to_cm(1, 0) - 30.48) < 1e-9\nassert abs(feet_inches_to_cm(0, 1) - 2.54) < 1e-9\nassert abs(feet_inches_to_cm(5, 10) - 177.8) < 1e-9\nassert abs(feet_inches_to_cm(0, 0) - 0.0) < 1e-9\nassert abs(feet_inches_to_cm(2, 6) - 76.2) < 1e-9'),
+
+    ('boxes_needed', 'boxes_needed(items, per_box)',
+     'returns the minimum number of boxes needed to pack items objects when each box holds at most per_box objects (items >= 0, per_box > 0; zero items need zero boxes).',
+     'return (items + per_box - 1) // per_box',
+     'assert boxes_needed(10, 3) == 4\nassert boxes_needed(9, 3) == 3\nassert boxes_needed(0, 5) == 0\nassert boxes_needed(1, 100) == 1\nassert boxes_needed(7, 1) == 7'),
+
+    ('compound_interest', 'compound_interest(principal, rate_percent, years)',
+     'returns the balance after years years when principal earns rate_percent percent interest compounded once per year, rounded to 2 decimal places (zero years leave the principal unchanged).',
+     'return round(principal * (1 + rate_percent / 100) ** years, 2)',
+     'assert abs(compound_interest(1000, 10, 2) - 1210.0) < 1e-9\nassert abs(compound_interest(500, 0, 5) - 500.0) < 1e-9\nassert abs(compound_interest(100, 5, 0) - 100.0) < 1e-9\nassert abs(compound_interest(200, 50, 1) - 300.0) < 1e-9\nassert abs(compound_interest(1000, 10, 3) - 1331.0) < 1e-9\nassert abs(compound_interest(250, 4, 2) - 270.4) < 1e-9'),
+
+    ('time_difference_minutes', 'time_difference_minutes(h1, m1, h2, m2)',
+     'returns the number of minutes from the clock time h1:m1 forward to the clock time h2:m2 on a 24-hour clock; if the second time is earlier than the first it is taken to be on the next day, and equal times give 0.',
+     'diff = (h2 * 60 + m2) - (h1 * 60 + m1)\nreturn diff % (24 * 60)',
+     'assert time_difference_minutes(9, 30, 11, 0) == 90\nassert time_difference_minutes(23, 0, 1, 30) == 150\nassert time_difference_minutes(8, 0, 8, 0) == 0\nassert time_difference_minutes(0, 15, 0, 10) == 1435\nassert time_difference_minutes(12, 0, 13, 59) == 119'),
+
+    ('round_to_nearest_multiple', 'round_to_nearest_multiple(n, k)',
+     'returns the multiple of the positive integer k that is nearest to the non-negative integer n; when n is exactly halfway between two multiples, the larger one is returned.',
+     'return (n + k // 2) // k * k',
+     'assert round_to_nearest_multiple(17, 5) == 15\nassert round_to_nearest_multiple(18, 5) == 20\nassert round_to_nearest_multiple(25, 10) == 30\nassert round_to_nearest_multiple(24, 10) == 20\nassert round_to_nearest_multiple(0, 3) == 0\nassert round_to_nearest_multiple(7, 7) == 7'),
+
+    ('seconds_to_clock', 'seconds_to_clock(s)',
+     "returns a string 'H:MM:SS' for a non-negative number of seconds s, where the hours are not padded but the minutes and seconds always have two digits (3661 gives '1:01:01', 0 gives '0:00:00').",
+     "h = s // 3600\nm = (s % 3600) // 60\nsec = s % 60\nreturn f'{h}:{m:02d}:{sec:02d}'",
+     "assert seconds_to_clock(3661) == '1:01:01'\nassert seconds_to_clock(59) == '0:00:59'\nassert seconds_to_clock(0) == '0:00:00'\nassert seconds_to_clock(36000) == '10:00:00'\nassert seconds_to_clock(7322) == '2:02:02'"),
+
+    ('change_coins', 'change_coins(amount)',
+     'returns the minimum number of coins needed to make amount cents (a non-negative integer) using coins worth 25, 10, 5 and 1 cents (0 cents needs 0 coins).',
+     'count = 0\nfor c in (25, 10, 5, 1):\n    count += amount // c\n    amount %= c\nreturn count',
+     'assert change_coins(0) == 0\nassert change_coins(30) == 2\nassert change_coins(41) == 4\nassert change_coins(99) == 9\nassert change_coins(7) == 3'),
+
+    ('hourly_pay', 'hourly_pay(hours, rate)',
+     'returns the weekly pay for working hours hours at an hourly rate of rate, where every hour beyond the first 40 is paid at 1.5 times the rate.',
+     'if hours <= 40:\n    return hours * rate\nreturn 40 * rate + (hours - 40) * rate * 1.5',
+     'assert abs(hourly_pay(40, 10) - 400) < 1e-9\nassert abs(hourly_pay(45, 10) - 475) < 1e-9\nassert abs(hourly_pay(0, 20) - 0) < 1e-9\nassert abs(hourly_pay(50, 20) - 1100) < 1e-9\nassert abs(hourly_pay(10, 15) - 150) < 1e-9'),
+
+    ('arithmetic_series_sum', 'arithmetic_series_sum(first, diff, n)',
+     'returns the sum of the first n terms of the arithmetic sequence that starts at first and changes by diff at each step (diff may be zero or negative; n = 0 gives 0).',
+     'return n * (2 * first + (n - 1) * diff) // 2',
+     'assert arithmetic_series_sum(1, 1, 10) == 55\nassert arithmetic_series_sum(5, 0, 3) == 15\nassert arithmetic_series_sum(2, 3, 0) == 0\nassert arithmetic_series_sum(10, -2, 4) == 28\nassert arithmetic_series_sum(3, 4, 1) == 3'),
+
+    ('manhattan_distance', 'manhattan_distance(x1, y1, x2, y2)',
+     'returns the Manhattan (taxicab) distance between the points (x1, y1) and (x2, y2), i.e. the sum of the absolute differences of their x coordinates and of their y coordinates.',
+     'return abs(x1 - x2) + abs(y1 - y2)',
+     'assert manhattan_distance(0, 0, 3, 4) == 7\nassert manhattan_distance(1, 1, 1, 1) == 0\nassert manhattan_distance(-2, 3, 2, -3) == 10\nassert manhattan_distance(5, 0, 0, 0) == 5'),
+
+    # ---------------------------------------------------------------- booleans and range checks
+    ('intervals_overlap', 'intervals_overlap(a1, a2, b1, b2)',
+     'returns True if the closed intervals [a1, a2] and [b1, b2] (with a1 <= a2 and b1 <= b2) share at least one point, including when they only touch at an endpoint, and False otherwise.',
+     'return a1 <= b2 and b1 <= a2',
+     'assert intervals_overlap(1, 5, 4, 8)\nassert not intervals_overlap(1, 3, 4, 6)\nassert intervals_overlap(1, 4, 4, 6)\nassert intervals_overlap(2, 3, 0, 10)\nassert not intervals_overlap(5, 6, 1, 2)'),
+
+    ('digits_strictly_increasing', 'digits_strictly_increasing(n)',
+     'returns True if every decimal digit of the non-negative integer n is strictly greater than the digit before it, and False otherwise (a single-digit number gives True, and repeated neighbouring digits give False).',
+     's = str(n)\nreturn all(s[i] < s[i + 1] for i in range(len(s) - 1))',
+     'assert digits_strictly_increasing(1359)\nassert not digits_strictly_increasing(1123)\nassert digits_strictly_increasing(7)\nassert not digits_strictly_increasing(321)\nassert digits_strictly_increasing(0)\nassert digits_strictly_increasing(19)'),
+
+    ('exactly_two_true', 'exactly_two_true(a, b, c)',
+     'returns True if exactly two of the three booleans a, b and c are True, and False otherwise (including when all three are True).',
+     'return [a, b, c].count(True) == 2',
+     'assert exactly_two_true(True, True, False)\nassert not exactly_two_true(True, True, True)\nassert not exactly_two_true(False, False, False)\nassert exactly_two_true(False, True, True)\nassert not exactly_two_true(True, False, False)'),
+
+    ('is_strong_password', 'is_strong_password(p)',
+     'returns True if the string p is at least 8 characters long and contains at least one digit, at least one upper-case letter and at least one lower-case letter; otherwise returns False.',
+     'if len(p) < 8:\n    return False\nreturn any(c.isdigit() for c in p) and any(c.isupper() for c in p) and any(c.islower() for c in p)',
+     "assert is_strong_password('Abcdef12')\nassert not is_strong_password('abcdef12')\nassert not is_strong_password('Abc12')\nassert not is_strong_password('ABCDEFG1')\nassert not is_strong_password('Abcdefgh')\nassert is_strong_password('xY3xxxxx')"),
+
+    ('all_same_sign', 'all_same_sign(nums)',
+     'returns True if the numbers in the list nums are either all strictly positive or all strictly negative, and False otherwise; a list containing a zero gives False, and an empty list gives True.',
+     'return all(x > 0 for x in nums) or all(x < 0 for x in nums)',
+     'assert all_same_sign([1, 2, 3])\nassert all_same_sign([-1, -5])\nassert not all_same_sign([1, -1])\nassert not all_same_sign([0, 1])\nassert all_same_sign([])\nassert not all_same_sign([0])'),
+
+    ('is_within_tolerance', 'is_within_tolerance(value, target, tol_percent)',
+     'returns True if value differs from the positive number target by at most tol_percent percent of target (a difference exactly equal to the allowed amount still counts), and False otherwise.',
+     'return abs(value - target) <= target * tol_percent / 100',
+     'assert is_within_tolerance(105, 100, 5)\nassert not is_within_tolerance(106, 100, 5)\nassert is_within_tolerance(95, 100, 5)\nassert is_within_tolerance(100, 100, 0)\nassert not is_within_tolerance(94, 100, 5)\nassert is_within_tolerance(52, 50, 10)'),
+
+    ('steps_within', 'steps_within(nums, k)',
+     'returns True if every two neighbouring elements of the list nums differ by at most k in absolute value, and False otherwise; a list with fewer than two elements gives True.',
+     'return all(abs(nums[i] - nums[i + 1]) <= k for i in range(len(nums) - 1))',
+     'assert steps_within([1, 3, 4], 2)\nassert not steps_within([1, 4], 2)\nassert steps_within([], 0)\nassert steps_within([5], 1)\nassert steps_within([5, 5, 5], 0)\nassert not steps_within([10, 8, 11], 2)'),
+
+    ('is_valid_day_of_month', 'is_valid_day_of_month(day, month)',
+     'returns True if day is a valid day number for month number month (1 = January, ..., 12 = December) in a non-leap year, where February has 28 days, and False otherwise; a month outside 1 to 12 or a day below 1 gives False.',
+     'days = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]\nreturn 1 <= month <= 12 and 1 <= day <= days[month - 1]',
+     'assert is_valid_day_of_month(31, 1)\nassert not is_valid_day_of_month(29, 2)\nassert is_valid_day_of_month(28, 2)\nassert not is_valid_day_of_month(31, 4)\nassert is_valid_day_of_month(30, 4)\nassert not is_valid_day_of_month(1, 13)\nassert not is_valid_day_of_month(0, 5)\nassert is_valid_day_of_month(31, 12)\nassert not is_valid_day_of_month(1, 0)'),
+
+    ('is_hex_color', 'is_hex_color(s)',
+     "returns True if the string s consists of a '#' followed by exactly six hexadecimal digits (0-9, a-f or A-F, in any mix of cases), and False otherwise.",
+     "return len(s) == 7 and s[0] == '#' and all(c in '0123456789abcdefABCDEF' for c in s[1:])",
+     "assert is_hex_color('#1a2B3c')\nassert not is_hex_color('#12345')\nassert not is_hex_color('1234567')\nassert not is_hex_color('#12345g')\nassert is_hex_color('#FFFFFF')\nassert not is_hex_color('')"),
+
+    ('point_in_rectangle', 'point_in_rectangle(px, py, x1, y1, x2, y2)',
+     'returns True if the point (px, py) lies inside or on the border of the axis-aligned rectangle with opposite corners (x1, y1) and (x2, y2), where the corners may be given in either order, and False otherwise.',
+     'return min(x1, x2) <= px <= max(x1, x2) and min(y1, y2) <= py <= max(y1, y2)',
+     'assert point_in_rectangle(1, 1, 0, 0, 2, 2)\nassert not point_in_rectangle(3, 1, 0, 0, 2, 2)\nassert point_in_rectangle(2, 0, 0, 0, 2, 2)\nassert point_in_rectangle(1, 1, 2, 2, 0, 0)\nassert not point_in_rectangle(1, -1, 2, 2, 0, 0)'),
+
+    ('has_majority', 'has_majority(items, x)',
+     'returns True if x appears in the list items strictly more than half as many times as the list has elements (exactly half is not enough), and False otherwise; an empty list gives False.',
+     'return items.count(x) * 2 > len(items)',
+     "assert has_majority([1, 1, 2], 1)\nassert not has_majority([1, 2], 1)\nassert not has_majority([], 1)\nassert has_majority(['a', 'a', 'a', 'b'], 'a')\nassert not has_majority([3, 3, 4, 4], 3)"),
+
+    ('is_perfect_cube', 'is_perfect_cube(n)',
+     'returns True if the non-negative integer n is the cube of some integer (0 and 1 count as cubes), and False otherwise.',
+     'r = round(n ** (1 / 3))\nreturn any((r + d) ** 3 == n for d in (-1, 0, 1))',
+     'assert is_perfect_cube(27)\nassert is_perfect_cube(0)\nassert is_perfect_cube(1)\nassert not is_perfect_cube(10)\nassert is_perfect_cube(1000)\nassert not is_perfect_cube(26)\nassert is_perfect_cube(64)'),
+
+    ('is_harshad', 'is_harshad(n)',
+     'returns True if the positive integer n is divisible by the sum of its own decimal digits, and False otherwise.',
+     'return n % sum(int(c) for c in str(n)) == 0',
+     'assert is_harshad(18)\nassert not is_harshad(19)\nassert is_harshad(1)\nassert is_harshad(21)\nassert not is_harshad(11)\nassert is_harshad(100)'),
+
+    # ---------------------------------------------------------------- lists
+    ('middle_elements', 'middle_elements(items)',
+     'returns a list holding the middle element of the list items when its length is odd, or the two middle elements in order when its length is even; an empty list gives [].',
+     'n = len(items)\nif n == 0:\n    return []\nif n % 2 == 1:\n    return [items[n // 2]]\nreturn items[n // 2 - 1:n // 2 + 1]',
+     "assert middle_elements([1, 2, 3]) == [2]\nassert middle_elements([1, 2, 3, 4]) == [2, 3]\nassert middle_elements([]) == []\nassert middle_elements([9]) == [9]\nassert middle_elements(['a', 'b']) == ['a', 'b']"),
+
+    ('rotate_right', 'rotate_right(items, k)',
+     'returns a new list with the elements of the list items rotated k positions to the right (the last k elements move to the front), where k >= 0 may be larger than the length of the list; an empty list gives [].',
+     'if not items:\n    return []\nk %= len(items)\nreturn items[-k:] + items[:-k]',
+     'assert rotate_right([1, 2, 3, 4, 5], 2) == [4, 5, 1, 2, 3]\nassert rotate_right([1, 2, 3], 3) == [1, 2, 3]\nassert rotate_right([], 4) == []\nassert rotate_right([1, 2], 5) == [2, 1]\nassert rotate_right([1, 2, 3], 0) == [1, 2, 3]'),
+
+    ('last_index_of', 'last_index_of(items, x)',
+     'returns the index of the last occurrence of x in the list items, or -1 if x does not occur in it.',
+     'for i in range(len(items) - 1, -1, -1):\n    if items[i] == x:\n        return i\nreturn -1',
+     "assert last_index_of([1, 2, 1, 3], 1) == 2\nassert last_index_of([1, 2], 5) == -1\nassert last_index_of([], 0) == -1\nassert last_index_of(['a'], 'a') == 0\nassert last_index_of([7, 7, 7], 7) == 2"),
+
+    ('local_peaks', 'local_peaks(nums)',
+     'returns the list of indices i, in increasing order, at which nums[i] is strictly greater than both of its neighbours nums[i - 1] and nums[i + 1]; the first and last positions are never included, so a list shorter than 3 gives [].',
+     'return [i for i in range(1, len(nums) - 1) if nums[i] > nums[i - 1] and nums[i] > nums[i + 1]]',
+     'assert local_peaks([1, 3, 2, 4, 1]) == [1, 3]\nassert local_peaks([1, 2, 3]) == []\nassert local_peaks([]) == []\nassert local_peaks([5, 5, 5]) == []\nassert local_peaks([0, 1, 0]) == [1]\nassert local_peaks([2, 1]) == []'),
+
+    ('count_sign_changes', 'count_sign_changes(nums)',
+     'returns how many times the sign changes between consecutive non-zero numbers in the list nums, ignoring zeros entirely ([5, -1, 0, -2, 4] gives 2); a list with fewer than two non-zero numbers gives 0.',
+     'signs = [x > 0 for x in nums if x != 0]\nreturn sum(1 for i in range(len(signs) - 1) if signs[i] != signs[i + 1])',
+     'assert count_sign_changes([1, -2, 3]) == 2\nassert count_sign_changes([1, 0, -1]) == 1\nassert count_sign_changes([]) == 0\nassert count_sign_changes([-1, -2, -3]) == 0\nassert count_sign_changes([0, 0]) == 0\nassert count_sign_changes([5, -1, 0, -2, 4]) == 2'),
+
+    ('first_repeated', 'first_repeated(items)',
+     'scans the list items from left to right and returns the first element that is equal to some element before it (the first value seen for the second time), or None if all elements are different.',
+     'seen = set()\nfor x in items:\n    if x in seen:\n        return x\n    seen.add(x)\nreturn None',
+     "assert first_repeated([3, 1, 4, 1, 3]) == 1\nassert first_repeated([1, 2, 3]) is None\nassert first_repeated([]) is None\nassert first_repeated(['a', 'b', 'a']) == 'a'\nassert first_repeated([2, 2]) == 2"),
+
+    ('running_max', 'running_max(nums)',
+     'returns a list of the same length as nums whose element i is the largest value among nums[0] to nums[i]; an empty list gives [].',
+     'result = []\nfor x in nums:\n    result.append(x if not result else max(result[-1], x))\nreturn result',
+     'assert running_max([1, 3, 2, 5, 4]) == [1, 3, 3, 5, 5]\nassert running_max([]) == []\nassert running_max([-1, -2]) == [-1, -1]\nassert running_max([7]) == [7]\nassert running_max([-5, -3, -4]) == [-5, -3, -3]'),
+
+    ('chunk_list', 'chunk_list(items, size)',
+     'splits the list items into consecutive pieces of length size (a positive integer) and returns the list of these pieces; the last piece may be shorter, and an empty list gives [].',
+     'return [items[i:i + size] for i in range(0, len(items), size)]',
+     'assert chunk_list([1, 2, 3, 4, 5], 2) == [[1, 2], [3, 4], [5]]\nassert chunk_list([], 3) == []\nassert chunk_list([1, 2, 3], 3) == [[1, 2, 3]]\nassert chunk_list([1, 2], 5) == [[1, 2]]\nassert chunk_list([1, 2, 3], 1) == [[1], [2], [3]]'),
+
+    ('count_in_range', 'count_in_range(nums, lo, hi)',
+     'returns how many numbers x in the list nums satisfy lo <= x <= hi (both bounds inclusive); an empty list gives 0.',
+     'return sum(1 for x in nums if lo <= x <= hi)',
+     'assert count_in_range([1, 5, 10, 15], 5, 10) == 2\nassert count_in_range([], 0, 100) == 0\nassert count_in_range([3, 3, 3], 3, 3) == 3\nassert count_in_range([-5, 0, 5], -1, 1) == 1\nassert count_in_range([1, 2], 5, 9) == 0'),
+
+    ('mean_without_extremes', 'mean_without_extremes(nums)',
+     'returns, as a float, the average of the list nums after removing one occurrence of its smallest value and one occurrence of its largest value; nums always has at least 3 elements.',
+     'return (sum(nums) - min(nums) - max(nums)) / (len(nums) - 2)',
+     'assert abs(mean_without_extremes([1, 2, 3, 4, 100]) - 3.0) < 1e-9\nassert abs(mean_without_extremes([5, 5, 5]) - 5.0) < 1e-9\nassert abs(mean_without_extremes([1, 2, 10]) - 2.0) < 1e-9\nassert abs(mean_without_extremes([4, 1, 7, 10]) - 5.5) < 1e-9\nassert abs(mean_without_extremes([1, 1, 2, 2]) - 1.5) < 1e-9'),
+
+    ('second_largest_distinct', 'second_largest_distinct(nums)',
+     'returns the second largest distinct value in the list nums (copies of the largest value do not count), or None if nums has fewer than two distinct values.',
+     'values = sorted(set(nums))\nreturn values[-2] if len(values) >= 2 else None',
+     'assert second_largest_distinct([3, 1, 4, 4]) == 3\nassert second_largest_distinct([5, 5]) is None\nassert second_largest_distinct([]) is None\nassert second_largest_distinct([-1, -2]) == -2\nassert second_largest_distinct([10, 20, 30]) == 20'),
+
+    ('remove_at', 'remove_at(items, i)',
+     'returns a new list equal to the list items without the element at index i; if i is negative or not a valid index, returns an unchanged copy of items.',
+     'if 0 <= i < len(items):\n    return items[:i] + items[i + 1:]\nreturn list(items)',
+     "assert remove_at([1, 2, 3], 1) == [1, 3]\nassert remove_at([1, 2, 3], 3) == [1, 2, 3]\nassert remove_at([], 0) == []\nassert remove_at([1, 2, 3], -1) == [1, 2, 3]\nassert remove_at(['a'], 0) == []"),
+
+    ('compress_runs', 'compress_runs(items)',
+     'returns a list of [value, count] pairs (each pair a two-element list) describing the runs of consecutive equal elements of the list items, in order ([1, 1, 2, 1] gives [[1, 2], [2, 1], [1, 1]]); an empty list gives [].',
+     'result = []\nfor x in items:\n    if result and result[-1][0] == x:\n        result[-1][1] += 1\n    else:\n        result.append([x, 1])\nreturn result',
+     "assert compress_runs([1, 1, 2, 1]) == [[1, 2], [2, 1], [1, 1]]\nassert compress_runs([]) == []\nassert compress_runs(['a']) == [['a', 1]]\nassert compress_runs([5, 5, 5]) == [[5, 3]]\nassert compress_runs([1, 2, 2, 3, 3, 3]) == [[1, 1], [2, 2], [3, 3]]"),
+
+    # ---------------------------------------------------------------- strings
+    ('initials', 'initials(name)',
+     "returns the upper-case first letter of each whitespace-separated word in name, each followed by a dot ('ada lovelace' gives 'A.L.'); a string with no words gives ''.",
+     "return ''.join(w[0].upper() + '.' for w in name.split())",
+     "assert initials('ada lovelace') == 'A.L.'\nassert initials('Guido van Rossum') == 'G.V.R.'\nassert initials('') == ''\nassert initials('  x  ') == 'X.'"),
+
+    ('longest_word', 'longest_word(sentence)',
+     "returns the longest whitespace-separated word in sentence, choosing the first one if several words share the maximum length; returns '' if there are no words.",
+     "best = ''\nfor w in sentence.split():\n    if len(w) > len(best):\n        best = w\nreturn best",
+     "assert longest_word('the quick brown fox') == 'quick'\nassert longest_word('a bb cc') == 'bb'\nassert longest_word('') == ''\nassert longest_word('one') == 'one'\nassert longest_word('hi   there') == 'there'"),
+
+    ('alternate_case', 'alternate_case(s)',
+     "returns s with the characters at even indices (0, 2, 4, ...) converted to upper case and those at odd indices converted to lower case, where every character, including spaces, counts as a position ('hello' gives 'HeLlO').",
+     "return ''.join(c.upper() if i % 2 == 0 else c.lower() for i, c in enumerate(s))",
+     "assert alternate_case('hello') == 'HeLlO'\nassert alternate_case('') == ''\nassert alternate_case('ABC') == 'AbC'\nassert alternate_case('a b') == 'A B'\nassert alternate_case('Python') == 'PyThOn'"),
+
+    ('mask_all_but_last4', 'mask_all_but_last4(s)',
+     "returns s with every character except the last four replaced by '*', so the length stays the same; a string of length 4 or less is returned unchanged.",
+     "return '*' * max(0, len(s) - 4) + s[-4:]",
+     "assert mask_all_but_last4('1234567890') == '******7890'\nassert mask_all_but_last4('1234') == '1234'\nassert mask_all_but_last4('ab') == 'ab'\nassert mask_all_but_last4('') == ''\nassert mask_all_but_last4('12345') == '*2345'"),
+
+    ('snake_to_camel', 'snake_to_camel(s)',
+     "converts a lower-case snake_case identifier s (words separated by single underscores) to camelCase: the first word stays as it is and every later word gets its first letter capitalized ('hello_world' gives 'helloWorld'); the empty string gives ''.",
+     "parts = s.split('_')\nreturn parts[0] + ''.join(p.capitalize() for p in parts[1:])",
+     "assert snake_to_camel('hello_world') == 'helloWorld'\nassert snake_to_camel('a_b_c') == 'aBC'\nassert snake_to_camel('single') == 'single'\nassert snake_to_camel('') == ''\nassert snake_to_camel('get_user_id') == 'getUserId'"),
+
+    ('first_unique_char', 'first_unique_char(s)',
+     "returns the first character of s that occurs exactly once in s, or '' if there is no such character.",
+     "for c in s:\n    if s.count(c) == 1:\n        return c\nreturn ''",
+     "assert first_unique_char('swiss') == 'w'\nassert first_unique_char('aabb') == ''\nassert first_unique_char('') == ''\nassert first_unique_char('abc') == 'a'\nassert first_unique_char('aabbc') == 'c'"),
+
+    ('censor_word', 'censor_word(text, word)',
+     "returns text with every whole word equal to word replaced by asterisks of the same length, where the words of text are separated by single spaces; words that merely contain word (such as 'catalog' for 'cat') are left unchanged, and an empty text gives ''.",
+     "return ' '.join('*' * len(w) if w == word else w for w in text.split(' '))",
+     "assert censor_word('the cat sat', 'cat') == 'the *** sat'\nassert censor_word('cat catalog cat', 'cat') == '*** catalog ***'\nassert censor_word('', 'x') == ''\nassert censor_word('dog', 'cat') == 'dog'\nassert censor_word('a b a', 'a') == '* b *'"),
+
+    ('count_char_types', 'count_char_types(s)',
+     'returns a tuple (letters, digits, others) giving the number of alphabetic characters, the number of digit characters and the number of all remaining characters (spaces, punctuation, ...) in s.',
+     'letters = sum(1 for c in s if c.isalpha())\ndigits = sum(1 for c in s if c.isdigit())\nreturn (letters, digits, len(s) - letters - digits)',
+     "assert count_char_types('abc123!!') == (3, 3, 2)\nassert count_char_types('') == (0, 0, 0)\nassert count_char_types('A b') == (2, 0, 1)\nassert count_char_types('42') == (0, 2, 0)"),
+
+    ('truncate_text', 'truncate_text(s, n)',
+     "returns s unchanged if its length is at most n; otherwise returns the first n - 3 characters of s followed by '...', so that the result has exactly n characters (n is at least 3).",
+     "if len(s) <= n:\n    return s\nreturn s[:n - 3] + '...'",
+     "assert truncate_text('hello world', 8) == 'hello...'\nassert truncate_text('hi', 5) == 'hi'\nassert truncate_text('abcdef', 6) == 'abcdef'\nassert truncate_text('abcdefg', 6) == 'abc...'\nassert truncate_text('abcd', 3) == '...'"),
+
+    ('most_common_char', 'most_common_char(s)',
+     "returns the character that occurs most often in s; if several characters tie, returns the one whose first appearance in s comes earliest; the empty string gives ''.",
+     "best = ''\nfor c in s:\n    if best == '' or s.count(c) > s.count(best):\n        best = c\nreturn best",
+     "assert most_common_char('banana') == 'a'\nassert most_common_char('abab') == 'a'\nassert most_common_char('') == ''\nassert most_common_char('zzy') == 'z'\nassert most_common_char('xyz') == 'x'\nassert most_common_char('abbba') == 'b'"),
+
+    ('count_words_starting_with', 'count_words_starting_with(text, letter)',
+     'returns how many whitespace-separated words in text start with the character letter, ignoring the difference between upper and lower case; an empty text gives 0.',
+     'return sum(1 for w in text.split() if w[0].lower() == letter.lower())',
+     "assert count_words_starting_with('Apple and banana Avocado', 'a') == 3\nassert count_words_starting_with('', 'x') == 0\nassert count_words_starting_with('Bob builds boats', 'B') == 3\nassert count_words_starting_with('cat dog', 'z') == 0"),
+
+    ('repeat_each_char', 'repeat_each_char(s, k)',
+     "returns a string in which every character of s is repeated k times in place ('abc' with k = 2 gives 'aabbcc'); k = 0 gives ''.",
+     "return ''.join(c * k for c in s)",
+     "assert repeat_each_char('abc', 2) == 'aabbcc'\nassert repeat_each_char('abc', 0) == ''\nassert repeat_each_char('', 5) == ''\nassert repeat_each_char('x', 3) == 'xxx'\nassert repeat_each_char('ab', 1) == 'ab'"),
+
+    ('sum_numbers_in_string', 'sum_numbers_in_string(s)',
+     "returns the sum of all the whole numbers formed by maximal runs of consecutive digit characters in s ('a12b3' gives 12 + 3 = 15); if s contains no digits, returns 0.",
+     "cleaned = ''.join(c if c.isdigit() else ' ' for c in s)\nreturn sum(int(part) for part in cleaned.split())",
+     "assert sum_numbers_in_string('a12b3') == 15\nassert sum_numbers_in_string('abc') == 0\nassert sum_numbers_in_string('') == 0\nassert sum_numbers_in_string('100') == 100\nassert sum_numbers_in_string('1 2 3x40') == 46\nassert sum_numbers_in_string('007') == 7"),
+
+    # ---------------------------------------------------------------- dictionaries
+    ('group_keys_by_value', 'group_keys_by_value(d)',
+     'returns a dictionary that maps each value of the dictionary d to the sorted list of the keys of d that have that value; an empty dictionary gives {}.',
+     'result = {}\nfor k, v in d.items():\n    result.setdefault(v, []).append(k)\nfor v in result:\n    result[v].sort()\nreturn result',
+     "assert group_keys_by_value({'a': 1, 'b': 2, 'c': 1}) == {1: ['a', 'c'], 2: ['b']}\nassert group_keys_by_value({}) == {}\nassert group_keys_by_value({'x': 0}) == {0: ['x']}\nassert group_keys_by_value({'b': 5, 'a': 5}) == {5: ['a', 'b']}"),
+
+    ('merge_sum', 'merge_sum(d1, d2)',
+     'returns a new dictionary containing every key of the dictionaries d1 and d2, where a key present in both gets the sum of its two values and a key present in only one keeps its value; the inputs are not modified.',
+     'result = dict(d1)\nfor k, v in d2.items():\n    result[k] = result.get(k, 0) + v\nreturn result',
+     "assert merge_sum({'a': 1, 'b': 2}, {'b': 3, 'c': 4}) == {'a': 1, 'b': 5, 'c': 4}\nassert merge_sum({}, {}) == {}\nassert merge_sum({'x': 1}, {}) == {'x': 1}\nassert merge_sum({}, {'y': -2}) == {'y': -2}"),
+
+    ('key_with_max_value', 'key_with_max_value(d)',
+     'returns the key of the dictionary d whose value is largest; if several keys share the largest value, returns the smallest of those keys; an empty dictionary gives None.',
+     'if not d:\n    return None\nbest = max(d.values())\nreturn min(k for k, v in d.items() if v == best)',
+     "assert key_with_max_value({'a': 3, 'b': 5, 'c': 1}) == 'b'\nassert key_with_max_value({'x': 2, 'a': 2}) == 'a'\nassert key_with_max_value({}) is None\nassert key_with_max_value({'k': -1}) == 'k'\nassert key_with_max_value({'b': 1, 'a': 0}) == 'b'"),
+
+    ('stock_after_orders', 'stock_after_orders(stock, orders)',
+     'takes a dictionary stock mapping item names to quantities and a list orders of item names, and returns a new dictionary with the quantities left after each order removes one unit of its item; an order for an item that is missing from stock or has quantity 0 is ignored, and stock itself is not modified.',
+     'result = dict(stock)\nfor item in orders:\n    if result.get(item, 0) > 0:\n        result[item] -= 1\nreturn result',
+     "assert stock_after_orders({'apple': 2, 'pear': 1}, ['apple', 'pear', 'pear']) == {'apple': 1, 'pear': 0}\nassert stock_after_orders({}, ['x']) == {}\nassert stock_after_orders({'a': 0}, ['a']) == {'a': 0}\nassert stock_after_orders({'a': 3}, []) == {'a': 3}\nassert stock_after_orders({'a': 3, 'b': 1}, ['a', 'a', 'c']) == {'a': 1, 'b': 1}"),
+
+    ('count_by_length', 'count_by_length(words)',
+     'returns a dictionary mapping each word length to the number of strings in the list words that have that length; an empty list gives {}.',
+     'result = {}\nfor w in words:\n    result[len(w)] = result.get(len(w), 0) + 1\nreturn result',
+     "assert count_by_length(['a', 'bb', 'cc', 'ddd']) == {1: 1, 2: 2, 3: 1}\nassert count_by_length([]) == {}\nassert count_by_length(['']) == {0: 1}\nassert count_by_length(['hi', 'yo']) == {2: 2}"),
+
+    ('counts_to_list', 'counts_to_list(d)',
+     "returns a list in which each key of the dictionary d is repeated as many times as its non-negative integer value, with the keys in sorted order ({'b': 1, 'a': 2} gives ['a', 'a', 'b']); keys with value 0 do not appear.",
+     'return [k for k in sorted(d) for _ in range(d[k])]',
+     "assert counts_to_list({'b': 1, 'a': 2}) == ['a', 'a', 'b']\nassert counts_to_list({}) == []\nassert counts_to_list({'x': 0}) == []\nassert counts_to_list({'z': 3}) == ['z', 'z', 'z']\nassert counts_to_list({'c': 1, 'a': 0, 'b': 1}) == ['b', 'c']"),
+
+    ('parse_key_values', 'parse_key_values(s)',
+     "parses a string such as 'a=1;b=2' (entries separated by ';', each entry a key and an integer value separated by '=') into a dictionary such as {'a': 1, 'b': 2}; an empty string gives {}, and if a key appears more than once its last value wins.",
+     "result = {}\nif s:\n    for part in s.split(';'):\n        key, value = part.split('=')\n        result[key] = int(value)\nreturn result",
+     "assert parse_key_values('a=1;b=2') == {'a': 1, 'b': 2}\nassert parse_key_values('') == {}\nassert parse_key_values('x=-5') == {'x': -5}\nassert parse_key_values('a=1;a=3') == {'a': 3}\nassert parse_key_values('k=10') == {'k': 10}"),
+
+    ('total_cost', 'total_cost(cart, prices)',
+     'returns the total price of the dictionary cart, which maps item names to quantities, using the dictionary prices of unit prices; items that have no entry in prices are ignored, and an empty cart costs 0.',
+     'return sum(q * prices[item] for item, q in cart.items() if item in prices)',
+     "assert abs(total_cost({'apple': 2, 'milk': 1}, {'apple': 0.5, 'milk': 1.25}) - 2.25) < 1e-9\nassert total_cost({}, {'a': 1}) == 0\nassert total_cost({'x': 3}, {}) == 0\nassert total_cost({'a': 2, 'b': 3}, {'a': 10, 'b': 1}) == 23\nassert total_cost({'a': 2, 'z': 5}, {'a': 4}) == 8"),
+
+    ('keys_sorted_by_value', 'keys_sorted_by_value(d)',
+     'returns a list of the keys of the dictionary d sorted by their values in increasing order, breaking ties between equal values by the keys themselves in increasing order; an empty dictionary gives [].',
+     'return sorted(d, key=lambda k: (d[k], k))',
+     "assert keys_sorted_by_value({'a': 3, 'b': 1, 'c': 2}) == ['b', 'c', 'a']\nassert keys_sorted_by_value({}) == []\nassert keys_sorted_by_value({'y': 1, 'x': 1}) == ['x', 'y']\nassert keys_sorted_by_value({'z': 0}) == ['z']"),
+
+    ('changed_keys', 'changed_keys(old, new)',
+     'returns a sorted list of the keys that are present in both dictionaries old and new but have different values in them; keys present in only one of the dictionaries are ignored.',
+     'return sorted(k for k in old if k in new and old[k] != new[k])',
+     "assert changed_keys({'a': 1, 'b': 2}, {'a': 1, 'b': 3}) == ['b']\nassert changed_keys({}, {}) == []\nassert changed_keys({'a': 1}, {'b': 1}) == []\nassert changed_keys({'x': 1, 'y': 2}, {'y': 0, 'x': 0}) == ['x', 'y']"),
+
+    ('nested_get', 'nested_get(d, path)',
+     'follows the list of keys path through nested dictionaries starting from the dictionary d and returns the value reached; if a key is missing or a value along the way is not a dictionary, returns None, and an empty path returns d itself.',
+     'current = d\nfor key in path:\n    if not isinstance(current, dict) or key not in current:\n        return None\n    current = current[key]\nreturn current',
+     "assert nested_get({'a': {'b': {'c': 5}}}, ['a', 'b', 'c']) == 5\nassert nested_get({'a': {'b': 1}}, ['a', 'x']) is None\nassert nested_get({'a': 1}, []) == {'a': 1}\nassert nested_get({'a': 1}, ['a', 'b']) is None\nassert nested_get({}, ['a']) is None"),
+
+    ('rename_keys', 'rename_keys(d, mapping)',
+     'returns a new dictionary with the same values as the dictionary d, where every key k of d that is also a key of the dictionary mapping is replaced by mapping[k], and all other keys are kept as they are.',
+     'return {mapping.get(k, k): v for k, v in d.items()}',
+     "assert rename_keys({'a': 1, 'b': 2}, {'a': 'x'}) == {'x': 1, 'b': 2}\nassert rename_keys({}, {'a': 'b'}) == {}\nassert rename_keys({'a': 1}, {}) == {'a': 1}\nassert rename_keys({'a': 1, 'b': 2}, {'a': 'b', 'b': 'a'}) == {'b': 1, 'a': 2}"),
+
+    # ---------------------------------------------------------------- two inputs (two lists, two strings)
+    ('weighted_average', 'weighted_average(values, weights)',
+     'returns the weighted average of the list values using the list weights of the same length, i.e. the sum of value * weight over all positions divided by the sum of the weights, as a float; if the weights add up to 0 (including when both lists are empty), returns 0.0.',
+     'total = sum(weights)\nif total == 0:\n    return 0.0\nreturn sum(v * w for v, w in zip(values, weights)) / total',
+     'assert abs(weighted_average([1, 2, 3], [1, 1, 1]) - 2.0) < 1e-9\nassert abs(weighted_average([10, 20], [3, 1]) - 12.5) < 1e-9\nassert abs(weighted_average([], []) - 0.0) < 1e-9\nassert abs(weighted_average([5, 7], [0, 0]) - 0.0) < 1e-9\nassert abs(weighted_average([4], [2]) - 4.0) < 1e-9'),
+
+    ('interleave', 'interleave(a, b)',
+     'returns a new list taking elements alternately from the lists a and b, starting with a[0]; once the shorter list runs out, the remaining elements of the longer list are appended in order.',
+     'result = []\nfor i in range(max(len(a), len(b))):\n    if i < len(a):\n        result.append(a[i])\n    if i < len(b):\n        result.append(b[i])\nreturn result',
+     "assert interleave([1, 2, 3], ['a', 'b']) == [1, 'a', 2, 'b', 3]\nassert interleave([], [1]) == [1]\nassert interleave([], []) == []\nassert interleave([1], [2, 3, 4]) == [1, 2, 3, 4]"),
+
+    ('count_matching_positions', 'count_matching_positions(a, b)',
+     'returns the number of indices i at which the lists a and b hold equal elements, comparing only the positions that exist in both lists.',
+     'return sum(1 for x, y in zip(a, b) if x == y)',
+     "assert count_matching_positions([1, 2, 3], [1, 5, 3]) == 2\nassert count_matching_positions([1, 2, 3], [1, 2]) == 2\nassert count_matching_positions([], [1]) == 0\nassert count_matching_positions(['a', 'b'], ['b', 'a']) == 0\nassert count_matching_positions([4, 4, 4, 4], [4, 0, 4]) == 2"),
+
+    ('common_prefix', 'common_prefix(s, t)',
+     "returns the longest string that both s and t start with, which is '' if their first characters differ or either string is empty.",
+     'i = 0\nwhile i < len(s) and i < len(t) and s[i] == t[i]:\n    i += 1\nreturn s[:i]',
+     "assert common_prefix('flower', 'flow') == 'flow'\nassert common_prefix('abc', 'xyz') == ''\nassert common_prefix('', 'abc') == ''\nassert common_prefix('same', 'same') == 'same'\nassert common_prefix('interview', 'internet') == 'inter'"),
+
+    ('missing_from_second', 'missing_from_second(a, b)',
+     'returns a list of the elements of the list a that do not occur anywhere in the list b, keeping their order and any repetitions from a.',
+     'return [x for x in a if x not in b]',
+     "assert missing_from_second([1, 2, 3, 2], [2]) == [1, 3]\nassert missing_from_second([], [1]) == []\nassert missing_from_second([1, 1], []) == [1, 1]\nassert missing_from_second([4, 5], [5, 4]) == []\nassert missing_from_second(['a', 'b', 'a'], ['c']) == ['a', 'b', 'a']"),
+
+    ('chars_in_both', 'chars_in_both(s, t)',
+     "returns a string made of the distinct characters that occur in both s and t, in sorted order, or '' if they have no character in common.",
+     "return ''.join(sorted(set(s) & set(t)))",
+     "assert chars_in_both('hello', 'world') == 'lo'\nassert chars_in_both('abc', 'xyz') == ''\nassert chars_in_both('', 'a') == ''\nassert chars_in_both('banana', 'ban') == 'abn'"),
+
+    ('is_subsequence', 'is_subsequence(s, t)',
+     'returns True if the characters of s appear in t in the same order, not necessarily next to each other (that is, deleting zero or more characters of t can give s), and False otherwise; the empty string is a subsequence of every string.',
+     'i = 0\nfor c in t:\n    if i < len(s) and s[i] == c:\n        i += 1\nreturn i == len(s)',
+     "assert is_subsequence('ace', 'abcde')\nassert not is_subsequence('aec', 'abcde')\nassert is_subsequence('', 'x')\nassert not is_subsequence('a', '')\nassert is_subsequence('abc', 'abc')"),
+
+    ('zip_to_dict', 'zip_to_dict(keys, values)',
+     'returns a dictionary pairing each keys[i] with values[i], where the keys are all distinct; keys without a matching value (when values is shorter) map to None, and extra values are ignored.',
+     'return {k: (values[i] if i < len(values) else None) for i, k in enumerate(keys)}',
+     "assert zip_to_dict(['a', 'b'], [1, 2]) == {'a': 1, 'b': 2}\nassert zip_to_dict(['a', 'b'], [1]) == {'a': 1, 'b': None}\nassert zip_to_dict([], [1]) == {}\nassert zip_to_dict(['x'], [5, 6]) == {'x': 5}"),
+
+    ('count_overlapping', 'count_overlapping(text, pattern)',
+     "returns how many times the non-empty string pattern occurs in text, counting overlapping occurrences ('aa' occurs 3 times in 'aaaa'); returns 0 if pattern is longer than text.",
+     'return sum(1 for i in range(len(text) - len(pattern) + 1) if text[i:i + len(pattern)] == pattern)',
+     "assert count_overlapping('aaaa', 'aa') == 3\nassert count_overlapping('abcabc', 'abc') == 2\nassert count_overlapping('', 'a') == 0\nassert count_overlapping('ab', 'abc') == 0\nassert count_overlapping('abababa', 'aba') == 3"),
+
+    ('round_winner', 'round_winner(a, b)',
+     "takes the lists a and b of the scores of players A and B in each round (same length) and returns 'A' if A won more rounds, 'B' if B won more rounds, or 'tie' if they won equally many; a round with equal scores is won by nobody.",
+     "wins_a = sum(1 for x, y in zip(a, b) if x > y)\nwins_b = sum(1 for x, y in zip(a, b) if y > x)\nif wins_a == wins_b:\n    return 'tie'\nreturn 'A' if wins_a > wins_b else 'B'",
+     "assert round_winner([3, 1, 2], [1, 2, 1]) == 'A'\nassert round_winner([1, 1], [2, 2]) == 'B'\nassert round_winner([], []) == 'tie'\nassert round_winner([5, 1], [1, 5]) == 'tie'\nassert round_winner([2, 2, 2], [2, 2, 3]) == 'B'"),
+
+    ('is_rotation', 'is_rotation(s, t)',
+     "returns True if t can be obtained by moving some number of characters from the start of s to its end ('cdeab' is a rotation of 'abcde'), and False otherwise; strings of different lengths are never rotations of each other, and every string, including '', is a rotation of itself.",
+     'return len(s) == len(t) and t in s + s',
+     "assert is_rotation('abcde', 'cdeab')\nassert not is_rotation('abc', 'acb')\nassert is_rotation('', '')\nassert not is_rotation('ab', 'aba')\nassert is_rotation('aa', 'aa')"),
+
+    ('can_build_from', 'can_build_from(word, letters)',
+     'returns True if word can be spelled using the characters of the string letters, where each character of letters may be used at most once and upper and lower case are different, and False otherwise; the empty word can always be built.',
+     'return all(word.count(c) <= letters.count(c) for c in set(word))',
+     "assert can_build_from('cat', 'tacx')\nassert not can_build_from('noon', 'nox')\nassert can_build_from('', '')\nassert not can_build_from('aa', 'a')\nassert can_build_from('abc', 'cbaa')\nassert not can_build_from('A', 'a')"),
+
+    ('pairs_with_sum', 'pairs_with_sum(a, b, target)',
+     'returns the number of pairs (x, y) with x taken from the list a and y taken from the list b such that x + y == target, counting every combination of positions separately.',
+     'return sum(1 for x in a for y in b if x + y == target)',
+     'assert pairs_with_sum([1, 2, 3], [3, 2, 1], 4) == 3\nassert pairs_with_sum([], [1], 1) == 0\nassert pairs_with_sum([1, 1], [2], 3) == 2\nassert pairs_with_sum([5], [5], 9) == 0\nassert pairs_with_sum([0, 1], [0, 1], 1) == 2'),
+)

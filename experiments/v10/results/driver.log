@@ -1,0 +1,64 @@
+[03:47:10] R0 C2 rebuild start
+[06:06:34] R0 C2 rebuild finished, exit 0
+[06:06:55] R0: checkpoint sha256 matches V9-1's C2
+{"content_sha256": "cc2f2fa07777e69ed7de21696174ce8d6cfbe1f561115d1a126c14af38fd1bb7", "packed_bytes": 1315180010, "source_bytes": 2126862031}
+[06:10:01] C2: packed to /home/user/lmwork/v10/ckpt/C2_1301.ypk (1315180010 bytes), verified cc2f2fa07777e69ed7de21696174ce8d6cfbe1f561115d1a126c14af38fd1bb7
+[06:10:01] R1 start
+[06:14:01] R1: C2's RAM-disk copy dropped (packed copy verified)
+[08:14:18] driver2 cancelled before it started (it was waiting): replaced by driver3
+[08:25:06] R1 finished, exit 0
+{"content_sha256": "9909c511043b8a166b4a713e50ad206d84a47cbc927e9ed17bfc9b0e161c6ec3", "packed_bytes": 1320073261, "source_bytes": 2126862031}
+[08:28:18] R1: packed to /home/user/lmwork/v10/ckpt/R1_1301.ypk (1320073261 bytes), verified 9909c511043b8a166b4a713e50ad206d84a47cbc927e9ed17bfc9b0e161c6ec3
+[08:28:18] janitor: R1 1301 RAM-disk copy dropped (pack verified 9909c511043b8a166b4a713e50ad206d84a47cbc927e9ed17bfc9b0e161c6ec3)
+/dev/shm/ycode-keep/C2/1301/model_bf16/model.pt
+[08:28:51] C2 restored to /dev/shm/ycode-keep from its pack
+[08:28:51] R2 start
+[08:33:12] R2: C2's RAM-disk copy dropped (packed copy verified)
+[11:06:03] R2 finished, exit 0
+{"content_sha256": "e0908fe70fe47e349bd981d8aa4b3fa4953eda30da80ebeaf0cd12f600d31fea", "packed_bytes": 1333874601, "source_bytes": 2126862031}
+[11:09:23] R2: packed to /home/user/lmwork/v10/ckpt/R2_1301.ypk (1333874601 bytes), verified e0908fe70fe47e349bd981d8aa4b3fa4953eda30da80ebeaf0cd12f600d31fea
+[11:09:23] driver1 done
+[11:09:24] janitor: R2 1301 RAM-disk copy dropped (pack verified e0908fe70fe47e349bd981d8aa4b3fa4953eda30da80ebeaf0cd12f600d31fea)
+/dev/shm/ycode-keep/C2/1301/model_bf16/model.pt
+[11:10:30] C2 restored to /dev/shm/ycode-keep from its pack
+[11:10:30] R5 1301 start
+[11:15:31] R5 1301: C2's RAM-disk copy dropped (packed copy verified)
+[14:35:31] R5 1301 finished, exit 0
+{"content_sha256": "6fbe3ce97494e32331b0653aa9511ce83e7aa5c055e5faf425749e8f84e89a31", "packed_bytes": 1329317228, "source_bytes": 2126862031}
+[14:39:01] R5 1301: packed to /home/user/lmwork/v10/ckpt/R5_1301.ypk (1329317228 bytes), verified 6fbe3ce97494e32331b0653aa9511ce83e7aa5c055e5faf425749e8f84e89a31
+[14:39:14] janitor: R5 1301 RAM-disk copy dropped (pack verified 6fbe3ce97494e32331b0653aa9511ce83e7aa5c055e5faf425749e8f84e89a31)
+/dev/shm/ycode-keep/C2/1301/model_bf16/model.pt
+[14:39:33] C2 restored to /dev/shm/ycode-keep from its pack
+[14:51:31] base: round54 c3_test exit 0
+[14:57:27] base: round54 c3_trained exit 0
+[15:08:42] base: C2 c3_test exit 0
+[15:16:12] base: C2 c3_trained exit 0
+[15:16:12] driver3 done
+[15:16:40] R6 1301 start
+[15:22:01] R6 1301: C2's RAM-disk copy dropped (packed copy verified)
+[18:57:10] R6 1301 finished, exit 0
+{"content_sha256": "0e8bf2a6a881b17411af8121b439ee176ab7103d0efebf8927b75542d3ab934c", "packed_bytes": 1351930866, "source_bytes": 2126862031}
+[19:00:22] R6 1301: packed to /home/user/lmwork/v10/ckpt/R6_1301.ypk (1351930866 bytes), verified 0e8bf2a6a881b17411af8121b439ee176ab7103d0efebf8927b75542d3ab934c
+[19:00:22] driver4 done
+[19:00:24] janitor: R6 1301 RAM-disk copy dropped (pack verified 0e8bf2a6a881b17411af8121b439ee176ab7103d0efebf8927b75542d3ab934c)
+/dev/shm/ycode-keep/C2/1301/model_bf16/model.pt
+[19:01:48] C2 restored to /dev/shm/ycode-keep from its pack
+[19:01:48] R4 1301 start
+[19:05:29] R4 1301: C2's RAM-disk copy dropped (packed copy verified)
+[01:02:13] container restarted (~21:15 to 01:01): drivers stopped, RAM disk wiped; R4 cut off during its neighbour set (model lost, no pack); relaunching R7 (driver7)
+/dev/shm/ycode-keep/C2/1301/model_bf16/model.pt
+[01:13:04] C2 restored to /dev/shm/ycode-keep from its pack
+[01:13:04] R7 1301 start
+[01:26:44] R7 1301: C2's RAM-disk copy dropped (packed copy verified)
+[02:26:32] container restarted again (~02:15-02:25): R7 lost at about step 20 of 74 (no mid-run checkpoint, RAM-disk work dir); relaunching driver7
+/dev/shm/ycode-keep/C2/1301/model_bf16/model.pt
+[02:35:37] C2 restored to /dev/shm/ycode-keep from its pack
+[02:35:37] R7 1301 start
+[02:36:37] R7 1301: C2's RAM-disk copy dropped (packed copy verified)
+[02:45:55] R7: C2 restored by hand (the driver had matched the previous run's log line before the new trainer loaded C2)
+[02:49:01] R7: C2's RAM-disk copy dropped by hand after the new trainer loaded it (packed copy verified)
+[08:11:28] R7 1301 finished, exit 0
+{"content_sha256": "2d75e24a547473ad9f957132a931bb4bd9fc5ee6a636d2753168227d916b9b40", "packed_bytes": 1341076936, "source_bytes": 2126862031}
+[08:15:34] R7 1301: packed to /home/user/lmwork/v10/ckpt/R7_1301.ypk (1341076936 bytes), verified 2d75e24a547473ad9f957132a931bb4bd9fc5ee6a636d2753168227d916b9b40
+[08:15:34] driver7 done
+[08:15:49] janitor: R7 1301 RAM-disk copy dropped (pack verified 2d75e24a547473ad9f957132a931bb4bd9fc5ee6a636d2753168227d916b9b40)

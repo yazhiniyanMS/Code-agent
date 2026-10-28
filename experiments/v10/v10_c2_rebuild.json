@@ -1,0 +1,64 @@
+{
+  "name": "v10-c2-rebuild",
+  "note": "V10 R0: V9-1's C2 checkpoint was deleted after its evaluation (keep_models false, disk 1.7 GB free), so C2 is rebuilt from its recorded configuration: the identical spec (data options, 56 steps, lr 1e-4 WSD to 1e-5, seed 1301, from round 54). The rebuild is verified against V9-1's record: data token counts and the final checkpoint sha256 9c1384982c9b95eb67819fd60b9b5fe5ced0973356dc16199eb3b4c683160d6f. It is kept, on the RAM disk (keep_dir), as the starting checkpoint of V10. Evaluation: dev and unseen-v1 (a check that the scores reproduce) and the new-family-member probe (family_new), which V9-1 did not run.",
+  "decision": "Verification only: no selection is made on this run.",
+  "anchor": "/home/user/lmwork/loop/anchor",
+  "tokenizer": "/home/user/lmwork/data/tokenizer.json",
+  "replay_dir": "/home/user/lmwork/data",
+  "average_script": "/home/user/lmwork/average.py",
+  "work_dir": "/dev/shm/ycode-v10",
+  "metric": "unseen_clean",
+  "category_rule": "items_lost",
+  "out": "/home/user/lmwork/v10/runs",
+  "seeds": [
+    1301
+  ],
+  "keep_models": "compact",
+  "train": {
+    "steps": 56,
+    "lr": 0.0001,
+    "batch": 4,
+    "train_layers": 24,
+    "warmup": 2,
+    "precision": "fp32",
+    "init_optim": true,
+    "compact": true,
+    "save_every": 56,
+    "final_bf16": true
+  },
+  "eval": {
+    "dev": true,
+    "unseen": true,
+    "unseen2": false,
+    "bench": false,
+    "diagnose": 0,
+    "sets": [
+      {
+        "name": "family_new",
+        "set": "experiments/v8/sets/family_new.json"
+      }
+    ]
+  },
+  "arms": [
+    {
+      "name": "C2",
+      "data": {
+        "idioms_bugfix": 0,
+        "idioms_families": "v3",
+        "basics_write": 0,
+        "basics_bugfix": 0,
+        "compose_write": 0,
+        "compose_bugfix": 0,
+        "contrast": 0,
+        "novel_write": 0,
+        "replay": 0,
+        "legacy_share": 0.5,
+        "idioms_select": "v9_grammar_train",
+        "idioms_write": 3
+      },
+      "note": "grammar v2: 350 combinations x 3 examples"
+    }
+  ],
+  "comparisons": [],
+  "keep_dir": "/dev/shm/ycode-keep"
+}

@@ -1,0 +1,90 @@
+{
+ "model": "/home/user/lmwork/v6/runs/G/1302/model",
+ "data": "/home/user/lmwork/v6/runs/G/1302/data",
+ "seed": 0,
+ "trained_on": true,
+ "weights_dtype": "fp32",
+ "note": null,
+ "train": {
+  "examples": 16,
+  "answer_tokens": 635,
+  "token_loss": 0.0624,
+  "token_loss_ci95": [
+   0.0215,
+   0.1137
+  ],
+  "example_loss_mean": 0.0604,
+  "example_loss_sd": 0.0899,
+  "by_kind": {
+   "bugfix": {
+    "examples": 6,
+    "token_loss": 0.013
+   },
+   "write": {
+    "examples": 10,
+    "token_loss": 0.1053
+   }
+  }
+ },
+ "heldout_rows": {
+  "examples": 16,
+  "answer_tokens": 604,
+  "token_loss": 0.0748,
+  "token_loss_ci95": [
+   0.0253,
+   0.1561
+  ],
+  "example_loss_mean": 0.0682,
+  "example_loss_sd": 0.1243,
+  "by_kind": {
+   "bugfix": {
+    "examples": 6,
+    "token_loss": 0.0144
+   },
+   "write": {
+    "examples": 10,
+    "token_loss": 0.1081
+   }
+  }
+ },
+ "unseen_dev_clean": {
+  "examples": 34,
+  "answer_tokens": 988,
+  "token_loss": 0.1438,
+  "token_loss_ci95": [
+   0.086,
+   0.2129
+  ],
+  "example_loss_mean": 0.1237,
+  "example_loss_sd": 0.158,
+  "by_kind": {
+   "write": {
+    "examples": 34,
+    "token_loss": 0.1438
+   }
+  },
+  "code_token_loss_plain": 0.1811,
+  "code_token_loss_spec_first": 0.1922
+ },
+ "unseen_new": {
+  "examples": 53,
+  "answer_tokens": 1766,
+  "token_loss": 0.5471,
+  "token_loss_ci95": [
+   0.4687,
+   0.6363
+  ],
+  "example_loss_mean": 0.5329,
+  "example_loss_sd": 0.2913,
+  "by_kind": {
+   "write": {
+    "examples": 53,
+    "token_loss": 0.5471
+   }
+  },
+  "code_token_loss_plain": 0.6672,
+  "code_token_loss_spec_first": 0.6306
+ },
+ "gap_train_to_heldout": 0.0124,
+ "gap_heldout_to_unseen": 0.069
+}

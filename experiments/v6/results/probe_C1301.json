@@ -1,0 +1,28 @@
+{
+ "model": "/home/user/lmwork/v6/keep/C1301",
+ "trained": {
+  "items": 125,
+  "code_token_loss": 0.6042,
+  "item_loss_median": 0.6047
+ },
+ "family_new": {
+  "items": 28,
+  "code_token_loss": 0.7136,
+  "item_loss_median": 0.7982
+ },
+ "dev_clean": {
+  "items": 34,
+  "code_token_loss": 0.1906,
+  "item_loss_median": 0.0434
+ },
+ "unseen_v1": {
+  "items": 53,
+  "code_token_loss": 0.7389,
+  "item_loss_median": 0.699
+ },
+ "unseen_v2": {
+  "items": 71,
+  "code_token_loss": 0.986,
+  "item_loss_median": 0.9453
+ }
+}

@@ -1,0 +1,166 @@
+{
+ "round54": {
+  "same_wording": {
+   "original": {
+    "tasks": 19,
+    "margin_mean": -15.906,
+    "prefers_reference": 4,
+    "pass": 1,
+    "wrong": 8
+   },
+   "io": {
+    "tasks": 19,
+    "margin_mean": -15.753,
+    "prefers_reference": 2,
+    "pass": 0,
+    "wrong": 4,
+    "gained": 0,
+    "lost": 1,
+    "sign_test_p": 1.0,
+    "wrong_change": -4,
+    "margin_change_mean": 0.152,
+    "margin_up": 11,
+    "margin_down": 8,
+    "margin_sign_p": 0.6476
+   },
+   "constraint": {
+    "tasks": 19,
+    "margin_mean": -14.231,
+    "prefers_reference": 0,
+    "pass": 0,
+    "wrong": 4,
+    "gained": 0,
+    "lost": 1,
+    "sign_test_p": 1.0,
+    "wrong_change": -4,
+    "margin_change_mean": 1.674,
+    "margin_up": 10,
+    "margin_down": 9,
+    "margin_sign_p": 1.0
+   },
+   "distractor": {
+    "tasks": 19,
+    "margin_mean": -16.134,
+    "prefers_reference": 1,
+    "pass": 0,
+    "wrong": 7,
+    "gained": 0,
+    "lost": 1,
+    "sign_test_p": 1.0,
+    "wrong_change": -1,
+    "margin_change_mean": -0.228,
+    "margin_up": 9,
+    "margin_down": 10,
+    "margin_sign_p": 1.0
+   }
+  },
+  "new_wording": {
+   "original": {
+    "tasks": 19,
+    "margin_mean": 2.633,
+    "prefers_reference": 10,
+    "pass": 3,
+    "wrong": 1
+   },
+   "io": {
+    "tasks": 19,
+    "margin_mean": 3.103,
+    "prefers_reference": 13,
+    "pass": 0,
+    "wrong": 2,
+    "gained": 0,
+    "lost": 3,
+    "sign_test_p": 0.25,
+    "wrong_change": 1,
+    "margin_change_mean": 0.47,
+    "margin_up": 10,
+    "margin_down": 9,
+    "margin_sign_p": 1.0
+   },
+   "constraint": {
+    "tasks": 19,
+    "margin_mean": 2.006,
+    "prefers_reference": 11,
+    "pass": 1,
+    "wrong": 2,
+    "gained": 0,
+    "lost": 2,
+    "sign_test_p": 0.5,
+    "wrong_change": 1,
+    "margin_change_mean": -0.627,
+    "margin_up": 8,
+    "margin_down": 11,
+    "margin_sign_p": 0.6476
+   },
+   "distractor": {
+    "tasks": 19,
+    "margin_mean": -2.768,
+    "prefers_reference": 3,
+    "pass": 1,
+    "wrong": 10,
+    "gained": 1,
+    "lost": 3,
+    "sign_test_p": 0.625,
+    "wrong_change": 9,
+    "margin_change_mean": -5.4,
+    "margin_up": 2,
+    "margin_down": 17,
+    "margin_sign_p": 0.0007
+   }
+  },
+  "all": {
+   "original": {
+    "tasks": 38,
+    "margin_mean": -6.637,
+    "prefers_reference": 14,
+    "pass": 4,
+    "wrong": 9
+   },
+   "io": {
+    "tasks": 38,
+    "margin_mean": -6.325,
+    "prefers_reference": 15,
+    "pass": 0,
+    "wrong": 6,
+    "gained": 0,
+    "lost": 4,
+    "sign_test_p": 0.125,
+    "wrong_change": -3,
+    "margin_change_mean": 0.311,
+    "margin_up": 21,
+    "margin_down": 17,
+    "margin_sign_p": 0.6271
+   },
+   "constraint": {
+    "tasks": 38,
+    "margin_mean": -6.113,
+    "prefers_reference": 11,
+    "pass": 1,
+    "wrong": 6,
+    "gained": 0,
+    "lost": 3,
+    "sign_test_p": 0.25,
+    "wrong_change": -3,
+    "margin_change_mean": 0.524,
+    "margin_up": 18,
+    "margin_down": 20,
+    "margin_sign_p": 0.8714
+   },
+   "distractor": {
+    "tasks": 38,
+    "margin_mean": -9.451,
+    "prefers_reference": 4,
+    "pass": 1,
+    "wrong": 17,
+    "gained": 1,
+    "lost": 4,
+    "sign_test_p": 0.375,
+    "wrong_change": 8,
+    "margin_change_mean": -2.814,
+    "margin_up": 11,
+    "margin_down": 27,
+    "margin_sign_p": 0.0139
+   }
+  }
+ }
+}

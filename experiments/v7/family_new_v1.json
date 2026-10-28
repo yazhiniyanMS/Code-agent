@@ -1,0 +1,1438 @@
+{
+ "version": "family-new-v1",
+ "variants": [
+  "original"
+ ],
+ "tasks": [
+  {
+   "group": "family_new",
+   "name": "sum_after_first_five",
+   "params": "numbers",
+   "neighbour": "sum_after_first_one",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `sum_after_first_five(numbers)` that returns the sum of the numbers that come after the first five in the list (0 if there are none)."
+   },
+   "tests": "assert sum_after_first_five([]) == 0\nassert sum_after_first_five([-1]) == 0\nassert sum_after_first_five([-6]) == 0\nassert sum_after_first_five([-4, 12, -7, 7, 0]) == 0\nassert sum_after_first_five([16, 6, 8, -5, 20]) == 0\nassert sum_after_first_five([12, 3, -9, -6, 7]) == 0",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      -1
+     ]
+    ],
+    [
+     [
+      -6
+     ]
+    ],
+    [
+     [
+      -4,
+      12,
+      -7,
+      7,
+      0
+     ]
+    ],
+    [
+     [
+      16,
+      6,
+      8,
+      -5,
+      20
+     ]
+    ],
+    [
+     [
+      12,
+      3,
+      -9,
+      -6,
+      7
+     ]
+    ]
+   ],
+   "reference": "def sum_after_first_five(numbers):\n    return sum(numbers[5:])",
+   "wrong": "def sum_after_first_five(numbers):\n    return sum(numbers[1:])",
+   "expected": [
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0"
+   ],
+   "wrong_outputs": [
+    "0",
+    "0",
+    "0",
+    "12",
+    "29",
+    "-5"
+   ]
+  },
+  {
+   "group": "family_new",
+   "name": "sum_after_first_six",
+   "params": "numbers",
+   "neighbour": "sum_after_first_one",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `sum_after_first_six(numbers)` that returns the sum of the numbers that come after the first six in the list (0 if there are none)."
+   },
+   "tests": "assert sum_after_first_six([]) == 0\nassert sum_after_first_six([-1]) == 0\nassert sum_after_first_six([-6]) == 0\nassert sum_after_first_six([-4, 12, -7, 7, 0]) == 0\nassert sum_after_first_six([16, 6, 8, -5, 20]) == 0\nassert sum_after_first_six([12, 3, -9, -6, 7]) == 0",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      -1
+     ]
+    ],
+    [
+     [
+      -6
+     ]
+    ],
+    [
+     [
+      -4,
+      12,
+      -7,
+      7,
+      0
+     ]
+    ],
+    [
+     [
+      16,
+      6,
+      8,
+      -5,
+      20
+     ]
+    ],
+    [
+     [
+      12,
+      3,
+      -9,
+      -6,
+      7
+     ]
+    ]
+   ],
+   "reference": "def sum_after_first_six(numbers):\n    return sum(numbers[6:])",
+   "wrong": "def sum_after_first_six(numbers):\n    return sum(numbers[1:])",
+   "expected": [
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0"
+   ],
+   "wrong_outputs": [
+    "0",
+    "0",
+    "0",
+    "12",
+    "29",
+    "-5"
+   ]
+  },
+  {
+   "group": "family_new",
+   "name": "sum_of_first_six",
+   "params": "numbers",
+   "neighbour": "sum_of_first_two",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `sum_of_first_six(numbers)` that returns the sum of the first six numbers of the list (of all of them if the list is shorter)."
+   },
+   "tests": "assert sum_of_first_six([]) == 0\nassert sum_of_first_six([-1]) == -1\nassert sum_of_first_six([-6]) == -6\nassert sum_of_first_six([-4, 12, -7, 7, 0]) == 8\nassert sum_of_first_six([16, 6, 8, -5, 20]) == 45\nassert sum_of_first_six([12, 3, -9, -6, 7]) == 7",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      -1
+     ]
+    ],
+    [
+     [
+      -6
+     ]
+    ],
+    [
+     [
+      -4,
+      12,
+      -7,
+      7,
+      0
+     ]
+    ],
+    [
+     [
+      16,
+      6,
+      8,
+      -5,
+      20
+     ]
+    ],
+    [
+     [
+      12,
+      3,
+      -9,
+      -6,
+      7
+     ]
+    ]
+   ],
+   "reference": "def sum_of_first_six(numbers):\n    return sum(numbers[:6])",
+   "wrong": "def sum_of_first_six(numbers):\n    return sum(numbers[:2])",
+   "expected": [
+    "0",
+    "-1",
+    "-6",
+    "8",
+    "45",
+    "7"
+   ],
+   "wrong_outputs": [
+    "0",
+    "-1",
+    "-6",
+    "8",
+    "22",
+    "15"
+   ]
+  },
+  {
+   "group": "family_new",
+   "name": "sum_of_first_one",
+   "params": "numbers",
+   "neighbour": "sum_of_first_two",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `sum_of_first_one(numbers)` that returns the sum of the first one numbers of the list (of all of them if the list is shorter)."
+   },
+   "tests": "assert sum_of_first_one([]) == 0\nassert sum_of_first_one([-1]) == -1\nassert sum_of_first_one([-6]) == -6\nassert sum_of_first_one([-4, 12, -7, 7, 0]) == -4\nassert sum_of_first_one([16, 6, 8, -5, 20]) == 16\nassert sum_of_first_one([12, 3, -9, -6, 7]) == 12",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      -1
+     ]
+    ],
+    [
+     [
+      -6
+     ]
+    ],
+    [
+     [
+      -4,
+      12,
+      -7,
+      7,
+      0
+     ]
+    ],
+    [
+     [
+      16,
+      6,
+      8,
+      -5,
+      20
+     ]
+    ],
+    [
+     [
+      12,
+      3,
+      -9,
+      -6,
+      7
+     ]
+    ]
+   ],
+   "reference": "def sum_of_first_one(numbers):\n    return sum(numbers[:1])",
+   "wrong": "def sum_of_first_one(numbers):\n    return sum(numbers[:2])",
+   "expected": [
+    "0",
+    "-1",
+    "-6",
+    "-4",
+    "16",
+    "12"
+   ],
+   "wrong_outputs": [
+    "0",
+    "-1",
+    "-6",
+    "8",
+    "22",
+    "15"
+   ]
+  },
+  {
+   "group": "family_new",
+   "name": "positives_in_first_six",
+   "params": "numbers",
+   "neighbour": "positives_in_first_three",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `positives_in_first_six(numbers)` that returns how many of the first six numbers in the list are greater than zero."
+   },
+   "tests": "assert positives_in_first_six([]) == 0\nassert positives_in_first_six([-1]) == 0\nassert positives_in_first_six([-6]) == 0\nassert positives_in_first_six([-4, 12, -7, 7, 0]) == 2\nassert positives_in_first_six([16, 6, 8, -5, 20]) == 4\nassert positives_in_first_six([12, 3, -9, -6, 7]) == 3",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      -1
+     ]
+    ],
+    [
+     [
+      -6
+     ]
+    ],
+    [
+     [
+      -4,
+      12,
+      -7,
+      7,
+      0
+     ]
+    ],
+    [
+     [
+      16,
+      6,
+      8,
+      -5,
+      20
+     ]
+    ],
+    [
+     [
+      12,
+      3,
+      -9,
+      -6,
+      7
+     ]
+    ]
+   ],
+   "reference": "def positives_in_first_six(numbers):\n    return sum(1 for x in numbers[:6] if x > 0)",
+   "wrong": "def positives_in_first_six(numbers):\n    return sum(1 for x in numbers[:3] if x > 0)",
+   "expected": [
+    "0",
+    "0",
+    "0",
+    "2",
+    "4",
+    "3"
+   ],
+   "wrong_outputs": [
+    "0",
+    "0",
+    "0",
+    "1",
+    "3",
+    "2"
+   ]
+  },
+  {
+   "group": "family_new",
+   "name": "positives_in_first_two",
+   "params": "numbers",
+   "neighbour": "positives_in_first_three",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `positives_in_first_two(numbers)` that returns how many of the first two numbers in the list are greater than zero."
+   },
+   "tests": "assert positives_in_first_two([]) == 0\nassert positives_in_first_two([-1]) == 0\nassert positives_in_first_two([-6]) == 0\nassert positives_in_first_two([-4, 12, -7, 7, 0]) == 1\nassert positives_in_first_two([16, 6, 8, -5, 20]) == 2\nassert positives_in_first_two([12, 3, -9, -6, 7]) == 2",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      -1
+     ]
+    ],
+    [
+     [
+      -6
+     ]
+    ],
+    [
+     [
+      -4,
+      12,
+      -7,
+      7,
+      0
+     ]
+    ],
+    [
+     [
+      16,
+      6,
+      8,
+      -5,
+      20
+     ]
+    ],
+    [
+     [
+      12,
+      3,
+      -9,
+      -6,
+      7
+     ]
+    ]
+   ],
+   "reference": "def positives_in_first_two(numbers):\n    return sum(1 for x in numbers[:2] if x > 0)",
+   "wrong": "def positives_in_first_two(numbers):\n    return sum(1 for x in numbers[:3] if x > 0)",
+   "expected": [
+    "0",
+    "0",
+    "0",
+    "1",
+    "2",
+    "2"
+   ],
+   "wrong_outputs": [
+    "0",
+    "0",
+    "0",
+    "1",
+    "3",
+    "2"
+   ]
+  },
+  {
+   "group": "family_new",
+   "name": "last_five_reversed",
+   "params": "items",
+   "neighbour": "last_two_reversed",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `last_five_reversed(items)` that returns the last five items of the list in reverse order, the last item first (all of them if the list is shorter)."
+   },
+   "tests": "assert last_five_reversed([]) == []\nassert last_five_reversed([-1]) == [-1]\nassert last_five_reversed([-6]) == [-6]\nassert last_five_reversed([-4, 12, -7, 7, 0]) == [0, 7, -7, 12, -4]\nassert last_five_reversed([16, 6, 8, -5, 20]) == [20, -5, 8, 6, 16]\nassert last_five_reversed([12, 3, -9, -6, 7]) == [7, -6, -9, 3, 12]",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      -1
+     ]
+    ],
+    [
+     [
+      -6
+     ]
+    ],
+    [
+     [
+      -4,
+      12,
+      -7,
+      7,
+      0
+     ]
+    ],
+    [
+     [
+      16,
+      6,
+      8,
+      -5,
+      20
+     ]
+    ],
+    [
+     [
+      12,
+      3,
+      -9,
+      -6,
+      7
+     ]
+    ]
+   ],
+   "reference": "def last_five_reversed(items):\n    return items[::-1][:5]",
+   "wrong": "def last_five_reversed(items):\n    return items[::-1][:2]",
+   "expected": [
+    "[]",
+    "[-1]",
+    "[-6]",
+    "[0, 7, -7, 12, -4]",
+    "[20, -5, 8, 6, 16]",
+    "[7, -6, -9, 3, 12]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[-1]",
+    "[-6]",
+    "[0, 7]",
+    "[20, -5]",
+    "[7, -6]"
+   ]
+  },
+  {
+   "group": "family_new",
+   "name": "last_six_reversed",
+   "params": "items",
+   "neighbour": "last_two_reversed",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `last_six_reversed(items)` that returns the last six items of the list in reverse order, the last item first (all of them if the list is shorter)."
+   },
+   "tests": "assert last_six_reversed([]) == []\nassert last_six_reversed([-1]) == [-1]\nassert last_six_reversed([-6]) == [-6]\nassert last_six_reversed([-4, 12, -7, 7, 0]) == [0, 7, -7, 12, -4]\nassert last_six_reversed([16, 6, 8, -5, 20]) == [20, -5, 8, 6, 16]\nassert last_six_reversed([12, 3, -9, -6, 7]) == [7, -6, -9, 3, 12]",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      -1
+     ]
+    ],
+    [
+     [
+      -6
+     ]
+    ],
+    [
+     [
+      -4,
+      12,
+      -7,
+      7,
+      0
+     ]
+    ],
+    [
+     [
+      16,
+      6,
+      8,
+      -5,
+      20
+     ]
+    ],
+    [
+     [
+      12,
+      3,
+      -9,
+      -6,
+      7
+     ]
+    ]
+   ],
+   "reference": "def last_six_reversed(items):\n    return items[::-1][:6]",
+   "wrong": "def last_six_reversed(items):\n    return items[::-1][:2]",
+   "expected": [
+    "[]",
+    "[-1]",
+    "[-6]",
+    "[0, 7, -7, 12, -4]",
+    "[20, -5, 8, 6, 16]",
+    "[7, -6, -9, 3, 12]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[-1]",
+    "[-6]",
+    "[0, 7]",
+    "[20, -5]",
+    "[7, -6]"
+   ]
+  },
+  {
+   "group": "family_new",
+   "name": "neighbour_pairs_above_6",
+   "params": "numbers",
+   "neighbour": "neighbour_pairs_above_0",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `neighbour_pairs_above_6(numbers)` that returns how many pairs of neighbouring numbers add up to more than 6."
+   },
+   "tests": "assert neighbour_pairs_above_6([]) == 0\nassert neighbour_pairs_above_6([-1]) == 0\nassert neighbour_pairs_above_6([-6]) == 0\nassert neighbour_pairs_above_6([-4, 12, -7, 7, 0]) == 2\nassert neighbour_pairs_above_6([16, 6, 8, -5, 20]) == 3\nassert neighbour_pairs_above_6([12, 3, -9, -6, 7]) == 1",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      -1
+     ]
+    ],
+    [
+     [
+      -6
+     ]
+    ],
+    [
+     [
+      -4,
+      12,
+      -7,
+      7,
+      0
+     ]
+    ],
+    [
+     [
+      16,
+      6,
+      8,
+      -5,
+      20
+     ]
+    ],
+    [
+     [
+      12,
+      3,
+      -9,
+      -6,
+      7
+     ]
+    ]
+   ],
+   "reference": "def neighbour_pairs_above_6(numbers):\n    return sum(1 for a, b in zip(numbers, numbers[1:]) if a + b > 6)",
+   "wrong": "def neighbour_pairs_above_6(numbers):\n    return sum(1 for a, b in zip(numbers, numbers[1:]) if a + b > 0)",
+   "expected": [
+    "0",
+    "0",
+    "0",
+    "2",
+    "3",
+    "1"
+   ],
+   "wrong_outputs": [
+    "0",
+    "0",
+    "0",
+    "3",
+    "4",
+    "2"
+   ]
+  },
+  {
+   "group": "family_new",
+   "name": "neighbour_pairs_above_2",
+   "params": "numbers",
+   "neighbour": "neighbour_pairs_above_0",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `neighbour_pairs_above_2(numbers)` that returns how many pairs of neighbouring numbers add up to more than 2."
+   },
+   "tests": "assert neighbour_pairs_above_2([]) == 0\nassert neighbour_pairs_above_2([-1]) == 0\nassert neighbour_pairs_above_2([-6]) == 0\nassert neighbour_pairs_above_2([-4, 12, -7, 7, 0]) == 3\nassert neighbour_pairs_above_2([16, 6, 8, -5, 20]) == 4\nassert neighbour_pairs_above_2([12, 3, -9, -6, 7]) == 1",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      -1
+     ]
+    ],
+    [
+     [
+      -6
+     ]
+    ],
+    [
+     [
+      -4,
+      12,
+      -7,
+      7,
+      0
+     ]
+    ],
+    [
+     [
+      16,
+      6,
+      8,
+      -5,
+      20
+     ]
+    ],
+    [
+     [
+      12,
+      3,
+      -9,
+      -6,
+      7
+     ]
+    ]
+   ],
+   "reference": "def neighbour_pairs_above_2(numbers):\n    return sum(1 for a, b in zip(numbers, numbers[1:]) if a + b > 2)",
+   "wrong": "def neighbour_pairs_above_2(numbers):\n    return sum(1 for a, b in zip(numbers, numbers[1:]) if a + b > 0)",
+   "expected": [
+    "0",
+    "0",
+    "0",
+    "3",
+    "4",
+    "1"
+   ],
+   "wrong_outputs": [
+    "0",
+    "0",
+    "0",
+    "3",
+    "4",
+    "2"
+   ]
+  },
+  {
+   "group": "family_new",
+   "name": "sum_every_five",
+   "params": "numbers",
+   "neighbour": "sum_every_three",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `sum_every_five(numbers)` that returns the sum of the numbers at positions 0, 5, 2 * 5, ... of the list."
+   },
+   "tests": "assert sum_every_five([]) == 0\nassert sum_every_five([-1]) == -1\nassert sum_every_five([-6]) == -6\nassert sum_every_five([-4, 12, -7, 7, 0]) == -4\nassert sum_every_five([16, 6, 8, -5, 20]) == 16\nassert sum_every_five([12, 3, -9, -6, 7]) == 12",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      -1
+     ]
+    ],
+    [
+     [
+      -6
+     ]
+    ],
+    [
+     [
+      -4,
+      12,
+      -7,
+      7,
+      0
+     ]
+    ],
+    [
+     [
+      16,
+      6,
+      8,
+      -5,
+      20
+     ]
+    ],
+    [
+     [
+      12,
+      3,
+      -9,
+      -6,
+      7
+     ]
+    ]
+   ],
+   "reference": "def sum_every_five(numbers):\n    return sum(numbers[::5])",
+   "wrong": "def sum_every_five(numbers):\n    return sum(numbers[::3])",
+   "expected": [
+    "0",
+    "-1",
+    "-6",
+    "-4",
+    "16",
+    "12"
+   ],
+   "wrong_outputs": [
+    "0",
+    "-1",
+    "-6",
+    "3",
+    "11",
+    "6"
+   ]
+  },
+  {
+   "group": "family_new",
+   "name": "sum_every_six",
+   "params": "numbers",
+   "neighbour": "sum_every_three",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `sum_every_six(numbers)` that returns the sum of the numbers at positions 0, 6, 2 * 6, ... of the list."
+   },
+   "tests": "assert sum_every_six([]) == 0\nassert sum_every_six([-1]) == -1\nassert sum_every_six([-6]) == -6\nassert sum_every_six([-4, 12, -7, 7, 0]) == -4\nassert sum_every_six([16, 6, 8, -5, 20]) == 16\nassert sum_every_six([12, 3, -9, -6, 7]) == 12",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      -1
+     ]
+    ],
+    [
+     [
+      -6
+     ]
+    ],
+    [
+     [
+      -4,
+      12,
+      -7,
+      7,
+      0
+     ]
+    ],
+    [
+     [
+      16,
+      6,
+      8,
+      -5,
+      20
+     ]
+    ],
+    [
+     [
+      12,
+      3,
+      -9,
+      -6,
+      7
+     ]
+    ]
+   ],
+   "reference": "def sum_every_six(numbers):\n    return sum(numbers[::6])",
+   "wrong": "def sum_every_six(numbers):\n    return sum(numbers[::3])",
+   "expected": [
+    "0",
+    "-1",
+    "-6",
+    "-4",
+    "16",
+    "12"
+   ],
+   "wrong_outputs": [
+    "0",
+    "-1",
+    "-6",
+    "3",
+    "11",
+    "6"
+   ]
+  },
+  {
+   "group": "family_new",
+   "name": "rotate_left_five",
+   "params": "items",
+   "neighbour": "rotate_left_one",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `rotate_left_five(items)` that returns the list rotated left by five step(s): each step moves the first item to the end (an empty list stays empty)."
+   },
+   "tests": "assert rotate_left_five([]) == []\nassert rotate_left_five([-1]) == [-1]\nassert rotate_left_five([-6]) == [-6]\nassert rotate_left_five([-4, 12, -7, 7, 0]) == [-4, 12, -7, 7, 0]\nassert rotate_left_five([16, 6, 8, -5, 20]) == [16, 6, 8, -5, 20]\nassert rotate_left_five([12, 3, -9, -6, 7]) == [12, 3, -9, -6, 7]",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      -1
+     ]
+    ],
+    [
+     [
+      -6
+     ]
+    ],
+    [
+     [
+      -4,
+      12,
+      -7,
+      7,
+      0
+     ]
+    ],
+    [
+     [
+      16,
+      6,
+      8,
+      -5,
+      20
+     ]
+    ],
+    [
+     [
+      12,
+      3,
+      -9,
+      -6,
+      7
+     ]
+    ]
+   ],
+   "reference": "def rotate_left_five(items):\n    if not items:\n        return []\n    k = 5 % len(items)\n    return items[k:] + items[:k]",
+   "wrong": "def rotate_left_five(items):\n    if not items:\n        return []\n    k = 1 % len(items)\n    return items[k:] + items[:k]",
+   "expected": [
+    "[]",
+    "[-1]",
+    "[-6]",
+    "[-4, 12, -7, 7, 0]",
+    "[16, 6, 8, -5, 20]",
+    "[12, 3, -9, -6, 7]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[-1]",
+    "[-6]",
+    "[12, -7, 7, 0, -4]",
+    "[6, 8, -5, 20, 16]",
+    "[3, -9, -6, 7, 12]"
+   ]
+  },
+  {
+   "group": "family_new",
+   "name": "rotate_left_six",
+   "params": "items",
+   "neighbour": "rotate_left_two",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `rotate_left_six(items)` that returns the list rotated left by six step(s): each step moves the first item to the end (an empty list stays empty)."
+   },
+   "tests": "assert rotate_left_six([]) == []\nassert rotate_left_six([-1]) == [-1]\nassert rotate_left_six([-6]) == [-6]\nassert rotate_left_six([-4, 12, -7, 7, 0]) == [12, -7, 7, 0, -4]\nassert rotate_left_six([16, 6, 8, -5, 20]) == [6, 8, -5, 20, 16]\nassert rotate_left_six([12, 3, -9, -6, 7]) == [3, -9, -6, 7, 12]",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      -1
+     ]
+    ],
+    [
+     [
+      -6
+     ]
+    ],
+    [
+     [
+      -4,
+      12,
+      -7,
+      7,
+      0
+     ]
+    ],
+    [
+     [
+      16,
+      6,
+      8,
+      -5,
+      20
+     ]
+    ],
+    [
+     [
+      12,
+      3,
+      -9,
+      -6,
+      7
+     ]
+    ]
+   ],
+   "reference": "def rotate_left_six(items):\n    if not items:\n        return []\n    k = 6 % len(items)\n    return items[k:] + items[:k]",
+   "wrong": "def rotate_left_six(items):\n    if not items:\n        return []\n    k = 2 % len(items)\n    return items[k:] + items[:k]",
+   "expected": [
+    "[]",
+    "[-1]",
+    "[-6]",
+    "[12, -7, 7, 0, -4]",
+    "[6, 8, -5, 20, 16]",
+    "[3, -9, -6, 7, 12]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[-1]",
+    "[-6]",
+    "[-7, 7, 0, -4, 12]",
+    "[8, -5, 20, 16, 6]",
+    "[-9, -6, 7, 12, 3]"
+   ]
+  },
+  {
+   "group": "family_new",
+   "name": "sums_of_groups_of_five",
+   "params": "numbers",
+   "neighbour": "sums_of_groups_of_two",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `sums_of_groups_of_five(numbers)` that returns the sums of consecutive groups of five numbers of the list (the last group may be shorter)."
+   },
+   "tests": "assert sums_of_groups_of_five([]) == []\nassert sums_of_groups_of_five([-1]) == [-1]\nassert sums_of_groups_of_five([-6]) == [-6]\nassert sums_of_groups_of_five([-4, 12, -7, 7, 0]) == [8]\nassert sums_of_groups_of_five([16, 6, 8, -5, 20]) == [45]\nassert sums_of_groups_of_five([12, 3, -9, -6, 7]) == [7]",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      -1
+     ]
+    ],
+    [
+     [
+      -6
+     ]
+    ],
+    [
+     [
+      -4,
+      12,
+      -7,
+      7,
+      0
+     ]
+    ],
+    [
+     [
+      16,
+      6,
+      8,
+      -5,
+      20
+     ]
+    ],
+    [
+     [
+      12,
+      3,
+      -9,
+      -6,
+      7
+     ]
+    ]
+   ],
+   "reference": "def sums_of_groups_of_five(numbers):\n    return [sum(numbers[i:i + 5]) for i in range(0, len(numbers), 5)]",
+   "wrong": "def sums_of_groups_of_five(numbers):\n    return [sum(numbers[i:i + 2]) for i in range(0, len(numbers), 2)]",
+   "expected": [
+    "[]",
+    "[-1]",
+    "[-6]",
+    "[8]",
+    "[45]",
+    "[7]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[-1]",
+    "[-6]",
+    "[8, 0, 0]",
+    "[22, 3, 20]",
+    "[15, -15, 7]"
+   ]
+  },
+  {
+   "group": "family_new",
+   "name": "sums_of_groups_of_six",
+   "params": "numbers",
+   "neighbour": "sums_of_groups_of_two",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `sums_of_groups_of_six(numbers)` that returns the sums of consecutive groups of six numbers of the list (the last group may be shorter)."
+   },
+   "tests": "assert sums_of_groups_of_six([]) == []\nassert sums_of_groups_of_six([-1]) == [-1]\nassert sums_of_groups_of_six([-6]) == [-6]\nassert sums_of_groups_of_six([-4, 12, -7, 7, 0]) == [8]\nassert sums_of_groups_of_six([16, 6, 8, -5, 20]) == [45]\nassert sums_of_groups_of_six([12, 3, -9, -6, 7]) == [7]",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      -1
+     ]
+    ],
+    [
+     [
+      -6
+     ]
+    ],
+    [
+     [
+      -4,
+      12,
+      -7,
+      7,
+      0
+     ]
+    ],
+    [
+     [
+      16,
+      6,
+      8,
+      -5,
+      20
+     ]
+    ],
+    [
+     [
+      12,
+      3,
+      -9,
+      -6,
+      7
+     ]
+    ]
+   ],
+   "reference": "def sums_of_groups_of_six(numbers):\n    return [sum(numbers[i:i + 6]) for i in range(0, len(numbers), 6)]",
+   "wrong": "def sums_of_groups_of_six(numbers):\n    return [sum(numbers[i:i + 2]) for i in range(0, len(numbers), 2)]",
+   "expected": [
+    "[]",
+    "[-1]",
+    "[-6]",
+    "[8]",
+    "[45]",
+    "[7]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[-1]",
+    "[-6]",
+    "[8, 0, 0]",
+    "[22, 3, 20]",
+    "[15, -15, 7]"
+   ]
+  },
+  {
+   "group": "family_new",
+   "name": "digits_above_6",
+   "params": "n",
+   "neighbour": "digits_above_4",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `digits_above_6(n)` that returns how many digits of the non-negative integer n are greater than 6."
+   },
+   "tests": "assert digits_above_6(0) == 0\nassert digits_above_6(3) == 0\nassert digits_above_6(8) == 1\nassert digits_above_6(336) == 0\nassert digits_above_6(350) == 0\nassert digits_above_6(432) == 0",
+   "test_inputs": [
+    [
+     0
+    ],
+    [
+     3
+    ],
+    [
+     8
+    ],
+    [
+     336
+    ],
+    [
+     350
+    ],
+    [
+     432
+    ]
+   ],
+   "reference": "def digits_above_6(n):\n    return sum(1 for d in str(n) if int(d) > 6)",
+   "wrong": "def digits_above_6(n):\n    return sum(1 for d in str(n) if int(d) > 4)",
+   "expected": [
+    "0",
+    "0",
+    "1",
+    "0",
+    "0",
+    "0"
+   ],
+   "wrong_outputs": [
+    "0",
+    "0",
+    "1",
+    "1",
+    "1",
+    "0"
+   ]
+  },
+  {
+   "group": "family_new",
+   "name": "digits_above_2",
+   "params": "n",
+   "neighbour": "digits_above_4",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `digits_above_2(n)` that returns how many digits of the non-negative integer n are greater than 2."
+   },
+   "tests": "assert digits_above_2(0) == 0\nassert digits_above_2(3) == 1\nassert digits_above_2(8) == 1\nassert digits_above_2(336) == 3\nassert digits_above_2(350) == 2\nassert digits_above_2(432) == 2",
+   "test_inputs": [
+    [
+     0
+    ],
+    [
+     3
+    ],
+    [
+     8
+    ],
+    [
+     336
+    ],
+    [
+     350
+    ],
+    [
+     432
+    ]
+   ],
+   "reference": "def digits_above_2(n):\n    return sum(1 for d in str(n) if int(d) > 2)",
+   "wrong": "def digits_above_2(n):\n    return sum(1 for d in str(n) if int(d) > 4)",
+   "expected": [
+    "0",
+    "1",
+    "1",
+    "3",
+    "2",
+    "2"
+   ],
+   "wrong_outputs": [
+    "0",
+    "0",
+    "1",
+    "1",
+    "1",
+    "0"
+   ]
+  },
+  {
+   "group": "family_new",
+   "name": "words_longer_than_5",
+   "params": "text",
+   "neighbour": "words_longer_than_3",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `words_longer_than_5(text)` that returns a list of the words of text that have more than 5 characters, in order."
+   },
+   "tests": "assert words_longer_than_5('') == []\nassert words_longer_than_5('x') == []\nassert words_longer_than_5('I') == []\nassert words_longer_than_5('grape sky zoo') == []\nassert words_longer_than_5('Banana Echo x') == ['Banana']\nassert words_longer_than_5('ice cat queen') == []",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "x"
+    ],
+    [
+     "I"
+    ],
+    [
+     "grape sky zoo"
+    ],
+    [
+     "Banana Echo x"
+    ],
+    [
+     "ice cat queen"
+    ]
+   ],
+   "reference": "def words_longer_than_5(text):\n    return [w for w in text.split() if len(w) > 5]",
+   "wrong": "def words_longer_than_5(text):\n    return [w for w in text.split() if len(w) > 3]",
+   "expected": [
+    "[]",
+    "[]",
+    "[]",
+    "[]",
+    "['Banana']",
+    "[]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[]",
+    "[]",
+    "['grape']",
+    "['Banana', 'Echo']",
+    "['queen']"
+   ]
+  },
+  {
+   "group": "family_new",
+   "name": "words_longer_than_6",
+   "params": "text",
+   "neighbour": "words_longer_than_3",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `words_longer_than_6(text)` that returns a list of the words of text that have more than 6 characters, in order."
+   },
+   "tests": "assert words_longer_than_6('') == []\nassert words_longer_than_6('x') == []\nassert words_longer_than_6('I') == []\nassert words_longer_than_6('grape sky zoo') == []\nassert words_longer_than_6('Banana Echo x') == []\nassert words_longer_than_6('ice cat queen') == []",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "x"
+    ],
+    [
+     "I"
+    ],
+    [
+     "grape sky zoo"
+    ],
+    [
+     "Banana Echo x"
+    ],
+    [
+     "ice cat queen"
+    ]
+   ],
+   "reference": "def words_longer_than_6(text):\n    return [w for w in text.split() if len(w) > 6]",
+   "wrong": "def words_longer_than_6(text):\n    return [w for w in text.split() if len(w) > 3]",
+   "expected": [
+    "[]",
+    "[]",
+    "[]",
+    "[]",
+    "[]",
+    "[]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[]",
+    "[]",
+    "['grape']",
+    "['Banana', 'Echo']",
+    "['queen']"
+   ]
+  },
+  {
+   "group": "family_new",
+   "name": "shift_by_5",
+   "params": "s",
+   "neighbour": "shift_by_1",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `shift_by_5(s)` that returns s (lower-case letters only) with every letter moved 5 places forward in the alphabet, wrapping around from z to a."
+   },
+   "tests": "assert shift_by_5('') == ''\nassert shift_by_5('i') == 'n'\nassert shift_by_5('d') == 'i'\nassert shift_by_5('gxad') == 'lcfi'\nassert shift_by_5('cwqvy') == 'hbvad'\nassert shift_by_5('rcoqg') == 'whtvl'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "i"
+    ],
+    [
+     "d"
+    ],
+    [
+     "gxad"
+    ],
+    [
+     "cwqvy"
+    ],
+    [
+     "rcoqg"
+    ]
+   ],
+   "reference": "def shift_by_5(s):\n    return ''.join(chr((ord(c) - ord('a') + 5) % 26 + ord('a')) for c in s)",
+   "wrong": "def shift_by_5(s):\n    return ''.join(chr((ord(c) - ord('a') + 1) % 26 + ord('a')) for c in s)",
+   "expected": [
+    "''",
+    "'n'",
+    "'i'",
+    "'lcfi'",
+    "'hbvad'",
+    "'whtvl'"
+   ],
+   "wrong_outputs": [
+    "''",
+    "'j'",
+    "'e'",
+    "'hybe'",
+    "'dxrwz'",
+    "'sdprh'"
+   ]
+  },
+  {
+   "group": "family_new",
+   "name": "shift_by_6",
+   "params": "s",
+   "neighbour": "shift_by_1",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `shift_by_6(s)` that returns s (lower-case letters only) with every letter moved 6 places forward in the alphabet, wrapping around from z to a."
+   },
+   "tests": "assert shift_by_6('') == ''\nassert shift_by_6('i') == 'o'\nassert shift_by_6('d') == 'j'\nassert shift_by_6('gxad') == 'mdgj'\nassert shift_by_6('cwqvy') == 'icwbe'\nassert shift_by_6('rcoqg') == 'xiuwm'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "i"
+    ],
+    [
+     "d"
+    ],
+    [
+     "gxad"
+    ],
+    [
+     "cwqvy"
+    ],
+    [
+     "rcoqg"
+    ]
+   ],
+   "reference": "def shift_by_6(s):\n    return ''.join(chr((ord(c) - ord('a') + 6) % 26 + ord('a')) for c in s)",
+   "wrong": "def shift_by_6(s):\n    return ''.join(chr((ord(c) - ord('a') + 1) % 26 + ord('a')) for c in s)",
+   "expected": [
+    "''",
+    "'o'",
+    "'j'",
+    "'mdgj'",
+    "'icwbe'",
+    "'xiuwm'"
+   ],
+   "wrong_outputs": [
+    "''",
+    "'j'",
+    "'e'",
+    "'hybe'",
+    "'dxrwz'",
+    "'sdprh'"
+   ]
+  }
+ ]
+}

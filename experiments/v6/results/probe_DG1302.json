@@ -1,0 +1,28 @@
+{
+ "model": "/home/user/lmwork/v6/soups/DG1302c",
+ "trained": {
+  "items": 125,
+  "code_token_loss": 0.276,
+  "item_loss_median": 0.2201
+ },
+ "family_new": {
+  "items": 28,
+  "code_token_loss": 0.3822,
+  "item_loss_median": 0.3378
+ },
+ "dev_clean": {
+  "items": 34,
+  "code_token_loss": 0.1784,
+  "item_loss_median": 0.0396
+ },
+ "unseen_v1": {
+  "items": 53,
+  "code_token_loss": 0.6611,
+  "item_loss_median": 0.6081
+ },
+ "unseen_v2": {
+  "items": 71,
+  "code_token_loss": 0.9829,
+  "item_loss_median": 0.9645
+ }
+}

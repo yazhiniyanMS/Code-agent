@@ -1,0 +1,15 @@
+{
+ "method": "experiments/v6/soup.py (fp32 average, stored bf16, base-referenced)",
+ "sources": [
+  "/dev/shm/ycode-w/src/R1/1301/model_bf16",
+  "/home/user/lmwork/loop/anchor"
+ ],
+ "weights": [
+  0.5,
+  0.5
+ ],
+ "sha256": "0b4f6c8f994b267409fbb1fb8ca731af761cc04d0fabe6e1fa20431f8fd96004",
+ "exit": 0,
+ "minutes": 0.5,
+ "peak_rss_mb": 16448
+}

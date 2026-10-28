@@ -1,0 +1,99 @@
+{
+  "name": "v8-comp",
+  "note": "V8 stage 3, the one additional hypothesis: replay restored dev (C75 and T50: 25/44 against round 54's 27) but nothing transferred across families (T50: held-out families 2/66, the same as round 54 and L2; neighbours 4/38). Does the model need more diverse, compositionally structured examples rather than more examples? Programs aggregate(transform(selection(numbers))) from a V8 grammar (ycode.lm.compositions: 11 selections, 7 transforms, 9 aggregates; 412 behaviours after held-out, test-skeleton and v5-trained exclusions), task text composed the same way. COMP trains 352 combinations x 3 examples; MORE trains 60 of them x 18 examples: the same curriculum tokens (99.8k / 102.1k), the same 50% replay, 52 steps (one epoch), lr 1e-4, seed 1301. COMP runs first; MORE only if COMP gains on new combinations or across families. Seed 1302 (both arms, same spec) added after seed 1301: COMP 55/60 vs MORE 45/60 on the held-out combinations (paired 11 vs 1, sign test p = 0.006 over tasks), to check the difference across seeds.",
+  "decision": "Development tasks only. Systematic generalisation = c_test (60 combinations of trained parts no arm trains on); learning = c_more (both arms train) and c_comp_only (only COMP trains); cross-family = t_families and the neighbour set, against round 54. A gain on new combinations of trained parts is not evidence of transfer to new families.",
+  "anchor": "/home/user/lmwork/loop/anchor",
+  "tokenizer": "/home/user/lmwork/data/tokenizer.json",
+  "replay_dir": "/home/user/lmwork/data",
+  "average_script": "/home/user/lmwork/average.py",
+  "work_dir": "/dev/shm/ycode-v8",
+  "metric": "unseen_clean",
+  "category_rule": "items_lost",
+  "out": "/home/user/lmwork/v8/runs",
+  "seeds": [
+    1301,
+    1302
+  ],
+  "keep_models": false,
+  "train": {
+    "steps": 52,
+    "lr": 0.0001,
+    "batch": 4,
+    "train_layers": 24,
+    "warmup": 2,
+    "precision": "fp32",
+    "init_optim": true,
+    "compact": true,
+    "save_every": 52,
+    "final_bf16": true
+  },
+  "eval": {
+    "dev": true,
+    "unseen": true,
+    "unseen2": false,
+    "bench": false,
+    "diagnose": 0,
+    "sets": [
+      {
+        "name": "c_more",
+        "set": "experiments/v8/sets/c_more.json"
+      },
+      {
+        "name": "c_comp_only",
+        "set": "experiments/v8/sets/c_comp_only.json"
+      },
+      {
+        "name": "c_test",
+        "set": "experiments/v8/sets/c_test.json"
+      },
+      {
+        "name": "t_families",
+        "set": "experiments/v8/sets/t_families.json"
+      },
+      {
+        "name": "neighbours",
+        "set": "experiments/v8/sets/neighbours.json",
+        "variants": "original"
+      }
+    ]
+  },
+  "arms": [
+    {
+      "name": "COMP",
+      "data": {
+        "idioms_bugfix": 0,
+        "idioms_families": "v3",
+        "basics_write": 0,
+        "basics_bugfix": 0,
+        "compose_write": 0,
+        "compose_bugfix": 0,
+        "contrast": 0,
+        "novel_write": 0,
+        "replay": 0,
+        "legacy_share": 0.5,
+        "idioms_select": "v8_comp_train",
+        "idioms_write": 3
+      },
+      "note": "352 compositions x 3 examples"
+    },
+    {
+      "name": "MORE",
+      "data": {
+        "idioms_bugfix": 0,
+        "idioms_families": "v3",
+        "basics_write": 0,
+        "basics_bugfix": 0,
+        "compose_write": 0,
+        "compose_bugfix": 0,
+        "contrast": 0,
+        "novel_write": 0,
+        "replay": 0,
+        "legacy_share": 0.5,
+        "idioms_select": "v8_comp_more",
+        "idioms_write": 18
+      },
+      "note": "60 compositions x 18 examples"
+    }
+  ],
+  "comparisons": []
+}

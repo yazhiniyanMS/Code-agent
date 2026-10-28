@@ -1,0 +1,28 @@
+{
+ "model": "/home/user/lmwork/v6/runs/D/1301/model_bf16",
+ "trained": {
+  "items": 125,
+  "code_token_loss": 0.3661,
+  "item_loss_median": 0.3097
+ },
+ "family_new": {
+  "items": 28,
+  "code_token_loss": 0.4509,
+  "item_loss_median": 0.4441
+ },
+ "dev_clean": {
+  "items": 34,
+  "code_token_loss": 0.1819,
+  "item_loss_median": 0.0478
+ },
+ "unseen_v1": {
+  "items": 53,
+  "code_token_loss": 0.6761,
+  "item_loss_median": 0.6311
+ },
+ "unseen_v2": {
+  "items": 71,
+  "code_token_loss": 0.9621,
+  "item_loss_median": 0.9305
+ }
+}

@@ -1,0 +1,66 @@
+{
+ "name": "R1",
+ "parent": "C2",
+ "config": "experiments/v10/v10_r1.json",
+ "seeds": {
+  "train": 1301,
+  "data": 1302
+ },
+ "gate": "NOT validated: combined 33 passes the score part of the second-seed gate, but 3 instruction-following losses fail the category rule; its replication V11-A reaches 31; the R1 recipe over two seeds: mean 32.0, mean instruction-following losses 3.0 -> fails promotion",
+ "role": null,
+ "storage": "lossless pack (ycode/lm/packckpt.py): bf16 bits XOR round 54's, byte planes, zlib",
+ "files": [
+  {
+   "path": "/home/user/lmwork/v10/ckpt/R1_1301.ypk",
+   "bytes": 1320073261,
+   "sha256": "eb7ec5951101986951521256ae98ee40e81ef673724058c3c89e7d001d408eb5"
+  }
+ ],
+ "content_sha256": "9909c511043b8a166b4a713e50ad206d84a47cbc927e9ed17bfc9b0e161c6ec3",
+ "restore": "python -m ycode.lm.packckpt unpack /home/user/lmwork/v10/ckpt/R1_1301.ypk OUT_DIR   # every tensor checked against the content sha256",
+ "needs": [
+  "/home/user/lmwork/loop/anchor (round 54: model.pt, info.json; the packs store XOR against it)",
+  "/home/user/lmwork/data/tokenizer.json"
+ ],
+ "evaluate": "python -m ycode.lm.cli eval --model OUT_DIR --problems dev --device cpu --answers-out dev.jsonl",
+ "evaluation": {
+  "dev": {
+   "points": 42,
+   "of": 62,
+   "clean": 30,
+   "clean_of": 44,
+   "robust": 42,
+   "robust_of": 62,
+   "robust_clean": 30
+  },
+  "unseen": {
+   "points": 3,
+   "of": 53,
+   "clean": 3,
+   "clean_of": 53,
+   "robust": 2,
+   "robust_of": 53,
+   "robust_clean": 2
+  },
+  "bench": {
+   "points": 23,
+   "of": 65,
+   "clean": 20,
+   "clean_of": 61,
+   "robust": 23,
+   "robust_of": 65,
+   "robust_clean": 20
+  },
+  "combined_clean": 33,
+  "training": {
+   "steps": 36,
+   "tokens": 147456,
+   "minutes": 73.66,
+   "peak_rss_mb": 10827,
+   "checkpoint_sha256": "0758684e76d6b4e98df74a510f90af3174365790e2077418eb25a81b9f433a93"
+  },
+  "minutes_total": 129.6
+ },
+ "record": "experiments/v10/results/runs/R1/1301",
+ "label": "best experimental candidate"
+}

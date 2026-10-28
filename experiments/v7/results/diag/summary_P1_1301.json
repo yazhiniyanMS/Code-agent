@@ -1,0 +1,76 @@
+{
+ "P1_1301": {
+  "same_wording": {
+   "original": {
+    "tasks": 19,
+    "margin_mean": -8.856,
+    "prefers_reference": 3,
+    "pass": 1,
+    "wrong": 6
+   },
+   "distractor": {
+    "tasks": 19,
+    "margin_mean": -9.464,
+    "prefers_reference": 1,
+    "pass": 0,
+    "wrong": 6,
+    "gained": 0,
+    "lost": 1,
+    "sign_test_p": 1.0,
+    "wrong_change": 0,
+    "margin_change_mean": -0.608,
+    "margin_up": 8,
+    "margin_down": 11,
+    "margin_sign_p": 0.6476
+   }
+  },
+  "new_wording": {
+   "original": {
+    "tasks": 19,
+    "margin_mean": 2.518,
+    "prefers_reference": 11,
+    "pass": 1,
+    "wrong": 3
+   },
+   "distractor": {
+    "tasks": 19,
+    "margin_mean": -0.679,
+    "prefers_reference": 7,
+    "pass": 0,
+    "wrong": 4,
+    "gained": 0,
+    "lost": 1,
+    "sign_test_p": 1.0,
+    "wrong_change": 1,
+    "margin_change_mean": -3.197,
+    "margin_up": 2,
+    "margin_down": 17,
+    "margin_sign_p": 0.0007
+   }
+  },
+  "all": {
+   "original": {
+    "tasks": 38,
+    "margin_mean": -3.169,
+    "prefers_reference": 14,
+    "pass": 2,
+    "wrong": 9
+   },
+   "distractor": {
+    "tasks": 38,
+    "margin_mean": -5.071,
+    "prefers_reference": 8,
+    "pass": 0,
+    "wrong": 10,
+    "gained": 0,
+    "lost": 2,
+    "sign_test_p": 0.5,
+    "wrong_change": 1,
+    "margin_change_mean": -1.902,
+    "margin_up": 10,
+    "margin_down": 28,
+    "margin_sign_p": 0.0051
+   }
+  }
+ }
+}

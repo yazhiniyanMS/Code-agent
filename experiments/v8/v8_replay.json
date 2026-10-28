@@ -1,0 +1,90 @@
+{
+  "name": "v8-replay",
+  "note": "V8 stage 1: does replay from round 54's own training distribution stop L2's forgetting without undoing its learning? Every arm starts from round 54 with L2's recipe (lr 1e-4, 24 steps x 4 x 1024 = 98,304 training tokens, top 24 layers, Lion, seed 1301) and L2's curriculum examples, identical (the 976 write examples of the 36 programs of the 12 constant-parameterised v1 families). Replay (rounddata.legacy_share) samples one production round (the v5 mix round 54 was trained on: basics, compose, contrast and novel examples, plus original SFT replay rows) to the given share of the dataset's tokens. The token budget is fixed, so more replay means fewer curriculum exposures: each run records the tokens it actually trained on by source and the exposures per curriculum behaviour (exposures.json). Reference A is L2 itself (76% curriculum tokens; 24% a minimal legacy share of basics writes and 50 replay rows), unchanged.",
+  "decision": "Screening on development tasks only (the fixed holdout is not evaluated). Replay works if it restores clean dev toward round 54's 27/44 while keeping learning: the trained programs (strict, all 40 inputs) and new constants of their families. Arm C, a second replay share, is chosen from B's result. Any candidate needs two seeds before a decision.",
+  "anchor": "/home/user/lmwork/loop/anchor",
+  "tokenizer": "/home/user/lmwork/data/tokenizer.json",
+  "replay_dir": "/home/user/lmwork/data",
+  "average_script": "/home/user/lmwork/average.py",
+  "out": "/home/user/lmwork/v8/runs",
+  "work_dir": "/dev/shm/ycode-v8",
+  "seeds": [
+    1301
+  ],
+  "metric": "unseen_clean",
+  "category_rule": "items_lost",
+  "keep_models": false,
+  "train": {
+    "steps": 24,
+    "lr": 0.0001,
+    "batch": 4,
+    "train_layers": 24,
+    "warmup": 2,
+    "precision": "fp32",
+    "init_optim": true,
+    "compact": true,
+    "save_every": 24,
+    "final_bf16": true
+  },
+  "eval": {
+    "dev": true,
+    "unseen": true,
+    "unseen2": false,
+    "bench": false,
+    "diagnose": 0,
+    "sets": [
+      {
+        "name": "k_trained",
+        "set": "experiments/v8/sets/k_trained.json"
+      },
+      {
+        "name": "family_new",
+        "set": "experiments/v8/sets/family_new.json"
+      },
+      {
+        "name": "neighbours",
+        "set": "experiments/v8/sets/neighbours.json",
+        "variants": "original"
+      }
+    ]
+  },
+  "arms": [
+    {
+      "name": "B50",
+      "data": {
+        "idioms_write": 16,
+        "idioms_bugfix": 0,
+        "idioms_select": "k_families",
+        "idioms_families": "v1",
+        "basics_write": 0,
+        "basics_bugfix": 0,
+        "compose_write": 0,
+        "compose_bugfix": 0,
+        "contrast": 0,
+        "novel_write": 0,
+        "replay": 0,
+        "legacy_share": 0.5
+      },
+      "note": "replay from the production mix at 50% of the dataset's tokens"
+    },
+    {
+      "name": "C75",
+      "data": {
+        "idioms_write": 16,
+        "idioms_bugfix": 0,
+        "idioms_select": "k_families",
+        "idioms_families": "v1",
+        "basics_write": 0,
+        "basics_bugfix": 0,
+        "compose_write": 0,
+        "compose_bugfix": 0,
+        "contrast": 0,
+        "novel_write": 0,
+        "replay": 0,
+        "legacy_share": 0.75
+      },
+      "note": "replay at 75%, chosen after B50 (54% non-curriculum tokens) restored dev 15 -> 21/44 of round 54's 27 and kept 32/36 trained programs at 14.2 exposures per behaviour (L2: 23.6, reconstructed): does more replay restore dev further, and does learning hold at ~7 exposures?"
+    }
+  ],
+  "comparisons": []
+}

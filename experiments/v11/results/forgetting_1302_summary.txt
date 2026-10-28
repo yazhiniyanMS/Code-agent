@@ -1,0 +1,30 @@
+seed 1302: 4378 examples; before = /home/user/lmwork/loop/anchor, after = /dev/shm/ycode-keep/C2/1301/model_bf16
+
+| Kind | Examples | Loss round 54 | Loss C2 | Mean rise | Share rising | Share of weight |
+| --- | --- | --- | --- | --- | --- | --- |
+| write | 2878 | 0.005 | 0.025 | +0.019 | 92% | 82.4% |
+| bugfix:other | 660 | 0.001 | 0.011 | +0.010 | 100% | 10.1% |
+| bugfix:literal | 549 | 0.003 | 0.009 | +0.006 | 99% | 5.6% |
+| bugfix:comparison | 291 | 0.001 | 0.004 | +0.004 | 99% | 1.9% |
+| all | 4378 | 0.004 | 0.019 | +0.015 | 95% | 100% |
+
+Most forgotten (loss rise, kind, prompt start):
+  +0.360  bugfix:other       'This function has a bug. Find and fix it:\n```python\ndef multiply_lists(a, b):\n    """Return a list o'
+  +0.317  bugfix:other       'This function has a bug. Find and fix it:\n```python\ndef remove_vowels(s):\n    """Return s with the v'
+  +0.302  write              'Implement `helper_xo(n)`, which returns how many steps the Collatz process takes to reach 1 from n.'
+  +0.300  write              'Write a Python function `crimson_kettle(a, b)` that returns a list of the products of the numbers at'
+  +0.290  write              'Implement `collatz_steps(n)`, which returns how many steps the Collatz process takes to reach 1 from'
+  +0.286  bugfix:other       'This function has a bug. Find and fix it:\n```python\ndef loop_sum_lt3(numbers):\n    """Return the sum'
+  +0.285  write              'Implement `fn(s)`, which returns s with all digits removed.'
+  +0.277  write              'Write a Python function `collatz_steps(n)` that returns how many steps the Collatz process takes to '
+  +0.274  write              'Write a Python function `calc(n)` that returns a list of the positive divisors of n in ascending ord'
+  +0.271  bugfix:other       'This function has a bug. Find and fix it:\n```python\ndef run(numbers):\n    """Return a new list with '
+  +0.271  write              'Create a Python function named `collatz_steps` that takes n and returns how many steps the Collatz p'
+  +0.267  write              'Write a Python function `velvet_willow(a, b)` that returns a list of the products of the numbers at '
+  +0.264  write              'Create a Python function named `collatz_steps` that takes n and returns how many steps the Collatz p'
+  +0.262  write              'Implement `multiply_lists(a, b)`, which returns a list of the products of the numbers at the same po'
+  +0.256  write              'Create a Python function named `calc` that takes n and returns a list of the positive divisors of n '
+
+replay drawn uniform (R1): 959 examples, {'bugfix:comparison': 56, 'bugfix:literal': 109, 'bugfix:other': 155, 'write': 639}, mean rise of those drawn +0.014
+
+replay drawn by forgetting (V11-B): 976 examples, {'bugfix:comparison': 20, 'bugfix:literal': 73, 'bugfix:other': 112, 'write': 771}, mean rise of those drawn +0.046

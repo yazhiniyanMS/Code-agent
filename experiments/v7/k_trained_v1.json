@@ -1,0 +1,1917 @@
+{
+ "version": "k-trained-v1",
+ "variants": [
+  "original"
+ ],
+ "tasks": [
+  {
+   "group": "k_trained",
+   "name": "sum_after_first_one",
+   "params": "numbers",
+   "neighbour": "sum_after_first_two",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `sum_after_first_one(numbers)` that returns the sum of the numbers that come after the first one in the list (0 if there are none)."
+   },
+   "tests": "assert sum_after_first_one([]) == 0\nassert sum_after_first_one([10]) == 0\nassert sum_after_first_one([19]) == 0\nassert sum_after_first_one([2, 4, -4, -8]) == -8\nassert sum_after_first_one([20, 8, 13, 16]) == 37\nassert sum_after_first_one([-8, 16, 20, 8]) == 44",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      10
+     ]
+    ],
+    [
+     [
+      19
+     ]
+    ],
+    [
+     [
+      2,
+      4,
+      -4,
+      -8
+     ]
+    ],
+    [
+     [
+      20,
+      8,
+      13,
+      16
+     ]
+    ],
+    [
+     [
+      -8,
+      16,
+      20,
+      8
+     ]
+    ]
+   ],
+   "reference": "def sum_after_first_one(numbers):\n    return sum(numbers[1:])",
+   "wrong": "def sum_after_first_one(numbers):\n    return sum(numbers[2:])",
+   "expected": [
+    "0",
+    "0",
+    "0",
+    "-8",
+    "37",
+    "44"
+   ],
+   "wrong_outputs": [
+    "0",
+    "0",
+    "0",
+    "-12",
+    "29",
+    "28"
+   ]
+  },
+  {
+   "group": "k_trained",
+   "name": "sum_after_first_two",
+   "params": "numbers",
+   "neighbour": "sum_after_first_one",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `sum_after_first_two(numbers)` that returns the sum of the numbers that come after the first two in the list (0 if there are none)."
+   },
+   "tests": "assert sum_after_first_two([]) == 0\nassert sum_after_first_two([1]) == 0\nassert sum_after_first_two([0]) == 0\nassert sum_after_first_two([0, 4, -6, -6, 8]) == -4\nassert sum_after_first_two([16, 2, 13, -7, 1]) == 7\nassert sum_after_first_two([3, 17, 12, -1, -5]) == 6",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      1
+     ]
+    ],
+    [
+     [
+      0
+     ]
+    ],
+    [
+     [
+      0,
+      4,
+      -6,
+      -6,
+      8
+     ]
+    ],
+    [
+     [
+      16,
+      2,
+      13,
+      -7,
+      1
+     ]
+    ],
+    [
+     [
+      3,
+      17,
+      12,
+      -1,
+      -5
+     ]
+    ]
+   ],
+   "reference": "def sum_after_first_two(numbers):\n    return sum(numbers[2:])",
+   "wrong": "def sum_after_first_two(numbers):\n    return sum(numbers[1:])",
+   "expected": [
+    "0",
+    "0",
+    "0",
+    "-4",
+    "7",
+    "6"
+   ],
+   "wrong_outputs": [
+    "0",
+    "0",
+    "0",
+    "0",
+    "9",
+    "23"
+   ]
+  },
+  {
+   "group": "k_trained",
+   "name": "sum_after_first_three",
+   "params": "numbers",
+   "neighbour": "sum_after_first_one",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `sum_after_first_three(numbers)` that returns the sum of the numbers that come after the first three in the list (0 if there are none)."
+   },
+   "tests": "assert sum_after_first_three([]) == 0\nassert sum_after_first_three([7]) == 0\nassert sum_after_first_three([-7]) == 0\nassert sum_after_first_three([1, -7, 6, 18]) == 18\nassert sum_after_first_three([15, 4, 3, 16]) == 16\nassert sum_after_first_three([13, 13, 16, 6]) == 6",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      7
+     ]
+    ],
+    [
+     [
+      -7
+     ]
+    ],
+    [
+     [
+      1,
+      -7,
+      6,
+      18
+     ]
+    ],
+    [
+     [
+      15,
+      4,
+      3,
+      16
+     ]
+    ],
+    [
+     [
+      13,
+      13,
+      16,
+      6
+     ]
+    ]
+   ],
+   "reference": "def sum_after_first_three(numbers):\n    return sum(numbers[3:])",
+   "wrong": "def sum_after_first_three(numbers):\n    return sum(numbers[1:])",
+   "expected": [
+    "0",
+    "0",
+    "0",
+    "18",
+    "16",
+    "6"
+   ],
+   "wrong_outputs": [
+    "0",
+    "0",
+    "0",
+    "17",
+    "23",
+    "35"
+   ]
+  },
+  {
+   "group": "k_trained",
+   "name": "sum_after_first_four",
+   "params": "numbers",
+   "neighbour": "sum_after_first_one",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `sum_after_first_four(numbers)` that returns the sum of the numbers that come after the first four in the list (0 if there are none)."
+   },
+   "tests": "assert sum_after_first_four([]) == 0\nassert sum_after_first_four([2]) == 0\nassert sum_after_first_four([6]) == 0\nassert sum_after_first_four([-4, 3, 19, -5]) == 0\nassert sum_after_first_four([-6, 8, 10, 13]) == 0\nassert sum_after_first_four([11, -9, -6, -1]) == 0",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      2
+     ]
+    ],
+    [
+     [
+      6
+     ]
+    ],
+    [
+     [
+      -4,
+      3,
+      19,
+      -5
+     ]
+    ],
+    [
+     [
+      -6,
+      8,
+      10,
+      13
+     ]
+    ],
+    [
+     [
+      11,
+      -9,
+      -6,
+      -1
+     ]
+    ]
+   ],
+   "reference": "def sum_after_first_four(numbers):\n    return sum(numbers[4:])",
+   "wrong": "def sum_after_first_four(numbers):\n    return sum(numbers[1:])",
+   "expected": [
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0"
+   ],
+   "wrong_outputs": [
+    "0",
+    "0",
+    "0",
+    "17",
+    "31",
+    "-16"
+   ]
+  },
+  {
+   "group": "k_trained",
+   "name": "sum_of_first_two",
+   "params": "numbers",
+   "neighbour": "sum_of_first_three",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `sum_of_first_two(numbers)` that returns the sum of the first two numbers of the list (of all of them if the list is shorter)."
+   },
+   "tests": "assert sum_of_first_two([]) == 0\nassert sum_of_first_two([4]) == 4\nassert sum_of_first_two([3]) == 3\nassert sum_of_first_two([15, 19, 19, 2]) == 34\nassert sum_of_first_two([14, 19, -2, -5]) == 33\nassert sum_of_first_two([10, -7, 13, 18]) == 3",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      4
+     ]
+    ],
+    [
+     [
+      3
+     ]
+    ],
+    [
+     [
+      15,
+      19,
+      19,
+      2
+     ]
+    ],
+    [
+     [
+      14,
+      19,
+      -2,
+      -5
+     ]
+    ],
+    [
+     [
+      10,
+      -7,
+      13,
+      18
+     ]
+    ]
+   ],
+   "reference": "def sum_of_first_two(numbers):\n    return sum(numbers[:2])",
+   "wrong": "def sum_of_first_two(numbers):\n    return sum(numbers[:3])",
+   "expected": [
+    "0",
+    "4",
+    "3",
+    "34",
+    "33",
+    "3"
+   ],
+   "wrong_outputs": [
+    "0",
+    "4",
+    "3",
+    "53",
+    "31",
+    "16"
+   ]
+  },
+  {
+   "group": "k_trained",
+   "name": "sum_of_first_three",
+   "params": "numbers",
+   "neighbour": "sum_of_first_two",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `sum_of_first_three(numbers)` that returns the sum of the first three numbers of the list (of all of them if the list is shorter)."
+   },
+   "tests": "assert sum_of_first_three([]) == 0\nassert sum_of_first_three([7]) == 7\nassert sum_of_first_three([-4]) == -4\nassert sum_of_first_three([10, 8, 16, -3]) == 34\nassert sum_of_first_three([-1, -2, -9, -6]) == -12\nassert sum_of_first_three([-2, 14, 17, 19]) == 29",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      7
+     ]
+    ],
+    [
+     [
+      -4
+     ]
+    ],
+    [
+     [
+      10,
+      8,
+      16,
+      -3
+     ]
+    ],
+    [
+     [
+      -1,
+      -2,
+      -9,
+      -6
+     ]
+    ],
+    [
+     [
+      -2,
+      14,
+      17,
+      19
+     ]
+    ]
+   ],
+   "reference": "def sum_of_first_three(numbers):\n    return sum(numbers[:3])",
+   "wrong": "def sum_of_first_three(numbers):\n    return sum(numbers[:2])",
+   "expected": [
+    "0",
+    "7",
+    "-4",
+    "34",
+    "-12",
+    "29"
+   ],
+   "wrong_outputs": [
+    "0",
+    "7",
+    "-4",
+    "18",
+    "-3",
+    "12"
+   ]
+  },
+  {
+   "group": "k_trained",
+   "name": "sum_of_first_four",
+   "params": "numbers",
+   "neighbour": "sum_of_first_two",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `sum_of_first_four(numbers)` that returns the sum of the first four numbers of the list (of all of them if the list is shorter)."
+   },
+   "tests": "assert sum_of_first_four([]) == 0\nassert sum_of_first_four([3]) == 3\nassert sum_of_first_four([9]) == 9\nassert sum_of_first_four([17, -4, 7, -4]) == 16\nassert sum_of_first_four([-9, 6, -9, 15]) == 3\nassert sum_of_first_four([12, 15, -3, 15]) == 39",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      3
+     ]
+    ],
+    [
+     [
+      9
+     ]
+    ],
+    [
+     [
+      17,
+      -4,
+      7,
+      -4
+     ]
+    ],
+    [
+     [
+      -9,
+      6,
+      -9,
+      15
+     ]
+    ],
+    [
+     [
+      12,
+      15,
+      -3,
+      15
+     ]
+    ]
+   ],
+   "reference": "def sum_of_first_four(numbers):\n    return sum(numbers[:4])",
+   "wrong": "def sum_of_first_four(numbers):\n    return sum(numbers[:2])",
+   "expected": [
+    "0",
+    "3",
+    "9",
+    "16",
+    "3",
+    "39"
+   ],
+   "wrong_outputs": [
+    "0",
+    "3",
+    "9",
+    "13",
+    "-3",
+    "27"
+   ]
+  },
+  {
+   "group": "k_trained",
+   "name": "sum_of_first_five",
+   "params": "numbers",
+   "neighbour": "sum_of_first_two",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `sum_of_first_five(numbers)` that returns the sum of the first five numbers of the list (of all of them if the list is shorter)."
+   },
+   "tests": "assert sum_of_first_five([]) == 0\nassert sum_of_first_five([4]) == 4\nassert sum_of_first_five([2]) == 2\nassert sum_of_first_five([-8, -9, 3, 1]) == -13\nassert sum_of_first_five([1, 13, 13, -1]) == 26\nassert sum_of_first_five([16, 3, 20, -8]) == 31",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      4
+     ]
+    ],
+    [
+     [
+      2
+     ]
+    ],
+    [
+     [
+      -8,
+      -9,
+      3,
+      1
+     ]
+    ],
+    [
+     [
+      1,
+      13,
+      13,
+      -1
+     ]
+    ],
+    [
+     [
+      16,
+      3,
+      20,
+      -8
+     ]
+    ]
+   ],
+   "reference": "def sum_of_first_five(numbers):\n    return sum(numbers[:5])",
+   "wrong": "def sum_of_first_five(numbers):\n    return sum(numbers[:2])",
+   "expected": [
+    "0",
+    "4",
+    "2",
+    "-13",
+    "26",
+    "31"
+   ],
+   "wrong_outputs": [
+    "0",
+    "4",
+    "2",
+    "-17",
+    "14",
+    "19"
+   ]
+  },
+  {
+   "group": "k_trained",
+   "name": "positives_in_first_three",
+   "params": "numbers",
+   "neighbour": "positives_in_first_four",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `positives_in_first_three(numbers)` that returns how many of the first three numbers in the list are greater than zero."
+   },
+   "tests": "assert positives_in_first_three([]) == 0\nassert positives_in_first_three([2]) == 1\nassert positives_in_first_three([6]) == 1\nassert positives_in_first_three([2, 12, 18, 14]) == 3\nassert positives_in_first_three([-5, 15, -5, 17]) == 1\nassert positives_in_first_three([17, -5, 1, 9, 15]) == 2",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      2
+     ]
+    ],
+    [
+     [
+      6
+     ]
+    ],
+    [
+     [
+      2,
+      12,
+      18,
+      14
+     ]
+    ],
+    [
+     [
+      -5,
+      15,
+      -5,
+      17
+     ]
+    ],
+    [
+     [
+      17,
+      -5,
+      1,
+      9,
+      15
+     ]
+    ]
+   ],
+   "reference": "def positives_in_first_three(numbers):\n    return sum(1 for x in numbers[:3] if x > 0)",
+   "wrong": "def positives_in_first_three(numbers):\n    return sum(1 for x in numbers[:4] if x > 0)",
+   "expected": [
+    "0",
+    "1",
+    "1",
+    "3",
+    "1",
+    "2"
+   ],
+   "wrong_outputs": [
+    "0",
+    "1",
+    "1",
+    "4",
+    "2",
+    "3"
+   ]
+  },
+  {
+   "group": "k_trained",
+   "name": "positives_in_first_five",
+   "params": "numbers",
+   "neighbour": "positives_in_first_three",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `positives_in_first_five(numbers)` that returns how many of the first five numbers in the list are greater than zero."
+   },
+   "tests": "assert positives_in_first_five([]) == 0\nassert positives_in_first_five([7]) == 1\nassert positives_in_first_five([5]) == 1\nassert positives_in_first_five([19, 12, -7, 10]) == 3\nassert positives_in_first_five([3, 7, -8, 2, 17]) == 4\nassert positives_in_first_five([14, 12, -5, -6, 7]) == 3",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      7
+     ]
+    ],
+    [
+     [
+      5
+     ]
+    ],
+    [
+     [
+      19,
+      12,
+      -7,
+      10
+     ]
+    ],
+    [
+     [
+      3,
+      7,
+      -8,
+      2,
+      17
+     ]
+    ],
+    [
+     [
+      14,
+      12,
+      -5,
+      -6,
+      7
+     ]
+    ]
+   ],
+   "reference": "def positives_in_first_five(numbers):\n    return sum(1 for x in numbers[:5] if x > 0)",
+   "wrong": "def positives_in_first_five(numbers):\n    return sum(1 for x in numbers[:3] if x > 0)",
+   "expected": [
+    "0",
+    "1",
+    "1",
+    "3",
+    "4",
+    "3"
+   ],
+   "wrong_outputs": [
+    "0",
+    "1",
+    "1",
+    "2",
+    "2",
+    "2"
+   ]
+  },
+  {
+   "group": "k_trained",
+   "name": "last_two_reversed",
+   "params": "items",
+   "neighbour": "last_three_reversed",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `last_two_reversed(items)` that returns the last two items of the list in reverse order, the last item first (all of them if the list is shorter)."
+   },
+   "tests": "assert last_two_reversed([]) == []\nassert last_two_reversed([8]) == [8]\nassert last_two_reversed([20]) == [20]\nassert last_two_reversed([18, 18, 14, 1]) == [1, 14]\nassert last_two_reversed([-2, 3, -9, -8]) == [-8, -9]\nassert last_two_reversed([17, 9, -6, 8, -3]) == [-3, 8]",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      8
+     ]
+    ],
+    [
+     [
+      20
+     ]
+    ],
+    [
+     [
+      18,
+      18,
+      14,
+      1
+     ]
+    ],
+    [
+     [
+      -2,
+      3,
+      -9,
+      -8
+     ]
+    ],
+    [
+     [
+      17,
+      9,
+      -6,
+      8,
+      -3
+     ]
+    ]
+   ],
+   "reference": "def last_two_reversed(items):\n    return items[::-1][:2]",
+   "wrong": "def last_two_reversed(items):\n    return items[::-1][:3]",
+   "expected": [
+    "[]",
+    "[8]",
+    "[20]",
+    "[1, 14]",
+    "[-8, -9]",
+    "[-3, 8]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[8]",
+    "[20]",
+    "[1, 14, 18]",
+    "[-8, -9, 3]",
+    "[-3, 8, -6]"
+   ]
+  },
+  {
+   "group": "k_trained",
+   "name": "last_three_reversed",
+   "params": "items",
+   "neighbour": "last_two_reversed",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `last_three_reversed(items)` that returns the last three items of the list in reverse order, the last item first (all of them if the list is shorter)."
+   },
+   "tests": "assert last_three_reversed([]) == []\nassert last_three_reversed([1]) == [1]\nassert last_three_reversed([2]) == [2]\nassert last_three_reversed([9, 17, -9, 6]) == [6, -9, 17]\nassert last_three_reversed([6, -1, 3, 13]) == [13, 3, -1]\nassert last_three_reversed([10, 13, -3, 4]) == [4, -3, 13]",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      1
+     ]
+    ],
+    [
+     [
+      2
+     ]
+    ],
+    [
+     [
+      9,
+      17,
+      -9,
+      6
+     ]
+    ],
+    [
+     [
+      6,
+      -1,
+      3,
+      13
+     ]
+    ],
+    [
+     [
+      10,
+      13,
+      -3,
+      4
+     ]
+    ]
+   ],
+   "reference": "def last_three_reversed(items):\n    return items[::-1][:3]",
+   "wrong": "def last_three_reversed(items):\n    return items[::-1][:2]",
+   "expected": [
+    "[]",
+    "[1]",
+    "[2]",
+    "[6, -9, 17]",
+    "[13, 3, -1]",
+    "[4, -3, 13]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[1]",
+    "[2]",
+    "[6, -9]",
+    "[13, 3]",
+    "[4, -3]"
+   ]
+  },
+  {
+   "group": "k_trained",
+   "name": "last_four_reversed",
+   "params": "items",
+   "neighbour": "last_two_reversed",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `last_four_reversed(items)` that returns the last four items of the list in reverse order, the last item first (all of them if the list is shorter)."
+   },
+   "tests": "assert last_four_reversed([]) == []\nassert last_four_reversed([9]) == [9]\nassert last_four_reversed([4]) == [4]\nassert last_four_reversed([18, -6, 8, 8]) == [8, 8, -6, 18]\nassert last_four_reversed([18, 15, 8, 2]) == [2, 8, 15, 18]\nassert last_four_reversed([-6, 5, 5, -3]) == [-3, 5, 5, -6]",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      9
+     ]
+    ],
+    [
+     [
+      4
+     ]
+    ],
+    [
+     [
+      18,
+      -6,
+      8,
+      8
+     ]
+    ],
+    [
+     [
+      18,
+      15,
+      8,
+      2
+     ]
+    ],
+    [
+     [
+      -6,
+      5,
+      5,
+      -3
+     ]
+    ]
+   ],
+   "reference": "def last_four_reversed(items):\n    return items[::-1][:4]",
+   "wrong": "def last_four_reversed(items):\n    return items[::-1][:2]",
+   "expected": [
+    "[]",
+    "[9]",
+    "[4]",
+    "[8, 8, -6, 18]",
+    "[2, 8, 15, 18]",
+    "[-3, 5, 5, -6]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[9]",
+    "[4]",
+    "[8, 8]",
+    "[2, 8]",
+    "[-3, 5]"
+   ]
+  },
+  {
+   "group": "k_trained",
+   "name": "neighbour_pairs_above_0",
+   "params": "numbers",
+   "neighbour": "neighbour_pairs_above_10",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `neighbour_pairs_above_0(numbers)` that returns how many pairs of neighbouring numbers add up to more than 0."
+   },
+   "tests": "assert neighbour_pairs_above_0([]) == 0\nassert neighbour_pairs_above_0([2]) == 0\nassert neighbour_pairs_above_0([4]) == 0\nassert neighbour_pairs_above_0([10, 3, 13, -5]) == 3\nassert neighbour_pairs_above_0([16, -5, -1, 1]) == 1\nassert neighbour_pairs_above_0([19, 16, 10, 18]) == 3",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      2
+     ]
+    ],
+    [
+     [
+      4
+     ]
+    ],
+    [
+     [
+      10,
+      3,
+      13,
+      -5
+     ]
+    ],
+    [
+     [
+      16,
+      -5,
+      -1,
+      1
+     ]
+    ],
+    [
+     [
+      19,
+      16,
+      10,
+      18
+     ]
+    ]
+   ],
+   "reference": "def neighbour_pairs_above_0(numbers):\n    return sum(1 for a, b in zip(numbers, numbers[1:]) if a + b > 0)",
+   "wrong": "def neighbour_pairs_above_0(numbers):\n    return sum(1 for a, b in zip(numbers, numbers[1:]) if a + b > 10)",
+   "expected": [
+    "0",
+    "0",
+    "0",
+    "3",
+    "1",
+    "3"
+   ],
+   "wrong_outputs": [
+    "0",
+    "0",
+    "0",
+    "2",
+    "1",
+    "3"
+   ]
+  },
+  {
+   "group": "k_trained",
+   "name": "neighbour_pairs_above_10",
+   "params": "numbers",
+   "neighbour": "neighbour_pairs_above_0",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `neighbour_pairs_above_10(numbers)` that returns how many pairs of neighbouring numbers add up to more than 10."
+   },
+   "tests": "assert neighbour_pairs_above_10([]) == 0\nassert neighbour_pairs_above_10([0]) == 0\nassert neighbour_pairs_above_10([10]) == 0\nassert neighbour_pairs_above_10([13, 4, 17, 8, 0]) == 3\nassert neighbour_pairs_above_10([-7, -6, -1, 6, 5]) == 1\nassert neighbour_pairs_above_10([-4, 12, -9, 9, 0]) == 0",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      0
+     ]
+    ],
+    [
+     [
+      10
+     ]
+    ],
+    [
+     [
+      13,
+      4,
+      17,
+      8,
+      0
+     ]
+    ],
+    [
+     [
+      -7,
+      -6,
+      -1,
+      6,
+      5
+     ]
+    ],
+    [
+     [
+      -4,
+      12,
+      -9,
+      9,
+      0
+     ]
+    ]
+   ],
+   "reference": "def neighbour_pairs_above_10(numbers):\n    return sum(1 for a, b in zip(numbers, numbers[1:]) if a + b > 10)",
+   "wrong": "def neighbour_pairs_above_10(numbers):\n    return sum(1 for a, b in zip(numbers, numbers[1:]) if a + b > 0)",
+   "expected": [
+    "0",
+    "0",
+    "0",
+    "3",
+    "1",
+    "0"
+   ],
+   "wrong_outputs": [
+    "0",
+    "0",
+    "0",
+    "4",
+    "2",
+    "3"
+   ]
+  },
+  {
+   "group": "k_trained",
+   "name": "sum_every_three",
+   "params": "numbers",
+   "neighbour": "sum_every_four",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `sum_every_three(numbers)` that returns the sum of the numbers at positions 0, 3, 2 * 3, ... of the list."
+   },
+   "tests": "assert sum_every_three([]) == 0\nassert sum_every_three([1]) == 1\nassert sum_every_three([3]) == 3\nassert sum_every_three([17, 8, 20, 6, 18]) == 23\nassert sum_every_three([-7, -1, 20, 2, 3]) == -5\nassert sum_every_three([3, 5, -6, 18, -5]) == 21",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      1
+     ]
+    ],
+    [
+     [
+      3
+     ]
+    ],
+    [
+     [
+      17,
+      8,
+      20,
+      6,
+      18
+     ]
+    ],
+    [
+     [
+      -7,
+      -1,
+      20,
+      2,
+      3
+     ]
+    ],
+    [
+     [
+      3,
+      5,
+      -6,
+      18,
+      -5
+     ]
+    ]
+   ],
+   "reference": "def sum_every_three(numbers):\n    return sum(numbers[::3])",
+   "wrong": "def sum_every_three(numbers):\n    return sum(numbers[::4])",
+   "expected": [
+    "0",
+    "1",
+    "3",
+    "23",
+    "-5",
+    "21"
+   ],
+   "wrong_outputs": [
+    "0",
+    "1",
+    "3",
+    "35",
+    "-4",
+    "-2"
+   ]
+  },
+  {
+   "group": "k_trained",
+   "name": "sum_every_four",
+   "params": "numbers",
+   "neighbour": "sum_every_three",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `sum_every_four(numbers)` that returns the sum of the numbers at positions 0, 4, 2 * 4, ... of the list."
+   },
+   "tests": "assert sum_every_four([]) == 0\nassert sum_every_four([7]) == 7\nassert sum_every_four([2]) == 2\nassert sum_every_four([10, 5, -4, 9, 19]) == 29\nassert sum_every_four([11, 10, 1, 3, 10]) == 21\nassert sum_every_four([7, -2, 8, 14, -2]) == 5",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      7
+     ]
+    ],
+    [
+     [
+      2
+     ]
+    ],
+    [
+     [
+      10,
+      5,
+      -4,
+      9,
+      19
+     ]
+    ],
+    [
+     [
+      11,
+      10,
+      1,
+      3,
+      10
+     ]
+    ],
+    [
+     [
+      7,
+      -2,
+      8,
+      14,
+      -2
+     ]
+    ]
+   ],
+   "reference": "def sum_every_four(numbers):\n    return sum(numbers[::4])",
+   "wrong": "def sum_every_four(numbers):\n    return sum(numbers[::3])",
+   "expected": [
+    "0",
+    "7",
+    "2",
+    "29",
+    "21",
+    "5"
+   ],
+   "wrong_outputs": [
+    "0",
+    "7",
+    "2",
+    "19",
+    "14",
+    "21"
+   ]
+  },
+  {
+   "group": "k_trained",
+   "name": "rotate_left_one",
+   "params": "items",
+   "neighbour": "rotate_left_two",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `rotate_left_one(items)` that returns the list rotated left by one step(s): each step moves the first item to the end (an empty list stays empty)."
+   },
+   "tests": "assert rotate_left_one([]) == []\nassert rotate_left_one([4]) == [4]\nassert rotate_left_one([-6]) == [-6]\nassert rotate_left_one([5, 20, 0, -7, 12]) == [20, 0, -7, 12, 5]\nassert rotate_left_one([-1, 9, 6, -3, 10]) == [9, 6, -3, 10, -1]\nassert rotate_left_one([-2, -7, 18, 10, 1]) == [-7, 18, 10, 1, -2]",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      4
+     ]
+    ],
+    [
+     [
+      -6
+     ]
+    ],
+    [
+     [
+      5,
+      20,
+      0,
+      -7,
+      12
+     ]
+    ],
+    [
+     [
+      -1,
+      9,
+      6,
+      -3,
+      10
+     ]
+    ],
+    [
+     [
+      -2,
+      -7,
+      18,
+      10,
+      1
+     ]
+    ]
+   ],
+   "reference": "def rotate_left_one(items):\n    if not items:\n        return []\n    k = 1 % len(items)\n    return items[k:] + items[:k]",
+   "wrong": "def rotate_left_one(items):\n    if not items:\n        return []\n    k = 2 % len(items)\n    return items[k:] + items[:k]",
+   "expected": [
+    "[]",
+    "[4]",
+    "[-6]",
+    "[20, 0, -7, 12, 5]",
+    "[9, 6, -3, 10, -1]",
+    "[-7, 18, 10, 1, -2]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[4]",
+    "[-6]",
+    "[0, -7, 12, 5, 20]",
+    "[6, -3, 10, -1, 9]",
+    "[18, 10, 1, -2, -7]"
+   ]
+  },
+  {
+   "group": "k_trained",
+   "name": "rotate_left_two",
+   "params": "items",
+   "neighbour": "rotate_left_one",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `rotate_left_two(items)` that returns the list rotated left by two step(s): each step moves the first item to the end (an empty list stays empty)."
+   },
+   "tests": "assert rotate_left_two([]) == []\nassert rotate_left_two([1]) == [1]\nassert rotate_left_two([-3]) == [-3]\nassert rotate_left_two([-7, 10, 9, 0]) == [9, 0, -7, 10]\nassert rotate_left_two([16, 8, 10, 9]) == [10, 9, 16, 8]\nassert rotate_left_two([6, 5, -4, 18]) == [-4, 18, 6, 5]",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      1
+     ]
+    ],
+    [
+     [
+      -3
+     ]
+    ],
+    [
+     [
+      -7,
+      10,
+      9,
+      0
+     ]
+    ],
+    [
+     [
+      16,
+      8,
+      10,
+      9
+     ]
+    ],
+    [
+     [
+      6,
+      5,
+      -4,
+      18
+     ]
+    ]
+   ],
+   "reference": "def rotate_left_two(items):\n    if not items:\n        return []\n    k = 2 % len(items)\n    return items[k:] + items[:k]",
+   "wrong": "def rotate_left_two(items):\n    if not items:\n        return []\n    k = 1 % len(items)\n    return items[k:] + items[:k]",
+   "expected": [
+    "[]",
+    "[1]",
+    "[-3]",
+    "[9, 0, -7, 10]",
+    "[10, 9, 16, 8]",
+    "[-4, 18, 6, 5]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[1]",
+    "[-3]",
+    "[10, 9, 0, -7]",
+    "[8, 10, 9, 16]",
+    "[5, -4, 18, 6]"
+   ]
+  },
+  {
+   "group": "k_trained",
+   "name": "rotate_left_three",
+   "params": "items",
+   "neighbour": "rotate_left_one",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `rotate_left_three(items)` that returns the list rotated left by three step(s): each step moves the first item to the end (an empty list stays empty)."
+   },
+   "tests": "assert rotate_left_three([]) == []\nassert rotate_left_three([8]) == [8]\nassert rotate_left_three([-9]) == [-9]\nassert rotate_left_three([5, 18, 19, 1]) == [1, 5, 18, 19]\nassert rotate_left_three([11, -9, 6, 14]) == [14, 11, -9, 6]\nassert rotate_left_three([14, 17, -5, 1]) == [1, 14, 17, -5]",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      8
+     ]
+    ],
+    [
+     [
+      -9
+     ]
+    ],
+    [
+     [
+      5,
+      18,
+      19,
+      1
+     ]
+    ],
+    [
+     [
+      11,
+      -9,
+      6,
+      14
+     ]
+    ],
+    [
+     [
+      14,
+      17,
+      -5,
+      1
+     ]
+    ]
+   ],
+   "reference": "def rotate_left_three(items):\n    if not items:\n        return []\n    k = 3 % len(items)\n    return items[k:] + items[:k]",
+   "wrong": "def rotate_left_three(items):\n    if not items:\n        return []\n    k = 1 % len(items)\n    return items[k:] + items[:k]",
+   "expected": [
+    "[]",
+    "[8]",
+    "[-9]",
+    "[1, 5, 18, 19]",
+    "[14, 11, -9, 6]",
+    "[1, 14, 17, -5]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[8]",
+    "[-9]",
+    "[18, 19, 1, 5]",
+    "[-9, 6, 14, 11]",
+    "[17, -5, 1, 14]"
+   ]
+  },
+  {
+   "group": "k_trained",
+   "name": "sums_of_groups_of_two",
+   "params": "numbers",
+   "neighbour": "sums_of_groups_of_three",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `sums_of_groups_of_two(numbers)` that returns the sums of consecutive groups of two numbers of the list (the last group may be shorter)."
+   },
+   "tests": "assert sums_of_groups_of_two([]) == []\nassert sums_of_groups_of_two([6]) == [6]\nassert sums_of_groups_of_two([3]) == [3]\nassert sums_of_groups_of_two([13, 16, -5, -8]) == [29, -13]\nassert sums_of_groups_of_two([-6, 1, 9, 1, 3]) == [-5, 10, 3]\nassert sums_of_groups_of_two([19, 16, -3, 20]) == [35, 17]",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      6
+     ]
+    ],
+    [
+     [
+      3
+     ]
+    ],
+    [
+     [
+      13,
+      16,
+      -5,
+      -8
+     ]
+    ],
+    [
+     [
+      -6,
+      1,
+      9,
+      1,
+      3
+     ]
+    ],
+    [
+     [
+      19,
+      16,
+      -3,
+      20
+     ]
+    ]
+   ],
+   "reference": "def sums_of_groups_of_two(numbers):\n    return [sum(numbers[i:i + 2]) for i in range(0, len(numbers), 2)]",
+   "wrong": "def sums_of_groups_of_two(numbers):\n    return [sum(numbers[i:i + 3]) for i in range(0, len(numbers), 3)]",
+   "expected": [
+    "[]",
+    "[6]",
+    "[3]",
+    "[29, -13]",
+    "[-5, 10, 3]",
+    "[35, 17]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[6]",
+    "[3]",
+    "[24, -8]",
+    "[4, 4]",
+    "[32, 20]"
+   ]
+  },
+  {
+   "group": "k_trained",
+   "name": "sums_of_groups_of_three",
+   "params": "numbers",
+   "neighbour": "sums_of_groups_of_two",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `sums_of_groups_of_three(numbers)` that returns the sums of consecutive groups of three numbers of the list (the last group may be shorter)."
+   },
+   "tests": "assert sums_of_groups_of_three([]) == []\nassert sums_of_groups_of_three([1]) == [1]\nassert sums_of_groups_of_three([-6]) == [-6]\nassert sums_of_groups_of_three([18, 10, 16, 9]) == [44, 9]\nassert sums_of_groups_of_three([16, -5, -1, 19]) == [10, 19]\nassert sums_of_groups_of_three([0, 1, 4, -8, -8]) == [5, -16]",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      1
+     ]
+    ],
+    [
+     [
+      -6
+     ]
+    ],
+    [
+     [
+      18,
+      10,
+      16,
+      9
+     ]
+    ],
+    [
+     [
+      16,
+      -5,
+      -1,
+      19
+     ]
+    ],
+    [
+     [
+      0,
+      1,
+      4,
+      -8,
+      -8
+     ]
+    ]
+   ],
+   "reference": "def sums_of_groups_of_three(numbers):\n    return [sum(numbers[i:i + 3]) for i in range(0, len(numbers), 3)]",
+   "wrong": "def sums_of_groups_of_three(numbers):\n    return [sum(numbers[i:i + 2]) for i in range(0, len(numbers), 2)]",
+   "expected": [
+    "[]",
+    "[1]",
+    "[-6]",
+    "[44, 9]",
+    "[10, 19]",
+    "[5, -16]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[1]",
+    "[-6]",
+    "[28, 25]",
+    "[11, 18]",
+    "[1, -4, -8]"
+   ]
+  },
+  {
+   "group": "k_trained",
+   "name": "digits_above_4",
+   "params": "n",
+   "neighbour": "digits_above_7",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `digits_above_4(n)` that returns how many digits of the non-negative integer n are greater than 4."
+   },
+   "tests": "assert digits_above_4(9) == 1\nassert digits_above_4(6) == 1\nassert digits_above_4(0) == 0\nassert digits_above_4(816) == 2\nassert digits_above_4(621) == 1\nassert digits_above_4(838) == 2",
+   "test_inputs": [
+    [
+     9
+    ],
+    [
+     6
+    ],
+    [
+     0
+    ],
+    [
+     816
+    ],
+    [
+     621
+    ],
+    [
+     838
+    ]
+   ],
+   "reference": "def digits_above_4(n):\n    return sum(1 for d in str(n) if int(d) > 4)",
+   "wrong": "def digits_above_4(n):\n    return sum(1 for d in str(n) if int(d) > 7)",
+   "expected": [
+    "1",
+    "1",
+    "0",
+    "2",
+    "1",
+    "2"
+   ],
+   "wrong_outputs": [
+    "1",
+    "0",
+    "0",
+    "1",
+    "0",
+    "2"
+   ]
+  },
+  {
+   "group": "k_trained",
+   "name": "digits_above_5",
+   "params": "n",
+   "neighbour": "digits_above_4",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `digits_above_5(n)` that returns how many digits of the non-negative integer n are greater than 5."
+   },
+   "tests": "assert digits_above_5(3) == 0\nassert digits_above_5(5) == 0\nassert digits_above_5(6) == 1\nassert digits_above_5(785) == 2\nassert digits_above_5(6463) == 2\nassert digits_above_5(6006) == 2",
+   "test_inputs": [
+    [
+     3
+    ],
+    [
+     5
+    ],
+    [
+     6
+    ],
+    [
+     785
+    ],
+    [
+     6463
+    ],
+    [
+     6006
+    ]
+   ],
+   "reference": "def digits_above_5(n):\n    return sum(1 for d in str(n) if int(d) > 5)",
+   "wrong": "def digits_above_5(n):\n    return sum(1 for d in str(n) if int(d) > 4)",
+   "expected": [
+    "0",
+    "0",
+    "1",
+    "2",
+    "2",
+    "2"
+   ],
+   "wrong_outputs": [
+    "0",
+    "1",
+    "1",
+    "3",
+    "2",
+    "2"
+   ]
+  },
+  {
+   "group": "k_trained",
+   "name": "digits_above_7",
+   "params": "n",
+   "neighbour": "digits_above_4",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `digits_above_7(n)` that returns how many digits of the non-negative integer n are greater than 7."
+   },
+   "tests": "assert digits_above_7(8) == 1\nassert digits_above_7(9) == 1\nassert digits_above_7(3) == 0\nassert digits_above_7(533) == 0\nassert digits_above_7(985) == 2\nassert digits_above_7(584) == 1",
+   "test_inputs": [
+    [
+     8
+    ],
+    [
+     9
+    ],
+    [
+     3
+    ],
+    [
+     533
+    ],
+    [
+     985
+    ],
+    [
+     584
+    ]
+   ],
+   "reference": "def digits_above_7(n):\n    return sum(1 for d in str(n) if int(d) > 7)",
+   "wrong": "def digits_above_7(n):\n    return sum(1 for d in str(n) if int(d) > 4)",
+   "expected": [
+    "1",
+    "1",
+    "0",
+    "0",
+    "2",
+    "1"
+   ],
+   "wrong_outputs": [
+    "1",
+    "1",
+    "0",
+    "1",
+    "3",
+    "2"
+   ]
+  },
+  {
+   "group": "k_trained",
+   "name": "words_longer_than_3",
+   "params": "text",
+   "neighbour": "words_longer_than_4",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `words_longer_than_3(text)` that returns a list of the words of text that have more than 3 characters, in order."
+   },
+   "tests": "assert words_longer_than_3('') == []\nassert words_longer_than_3('I') == []\nassert words_longer_than_3('cat') == []\nassert words_longer_than_3('Hat tree Hat zoo') == ['tree']\nassert words_longer_than_3('sky cat kiwi tree') == ['kiwi', 'tree']\nassert words_longer_than_3('Lemon Lemon I sun') == ['Lemon', 'Lemon']",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "I"
+    ],
+    [
+     "cat"
+    ],
+    [
+     "Hat tree Hat zoo"
+    ],
+    [
+     "sky cat kiwi tree"
+    ],
+    [
+     "Lemon Lemon I sun"
+    ]
+   ],
+   "reference": "def words_longer_than_3(text):\n    return [w for w in text.split() if len(w) > 3]",
+   "wrong": "def words_longer_than_3(text):\n    return [w for w in text.split() if len(w) > 4]",
+   "expected": [
+    "[]",
+    "[]",
+    "[]",
+    "['tree']",
+    "['kiwi', 'tree']",
+    "['Lemon', 'Lemon']"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[]",
+    "[]",
+    "[]",
+    "[]",
+    "['Lemon', 'Lemon']"
+   ]
+  },
+  {
+   "group": "k_trained",
+   "name": "words_longer_than_4",
+   "params": "text",
+   "neighbour": "words_longer_than_3",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `words_longer_than_4(text)` that returns a list of the words of text that have more than 4 characters, in order."
+   },
+   "tests": "assert words_longer_than_4('') == []\nassert words_longer_than_4('x') == []\nassert words_longer_than_4('jam') == []\nassert words_longer_than_4('kiwi sky a owl sun') == []\nassert words_longer_than_4('grape kiwi nut ice') == ['grape']\nassert words_longer_than_4('nut a Lemon Banana') == ['Lemon', 'Banana']",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "x"
+    ],
+    [
+     "jam"
+    ],
+    [
+     "kiwi sky a owl sun"
+    ],
+    [
+     "grape kiwi nut ice"
+    ],
+    [
+     "nut a Lemon Banana"
+    ]
+   ],
+   "reference": "def words_longer_than_4(text):\n    return [w for w in text.split() if len(w) > 4]",
+   "wrong": "def words_longer_than_4(text):\n    return [w for w in text.split() if len(w) > 3]",
+   "expected": [
+    "[]",
+    "[]",
+    "[]",
+    "[]",
+    "['grape']",
+    "['Lemon', 'Banana']"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[]",
+    "[]",
+    "['kiwi']",
+    "['grape', 'kiwi']",
+    "['Lemon', 'Banana']"
+   ]
+  },
+  {
+   "group": "k_trained",
+   "name": "shift_by_1",
+   "params": "s",
+   "neighbour": "shift_by_3",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `shift_by_1(s)` that returns s (lower-case letters only) with every letter moved 1 places forward in the alphabet, wrapping around from z to a."
+   },
+   "tests": "assert shift_by_1('') == ''\nassert shift_by_1('s') == 't'\nassert shift_by_1('v') == 'w'\nassert shift_by_1('phxxt') == 'qiyyu'\nassert shift_by_1('zuaoc') == 'avbpd'\nassert shift_by_1('jldtc') == 'kmeud'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "s"
+    ],
+    [
+     "v"
+    ],
+    [
+     "phxxt"
+    ],
+    [
+     "zuaoc"
+    ],
+    [
+     "jldtc"
+    ]
+   ],
+   "reference": "def shift_by_1(s):\n    return ''.join(chr((ord(c) - ord('a') + 1) % 26 + ord('a')) for c in s)",
+   "wrong": "def shift_by_1(s):\n    return ''.join(chr((ord(c) - ord('a') + 3) % 26 + ord('a')) for c in s)",
+   "expected": [
+    "''",
+    "'t'",
+    "'w'",
+    "'qiyyu'",
+    "'avbpd'",
+    "'kmeud'"
+   ],
+   "wrong_outputs": [
+    "''",
+    "'v'",
+    "'y'",
+    "'skaaw'",
+    "'cxdrf'",
+    "'mogwf'"
+   ]
+  },
+  {
+   "group": "k_trained",
+   "name": "shift_by_3",
+   "params": "s",
+   "neighbour": "shift_by_1",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `shift_by_3(s)` that returns s (lower-case letters only) with every letter moved 3 places forward in the alphabet, wrapping around from z to a."
+   },
+   "tests": "assert shift_by_3('') == ''\nassert shift_by_3('d') == 'g'\nassert shift_by_3('k') == 'n'\nassert shift_by_3('ximl') == 'alpo'\nassert shift_by_3('bxgji') == 'eajml'\nassert shift_by_3('vocgb') == 'yrfje'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "d"
+    ],
+    [
+     "k"
+    ],
+    [
+     "ximl"
+    ],
+    [
+     "bxgji"
+    ],
+    [
+     "vocgb"
+    ]
+   ],
+   "reference": "def shift_by_3(s):\n    return ''.join(chr((ord(c) - ord('a') + 3) % 26 + ord('a')) for c in s)",
+   "wrong": "def shift_by_3(s):\n    return ''.join(chr((ord(c) - ord('a') + 1) % 26 + ord('a')) for c in s)",
+   "expected": [
+    "''",
+    "'g'",
+    "'n'",
+    "'alpo'",
+    "'eajml'",
+    "'yrfje'"
+   ],
+   "wrong_outputs": [
+    "''",
+    "'e'",
+    "'l'",
+    "'yjnm'",
+    "'cyhkj'",
+    "'wpdhc'"
+   ]
+  },
+  {
+   "group": "k_trained",
+   "name": "shift_by_13",
+   "params": "s",
+   "neighbour": "shift_by_1",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `shift_by_13(s)` that returns s (lower-case letters only) with every letter moved 13 places forward in the alphabet, wrapping around from z to a."
+   },
+   "tests": "assert shift_by_13('') == ''\nassert shift_by_13('d') == 'q'\nassert shift_by_13('r') == 'e'\nassert shift_by_13('gcsy') == 'tpfl'\nassert shift_by_13('ciqc') == 'pvdp'\nassert shift_by_13('eypw') == 'rlcj'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "d"
+    ],
+    [
+     "r"
+    ],
+    [
+     "gcsy"
+    ],
+    [
+     "ciqc"
+    ],
+    [
+     "eypw"
+    ]
+   ],
+   "reference": "def shift_by_13(s):\n    return ''.join(chr((ord(c) - ord('a') + 13) % 26 + ord('a')) for c in s)",
+   "wrong": "def shift_by_13(s):\n    return ''.join(chr((ord(c) - ord('a') + 1) % 26 + ord('a')) for c in s)",
+   "expected": [
+    "''",
+    "'q'",
+    "'e'",
+    "'tpfl'",
+    "'pvdp'",
+    "'rlcj'"
+   ],
+   "wrong_outputs": [
+    "''",
+    "'e'",
+    "'s'",
+    "'hdtz'",
+    "'djrd'",
+    "'fzqx'"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,31 @@
+{
+ "name": "R1",
+ "pack": "/home/user/lmwork/v10/ckpt/R1_1301.ypk",
+ "pack_sha256": "eb7ec5951101986951521256ae98ee40e81ef673724058c3c89e7d001d408eb5",
+ "record": "experiments/v10/results/runs/R1/1301",
+ "unpack": {
+  "exit": 0,
+  "tail": "/dev/shm/ycode-verify/R1/model/model.pt\n"
+ },
+ "restored_model_sha256": "f9891c2ef88c1a2aa348d3d21b2c7b36c3eeef45a9559d2611fdef911bc12f9b",
+ "content_sha256": "9909c511043b8a166b4a713e50ad206d84a47cbc927e9ed17bfc9b0e161c6ec3",
+ "unseen": {
+  "items": 53,
+  "identical": 52,
+  "differ": [
+   "write:count_words_longer_than"
+  ],
+  "differ_detail": {
+   "write:count_words_longer_than": {
+    "recorded": "def count_words_longer_than(text, n):\n    count = 0\n    for y in ys:\n        count += 1\n    return count",
+    "recorded_pass": false,
+    "restored": "def count_words_longer_than(text, n):\n    count = 0\n    for c in text.split():\n        if c.isalpha():\n            count += 1\n    return count",
+    "restored_pass": false
+   }
+  },
+  "passes_restored": 3,
+  "passes_recorded": 3
+ },
+ "minutes": 9.8,
+ "verified": false
+}

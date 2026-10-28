@@ -1,0 +1,94 @@
+{
+ "model": "/home/user/lmwork/v6/runs/F/1301/model",
+ "data": "/home/user/lmwork/v6/runs/F/1301/data",
+ "seed": 0,
+ "trained_on": true,
+ "weights_dtype": "bfloat16",
+ "note": null,
+ "train": {
+  "examples": 16,
+  "answer_tokens": 698,
+  "token_loss": 0.3525,
+  "token_loss_ci95": [
+   0.175,
+   0.5578
+  ],
+  "example_loss_mean": 0.3701,
+  "example_loss_sd": 0.4683,
+  "by_kind": {
+   "bugfix": {
+    "examples": 3,
+    "token_loss": 0.0224
+   },
+   "explain": {
+    "examples": 1,
+    "token_loss": 1.6838
+   },
+   "write": {
+    "examples": 12,
+    "token_loss": 0.3935
+   }
+  }
+ },
+ "heldout_rows": {
+  "examples": 16,
+  "answer_tokens": 812,
+  "token_loss": 0.1565,
+  "token_loss_ci95": [
+   0.0482,
+   0.2883
+  ],
+  "example_loss_mean": 0.1544,
+  "example_loss_sd": 0.2469,
+  "by_kind": {
+   "bugfix": {
+    "examples": 9,
+    "token_loss": 0.0254
+   },
+   "write": {
+    "examples": 7,
+    "token_loss": 0.3757
+   }
+  }
+ },
+ "unseen_dev_clean": {
+  "examples": 34,
+  "answer_tokens": 988,
+  "token_loss": 0.1442,
+  "token_loss_ci95": [
+   0.086,
+   0.2122
+  ],
+  "example_loss_mean": 0.1251,
+  "example_loss_sd": 0.1629,
+  "by_kind": {
+   "write": {
+    "examples": 34,
+    "token_loss": 0.1442
+   }
+  },
+  "code_token_loss_plain": 0.1817,
+  "code_token_loss_spec_first": 0.2188
+ },
+ "unseen_new": {
+  "examples": 53,
+  "answer_tokens": 1766,
+  "token_loss": 0.5552,
+  "token_loss_ci95": [
+   0.4921,
+   0.6212
+  ],
+  "example_loss_mean": 0.5417,
+  "example_loss_sd": 0.2415,
+  "by_kind": {
+   "write": {
+    "examples": 53,
+    "token_loss": 0.5552
+   }
+  },
+  "code_token_loss_plain": 0.6771,
+  "code_token_loss_spec_first": 0.6553
+ },
+ "gap_train_to_heldout": -0.196,
+ "gap_heldout_to_unseen": -0.0123
+}

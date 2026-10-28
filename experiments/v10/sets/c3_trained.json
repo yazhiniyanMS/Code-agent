@@ -1,0 +1,5673 @@
+{
+ "version": "c3_trained-v1",
+ "variants": [
+  "original"
+ ],
+ "probes": 40,
+ "tasks": [
+  {
+   "group": "c3_trained",
+   "family": "comp3:bestrun",
+   "name": "best_run_sum_sorted",
+   "params": "numbers",
+   "neighbour": "best_run_sum_steps",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `best_run_sum_sorted(numbers)` that returns the largest sum of a stretch of one or more neighbouring values of the list sorted from smallest to largest (None if there are none)."
+   },
+   "tests": "assert best_run_sum_sorted([]) == None\nassert best_run_sum_sorted([10]) == 10\nassert best_run_sum_sorted([19]) == 19\nassert best_run_sum_sorted([2, 4, -4, -8]) == 6\nassert best_run_sum_sorted([20, 8, 13, 16]) == 57\nassert best_run_sum_sorted([-8, 16, 20, 8]) == 44",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      10
+     ]
+    ],
+    [
+     [
+      19
+     ]
+    ],
+    [
+     [
+      2,
+      4,
+      -4,
+      -8
+     ]
+    ],
+    [
+     [
+      20,
+      8,
+      13,
+      16
+     ]
+    ],
+    [
+     [
+      -8,
+      16,
+      20,
+      8
+     ]
+    ]
+   ],
+   "reference": "def best_run_sum_sorted(numbers):\n    xs = numbers\n    ys = sorted(xs)\n    if not ys:\n        return None\n    best = cur = ys[0]\n    for y in ys[1:]:\n        cur = max(y, cur + y)\n        best = max(best, cur)\n    return best",
+   "wrong": "def best_run_sum_sorted(numbers):\n    xs = numbers\n    ys = [b - a for a, b in zip(xs, xs[1:])]\n    if not ys:\n        return None\n    best = cur = ys[0]\n    for y in ys[1:]:\n        cur = max(y, cur + y)\n        best = max(best, cur)\n    return best",
+   "expected": [
+    "None",
+    "10",
+    "19",
+    "6",
+    "57",
+    "44"
+   ],
+   "wrong_outputs": [
+    "None",
+    "None",
+    "None",
+    "2",
+    "8",
+    "28"
+   ],
+   "probe_args": [
+    "([15, 19, 4, -8, -1, 7],)",
+    "([20, 16, 17, 0, 6, 2],)",
+    "([7, -5, 0],)",
+    "([10],)",
+    "([20, 8, 13, 16],)",
+    "([0, -6],)",
+    "([19],)",
+    "([6, 8, -6, 2, 4],)",
+    "([8, 6, 5],)",
+    "([-8, 16, 20, 8],)",
+    "([14],)",
+    "([13, 17, 16, 12, 11, -9],)",
+    "([17, 18, 1, -2, 14, 1, 13],)",
+    "([-3],)",
+    "([-2, 16, -5],)",
+    "([-7, -7, 1, 19, 7, 20, 6],)",
+    "([8, 0, 13, -6],)",
+    "([17, 20, 8, -3, 16],)",
+    "([5, -7, 10, 16],)",
+    "([9, -2, 0, -4, -3],)",
+    "([-8, 10],)",
+    "([6, -7, -7, 12],)",
+    "([19, -5],)",
+    "([17, 13, 7, -1, 7, 16],)",
+    "([19, 12, 9],)",
+    "([9, -1, 5, 6, 12, 11],)",
+    "([-7, 1, 10, -6, 6],)",
+    "([18, -3, -2, -9, 14],)",
+    "([13],)",
+    "([16, -4, 1, 4, 17],)",
+    "([16],)",
+    "([-8, 17, 9],)",
+    "([-9],)",
+    "([10, 17, 9],)",
+    "([-7, 2, 17, -6, -8, 10],)",
+    "([-4, 13, -6],)",
+    "([14, 16, -8],)",
+    "([],)",
+    "([10, -6, 17, -1, -7, -2],)",
+    "([2, 4, -4, -8],)"
+   ],
+   "probe_expected": [
+    "45",
+    "61",
+    "7",
+    "10",
+    "57",
+    "0",
+    "19",
+    "20",
+    "19",
+    "44",
+    "14",
+    "69",
+    "64",
+    "-3",
+    "16",
+    "53",
+    "21",
+    "61",
+    "31",
+    "9",
+    "10",
+    "18",
+    "19",
+    "60",
+    "40",
+    "43",
+    "17",
+    "32",
+    "13",
+    "38",
+    "16",
+    "26",
+    "-9",
+    "36",
+    "29",
+    "13",
+    "30",
+    "None",
+    "27",
+    "6"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:records",
+   "name": "records_steps",
+   "params": "numbers",
+   "neighbour": "records_pair_maxima",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `records_steps(numbers)` that returns how many of the differences between neighbouring values of the list (each minus the one before it) are larger than every value before them."
+   },
+   "tests": "assert records_steps([]) == 0\nassert records_steps([10]) == 0\nassert records_steps([19]) == 0\nassert records_steps([2, 4, -4, -8]) == 1\nassert records_steps([20, 8, 13, 16]) == 2\nassert records_steps([-8, 16, 20, 8]) == 1",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      10
+     ]
+    ],
+    [
+     [
+      19
+     ]
+    ],
+    [
+     [
+      2,
+      4,
+      -4,
+      -8
+     ]
+    ],
+    [
+     [
+      20,
+      8,
+      13,
+      16
+     ]
+    ],
+    [
+     [
+      -8,
+      16,
+      20,
+      8
+     ]
+    ]
+   ],
+   "reference": "def records_steps(numbers):\n    xs = numbers\n    ys = [b - a for a, b in zip(xs, xs[1:])]\n    return sum(1 for i, y in enumerate(ys) if all(y > z for z in ys[:i]))",
+   "wrong": "def records_steps(numbers):\n    xs = numbers\n    ys = [max(a, b) for a, b in zip(xs, xs[1:])]\n    return sum(1 for i, y in enumerate(ys) if all(y > z for z in ys[:i]))",
+   "expected": [
+    "0",
+    "0",
+    "0",
+    "1",
+    "2",
+    "1"
+   ],
+   "wrong_outputs": [
+    "0",
+    "0",
+    "0",
+    "1",
+    "1",
+    "2"
+   ],
+   "probe_args": [
+    "([15, 19, 4, -8, -1, 7],)",
+    "([20, 16, 17, 0, 6, 2],)",
+    "([7, -5, 0],)",
+    "([10],)",
+    "([20, 8, 13, 16],)",
+    "([0, -6],)",
+    "([19],)",
+    "([6, 8, -6, 2, 4],)",
+    "([8, 6, 5],)",
+    "([-8, 16, 20, 8],)",
+    "([14],)",
+    "([13, 17, 16, 12, 11, -9],)",
+    "([17, 18, 1, -2, 14, 1, 13],)",
+    "([-3],)",
+    "([-2, 16, -5],)",
+    "([-7, -7, 1, 19, 7, 20, 6],)",
+    "([8, 0, 13, -6],)",
+    "([17, 20, 8, -3, 16],)",
+    "([5, -7, 10, 16],)",
+    "([9, -2, 0, -4, -3],)",
+    "([-8, 10],)",
+    "([6, -7, -7, 12],)",
+    "([19, -5],)",
+    "([17, 13, 7, -1, 7, 16],)",
+    "([19, 12, 9],)",
+    "([9, -1, 5, 6, 12, 11],)",
+    "([-7, 1, 10, -6, 6],)",
+    "([18, -3, -2, -9, 14],)",
+    "([13],)",
+    "([16, -4, 1, 4, 17],)",
+    "([16],)",
+    "([-8, 17, 9],)",
+    "([-9],)",
+    "([10, 17, 9],)",
+    "([-7, 2, 17, -6, -8, 10],)",
+    "([-4, 13, -6],)",
+    "([14, 16, -8],)",
+    "([],)",
+    "([10, -6, 17, -1, -7, -2],)",
+    "([2, 4, -4, -8],)"
+   ],
+   "probe_expected": [
+    "3",
+    "3",
+    "2",
+    "0",
+    "2",
+    "1",
+    "0",
+    "2",
+    "2",
+    "1",
+    "0",
+    "1",
+    "2",
+    "0",
+    "1",
+    "3",
+    "2",
+    "2",
+    "2",
+    "2",
+    "1",
+    "3",
+    "1",
+    "3",
+    "2",
+    "2",
+    "3",
+    "3",
+    "0",
+    "3",
+    "0",
+    "1",
+    "0",
+    "1",
+    "3",
+    "1",
+    "1",
+    "0",
+    "2",
+    "1"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:list",
+   "name": "list_leaders",
+   "params": "numbers",
+   "neighbour": "list_run_lengths",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `list_leaders(numbers)` that returns a list of the values of the list that are larger than every value after them."
+   },
+   "tests": "assert list_leaders([]) == []\nassert list_leaders([10]) == [10]\nassert list_leaders([19]) == [19]\nassert list_leaders([2, 4, -4, -8]) == [4, -4, -8]\nassert list_leaders([20, 8, 13, 16]) == [20, 16]\nassert list_leaders([-8, 16, 20, 8]) == [20, 8]",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      10
+     ]
+    ],
+    [
+     [
+      19
+     ]
+    ],
+    [
+     [
+      2,
+      4,
+      -4,
+      -8
+     ]
+    ],
+    [
+     [
+      20,
+      8,
+      13,
+      16
+     ]
+    ],
+    [
+     [
+      -8,
+      16,
+      20,
+      8
+     ]
+    ]
+   ],
+   "reference": "def list_leaders(numbers):\n    xs = numbers\n    ys = [x for i, x in enumerate(xs) if all(x > y for y in xs[i + 1:])]\n    return list(ys)",
+   "wrong": "def list_leaders(numbers):\n    xs = []\n    for i, x in enumerate(numbers):\n        if i > 0 and x == numbers[i - 1]:\n            xs[-1] += 1\n        else:\n            xs.append(1)\n    ys = xs\n    return list(ys)",
+   "expected": [
+    "[]",
+    "[10]",
+    "[19]",
+    "[4, -4, -8]",
+    "[20, 16]",
+    "[20, 8]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[1]",
+    "[1]",
+    "[1, 1, 1, 1]",
+    "[1, 1, 1, 1]",
+    "[1, 1, 1, 1]"
+   ],
+   "probe_args": [
+    "([15, 19, 4, -8, -1, 7],)",
+    "([20, 16, 17, 0, 6, 2],)",
+    "([7, -5, 0],)",
+    "([10],)",
+    "([20, 8, 13, 16],)",
+    "([0, -6],)",
+    "([19],)",
+    "([6, 8, -6, 2, 4],)",
+    "([8, 6, 5],)",
+    "([-8, 16, 20, 8],)",
+    "([14],)",
+    "([13, 17, 16, 12, 11, -9],)",
+    "([17, 18, 1, -2, 14, 1, 13],)",
+    "([-3],)",
+    "([-2, 16, -5],)",
+    "([-7, -7, 1, 19, 7, 20, 6],)",
+    "([8, 0, 13, -6],)",
+    "([17, 20, 8, -3, 16],)",
+    "([5, -7, 10, 16],)",
+    "([9, -2, 0, -4, -3],)",
+    "([-8, 10],)",
+    "([6, -7, -7, 12],)",
+    "([19, -5],)",
+    "([17, 13, 7, -1, 7, 16],)",
+    "([19, 12, 9],)",
+    "([9, -1, 5, 6, 12, 11],)",
+    "([-7, 1, 10, -6, 6],)",
+    "([18, -3, -2, -9, 14],)",
+    "([13],)",
+    "([16, -4, 1, 4, 17],)",
+    "([16],)",
+    "([-8, 17, 9],)",
+    "([-9],)",
+    "([10, 17, 9],)",
+    "([-7, 2, 17, -6, -8, 10],)",
+    "([-4, 13, -6],)",
+    "([14, 16, -8],)",
+    "([],)",
+    "([10, -6, 17, -1, -7, -2],)",
+    "([2, 4, -4, -8],)"
+   ],
+   "probe_expected": [
+    "[19, 7]",
+    "[20, 17, 6, 2]",
+    "[7, 0]",
+    "[10]",
+    "[20, 16]",
+    "[0, -6]",
+    "[19]",
+    "[8, 4]",
+    "[8, 6, 5]",
+    "[20, 8]",
+    "[14]",
+    "[17, 16, 12, 11, -9]",
+    "[18, 14, 13]",
+    "[-3]",
+    "[16, -5]",
+    "[20, 6]",
+    "[13, -6]",
+    "[20, 16]",
+    "[16]",
+    "[9, 0, -3]",
+    "[10]",
+    "[12]",
+    "[19, -5]",
+    "[17, 16]",
+    "[19, 12, 9]",
+    "[12, 11]",
+    "[10, 6]",
+    "[18, 14]",
+    "[13]",
+    "[17]",
+    "[16]",
+    "[17, 9]",
+    "[-9]",
+    "[17, 9]",
+    "[17, 10]",
+    "[13, -6]",
+    "[16, -8]",
+    "[]",
+    "[17, -1, -2]",
+    "[4, -4, -8]"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:last",
+   "name": "last_after_first",
+   "params": "numbers",
+   "neighbour": "last_steps",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `last_after_first(numbers)` that returns the last of the values of the list after the first one (None if there are none)."
+   },
+   "tests": "assert last_after_first([]) == None\nassert last_after_first([10]) == None\nassert last_after_first([19]) == None\nassert last_after_first([2, 4, -4, -8]) == -8\nassert last_after_first([20, 8, 13, 16]) == 16\nassert last_after_first([-8, 16, 20, 8]) == 8",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      10
+     ]
+    ],
+    [
+     [
+      19
+     ]
+    ],
+    [
+     [
+      2,
+      4,
+      -4,
+      -8
+     ]
+    ],
+    [
+     [
+      20,
+      8,
+      13,
+      16
+     ]
+    ],
+    [
+     [
+      -8,
+      16,
+      20,
+      8
+     ]
+    ]
+   ],
+   "reference": "def last_after_first(numbers):\n    xs = numbers\n    ys = xs[1:]\n    return ys[-1] if ys else None",
+   "wrong": "def last_after_first(numbers):\n    xs = numbers\n    ys = [b - a for a, b in zip(xs, xs[1:])]\n    return ys[-1] if ys else None",
+   "expected": [
+    "None",
+    "None",
+    "None",
+    "-8",
+    "16",
+    "8"
+   ],
+   "wrong_outputs": [
+    "None",
+    "None",
+    "None",
+    "-4",
+    "3",
+    "-12"
+   ],
+   "probe_args": [
+    "([15, 19, 4, -8, -1, 7],)",
+    "([20, 16, 17, 0, 6, 2],)",
+    "([7, -5, 0],)",
+    "([10],)",
+    "([20, 8, 13, 16],)",
+    "([0, -6],)",
+    "([19],)",
+    "([6, 8, -6, 2, 4],)",
+    "([8, 6, 5],)",
+    "([-8, 16, 20, 8],)",
+    "([14],)",
+    "([13, 17, 16, 12, 11, -9],)",
+    "([17, 18, 1, -2, 14, 1, 13],)",
+    "([-3],)",
+    "([-2, 16, -5],)",
+    "([-7, -7, 1, 19, 7, 20, 6],)",
+    "([8, 0, 13, -6],)",
+    "([17, 20, 8, -3, 16],)",
+    "([5, -7, 10, 16],)",
+    "([9, -2, 0, -4, -3],)",
+    "([-8, 10],)",
+    "([6, -7, -7, 12],)",
+    "([19, -5],)",
+    "([17, 13, 7, -1, 7, 16],)",
+    "([19, 12, 9],)",
+    "([9, -1, 5, 6, 12, 11],)",
+    "([-7, 1, 10, -6, 6],)",
+    "([18, -3, -2, -9, 14],)",
+    "([13],)",
+    "([16, -4, 1, 4, 17],)",
+    "([16],)",
+    "([-8, 17, 9],)",
+    "([-9],)",
+    "([10, 17, 9],)",
+    "([-7, 2, 17, -6, -8, 10],)",
+    "([-4, 13, -6],)",
+    "([14, 16, -8],)",
+    "([],)",
+    "([10, -6, 17, -1, -7, -2],)",
+    "([2, 4, -4, -8],)"
+   ],
+   "probe_expected": [
+    "7",
+    "2",
+    "0",
+    "None",
+    "16",
+    "-6",
+    "None",
+    "4",
+    "5",
+    "8",
+    "None",
+    "-9",
+    "13",
+    "None",
+    "-5",
+    "6",
+    "-6",
+    "16",
+    "16",
+    "-3",
+    "10",
+    "12",
+    "-5",
+    "16",
+    "9",
+    "11",
+    "6",
+    "14",
+    "None",
+    "17",
+    "None",
+    "9",
+    "None",
+    "9",
+    "10",
+    "-6",
+    "-8",
+    "None",
+    "-2",
+    "-8"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:sum",
+   "name": "sum_pair_maxima",
+   "params": "numbers",
+   "neighbour": "sum_steps",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `sum_pair_maxima(numbers)` that returns the sum of the larger value of each neighbouring pair of the list."
+   },
+   "tests": "assert sum_pair_maxima([]) == 0\nassert sum_pair_maxima([10]) == 0\nassert sum_pair_maxima([19]) == 0\nassert sum_pair_maxima([2, 4, -4, -8]) == 4\nassert sum_pair_maxima([20, 8, 13, 16]) == 49\nassert sum_pair_maxima([-8, 16, 20, 8]) == 56",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      10
+     ]
+    ],
+    [
+     [
+      19
+     ]
+    ],
+    [
+     [
+      2,
+      4,
+      -4,
+      -8
+     ]
+    ],
+    [
+     [
+      20,
+      8,
+      13,
+      16
+     ]
+    ],
+    [
+     [
+      -8,
+      16,
+      20,
+      8
+     ]
+    ]
+   ],
+   "reference": "def sum_pair_maxima(numbers):\n    xs = numbers\n    ys = [max(a, b) for a, b in zip(xs, xs[1:])]\n    return sum(ys)",
+   "wrong": "def sum_pair_maxima(numbers):\n    xs = numbers\n    ys = [b - a for a, b in zip(xs, xs[1:])]\n    return sum(ys)",
+   "expected": [
+    "0",
+    "0",
+    "0",
+    "4",
+    "49",
+    "56"
+   ],
+   "wrong_outputs": [
+    "0",
+    "0",
+    "0",
+    "-10",
+    "-4",
+    "16"
+   ],
+   "probe_args": [
+    "([15, 19, 4, -8, -1, 7],)",
+    "([20, 16, 17, 0, 6, 2],)",
+    "([7, -5, 0],)",
+    "([10],)",
+    "([20, 8, 13, 16],)",
+    "([0, -6],)",
+    "([19],)",
+    "([6, 8, -6, 2, 4],)",
+    "([8, 6, 5],)",
+    "([-8, 16, 20, 8],)",
+    "([14],)",
+    "([13, 17, 16, 12, 11, -9],)",
+    "([17, 18, 1, -2, 14, 1, 13],)",
+    "([-3],)",
+    "([-2, 16, -5],)",
+    "([-7, -7, 1, 19, 7, 20, 6],)",
+    "([8, 0, 13, -6],)",
+    "([17, 20, 8, -3, 16],)",
+    "([5, -7, 10, 16],)",
+    "([9, -2, 0, -4, -3],)",
+    "([-8, 10],)",
+    "([6, -7, -7, 12],)",
+    "([19, -5],)",
+    "([17, 13, 7, -1, 7, 16],)",
+    "([19, 12, 9],)",
+    "([9, -1, 5, 6, 12, 11],)",
+    "([-7, 1, 10, -6, 6],)",
+    "([18, -3, -2, -9, 14],)",
+    "([13],)",
+    "([16, -4, 1, 4, 17],)",
+    "([16],)",
+    "([-8, 17, 9],)",
+    "([-9],)",
+    "([10, 17, 9],)",
+    "([-7, 2, 17, -6, -8, 10],)",
+    "([-4, 13, -6],)",
+    "([14, 16, -8],)",
+    "([],)",
+    "([10, -6, 17, -1, -7, -2],)",
+    "([2, 4, -4, -8],)"
+   ],
+   "probe_expected": [
+    "48",
+    "66",
+    "7",
+    "0",
+    "49",
+    "0",
+    "0",
+    "22",
+    "14",
+    "56",
+    "0",
+    "73",
+    "78",
+    "0",
+    "32",
+    "72",
+    "34",
+    "64",
+    "31",
+    "6",
+    "10",
+    "11",
+    "19",
+    "60",
+    "31",
+    "44",
+    "27",
+    "28",
+    "0",
+    "38",
+    "0",
+    "34",
+    "0",
+    "34",
+    "40",
+    "26",
+    "32",
+    "0",
+    "41",
+    "4"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:rising",
+   "name": "longest_rise_pair_minima",
+   "params": "numbers",
+   "neighbour": "longest_rise_all",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `longest_rise_pair_minima(numbers)` that returns the length of the longest stretch of strictly increasing neighbouring values in the smaller value of each neighbouring pair of the list (0 if there are none)."
+   },
+   "tests": "assert longest_rise_pair_minima([]) == 0\nassert longest_rise_pair_minima([10]) == 0\nassert longest_rise_pair_minima([19]) == 0\nassert longest_rise_pair_minima([2, 4, -4, -8]) == 1\nassert longest_rise_pair_minima([20, 8, 13, 16]) == 2\nassert longest_rise_pair_minima([-8, 16, 20, 8]) == 2",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      10
+     ]
+    ],
+    [
+     [
+      19
+     ]
+    ],
+    [
+     [
+      2,
+      4,
+      -4,
+      -8
+     ]
+    ],
+    [
+     [
+      20,
+      8,
+      13,
+      16
+     ]
+    ],
+    [
+     [
+      -8,
+      16,
+      20,
+      8
+     ]
+    ]
+   ],
+   "reference": "def longest_rise_pair_minima(numbers):\n    xs = numbers\n    ys = [min(a, b) for a, b in zip(xs, xs[1:])]\n    best = run = 0\n    for i, y in enumerate(ys):\n        run = run + 1 if i > 0 and y > ys[i - 1] else 1\n        best = max(best, run)\n    return best",
+   "wrong": "def longest_rise_pair_minima(numbers):\n    xs = numbers\n    ys = xs\n    best = run = 0\n    for i, y in enumerate(ys):\n        run = run + 1 if i > 0 and y > ys[i - 1] else 1\n        best = max(best, run)\n    return best",
+   "expected": [
+    "0",
+    "0",
+    "0",
+    "1",
+    "2",
+    "2"
+   ],
+   "wrong_outputs": [
+    "0",
+    "1",
+    "1",
+    "2",
+    "3",
+    "3"
+   ],
+   "probe_args": [
+    "([15, 19, 4, -8, -1, 7],)",
+    "([20, 16, 17, 0, 6, 2],)",
+    "([7, -5, 0],)",
+    "([10],)",
+    "([20, 8, 13, 16],)",
+    "([0, -6],)",
+    "([19],)",
+    "([6, 8, -6, 2, 4],)",
+    "([8, 6, 5],)",
+    "([-8, 16, 20, 8],)",
+    "([14],)",
+    "([13, 17, 16, 12, 11, -9],)",
+    "([17, 18, 1, -2, 14, 1, 13],)",
+    "([-3],)",
+    "([-2, 16, -5],)",
+    "([-7, -7, 1, 19, 7, 20, 6],)",
+    "([8, 0, 13, -6],)",
+    "([17, 20, 8, -3, 16],)",
+    "([5, -7, 10, 16],)",
+    "([9, -2, 0, -4, -3],)",
+    "([-8, 10],)",
+    "([6, -7, -7, 12],)",
+    "([19, -5],)",
+    "([17, 13, 7, -1, 7, 16],)",
+    "([19, 12, 9],)",
+    "([9, -1, 5, 6, 12, 11],)",
+    "([-7, 1, 10, -6, 6],)",
+    "([18, -3, -2, -9, 14],)",
+    "([13],)",
+    "([16, -4, 1, 4, 17],)",
+    "([16],)",
+    "([-8, 17, 9],)",
+    "([-9],)",
+    "([10, 17, 9],)",
+    "([-7, 2, 17, -6, -8, 10],)",
+    "([-4, 13, -6],)",
+    "([14, 16, -8],)",
+    "([],)",
+    "([10, -6, 17, -1, -7, -2],)",
+    "([2, 4, -4, -8],)"
+   ],
+   "probe_expected": [
+    "2",
+    "2",
+    "1",
+    "0",
+    "2",
+    "1",
+    "0",
+    "2",
+    "1",
+    "2",
+    "0",
+    "2",
+    "2",
+    "0",
+    "1",
+    "3",
+    "1",
+    "1",
+    "2",
+    "1",
+    "1",
+    "1",
+    "1",
+    "2",
+    "1",
+    "4",
+    "2",
+    "1",
+    "0",
+    "3",
+    "0",
+    "2",
+    "0",
+    "1",
+    "2",
+    "1",
+    "1",
+    "0",
+    "2",
+    "1"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:max",
+   "name": "max_after_first",
+   "params": "numbers",
+   "neighbour": "max_steps",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `max_after_first(numbers)` that returns the largest of the values of the list after the first one (None if there are none)."
+   },
+   "tests": "assert max_after_first([]) == None\nassert max_after_first([10]) == None\nassert max_after_first([19]) == None\nassert max_after_first([2, 4, -4, -8]) == 4\nassert max_after_first([20, 8, 13, 16]) == 16\nassert max_after_first([-8, 16, 20, 8]) == 20",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      10
+     ]
+    ],
+    [
+     [
+      19
+     ]
+    ],
+    [
+     [
+      2,
+      4,
+      -4,
+      -8
+     ]
+    ],
+    [
+     [
+      20,
+      8,
+      13,
+      16
+     ]
+    ],
+    [
+     [
+      -8,
+      16,
+      20,
+      8
+     ]
+    ]
+   ],
+   "reference": "def max_after_first(numbers):\n    xs = numbers\n    ys = xs[1:]\n    return max(ys) if ys else None",
+   "wrong": "def max_after_first(numbers):\n    xs = numbers\n    ys = [b - a for a, b in zip(xs, xs[1:])]\n    return max(ys) if ys else None",
+   "expected": [
+    "None",
+    "None",
+    "None",
+    "4",
+    "16",
+    "20"
+   ],
+   "wrong_outputs": [
+    "None",
+    "None",
+    "None",
+    "2",
+    "5",
+    "24"
+   ],
+   "probe_args": [
+    "([15, 19, 4, -8, -1, 7],)",
+    "([20, 16, 17, 0, 6, 2],)",
+    "([7, -5, 0],)",
+    "([10],)",
+    "([20, 8, 13, 16],)",
+    "([0, -6],)",
+    "([19],)",
+    "([6, 8, -6, 2, 4],)",
+    "([8, 6, 5],)",
+    "([-8, 16, 20, 8],)",
+    "([14],)",
+    "([13, 17, 16, 12, 11, -9],)",
+    "([17, 18, 1, -2, 14, 1, 13],)",
+    "([-3],)",
+    "([-2, 16, -5],)",
+    "([-7, -7, 1, 19, 7, 20, 6],)",
+    "([8, 0, 13, -6],)",
+    "([17, 20, 8, -3, 16],)",
+    "([5, -7, 10, 16],)",
+    "([9, -2, 0, -4, -3],)",
+    "([-8, 10],)",
+    "([6, -7, -7, 12],)",
+    "([19, -5],)",
+    "([17, 13, 7, -1, 7, 16],)",
+    "([19, 12, 9],)",
+    "([9, -1, 5, 6, 12, 11],)",
+    "([-7, 1, 10, -6, 6],)",
+    "([18, -3, -2, -9, 14],)",
+    "([13],)",
+    "([16, -4, 1, 4, 17],)",
+    "([16],)",
+    "([-8, 17, 9],)",
+    "([-9],)",
+    "([10, 17, 9],)",
+    "([-7, 2, 17, -6, -8, 10],)",
+    "([-4, 13, -6],)",
+    "([14, 16, -8],)",
+    "([],)",
+    "([10, -6, 17, -1, -7, -2],)",
+    "([2, 4, -4, -8],)"
+   ],
+   "probe_expected": [
+    "19",
+    "17",
+    "0",
+    "None",
+    "16",
+    "-6",
+    "None",
+    "8",
+    "6",
+    "20",
+    "None",
+    "17",
+    "18",
+    "None",
+    "16",
+    "20",
+    "13",
+    "20",
+    "16",
+    "0",
+    "10",
+    "12",
+    "-5",
+    "16",
+    "12",
+    "12",
+    "10",
+    "14",
+    "None",
+    "17",
+    "None",
+    "17",
+    "None",
+    "17",
+    "17",
+    "13",
+    "16",
+    "None",
+    "17",
+    "4"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:count",
+   "name": "count_leaders",
+   "params": "numbers",
+   "neighbour": "count_steps",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `count_leaders(numbers)` that returns how many values there are in the values of the list that are larger than every value after them."
+   },
+   "tests": "assert count_leaders([]) == 0\nassert count_leaders([10]) == 1\nassert count_leaders([19]) == 1\nassert count_leaders([2, 4, -4, -8]) == 3\nassert count_leaders([20, 8, 13, 16]) == 2\nassert count_leaders([-8, 16, 20, 8]) == 2",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      10
+     ]
+    ],
+    [
+     [
+      19
+     ]
+    ],
+    [
+     [
+      2,
+      4,
+      -4,
+      -8
+     ]
+    ],
+    [
+     [
+      20,
+      8,
+      13,
+      16
+     ]
+    ],
+    [
+     [
+      -8,
+      16,
+      20,
+      8
+     ]
+    ]
+   ],
+   "reference": "def count_leaders(numbers):\n    xs = numbers\n    ys = [x for i, x in enumerate(xs) if all(x > y for y in xs[i + 1:])]\n    return len(ys)",
+   "wrong": "def count_leaders(numbers):\n    xs = numbers\n    ys = [b - a for a, b in zip(xs, xs[1:])]\n    return len(ys)",
+   "expected": [
+    "0",
+    "1",
+    "1",
+    "3",
+    "2",
+    "2"
+   ],
+   "wrong_outputs": [
+    "0",
+    "0",
+    "0",
+    "3",
+    "3",
+    "3"
+   ],
+   "probe_args": [
+    "([15, 19, 4, -8, -1, 7],)",
+    "([20, 16, 17, 0, 6, 2],)",
+    "([7, -5, 0],)",
+    "([10],)",
+    "([20, 8, 13, 16],)",
+    "([0, -6],)",
+    "([19],)",
+    "([6, 8, -6, 2, 4],)",
+    "([8, 6, 5],)",
+    "([-8, 16, 20, 8],)",
+    "([14],)",
+    "([13, 17, 16, 12, 11, -9],)",
+    "([17, 18, 1, -2, 14, 1, 13],)",
+    "([-3],)",
+    "([-2, 16, -5],)",
+    "([-7, -7, 1, 19, 7, 20, 6],)",
+    "([8, 0, 13, -6],)",
+    "([17, 20, 8, -3, 16],)",
+    "([5, -7, 10, 16],)",
+    "([9, -2, 0, -4, -3],)",
+    "([-8, 10],)",
+    "([6, -7, -7, 12],)",
+    "([19, -5],)",
+    "([17, 13, 7, -1, 7, 16],)",
+    "([19, 12, 9],)",
+    "([9, -1, 5, 6, 12, 11],)",
+    "([-7, 1, 10, -6, 6],)",
+    "([18, -3, -2, -9, 14],)",
+    "([13],)",
+    "([16, -4, 1, 4, 17],)",
+    "([16],)",
+    "([-8, 17, 9],)",
+    "([-9],)",
+    "([10, 17, 9],)",
+    "([-7, 2, 17, -6, -8, 10],)",
+    "([-4, 13, -6],)",
+    "([14, 16, -8],)",
+    "([],)",
+    "([10, -6, 17, -1, -7, -2],)",
+    "([2, 4, -4, -8],)"
+   ],
+   "probe_expected": [
+    "2",
+    "4",
+    "2",
+    "1",
+    "2",
+    "2",
+    "1",
+    "2",
+    "3",
+    "2",
+    "1",
+    "5",
+    "3",
+    "1",
+    "2",
+    "2",
+    "2",
+    "2",
+    "1",
+    "3",
+    "1",
+    "1",
+    "2",
+    "2",
+    "3",
+    "2",
+    "2",
+    "2",
+    "1",
+    "1",
+    "1",
+    "2",
+    "1",
+    "2",
+    "2",
+    "2",
+    "2",
+    "0",
+    "3",
+    "3"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:records",
+   "name": "records_digits",
+   "params": "n",
+   "neighbour": "records_steps_digits",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `records_digits(n)` that returns how many of the digits of n are larger than every value before them."
+   },
+   "tests": "assert records_digits(2) == 1\nassert records_digits(9) == 1\nassert records_digits(7) == 1\nassert records_digits(555) == 1\nassert records_digits(422) == 1\nassert records_digits(568) == 3",
+   "test_inputs": [
+    [
+     2
+    ],
+    [
+     9
+    ],
+    [
+     7
+    ],
+    [
+     555
+    ],
+    [
+     422
+    ],
+    [
+     568
+    ]
+   ],
+   "reference": "def records_digits(n):\n    xs = [int(c) for c in str(n)]\n    ys = xs\n    return sum(1 for i, y in enumerate(ys) if all(y > z for z in ys[:i]))",
+   "wrong": "def records_digits(n):\n    xs = [int(c) for c in str(n)]\n    ys = [b - a for a, b in zip(xs, xs[1:])]\n    return sum(1 for i, y in enumerate(ys) if all(y > z for z in ys[:i]))",
+   "expected": [
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "3"
+   ],
+   "wrong_outputs": [
+    "0",
+    "0",
+    "0",
+    "1",
+    "2",
+    "2"
+   ],
+   "probe_args": [
+    "(916,)",
+    "(579,)",
+    "(2,)",
+    "(58,)",
+    "(9,)",
+    "(7,)",
+    "(9845,)",
+    "(280,)",
+    "(5,)",
+    "(8,)",
+    "(37,)",
+    "(45992,)",
+    "(661,)",
+    "(35233,)",
+    "(6960,)",
+    "(60271,)",
+    "(78,)",
+    "(90075,)",
+    "(638,)",
+    "(6503,)",
+    "(3,)",
+    "(34421,)",
+    "(1047,)",
+    "(4,)",
+    "(51240,)",
+    "(855,)",
+    "(7658,)",
+    "(69,)",
+    "(555,)",
+    "(422,)",
+    "(568,)",
+    "(173,)",
+    "(281,)",
+    "(5461,)",
+    "(77551,)",
+    "(29,)",
+    "(1,)",
+    "(6,)",
+    "(47793,)",
+    "(926,)"
+   ],
+   "probe_expected": [
+    "1",
+    "3",
+    "1",
+    "2",
+    "1",
+    "1",
+    "1",
+    "2",
+    "1",
+    "1",
+    "2",
+    "3",
+    "1",
+    "2",
+    "2",
+    "2",
+    "2",
+    "1",
+    "2",
+    "1",
+    "1",
+    "2",
+    "3",
+    "1",
+    "1",
+    "1",
+    "2",
+    "2",
+    "1",
+    "1",
+    "3",
+    "2",
+    "2",
+    "2",
+    "1",
+    "2",
+    "1",
+    "1",
+    "3",
+    "1"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:min",
+   "name": "min_steps_digits",
+   "params": "n",
+   "neighbour": "min_pair_maxima_digits",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `min_steps_digits(n)` that returns the smallest of the differences between neighbouring values of the digits of n (each minus the one before it) (None if there are none)."
+   },
+   "tests": "assert min_steps_digits(2) == None\nassert min_steps_digits(9) == None\nassert min_steps_digits(7) == None\nassert min_steps_digits(555) == 0\nassert min_steps_digits(422) == -2\nassert min_steps_digits(568) == 1",
+   "test_inputs": [
+    [
+     2
+    ],
+    [
+     9
+    ],
+    [
+     7
+    ],
+    [
+     555
+    ],
+    [
+     422
+    ],
+    [
+     568
+    ]
+   ],
+   "reference": "def min_steps_digits(n):\n    xs = [int(c) for c in str(n)]\n    ys = [b - a for a, b in zip(xs, xs[1:])]\n    return min(ys) if ys else None",
+   "wrong": "def min_steps_digits(n):\n    xs = [int(c) for c in str(n)]\n    ys = [max(a, b) for a, b in zip(xs, xs[1:])]\n    return min(ys) if ys else None",
+   "expected": [
+    "None",
+    "None",
+    "None",
+    "0",
+    "-2",
+    "1"
+   ],
+   "wrong_outputs": [
+    "None",
+    "None",
+    "None",
+    "5",
+    "2",
+    "6"
+   ],
+   "probe_args": [
+    "(916,)",
+    "(579,)",
+    "(2,)",
+    "(58,)",
+    "(9,)",
+    "(7,)",
+    "(9845,)",
+    "(280,)",
+    "(5,)",
+    "(8,)",
+    "(37,)",
+    "(45992,)",
+    "(661,)",
+    "(35233,)",
+    "(6960,)",
+    "(60271,)",
+    "(78,)",
+    "(90075,)",
+    "(638,)",
+    "(6503,)",
+    "(3,)",
+    "(34421,)",
+    "(1047,)",
+    "(4,)",
+    "(51240,)",
+    "(855,)",
+    "(7658,)",
+    "(69,)",
+    "(555,)",
+    "(422,)",
+    "(568,)",
+    "(173,)",
+    "(281,)",
+    "(5461,)",
+    "(77551,)",
+    "(29,)",
+    "(1,)",
+    "(6,)",
+    "(47793,)",
+    "(926,)"
+   ],
+   "probe_expected": [
+    "-8",
+    "2",
+    "None",
+    "3",
+    "None",
+    "None",
+    "-4",
+    "-8",
+    "None",
+    "None",
+    "4",
+    "-7",
+    "-5",
+    "-3",
+    "-6",
+    "-6",
+    "1",
+    "-9",
+    "-3",
+    "-5",
+    "None",
+    "-2",
+    "-1",
+    "None",
+    "-4",
+    "-3",
+    "-1",
+    "3",
+    "0",
+    "-2",
+    "1",
+    "-4",
+    "-7",
+    "-5",
+    "-4",
+    "7",
+    "None",
+    "None",
+    "-6",
+    "-7"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:records",
+   "name": "records_steps_digits",
+   "params": "n",
+   "neighbour": "records_digits",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `records_steps_digits(n)` that returns how many of the differences between neighbouring values of the digits of n (each minus the one before it) are larger than every value before them."
+   },
+   "tests": "assert records_steps_digits(2) == 0\nassert records_steps_digits(9) == 0\nassert records_steps_digits(7) == 0\nassert records_steps_digits(555) == 1\nassert records_steps_digits(422) == 2\nassert records_steps_digits(568) == 2",
+   "test_inputs": [
+    [
+     2
+    ],
+    [
+     9
+    ],
+    [
+     7
+    ],
+    [
+     555
+    ],
+    [
+     422
+    ],
+    [
+     568
+    ]
+   ],
+   "reference": "def records_steps_digits(n):\n    xs = [int(c) for c in str(n)]\n    ys = [b - a for a, b in zip(xs, xs[1:])]\n    return sum(1 for i, y in enumerate(ys) if all(y > z for z in ys[:i]))",
+   "wrong": "def records_steps_digits(n):\n    xs = [int(c) for c in str(n)]\n    ys = xs\n    return sum(1 for i, y in enumerate(ys) if all(y > z for z in ys[:i]))",
+   "expected": [
+    "0",
+    "0",
+    "0",
+    "1",
+    "2",
+    "2"
+   ],
+   "wrong_outputs": [
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "3"
+   ],
+   "probe_args": [
+    "(916,)",
+    "(579,)",
+    "(2,)",
+    "(58,)",
+    "(9,)",
+    "(7,)",
+    "(9845,)",
+    "(280,)",
+    "(5,)",
+    "(8,)",
+    "(37,)",
+    "(45992,)",
+    "(661,)",
+    "(35233,)",
+    "(6960,)",
+    "(60271,)",
+    "(78,)",
+    "(90075,)",
+    "(638,)",
+    "(6503,)",
+    "(3,)",
+    "(34421,)",
+    "(1047,)",
+    "(4,)",
+    "(51240,)",
+    "(855,)",
+    "(7658,)",
+    "(69,)",
+    "(555,)",
+    "(422,)",
+    "(568,)",
+    "(173,)",
+    "(281,)",
+    "(5461,)",
+    "(77551,)",
+    "(29,)",
+    "(1,)",
+    "(6,)",
+    "(47793,)",
+    "(926,)"
+   ],
+   "probe_expected": [
+    "2",
+    "1",
+    "0",
+    "1",
+    "0",
+    "0",
+    "2",
+    "1",
+    "0",
+    "0",
+    "1",
+    "2",
+    "1",
+    "1",
+    "1",
+    "3",
+    "1",
+    "3",
+    "2",
+    "2",
+    "0",
+    "1",
+    "2",
+    "0",
+    "3",
+    "2",
+    "2",
+    "1",
+    "1",
+    "2",
+    "2",
+    "1",
+    "1",
+    "2",
+    "1",
+    "1",
+    "0",
+    "0",
+    "1",
+    "2"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:count_pos",
+   "name": "count_positive_pair_maxima_digits",
+   "params": "n",
+   "neighbour": "count_positive_steps_digits",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `count_positive_pair_maxima_digits(n)` that returns how many of the larger value of each neighbouring pair of the digits of n are positive."
+   },
+   "tests": "assert count_positive_pair_maxima_digits(2) == 0\nassert count_positive_pair_maxima_digits(9) == 0\nassert count_positive_pair_maxima_digits(7) == 0\nassert count_positive_pair_maxima_digits(555) == 2\nassert count_positive_pair_maxima_digits(422) == 2\nassert count_positive_pair_maxima_digits(568) == 2",
+   "test_inputs": [
+    [
+     2
+    ],
+    [
+     9
+    ],
+    [
+     7
+    ],
+    [
+     555
+    ],
+    [
+     422
+    ],
+    [
+     568
+    ]
+   ],
+   "reference": "def count_positive_pair_maxima_digits(n):\n    xs = [int(c) for c in str(n)]\n    ys = [max(a, b) for a, b in zip(xs, xs[1:])]\n    return sum(1 for y in ys if y > 0)",
+   "wrong": "def count_positive_pair_maxima_digits(n):\n    xs = [int(c) for c in str(n)]\n    ys = [b - a for a, b in zip(xs, xs[1:])]\n    return sum(1 for y in ys if y > 0)",
+   "expected": [
+    "0",
+    "0",
+    "0",
+    "2",
+    "2",
+    "2"
+   ],
+   "wrong_outputs": [
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "2"
+   ],
+   "probe_args": [
+    "(916,)",
+    "(579,)",
+    "(2,)",
+    "(58,)",
+    "(9,)",
+    "(7,)",
+    "(9845,)",
+    "(280,)",
+    "(5,)",
+    "(8,)",
+    "(37,)",
+    "(45992,)",
+    "(661,)",
+    "(35233,)",
+    "(6960,)",
+    "(60271,)",
+    "(78,)",
+    "(90075,)",
+    "(638,)",
+    "(6503,)",
+    "(3,)",
+    "(34421,)",
+    "(1047,)",
+    "(4,)",
+    "(51240,)",
+    "(855,)",
+    "(7658,)",
+    "(69,)",
+    "(555,)",
+    "(422,)",
+    "(568,)",
+    "(173,)",
+    "(281,)",
+    "(5461,)",
+    "(77551,)",
+    "(29,)",
+    "(1,)",
+    "(6,)",
+    "(47793,)",
+    "(926,)"
+   ],
+   "probe_expected": [
+    "2",
+    "2",
+    "0",
+    "1",
+    "0",
+    "0",
+    "3",
+    "2",
+    "0",
+    "0",
+    "1",
+    "4",
+    "2",
+    "4",
+    "3",
+    "4",
+    "1",
+    "3",
+    "2",
+    "3",
+    "0",
+    "4",
+    "3",
+    "0",
+    "4",
+    "2",
+    "3",
+    "1",
+    "2",
+    "2",
+    "2",
+    "2",
+    "2",
+    "3",
+    "4",
+    "1",
+    "0",
+    "0",
+    "4",
+    "2"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:list",
+   "name": "list_after_first_digits",
+   "params": "n",
+   "neighbour": "list_steps_digits",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `list_after_first_digits(n)` that returns a list of the values of the digits of n after the first one."
+   },
+   "tests": "assert list_after_first_digits(2) == []\nassert list_after_first_digits(9) == []\nassert list_after_first_digits(7) == []\nassert list_after_first_digits(555) == [5, 5]\nassert list_after_first_digits(422) == [2, 2]\nassert list_after_first_digits(568) == [6, 8]",
+   "test_inputs": [
+    [
+     2
+    ],
+    [
+     9
+    ],
+    [
+     7
+    ],
+    [
+     555
+    ],
+    [
+     422
+    ],
+    [
+     568
+    ]
+   ],
+   "reference": "def list_after_first_digits(n):\n    xs = [int(c) for c in str(n)]\n    ys = xs[1:]\n    return list(ys)",
+   "wrong": "def list_after_first_digits(n):\n    xs = [int(c) for c in str(n)]\n    ys = [b - a for a, b in zip(xs, xs[1:])]\n    return list(ys)",
+   "expected": [
+    "[]",
+    "[]",
+    "[]",
+    "[5, 5]",
+    "[2, 2]",
+    "[6, 8]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[]",
+    "[]",
+    "[0, 0]",
+    "[-2, 0]",
+    "[1, 2]"
+   ],
+   "probe_args": [
+    "(916,)",
+    "(579,)",
+    "(2,)",
+    "(58,)",
+    "(9,)",
+    "(7,)",
+    "(9845,)",
+    "(280,)",
+    "(5,)",
+    "(8,)",
+    "(37,)",
+    "(45992,)",
+    "(661,)",
+    "(35233,)",
+    "(6960,)",
+    "(60271,)",
+    "(78,)",
+    "(90075,)",
+    "(638,)",
+    "(6503,)",
+    "(3,)",
+    "(34421,)",
+    "(1047,)",
+    "(4,)",
+    "(51240,)",
+    "(855,)",
+    "(7658,)",
+    "(69,)",
+    "(555,)",
+    "(422,)",
+    "(568,)",
+    "(173,)",
+    "(281,)",
+    "(5461,)",
+    "(77551,)",
+    "(29,)",
+    "(1,)",
+    "(6,)",
+    "(47793,)",
+    "(926,)"
+   ],
+   "probe_expected": [
+    "[1, 6]",
+    "[7, 9]",
+    "[]",
+    "[8]",
+    "[]",
+    "[]",
+    "[8, 4, 5]",
+    "[8, 0]",
+    "[]",
+    "[]",
+    "[7]",
+    "[5, 9, 9, 2]",
+    "[6, 1]",
+    "[5, 2, 3, 3]",
+    "[9, 6, 0]",
+    "[0, 2, 7, 1]",
+    "[8]",
+    "[0, 0, 7, 5]",
+    "[3, 8]",
+    "[5, 0, 3]",
+    "[]",
+    "[4, 4, 2, 1]",
+    "[0, 4, 7]",
+    "[]",
+    "[1, 2, 4, 0]",
+    "[5, 5]",
+    "[6, 5, 8]",
+    "[9]",
+    "[5, 5]",
+    "[2, 2]",
+    "[6, 8]",
+    "[7, 3]",
+    "[8, 1]",
+    "[4, 6, 1]",
+    "[7, 5, 5, 1]",
+    "[9]",
+    "[]",
+    "[]",
+    "[7, 7, 9, 3]",
+    "[2, 6]"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:rising",
+   "name": "longest_rise_pair_maxima_digits",
+   "params": "n",
+   "neighbour": "longest_rise_digits",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `longest_rise_pair_maxima_digits(n)` that returns the length of the longest stretch of strictly increasing neighbouring values in the larger value of each neighbouring pair of the digits of n (0 if there are none)."
+   },
+   "tests": "assert longest_rise_pair_maxima_digits(2) == 0\nassert longest_rise_pair_maxima_digits(9) == 0\nassert longest_rise_pair_maxima_digits(7) == 0\nassert longest_rise_pair_maxima_digits(555) == 1\nassert longest_rise_pair_maxima_digits(422) == 1\nassert longest_rise_pair_maxima_digits(568) == 2",
+   "test_inputs": [
+    [
+     2
+    ],
+    [
+     9
+    ],
+    [
+     7
+    ],
+    [
+     555
+    ],
+    [
+     422
+    ],
+    [
+     568
+    ]
+   ],
+   "reference": "def longest_rise_pair_maxima_digits(n):\n    xs = [int(c) for c in str(n)]\n    ys = [max(a, b) for a, b in zip(xs, xs[1:])]\n    best = run = 0\n    for i, y in enumerate(ys):\n        run = run + 1 if i > 0 and y > ys[i - 1] else 1\n        best = max(best, run)\n    return best",
+   "wrong": "def longest_rise_pair_maxima_digits(n):\n    xs = [int(c) for c in str(n)]\n    ys = xs\n    best = run = 0\n    for i, y in enumerate(ys):\n        run = run + 1 if i > 0 and y > ys[i - 1] else 1\n        best = max(best, run)\n    return best",
+   "expected": [
+    "0",
+    "0",
+    "0",
+    "1",
+    "1",
+    "2"
+   ],
+   "wrong_outputs": [
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "3"
+   ],
+   "probe_args": [
+    "(916,)",
+    "(579,)",
+    "(2,)",
+    "(58,)",
+    "(9,)",
+    "(7,)",
+    "(9845,)",
+    "(280,)",
+    "(5,)",
+    "(8,)",
+    "(37,)",
+    "(45992,)",
+    "(661,)",
+    "(35233,)",
+    "(6960,)",
+    "(60271,)",
+    "(78,)",
+    "(90075,)",
+    "(638,)",
+    "(6503,)",
+    "(3,)",
+    "(34421,)",
+    "(1047,)",
+    "(4,)",
+    "(51240,)",
+    "(855,)",
+    "(7658,)",
+    "(69,)",
+    "(555,)",
+    "(422,)",
+    "(568,)",
+    "(173,)",
+    "(281,)",
+    "(5461,)",
+    "(77551,)",
+    "(29,)",
+    "(1,)",
+    "(6,)",
+    "(47793,)",
+    "(926,)"
+   ],
+   "probe_expected": [
+    "1",
+    "2",
+    "0",
+    "1",
+    "0",
+    "0",
+    "1",
+    "1",
+    "0",
+    "0",
+    "1",
+    "2",
+    "1",
+    "1",
+    "1",
+    "2",
+    "1",
+    "2",
+    "2",
+    "1",
+    "0",
+    "1",
+    "3",
+    "0",
+    "2",
+    "1",
+    "2",
+    "1",
+    "1",
+    "1",
+    "2",
+    "1",
+    "1",
+    "2",
+    "1",
+    "1",
+    "0",
+    "0",
+    "2",
+    "1"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:rising",
+   "name": "longest_rise_odd_positions_digits",
+   "params": "n",
+   "neighbour": "longest_rise_digits",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `longest_rise_odd_positions_digits(n)` that returns the length of the longest stretch of strictly increasing neighbouring values in the values at odd positions (1, 3, 5, ...) of the digits of n (0 if there are none)."
+   },
+   "tests": "assert longest_rise_odd_positions_digits(2) == 0\nassert longest_rise_odd_positions_digits(9) == 0\nassert longest_rise_odd_positions_digits(7) == 0\nassert longest_rise_odd_positions_digits(555) == 1\nassert longest_rise_odd_positions_digits(422) == 1\nassert longest_rise_odd_positions_digits(568) == 1",
+   "test_inputs": [
+    [
+     2
+    ],
+    [
+     9
+    ],
+    [
+     7
+    ],
+    [
+     555
+    ],
+    [
+     422
+    ],
+    [
+     568
+    ]
+   ],
+   "reference": "def longest_rise_odd_positions_digits(n):\n    xs = [int(c) for c in str(n)]\n    ys = xs[1::2]\n    best = run = 0\n    for i, y in enumerate(ys):\n        run = run + 1 if i > 0 and y > ys[i - 1] else 1\n        best = max(best, run)\n    return best",
+   "wrong": "def longest_rise_odd_positions_digits(n):\n    xs = [int(c) for c in str(n)]\n    ys = xs\n    best = run = 0\n    for i, y in enumerate(ys):\n        run = run + 1 if i > 0 and y > ys[i - 1] else 1\n        best = max(best, run)\n    return best",
+   "expected": [
+    "0",
+    "0",
+    "0",
+    "1",
+    "1",
+    "1"
+   ],
+   "wrong_outputs": [
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "3"
+   ],
+   "probe_args": [
+    "(916,)",
+    "(579,)",
+    "(2,)",
+    "(58,)",
+    "(9,)",
+    "(7,)",
+    "(9845,)",
+    "(280,)",
+    "(5,)",
+    "(8,)",
+    "(37,)",
+    "(45992,)",
+    "(661,)",
+    "(35233,)",
+    "(6960,)",
+    "(60271,)",
+    "(78,)",
+    "(90075,)",
+    "(638,)",
+    "(6503,)",
+    "(3,)",
+    "(34421,)",
+    "(1047,)",
+    "(4,)",
+    "(51240,)",
+    "(855,)",
+    "(7658,)",
+    "(69,)",
+    "(555,)",
+    "(422,)",
+    "(568,)",
+    "(173,)",
+    "(281,)",
+    "(5461,)",
+    "(77551,)",
+    "(29,)",
+    "(1,)",
+    "(6,)",
+    "(47793,)",
+    "(926,)"
+   ],
+   "probe_expected": [
+    "1",
+    "1",
+    "0",
+    "1",
+    "0",
+    "0",
+    "1",
+    "1",
+    "0",
+    "0",
+    "1",
+    "2",
+    "1",
+    "1",
+    "1",
+    "2",
+    "1",
+    "2",
+    "1",
+    "1",
+    "0",
+    "1",
+    "2",
+    "0",
+    "2",
+    "1",
+    "2",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "0",
+    "0",
+    "2",
+    "1"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:count_pos",
+   "name": "count_positive_after_first_digits",
+   "params": "n",
+   "neighbour": "count_positive_steps_digits",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `count_positive_after_first_digits(n)` that returns how many of the values of the digits of n after the first one are positive."
+   },
+   "tests": "assert count_positive_after_first_digits(2) == 0\nassert count_positive_after_first_digits(9) == 0\nassert count_positive_after_first_digits(7) == 0\nassert count_positive_after_first_digits(555) == 2\nassert count_positive_after_first_digits(422) == 2\nassert count_positive_after_first_digits(568) == 2",
+   "test_inputs": [
+    [
+     2
+    ],
+    [
+     9
+    ],
+    [
+     7
+    ],
+    [
+     555
+    ],
+    [
+     422
+    ],
+    [
+     568
+    ]
+   ],
+   "reference": "def count_positive_after_first_digits(n):\n    xs = [int(c) for c in str(n)]\n    ys = xs[1:]\n    return sum(1 for y in ys if y > 0)",
+   "wrong": "def count_positive_after_first_digits(n):\n    xs = [int(c) for c in str(n)]\n    ys = [b - a for a, b in zip(xs, xs[1:])]\n    return sum(1 for y in ys if y > 0)",
+   "expected": [
+    "0",
+    "0",
+    "0",
+    "2",
+    "2",
+    "2"
+   ],
+   "wrong_outputs": [
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "2"
+   ],
+   "probe_args": [
+    "(916,)",
+    "(579,)",
+    "(2,)",
+    "(58,)",
+    "(9,)",
+    "(7,)",
+    "(9845,)",
+    "(280,)",
+    "(5,)",
+    "(8,)",
+    "(37,)",
+    "(45992,)",
+    "(661,)",
+    "(35233,)",
+    "(6960,)",
+    "(60271,)",
+    "(78,)",
+    "(90075,)",
+    "(638,)",
+    "(6503,)",
+    "(3,)",
+    "(34421,)",
+    "(1047,)",
+    "(4,)",
+    "(51240,)",
+    "(855,)",
+    "(7658,)",
+    "(69,)",
+    "(555,)",
+    "(422,)",
+    "(568,)",
+    "(173,)",
+    "(281,)",
+    "(5461,)",
+    "(77551,)",
+    "(29,)",
+    "(1,)",
+    "(6,)",
+    "(47793,)",
+    "(926,)"
+   ],
+   "probe_expected": [
+    "2",
+    "2",
+    "0",
+    "1",
+    "0",
+    "0",
+    "3",
+    "1",
+    "0",
+    "0",
+    "1",
+    "4",
+    "2",
+    "4",
+    "2",
+    "3",
+    "1",
+    "2",
+    "2",
+    "2",
+    "0",
+    "4",
+    "2",
+    "0",
+    "3",
+    "2",
+    "3",
+    "1",
+    "2",
+    "2",
+    "2",
+    "2",
+    "2",
+    "3",
+    "4",
+    "1",
+    "0",
+    "0",
+    "4",
+    "2"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:list",
+   "name": "list_running_max_word_lengths",
+   "params": "text",
+   "neighbour": "list_word_lengths",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `list_running_max_word_lengths(text)` that returns a list of the running largest values of the lengths of the words of text (at each position, the largest value so far)."
+   },
+   "tests": "assert list_running_max_word_lengths('') == []\nassert list_running_max_word_lengths('a') == [1]\nassert list_running_max_word_lengths('I') == [1]\nassert list_running_max_word_lengths('Echo Pear sky') == [4, 4, 4]\nassert list_running_max_word_lengths('yes tree cat x') == [3, 4, 4, 4]\nassert list_running_max_word_lengths('yes Echo apple') == [3, 4, 5]",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "a"
+    ],
+    [
+     "I"
+    ],
+    [
+     "Echo Pear sky"
+    ],
+    [
+     "yes tree cat x"
+    ],
+    [
+     "yes Echo apple"
+    ]
+   ],
+   "reference": "def list_running_max_word_lengths(text):\n    xs = [len(w) for w in text.split()]\n    ys = []\n    for x in xs:\n        ys.append(x if not ys or x > ys[-1] else ys[-1])\n    return list(ys)",
+   "wrong": "def list_running_max_word_lengths(text):\n    xs = [len(w) for w in text.split()]\n    ys = xs\n    return list(ys)",
+   "expected": [
+    "[]",
+    "[1]",
+    "[1]",
+    "[4, 4, 4]",
+    "[3, 4, 4, 4]",
+    "[3, 4, 5]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[1]",
+    "[1]",
+    "[4, 4, 3]",
+    "[3, 4, 3, 1]",
+    "[3, 4, 5]"
+   ],
+   "probe_args": [
+    "('dog cat',)",
+    "('apple sky queen owl yes',)",
+    "('dog',)",
+    "('ice grape Umbrella',)",
+    "('tree',)",
+    "('',)",
+    "('moon Lemon rose',)",
+    "('Echo sun moon',)",
+    "('nut sky queen Pear vine',)",
+    "('Pear Umbrella vine',)",
+    "('rose',)",
+    "('apple',)",
+    "('x sky kiwi a kiwi',)",
+    "('Echo I ice tree',)",
+    "('a',)",
+    "('jam wolf wolf zoo',)",
+    "('Echo',)",
+    "('apple yes',)",
+    "('kiwi I fig',)",
+    "('I',)",
+    "('Lemon queen moon',)",
+    "('Banana sun cat vine',)",
+    "('yes tree cat x',)",
+    "('jam',)",
+    "('nut a Pear I',)",
+    "('tree sun Hat',)",
+    "('ice kiwi cat Pear',)",
+    "('a jam',)",
+    "('moon zoo moon',)",
+    "('Umbrella',)",
+    "('Banana Banana',)",
+    "('Echo Pear sky',)",
+    "('wolf cat vine wolf',)",
+    "('nut Banana',)",
+    "('moon owl Banana',)",
+    "('yes Echo apple',)",
+    "('tree Echo Umbrella kiwi',)",
+    "('rose Umbrella Lemon grape moon',)",
+    "('dog sky Banana',)",
+    "('owl tree Umbrella kiwi Umbrella',)"
+   ],
+   "probe_expected": [
+    "[3, 3]",
+    "[5, 5, 5, 5, 5]",
+    "[3]",
+    "[3, 5, 8]",
+    "[4]",
+    "[]",
+    "[4, 5, 5]",
+    "[4, 4, 4]",
+    "[3, 3, 5, 5, 5]",
+    "[4, 8, 8]",
+    "[4]",
+    "[5]",
+    "[1, 3, 4, 4, 4]",
+    "[4, 4, 4, 4]",
+    "[1]",
+    "[3, 4, 4, 4]",
+    "[4]",
+    "[5, 5]",
+    "[4, 4, 4]",
+    "[1]",
+    "[5, 5, 5]",
+    "[6, 6, 6, 6]",
+    "[3, 4, 4, 4]",
+    "[3]",
+    "[3, 3, 4, 4]",
+    "[4, 4, 4]",
+    "[3, 4, 4, 4]",
+    "[1, 3]",
+    "[4, 4, 4]",
+    "[8]",
+    "[6, 6]",
+    "[4, 4, 4]",
+    "[4, 4, 4, 4]",
+    "[3, 6]",
+    "[4, 4, 6]",
+    "[3, 4, 5]",
+    "[4, 4, 8, 8]",
+    "[4, 8, 8, 8, 8]",
+    "[3, 3, 6]",
+    "[3, 4, 8, 8, 8]"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:last",
+   "name": "last_pair_minima_word_lengths",
+   "params": "text",
+   "neighbour": "last_steps_word_lengths",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `last_pair_minima_word_lengths(text)` that returns the last of the smaller value of each neighbouring pair of the lengths of the words of text (None if there are none)."
+   },
+   "tests": "assert last_pair_minima_word_lengths('') == None\nassert last_pair_minima_word_lengths('a') == None\nassert last_pair_minima_word_lengths('I') == None\nassert last_pair_minima_word_lengths('Echo Pear sky') == 3\nassert last_pair_minima_word_lengths('yes tree cat x') == 1\nassert last_pair_minima_word_lengths('yes Echo apple') == 4",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "a"
+    ],
+    [
+     "I"
+    ],
+    [
+     "Echo Pear sky"
+    ],
+    [
+     "yes tree cat x"
+    ],
+    [
+     "yes Echo apple"
+    ]
+   ],
+   "reference": "def last_pair_minima_word_lengths(text):\n    xs = [len(w) for w in text.split()]\n    ys = [min(a, b) for a, b in zip(xs, xs[1:])]\n    return ys[-1] if ys else None",
+   "wrong": "def last_pair_minima_word_lengths(text):\n    xs = [len(w) for w in text.split()]\n    ys = [b - a for a, b in zip(xs, xs[1:])]\n    return ys[-1] if ys else None",
+   "expected": [
+    "None",
+    "None",
+    "None",
+    "3",
+    "1",
+    "4"
+   ],
+   "wrong_outputs": [
+    "None",
+    "None",
+    "None",
+    "-1",
+    "-2",
+    "1"
+   ],
+   "probe_args": [
+    "('dog cat',)",
+    "('apple sky queen owl yes',)",
+    "('dog',)",
+    "('ice grape Umbrella',)",
+    "('tree',)",
+    "('',)",
+    "('moon Lemon rose',)",
+    "('Echo sun moon',)",
+    "('nut sky queen Pear vine',)",
+    "('Pear Umbrella vine',)",
+    "('rose',)",
+    "('apple',)",
+    "('x sky kiwi a kiwi',)",
+    "('Echo I ice tree',)",
+    "('a',)",
+    "('jam wolf wolf zoo',)",
+    "('Echo',)",
+    "('apple yes',)",
+    "('kiwi I fig',)",
+    "('I',)",
+    "('Lemon queen moon',)",
+    "('Banana sun cat vine',)",
+    "('yes tree cat x',)",
+    "('jam',)",
+    "('nut a Pear I',)",
+    "('tree sun Hat',)",
+    "('ice kiwi cat Pear',)",
+    "('a jam',)",
+    "('moon zoo moon',)",
+    "('Umbrella',)",
+    "('Banana Banana',)",
+    "('Echo Pear sky',)",
+    "('wolf cat vine wolf',)",
+    "('nut Banana',)",
+    "('moon owl Banana',)",
+    "('yes Echo apple',)",
+    "('tree Echo Umbrella kiwi',)",
+    "('rose Umbrella Lemon grape moon',)",
+    "('dog sky Banana',)",
+    "('owl tree Umbrella kiwi Umbrella',)"
+   ],
+   "probe_expected": [
+    "3",
+    "3",
+    "None",
+    "5",
+    "None",
+    "None",
+    "4",
+    "3",
+    "4",
+    "4",
+    "None",
+    "None",
+    "1",
+    "3",
+    "None",
+    "3",
+    "None",
+    "3",
+    "1",
+    "None",
+    "4",
+    "3",
+    "1",
+    "None",
+    "1",
+    "3",
+    "3",
+    "1",
+    "3",
+    "None",
+    "6",
+    "3",
+    "4",
+    "3",
+    "3",
+    "4",
+    "4",
+    "4",
+    "3",
+    "4"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:rising",
+   "name": "longest_rise_word_lengths",
+   "params": "text",
+   "neighbour": "longest_rise_steps_word_lengths",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `longest_rise_word_lengths(text)` that returns the length of the longest stretch of strictly increasing neighbouring values in the lengths of the words of text (0 if there are none)."
+   },
+   "tests": "assert longest_rise_word_lengths('') == 0\nassert longest_rise_word_lengths('a') == 1\nassert longest_rise_word_lengths('I') == 1\nassert longest_rise_word_lengths('Echo Pear sky') == 1\nassert longest_rise_word_lengths('yes tree cat x') == 2\nassert longest_rise_word_lengths('yes Echo apple') == 3",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "a"
+    ],
+    [
+     "I"
+    ],
+    [
+     "Echo Pear sky"
+    ],
+    [
+     "yes tree cat x"
+    ],
+    [
+     "yes Echo apple"
+    ]
+   ],
+   "reference": "def longest_rise_word_lengths(text):\n    xs = [len(w) for w in text.split()]\n    ys = xs\n    best = run = 0\n    for i, y in enumerate(ys):\n        run = run + 1 if i > 0 and y > ys[i - 1] else 1\n        best = max(best, run)\n    return best",
+   "wrong": "def longest_rise_word_lengths(text):\n    xs = [len(w) for w in text.split()]\n    ys = [b - a for a, b in zip(xs, xs[1:])]\n    best = run = 0\n    for i, y in enumerate(ys):\n        run = run + 1 if i > 0 and y > ys[i - 1] else 1\n        best = max(best, run)\n    return best",
+   "expected": [
+    "0",
+    "1",
+    "1",
+    "1",
+    "2",
+    "3"
+   ],
+   "wrong_outputs": [
+    "0",
+    "0",
+    "0",
+    "1",
+    "1",
+    "1"
+   ],
+   "probe_args": [
+    "('dog cat',)",
+    "('apple sky queen owl yes',)",
+    "('dog',)",
+    "('ice grape Umbrella',)",
+    "('tree',)",
+    "('',)",
+    "('moon Lemon rose',)",
+    "('Echo sun moon',)",
+    "('nut sky queen Pear vine',)",
+    "('Pear Umbrella vine',)",
+    "('rose',)",
+    "('apple',)",
+    "('x sky kiwi a kiwi',)",
+    "('Echo I ice tree',)",
+    "('a',)",
+    "('jam wolf wolf zoo',)",
+    "('Echo',)",
+    "('apple yes',)",
+    "('kiwi I fig',)",
+    "('I',)",
+    "('Lemon queen moon',)",
+    "('Banana sun cat vine',)",
+    "('yes tree cat x',)",
+    "('jam',)",
+    "('nut a Pear I',)",
+    "('tree sun Hat',)",
+    "('ice kiwi cat Pear',)",
+    "('a jam',)",
+    "('moon zoo moon',)",
+    "('Umbrella',)",
+    "('Banana Banana',)",
+    "('Echo Pear sky',)",
+    "('wolf cat vine wolf',)",
+    "('nut Banana',)",
+    "('moon owl Banana',)",
+    "('yes Echo apple',)",
+    "('tree Echo Umbrella kiwi',)",
+    "('rose Umbrella Lemon grape moon',)",
+    "('dog sky Banana',)",
+    "('owl tree Umbrella kiwi Umbrella',)"
+   ],
+   "probe_expected": [
+    "1",
+    "2",
+    "1",
+    "3",
+    "1",
+    "0",
+    "2",
+    "2",
+    "2",
+    "2",
+    "1",
+    "1",
+    "3",
+    "3",
+    "1",
+    "2",
+    "1",
+    "1",
+    "2",
+    "1",
+    "1",
+    "2",
+    "2",
+    "1",
+    "2",
+    "1",
+    "2",
+    "2",
+    "2",
+    "1",
+    "1",
+    "1",
+    "2",
+    "2",
+    "2",
+    "3",
+    "2",
+    "2",
+    "2",
+    "3"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:sum",
+   "name": "sum_pair_minima_word_lengths",
+   "params": "text",
+   "neighbour": "sum_steps_word_lengths",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `sum_pair_minima_word_lengths(text)` that returns the sum of the smaller value of each neighbouring pair of the lengths of the words of text."
+   },
+   "tests": "assert sum_pair_minima_word_lengths('') == 0\nassert sum_pair_minima_word_lengths('a') == 0\nassert sum_pair_minima_word_lengths('I') == 0\nassert sum_pair_minima_word_lengths('Echo Pear sky') == 7\nassert sum_pair_minima_word_lengths('yes tree cat x') == 7\nassert sum_pair_minima_word_lengths('yes Echo apple') == 7",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "a"
+    ],
+    [
+     "I"
+    ],
+    [
+     "Echo Pear sky"
+    ],
+    [
+     "yes tree cat x"
+    ],
+    [
+     "yes Echo apple"
+    ]
+   ],
+   "reference": "def sum_pair_minima_word_lengths(text):\n    xs = [len(w) for w in text.split()]\n    ys = [min(a, b) for a, b in zip(xs, xs[1:])]\n    return sum(ys)",
+   "wrong": "def sum_pair_minima_word_lengths(text):\n    xs = [len(w) for w in text.split()]\n    ys = [b - a for a, b in zip(xs, xs[1:])]\n    return sum(ys)",
+   "expected": [
+    "0",
+    "0",
+    "0",
+    "7",
+    "7",
+    "7"
+   ],
+   "wrong_outputs": [
+    "0",
+    "0",
+    "0",
+    "-1",
+    "-2",
+    "2"
+   ],
+   "probe_args": [
+    "('dog cat',)",
+    "('apple sky queen owl yes',)",
+    "('dog',)",
+    "('ice grape Umbrella',)",
+    "('tree',)",
+    "('',)",
+    "('moon Lemon rose',)",
+    "('Echo sun moon',)",
+    "('nut sky queen Pear vine',)",
+    "('Pear Umbrella vine',)",
+    "('rose',)",
+    "('apple',)",
+    "('x sky kiwi a kiwi',)",
+    "('Echo I ice tree',)",
+    "('a',)",
+    "('jam wolf wolf zoo',)",
+    "('Echo',)",
+    "('apple yes',)",
+    "('kiwi I fig',)",
+    "('I',)",
+    "('Lemon queen moon',)",
+    "('Banana sun cat vine',)",
+    "('yes tree cat x',)",
+    "('jam',)",
+    "('nut a Pear I',)",
+    "('tree sun Hat',)",
+    "('ice kiwi cat Pear',)",
+    "('a jam',)",
+    "('moon zoo moon',)",
+    "('Umbrella',)",
+    "('Banana Banana',)",
+    "('Echo Pear sky',)",
+    "('wolf cat vine wolf',)",
+    "('nut Banana',)",
+    "('moon owl Banana',)",
+    "('yes Echo apple',)",
+    "('tree Echo Umbrella kiwi',)",
+    "('rose Umbrella Lemon grape moon',)",
+    "('dog sky Banana',)",
+    "('owl tree Umbrella kiwi Umbrella',)"
+   ],
+   "probe_expected": [
+    "3",
+    "12",
+    "0",
+    "8",
+    "0",
+    "0",
+    "8",
+    "6",
+    "14",
+    "8",
+    "0",
+    "0",
+    "6",
+    "5",
+    "0",
+    "10",
+    "0",
+    "3",
+    "2",
+    "0",
+    "9",
+    "9",
+    "7",
+    "0",
+    "3",
+    "6",
+    "9",
+    "1",
+    "6",
+    "0",
+    "6",
+    "7",
+    "10",
+    "3",
+    "6",
+    "7",
+    "12",
+    "18",
+    "6",
+    "15"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:last",
+   "name": "last_after_first_word_lengths",
+   "params": "text",
+   "neighbour": "last_steps_word_lengths",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `last_after_first_word_lengths(text)` that returns the last of the values of the lengths of the words of text after the first one (None if there are none)."
+   },
+   "tests": "assert last_after_first_word_lengths('') == None\nassert last_after_first_word_lengths('a') == None\nassert last_after_first_word_lengths('I') == None\nassert last_after_first_word_lengths('Echo Pear sky') == 3\nassert last_after_first_word_lengths('yes tree cat x') == 1\nassert last_after_first_word_lengths('yes Echo apple') == 5",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "a"
+    ],
+    [
+     "I"
+    ],
+    [
+     "Echo Pear sky"
+    ],
+    [
+     "yes tree cat x"
+    ],
+    [
+     "yes Echo apple"
+    ]
+   ],
+   "reference": "def last_after_first_word_lengths(text):\n    xs = [len(w) for w in text.split()]\n    ys = xs[1:]\n    return ys[-1] if ys else None",
+   "wrong": "def last_after_first_word_lengths(text):\n    xs = [len(w) for w in text.split()]\n    ys = [b - a for a, b in zip(xs, xs[1:])]\n    return ys[-1] if ys else None",
+   "expected": [
+    "None",
+    "None",
+    "None",
+    "3",
+    "1",
+    "5"
+   ],
+   "wrong_outputs": [
+    "None",
+    "None",
+    "None",
+    "-1",
+    "-2",
+    "1"
+   ],
+   "probe_args": [
+    "('dog cat',)",
+    "('apple sky queen owl yes',)",
+    "('dog',)",
+    "('ice grape Umbrella',)",
+    "('tree',)",
+    "('',)",
+    "('moon Lemon rose',)",
+    "('Echo sun moon',)",
+    "('nut sky queen Pear vine',)",
+    "('Pear Umbrella vine',)",
+    "('rose',)",
+    "('apple',)",
+    "('x sky kiwi a kiwi',)",
+    "('Echo I ice tree',)",
+    "('a',)",
+    "('jam wolf wolf zoo',)",
+    "('Echo',)",
+    "('apple yes',)",
+    "('kiwi I fig',)",
+    "('I',)",
+    "('Lemon queen moon',)",
+    "('Banana sun cat vine',)",
+    "('yes tree cat x',)",
+    "('jam',)",
+    "('nut a Pear I',)",
+    "('tree sun Hat',)",
+    "('ice kiwi cat Pear',)",
+    "('a jam',)",
+    "('moon zoo moon',)",
+    "('Umbrella',)",
+    "('Banana Banana',)",
+    "('Echo Pear sky',)",
+    "('wolf cat vine wolf',)",
+    "('nut Banana',)",
+    "('moon owl Banana',)",
+    "('yes Echo apple',)",
+    "('tree Echo Umbrella kiwi',)",
+    "('rose Umbrella Lemon grape moon',)",
+    "('dog sky Banana',)",
+    "('owl tree Umbrella kiwi Umbrella',)"
+   ],
+   "probe_expected": [
+    "3",
+    "3",
+    "None",
+    "8",
+    "None",
+    "None",
+    "4",
+    "4",
+    "4",
+    "4",
+    "None",
+    "None",
+    "4",
+    "4",
+    "None",
+    "3",
+    "None",
+    "3",
+    "3",
+    "None",
+    "4",
+    "4",
+    "1",
+    "None",
+    "1",
+    "3",
+    "4",
+    "3",
+    "4",
+    "None",
+    "6",
+    "3",
+    "4",
+    "6",
+    "6",
+    "5",
+    "4",
+    "4",
+    "6",
+    "8"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:bestrun",
+   "name": "best_run_sum_running_max_word_lengths",
+   "params": "text",
+   "neighbour": "best_run_sum_word_lengths",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `best_run_sum_running_max_word_lengths(text)` that returns the largest sum of a stretch of one or more neighbouring values of the running largest values of the lengths of the words of text (at each position, the largest value so far) (None if there are none)."
+   },
+   "tests": "assert best_run_sum_running_max_word_lengths('') == None\nassert best_run_sum_running_max_word_lengths('a') == 1\nassert best_run_sum_running_max_word_lengths('I') == 1\nassert best_run_sum_running_max_word_lengths('Echo Pear sky') == 12\nassert best_run_sum_running_max_word_lengths('yes tree cat x') == 15\nassert best_run_sum_running_max_word_lengths('yes Echo apple') == 12",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "a"
+    ],
+    [
+     "I"
+    ],
+    [
+     "Echo Pear sky"
+    ],
+    [
+     "yes tree cat x"
+    ],
+    [
+     "yes Echo apple"
+    ]
+   ],
+   "reference": "def best_run_sum_running_max_word_lengths(text):\n    xs = [len(w) for w in text.split()]\n    ys = []\n    for x in xs:\n        ys.append(x if not ys or x > ys[-1] else ys[-1])\n    if not ys:\n        return None\n    best = cur = ys[0]\n    for y in ys[1:]:\n        cur = max(y, cur + y)\n        best = max(best, cur)\n    return best",
+   "wrong": "def best_run_sum_running_max_word_lengths(text):\n    xs = [len(w) for w in text.split()]\n    ys = xs\n    if not ys:\n        return None\n    best = cur = ys[0]\n    for y in ys[1:]:\n        cur = max(y, cur + y)\n        best = max(best, cur)\n    return best",
+   "expected": [
+    "None",
+    "1",
+    "1",
+    "12",
+    "15",
+    "12"
+   ],
+   "wrong_outputs": [
+    "None",
+    "1",
+    "1",
+    "11",
+    "11",
+    "12"
+   ],
+   "probe_args": [
+    "('dog cat',)",
+    "('apple sky queen owl yes',)",
+    "('dog',)",
+    "('ice grape Umbrella',)",
+    "('tree',)",
+    "('',)",
+    "('moon Lemon rose',)",
+    "('Echo sun moon',)",
+    "('nut sky queen Pear vine',)",
+    "('Pear Umbrella vine',)",
+    "('rose',)",
+    "('apple',)",
+    "('x sky kiwi a kiwi',)",
+    "('Echo I ice tree',)",
+    "('a',)",
+    "('jam wolf wolf zoo',)",
+    "('Echo',)",
+    "('apple yes',)",
+    "('kiwi I fig',)",
+    "('I',)",
+    "('Lemon queen moon',)",
+    "('Banana sun cat vine',)",
+    "('yes tree cat x',)",
+    "('jam',)",
+    "('nut a Pear I',)",
+    "('tree sun Hat',)",
+    "('ice kiwi cat Pear',)",
+    "('a jam',)",
+    "('moon zoo moon',)",
+    "('Umbrella',)",
+    "('Banana Banana',)",
+    "('Echo Pear sky',)",
+    "('wolf cat vine wolf',)",
+    "('nut Banana',)",
+    "('moon owl Banana',)",
+    "('yes Echo apple',)",
+    "('tree Echo Umbrella kiwi',)",
+    "('rose Umbrella Lemon grape moon',)",
+    "('dog sky Banana',)",
+    "('owl tree Umbrella kiwi Umbrella',)"
+   ],
+   "probe_expected": [
+    "6",
+    "25",
+    "3",
+    "16",
+    "4",
+    "None",
+    "14",
+    "12",
+    "21",
+    "20",
+    "4",
+    "5",
+    "16",
+    "16",
+    "1",
+    "15",
+    "4",
+    "10",
+    "12",
+    "1",
+    "15",
+    "24",
+    "15",
+    "3",
+    "14",
+    "12",
+    "15",
+    "4",
+    "12",
+    "8",
+    "12",
+    "12",
+    "16",
+    "9",
+    "14",
+    "12",
+    "24",
+    "36",
+    "12",
+    "31"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:list",
+   "name": "list_steps_word_lengths",
+   "params": "text",
+   "neighbour": "list_word_lengths",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `list_steps_word_lengths(text)` that returns a list of the differences between neighbouring values of the lengths of the words of text (each minus the one before it)."
+   },
+   "tests": "assert list_steps_word_lengths('') == []\nassert list_steps_word_lengths('a') == []\nassert list_steps_word_lengths('I') == []\nassert list_steps_word_lengths('Echo Pear sky') == [0, -1]\nassert list_steps_word_lengths('yes tree cat x') == [1, -1, -2]\nassert list_steps_word_lengths('yes Echo apple') == [1, 1]",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "a"
+    ],
+    [
+     "I"
+    ],
+    [
+     "Echo Pear sky"
+    ],
+    [
+     "yes tree cat x"
+    ],
+    [
+     "yes Echo apple"
+    ]
+   ],
+   "reference": "def list_steps_word_lengths(text):\n    xs = [len(w) for w in text.split()]\n    ys = [b - a for a, b in zip(xs, xs[1:])]\n    return list(ys)",
+   "wrong": "def list_steps_word_lengths(text):\n    xs = [len(w) for w in text.split()]\n    ys = xs\n    return list(ys)",
+   "expected": [
+    "[]",
+    "[]",
+    "[]",
+    "[0, -1]",
+    "[1, -1, -2]",
+    "[1, 1]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[1]",
+    "[1]",
+    "[4, 4, 3]",
+    "[3, 4, 3, 1]",
+    "[3, 4, 5]"
+   ],
+   "probe_args": [
+    "('dog cat',)",
+    "('apple sky queen owl yes',)",
+    "('dog',)",
+    "('ice grape Umbrella',)",
+    "('tree',)",
+    "('',)",
+    "('moon Lemon rose',)",
+    "('Echo sun moon',)",
+    "('nut sky queen Pear vine',)",
+    "('Pear Umbrella vine',)",
+    "('rose',)",
+    "('apple',)",
+    "('x sky kiwi a kiwi',)",
+    "('Echo I ice tree',)",
+    "('a',)",
+    "('jam wolf wolf zoo',)",
+    "('Echo',)",
+    "('apple yes',)",
+    "('kiwi I fig',)",
+    "('I',)",
+    "('Lemon queen moon',)",
+    "('Banana sun cat vine',)",
+    "('yes tree cat x',)",
+    "('jam',)",
+    "('nut a Pear I',)",
+    "('tree sun Hat',)",
+    "('ice kiwi cat Pear',)",
+    "('a jam',)",
+    "('moon zoo moon',)",
+    "('Umbrella',)",
+    "('Banana Banana',)",
+    "('Echo Pear sky',)",
+    "('wolf cat vine wolf',)",
+    "('nut Banana',)",
+    "('moon owl Banana',)",
+    "('yes Echo apple',)",
+    "('tree Echo Umbrella kiwi',)",
+    "('rose Umbrella Lemon grape moon',)",
+    "('dog sky Banana',)",
+    "('owl tree Umbrella kiwi Umbrella',)"
+   ],
+   "probe_expected": [
+    "[0]",
+    "[-2, 2, -2, 0]",
+    "[]",
+    "[2, 3]",
+    "[]",
+    "[]",
+    "[1, -1]",
+    "[-1, 1]",
+    "[0, 2, -1, 0]",
+    "[4, -4]",
+    "[]",
+    "[]",
+    "[2, 1, -3, 3]",
+    "[-3, 2, 1]",
+    "[]",
+    "[1, 0, -1]",
+    "[]",
+    "[-2]",
+    "[-3, 2]",
+    "[]",
+    "[0, -1]",
+    "[-3, 0, 1]",
+    "[1, -1, -2]",
+    "[]",
+    "[-2, 3, -3]",
+    "[-1, 0]",
+    "[1, -1, 1]",
+    "[2]",
+    "[-1, 1]",
+    "[]",
+    "[0]",
+    "[0, -1]",
+    "[-1, 1, 0]",
+    "[3]",
+    "[-1, 3]",
+    "[1, 1]",
+    "[0, 4, -4]",
+    "[4, -3, 0, -1]",
+    "[0, 3]",
+    "[1, 4, -4, 4]"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:records",
+   "name": "records_steps_word_lengths",
+   "params": "text",
+   "neighbour": "records_pair_maxima_word_lengths",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `records_steps_word_lengths(text)` that returns how many of the differences between neighbouring values of the lengths of the words of text (each minus the one before it) are larger than every value before them."
+   },
+   "tests": "assert records_steps_word_lengths('') == 0\nassert records_steps_word_lengths('a') == 0\nassert records_steps_word_lengths('I') == 0\nassert records_steps_word_lengths('Echo Pear sky') == 1\nassert records_steps_word_lengths('yes tree cat x') == 1\nassert records_steps_word_lengths('yes Echo apple') == 1",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "a"
+    ],
+    [
+     "I"
+    ],
+    [
+     "Echo Pear sky"
+    ],
+    [
+     "yes tree cat x"
+    ],
+    [
+     "yes Echo apple"
+    ]
+   ],
+   "reference": "def records_steps_word_lengths(text):\n    xs = [len(w) for w in text.split()]\n    ys = [b - a for a, b in zip(xs, xs[1:])]\n    return sum(1 for i, y in enumerate(ys) if all(y > z for z in ys[:i]))",
+   "wrong": "def records_steps_word_lengths(text):\n    xs = [len(w) for w in text.split()]\n    ys = [max(a, b) for a, b in zip(xs, xs[1:])]\n    return sum(1 for i, y in enumerate(ys) if all(y > z for z in ys[:i]))",
+   "expected": [
+    "0",
+    "0",
+    "0",
+    "1",
+    "1",
+    "1"
+   ],
+   "wrong_outputs": [
+    "0",
+    "0",
+    "0",
+    "1",
+    "1",
+    "2"
+   ],
+   "probe_args": [
+    "('dog cat',)",
+    "('apple sky queen owl yes',)",
+    "('dog',)",
+    "('ice grape Umbrella',)",
+    "('tree',)",
+    "('',)",
+    "('moon Lemon rose',)",
+    "('Echo sun moon',)",
+    "('nut sky queen Pear vine',)",
+    "('Pear Umbrella vine',)",
+    "('rose',)",
+    "('apple',)",
+    "('x sky kiwi a kiwi',)",
+    "('Echo I ice tree',)",
+    "('a',)",
+    "('jam wolf wolf zoo',)",
+    "('Echo',)",
+    "('apple yes',)",
+    "('kiwi I fig',)",
+    "('I',)",
+    "('Lemon queen moon',)",
+    "('Banana sun cat vine',)",
+    "('yes tree cat x',)",
+    "('jam',)",
+    "('nut a Pear I',)",
+    "('tree sun Hat',)",
+    "('ice kiwi cat Pear',)",
+    "('a jam',)",
+    "('moon zoo moon',)",
+    "('Umbrella',)",
+    "('Banana Banana',)",
+    "('Echo Pear sky',)",
+    "('wolf cat vine wolf',)",
+    "('nut Banana',)",
+    "('moon owl Banana',)",
+    "('yes Echo apple',)",
+    "('tree Echo Umbrella kiwi',)",
+    "('rose Umbrella Lemon grape moon',)",
+    "('dog sky Banana',)",
+    "('owl tree Umbrella kiwi Umbrella',)"
+   ],
+   "probe_expected": [
+    "1",
+    "2",
+    "0",
+    "2",
+    "0",
+    "0",
+    "1",
+    "2",
+    "2",
+    "1",
+    "0",
+    "0",
+    "2",
+    "2",
+    "0",
+    "1",
+    "0",
+    "1",
+    "2",
+    "0",
+    "1",
+    "3",
+    "1",
+    "0",
+    "2",
+    "2",
+    "1",
+    "1",
+    "2",
+    "0",
+    "1",
+    "1",
+    "2",
+    "1",
+    "2",
+    "1",
+    "2",
+    "1",
+    "2",
+    "2"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:max",
+   "name": "max_after_first_run_lengths",
+   "params": "numbers",
+   "neighbour": "max_steps",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `max_after_first_run_lengths(numbers)` that returns the largest of the values of the lengths of the runs of equal neighbouring numbers in the list after the first one (None if there are none)."
+   },
+   "tests": "assert max_after_first_run_lengths([]) == None\nassert max_after_first_run_lengths([7]) == None\nassert max_after_first_run_lengths([2]) == None\nassert max_after_first_run_lengths([-5, -9, -3, 2]) == 1\nassert max_after_first_run_lengths([-4, 3, 19, -5]) == 1\nassert max_after_first_run_lengths([-6, 8, 10, 13]) == 1",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      7
+     ]
+    ],
+    [
+     [
+      2
+     ]
+    ],
+    [
+     [
+      -5,
+      -9,
+      -3,
+      2
+     ]
+    ],
+    [
+     [
+      -4,
+      3,
+      19,
+      -5
+     ]
+    ],
+    [
+     [
+      -6,
+      8,
+      10,
+      13
+     ]
+    ]
+   ],
+   "reference": "def max_after_first_run_lengths(numbers):\n    xs = []\n    for i, x in enumerate(numbers):\n        if i > 0 and x == numbers[i - 1]:\n            xs[-1] += 1\n        else:\n            xs.append(1)\n    ys = xs[1:]\n    return max(ys) if ys else None",
+   "wrong": "def max_after_first_run_lengths(numbers):\n    xs = numbers\n    ys = [b - a for a, b in zip(xs, xs[1:])]\n    return max(ys) if ys else None",
+   "expected": [
+    "None",
+    "None",
+    "None",
+    "1",
+    "1",
+    "1"
+   ],
+   "wrong_outputs": [
+    "None",
+    "None",
+    "None",
+    "6",
+    "16",
+    "14"
+   ],
+   "probe_args": [
+    "([16, 18, -5, 20],)",
+    "([20, 14, 18, 12],)",
+    "([7],)",
+    "([-8, 16, 3],)",
+    "([15, -3, 5, 2, 16],)",
+    "([-8],)",
+    "([-1, 19, -9, 7, 12, 9, 9],)",
+    "([-7, 15, 17],)",
+    "([7, 0, -6, -5, 4, 19],)",
+    "([20, -7, 20, -6, 4, -7],)",
+    "([15, -5, 14, -9, 16, 5],)",
+    "([-9, 6, 20, 18, 1, 14],)",
+    "([2],)",
+    "([],)",
+    "([-4, -9, 17, -2, 17],)",
+    "([10],)",
+    "([-9, -3, 12],)",
+    "([14],)",
+    "([2, 13, -9, 20],)",
+    "([18, -5, -4],)",
+    "([6],)",
+    "([-5, -9, -3, 2],)",
+    "([0, 0, 20, 19, 8, 11, 1],)",
+    "([-6],)",
+    "([-4, 3, 19, -5],)",
+    "([1, 7, -2],)",
+    "([0, 2],)",
+    "([10, -9],)",
+    "([13],)",
+    "([4, 0],)",
+    "([14, 20, -5, 9, 4, 0],)",
+    "([-7, -2, 5, 11, 2],)",
+    "([-9, 4, 14, 19, 1, 5],)",
+    "([0, 6, -7, -4, 16],)",
+    "([-6, 8, 10, 13],)",
+    "([20, 3, -4, 15, 4, 4, -4],)",
+    "([1, 20, 7, -5, 2, 5, 11],)",
+    "([0, -9, 17],)",
+    "([10, 5, -9, -3, 0, -6, 15],)",
+    "([8, 10, -5, 4],)"
+   ],
+   "probe_expected": [
+    "1",
+    "1",
+    "None",
+    "1",
+    "1",
+    "None",
+    "2",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "None",
+    "None",
+    "1",
+    "None",
+    "1",
+    "None",
+    "1",
+    "1",
+    "None",
+    "1",
+    "1",
+    "None",
+    "1",
+    "1",
+    "1",
+    "1",
+    "None",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "2",
+    "1",
+    "1",
+    "1",
+    "1"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:count",
+   "name": "count_leaders_run_lengths",
+   "params": "numbers",
+   "neighbour": "count_steps",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `count_leaders_run_lengths(numbers)` that returns how many values there are in the values of the lengths of the runs of equal neighbouring numbers in the list that are larger than every value after them."
+   },
+   "tests": "assert count_leaders_run_lengths([]) == 0\nassert count_leaders_run_lengths([7]) == 1\nassert count_leaders_run_lengths([2]) == 1\nassert count_leaders_run_lengths([-5, -9, -3, 2]) == 1\nassert count_leaders_run_lengths([-4, 3, 19, -5]) == 1\nassert count_leaders_run_lengths([-6, 8, 10, 13]) == 1",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      7
+     ]
+    ],
+    [
+     [
+      2
+     ]
+    ],
+    [
+     [
+      -5,
+      -9,
+      -3,
+      2
+     ]
+    ],
+    [
+     [
+      -4,
+      3,
+      19,
+      -5
+     ]
+    ],
+    [
+     [
+      -6,
+      8,
+      10,
+      13
+     ]
+    ]
+   ],
+   "reference": "def count_leaders_run_lengths(numbers):\n    xs = []\n    for i, x in enumerate(numbers):\n        if i > 0 and x == numbers[i - 1]:\n            xs[-1] += 1\n        else:\n            xs.append(1)\n    ys = [x for i, x in enumerate(xs) if all(x > y for y in xs[i + 1:])]\n    return len(ys)",
+   "wrong": "def count_leaders_run_lengths(numbers):\n    xs = numbers\n    ys = [b - a for a, b in zip(xs, xs[1:])]\n    return len(ys)",
+   "expected": [
+    "0",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1"
+   ],
+   "wrong_outputs": [
+    "0",
+    "0",
+    "0",
+    "3",
+    "3",
+    "3"
+   ],
+   "probe_args": [
+    "([16, 18, -5, 20],)",
+    "([20, 14, 18, 12],)",
+    "([7],)",
+    "([-8, 16, 3],)",
+    "([15, -3, 5, 2, 16],)",
+    "([-8],)",
+    "([-1, 19, -9, 7, 12, 9, 9],)",
+    "([-7, 15, 17],)",
+    "([7, 0, -6, -5, 4, 19],)",
+    "([20, -7, 20, -6, 4, -7],)",
+    "([15, -5, 14, -9, 16, 5],)",
+    "([-9, 6, 20, 18, 1, 14],)",
+    "([2],)",
+    "([],)",
+    "([-4, -9, 17, -2, 17],)",
+    "([10],)",
+    "([-9, -3, 12],)",
+    "([14],)",
+    "([2, 13, -9, 20],)",
+    "([18, -5, -4],)",
+    "([6],)",
+    "([-5, -9, -3, 2],)",
+    "([0, 0, 20, 19, 8, 11, 1],)",
+    "([-6],)",
+    "([-4, 3, 19, -5],)",
+    "([1, 7, -2],)",
+    "([0, 2],)",
+    "([10, -9],)",
+    "([13],)",
+    "([4, 0],)",
+    "([14, 20, -5, 9, 4, 0],)",
+    "([-7, -2, 5, 11, 2],)",
+    "([-9, 4, 14, 19, 1, 5],)",
+    "([0, 6, -7, -4, 16],)",
+    "([-6, 8, 10, 13],)",
+    "([20, 3, -4, 15, 4, 4, -4],)",
+    "([1, 20, 7, -5, 2, 5, 11],)",
+    "([0, -9, 17],)",
+    "([10, 5, -9, -3, 0, -6, 15],)",
+    "([8, 10, -5, 4],)"
+   ],
+   "probe_expected": [
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "0",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "2",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "2",
+    "1",
+    "1",
+    "1",
+    "1"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:sum",
+   "name": "sum_odd_positions_run_lengths",
+   "params": "numbers",
+   "neighbour": "sum_steps",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `sum_odd_positions_run_lengths(numbers)` that returns the sum of the values at odd positions (1, 3, 5, ...) of the lengths of the runs of equal neighbouring numbers in the list."
+   },
+   "tests": "assert sum_odd_positions_run_lengths([]) == 0\nassert sum_odd_positions_run_lengths([7]) == 0\nassert sum_odd_positions_run_lengths([2]) == 0\nassert sum_odd_positions_run_lengths([-5, -9, -3, 2]) == 2\nassert sum_odd_positions_run_lengths([-4, 3, 19, -5]) == 2\nassert sum_odd_positions_run_lengths([-6, 8, 10, 13]) == 2",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      7
+     ]
+    ],
+    [
+     [
+      2
+     ]
+    ],
+    [
+     [
+      -5,
+      -9,
+      -3,
+      2
+     ]
+    ],
+    [
+     [
+      -4,
+      3,
+      19,
+      -5
+     ]
+    ],
+    [
+     [
+      -6,
+      8,
+      10,
+      13
+     ]
+    ]
+   ],
+   "reference": "def sum_odd_positions_run_lengths(numbers):\n    xs = []\n    for i, x in enumerate(numbers):\n        if i > 0 and x == numbers[i - 1]:\n            xs[-1] += 1\n        else:\n            xs.append(1)\n    ys = xs[1::2]\n    return sum(ys)",
+   "wrong": "def sum_odd_positions_run_lengths(numbers):\n    xs = numbers\n    ys = [b - a for a, b in zip(xs, xs[1:])]\n    return sum(ys)",
+   "expected": [
+    "0",
+    "0",
+    "0",
+    "2",
+    "2",
+    "2"
+   ],
+   "wrong_outputs": [
+    "0",
+    "0",
+    "0",
+    "7",
+    "-1",
+    "19"
+   ],
+   "probe_args": [
+    "([16, 18, -5, 20],)",
+    "([20, 14, 18, 12],)",
+    "([7],)",
+    "([-8, 16, 3],)",
+    "([15, -3, 5, 2, 16],)",
+    "([-8],)",
+    "([-1, 19, -9, 7, 12, 9, 9],)",
+    "([-7, 15, 17],)",
+    "([7, 0, -6, -5, 4, 19],)",
+    "([20, -7, 20, -6, 4, -7],)",
+    "([15, -5, 14, -9, 16, 5],)",
+    "([-9, 6, 20, 18, 1, 14],)",
+    "([2],)",
+    "([],)",
+    "([-4, -9, 17, -2, 17],)",
+    "([10],)",
+    "([-9, -3, 12],)",
+    "([14],)",
+    "([2, 13, -9, 20],)",
+    "([18, -5, -4],)",
+    "([6],)",
+    "([-5, -9, -3, 2],)",
+    "([0, 0, 20, 19, 8, 11, 1],)",
+    "([-6],)",
+    "([-4, 3, 19, -5],)",
+    "([1, 7, -2],)",
+    "([0, 2],)",
+    "([10, -9],)",
+    "([13],)",
+    "([4, 0],)",
+    "([14, 20, -5, 9, 4, 0],)",
+    "([-7, -2, 5, 11, 2],)",
+    "([-9, 4, 14, 19, 1, 5],)",
+    "([0, 6, -7, -4, 16],)",
+    "([-6, 8, 10, 13],)",
+    "([20, 3, -4, 15, 4, 4, -4],)",
+    "([1, 20, 7, -5, 2, 5, 11],)",
+    "([0, -9, 17],)",
+    "([10, 5, -9, -3, 0, -6, 15],)",
+    "([8, 10, -5, 4],)"
+   ],
+   "probe_expected": [
+    "2",
+    "2",
+    "0",
+    "1",
+    "2",
+    "0",
+    "4",
+    "1",
+    "3",
+    "3",
+    "3",
+    "3",
+    "0",
+    "0",
+    "2",
+    "0",
+    "1",
+    "0",
+    "2",
+    "1",
+    "0",
+    "2",
+    "3",
+    "0",
+    "2",
+    "1",
+    "1",
+    "1",
+    "0",
+    "1",
+    "3",
+    "2",
+    "3",
+    "2",
+    "2",
+    "3",
+    "3",
+    "1",
+    "3",
+    "2"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:sum",
+   "name": "sum_steps_run_lengths",
+   "params": "numbers",
+   "neighbour": "sum_steps",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `sum_steps_run_lengths(numbers)` that returns the sum of the differences between neighbouring values of the lengths of the runs of equal neighbouring numbers in the list (each minus the one before it)."
+   },
+   "tests": "assert sum_steps_run_lengths([]) == 0\nassert sum_steps_run_lengths([7]) == 0\nassert sum_steps_run_lengths([2]) == 0\nassert sum_steps_run_lengths([-5, -9, -3, 2]) == 0\nassert sum_steps_run_lengths([-4, 3, 19, -5]) == 0\nassert sum_steps_run_lengths([-6, 8, 10, 13]) == 0",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      7
+     ]
+    ],
+    [
+     [
+      2
+     ]
+    ],
+    [
+     [
+      -5,
+      -9,
+      -3,
+      2
+     ]
+    ],
+    [
+     [
+      -4,
+      3,
+      19,
+      -5
+     ]
+    ],
+    [
+     [
+      -6,
+      8,
+      10,
+      13
+     ]
+    ]
+   ],
+   "reference": "def sum_steps_run_lengths(numbers):\n    xs = []\n    for i, x in enumerate(numbers):\n        if i > 0 and x == numbers[i - 1]:\n            xs[-1] += 1\n        else:\n            xs.append(1)\n    ys = [b - a for a, b in zip(xs, xs[1:])]\n    return sum(ys)",
+   "wrong": "def sum_steps_run_lengths(numbers):\n    xs = numbers\n    ys = [b - a for a, b in zip(xs, xs[1:])]\n    return sum(ys)",
+   "expected": [
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0"
+   ],
+   "wrong_outputs": [
+    "0",
+    "0",
+    "0",
+    "7",
+    "-1",
+    "19"
+   ],
+   "probe_args": [
+    "([16, 18, -5, 20],)",
+    "([20, 14, 18, 12],)",
+    "([7],)",
+    "([-8, 16, 3],)",
+    "([15, -3, 5, 2, 16],)",
+    "([-8],)",
+    "([-1, 19, -9, 7, 12, 9, 9],)",
+    "([-7, 15, 17],)",
+    "([7, 0, -6, -5, 4, 19],)",
+    "([20, -7, 20, -6, 4, -7],)",
+    "([15, -5, 14, -9, 16, 5],)",
+    "([-9, 6, 20, 18, 1, 14],)",
+    "([2],)",
+    "([],)",
+    "([-4, -9, 17, -2, 17],)",
+    "([10],)",
+    "([-9, -3, 12],)",
+    "([14],)",
+    "([2, 13, -9, 20],)",
+    "([18, -5, -4],)",
+    "([6],)",
+    "([-5, -9, -3, 2],)",
+    "([0, 0, 20, 19, 8, 11, 1],)",
+    "([-6],)",
+    "([-4, 3, 19, -5],)",
+    "([1, 7, -2],)",
+    "([0, 2],)",
+    "([10, -9],)",
+    "([13],)",
+    "([4, 0],)",
+    "([14, 20, -5, 9, 4, 0],)",
+    "([-7, -2, 5, 11, 2],)",
+    "([-9, 4, 14, 19, 1, 5],)",
+    "([0, 6, -7, -4, 16],)",
+    "([-6, 8, 10, 13],)",
+    "([20, 3, -4, 15, 4, 4, -4],)",
+    "([1, 20, 7, -5, 2, 5, 11],)",
+    "([0, -9, 17],)",
+    "([10, 5, -9, -3, 0, -6, 15],)",
+    "([8, 10, -5, 4],)"
+   ],
+   "probe_expected": [
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "1",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "-1",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:count_pos",
+   "name": "count_positive_steps_run_lengths",
+   "params": "numbers",
+   "neighbour": "count_positive_pair_maxima",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `count_positive_steps_run_lengths(numbers)` that returns how many of the differences between neighbouring values of the lengths of the runs of equal neighbouring numbers in the list (each minus the one before it) are positive."
+   },
+   "tests": "assert count_positive_steps_run_lengths([]) == 0\nassert count_positive_steps_run_lengths([7]) == 0\nassert count_positive_steps_run_lengths([2]) == 0\nassert count_positive_steps_run_lengths([-5, -9, -3, 2]) == 0\nassert count_positive_steps_run_lengths([-4, 3, 19, -5]) == 0\nassert count_positive_steps_run_lengths([-6, 8, 10, 13]) == 0",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      7
+     ]
+    ],
+    [
+     [
+      2
+     ]
+    ],
+    [
+     [
+      -5,
+      -9,
+      -3,
+      2
+     ]
+    ],
+    [
+     [
+      -4,
+      3,
+      19,
+      -5
+     ]
+    ],
+    [
+     [
+      -6,
+      8,
+      10,
+      13
+     ]
+    ]
+   ],
+   "reference": "def count_positive_steps_run_lengths(numbers):\n    xs = []\n    for i, x in enumerate(numbers):\n        if i > 0 and x == numbers[i - 1]:\n            xs[-1] += 1\n        else:\n            xs.append(1)\n    ys = [b - a for a, b in zip(xs, xs[1:])]\n    return sum(1 for y in ys if y > 0)",
+   "wrong": "def count_positive_steps_run_lengths(numbers):\n    xs = numbers\n    ys = [max(a, b) for a, b in zip(xs, xs[1:])]\n    return sum(1 for y in ys if y > 0)",
+   "expected": [
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0"
+   ],
+   "wrong_outputs": [
+    "0",
+    "0",
+    "0",
+    "1",
+    "3",
+    "3"
+   ],
+   "probe_args": [
+    "([16, 18, -5, 20],)",
+    "([20, 14, 18, 12],)",
+    "([7],)",
+    "([-8, 16, 3],)",
+    "([15, -3, 5, 2, 16],)",
+    "([-8],)",
+    "([-1, 19, -9, 7, 12, 9, 9],)",
+    "([-7, 15, 17],)",
+    "([7, 0, -6, -5, 4, 19],)",
+    "([20, -7, 20, -6, 4, -7],)",
+    "([15, -5, 14, -9, 16, 5],)",
+    "([-9, 6, 20, 18, 1, 14],)",
+    "([2],)",
+    "([],)",
+    "([-4, -9, 17, -2, 17],)",
+    "([10],)",
+    "([-9, -3, 12],)",
+    "([14],)",
+    "([2, 13, -9, 20],)",
+    "([18, -5, -4],)",
+    "([6],)",
+    "([-5, -9, -3, 2],)",
+    "([0, 0, 20, 19, 8, 11, 1],)",
+    "([-6],)",
+    "([-4, 3, 19, -5],)",
+    "([1, 7, -2],)",
+    "([0, 2],)",
+    "([10, -9],)",
+    "([13],)",
+    "([4, 0],)",
+    "([14, 20, -5, 9, 4, 0],)",
+    "([-7, -2, 5, 11, 2],)",
+    "([-9, 4, 14, 19, 1, 5],)",
+    "([0, 6, -7, -4, 16],)",
+    "([-6, 8, 10, 13],)",
+    "([20, 3, -4, 15, 4, 4, -4],)",
+    "([1, 20, 7, -5, 2, 5, 11],)",
+    "([0, -9, 17],)",
+    "([10, 5, -9, -3, 0, -6, 15],)",
+    "([8, 10, -5, 4],)"
+   ],
+   "probe_expected": [
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "1",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "1",
+    "0",
+    "0",
+    "0",
+    "0"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:rising",
+   "name": "longest_rise_odd_positions_run_lengths",
+   "params": "numbers",
+   "neighbour": "longest_rise_all",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `longest_rise_odd_positions_run_lengths(numbers)` that returns the length of the longest stretch of strictly increasing neighbouring values in the values at odd positions (1, 3, 5, ...) of the lengths of the runs of equal neighbouring numbers in the list (0 if there are none)."
+   },
+   "tests": "assert longest_rise_odd_positions_run_lengths([]) == 0\nassert longest_rise_odd_positions_run_lengths([7]) == 0\nassert longest_rise_odd_positions_run_lengths([2]) == 0\nassert longest_rise_odd_positions_run_lengths([-5, -9, -3, 2]) == 1\nassert longest_rise_odd_positions_run_lengths([-4, 3, 19, -5]) == 1\nassert longest_rise_odd_positions_run_lengths([-6, 8, 10, 13]) == 1",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      7
+     ]
+    ],
+    [
+     [
+      2
+     ]
+    ],
+    [
+     [
+      -5,
+      -9,
+      -3,
+      2
+     ]
+    ],
+    [
+     [
+      -4,
+      3,
+      19,
+      -5
+     ]
+    ],
+    [
+     [
+      -6,
+      8,
+      10,
+      13
+     ]
+    ]
+   ],
+   "reference": "def longest_rise_odd_positions_run_lengths(numbers):\n    xs = []\n    for i, x in enumerate(numbers):\n        if i > 0 and x == numbers[i - 1]:\n            xs[-1] += 1\n        else:\n            xs.append(1)\n    ys = xs[1::2]\n    best = run = 0\n    for i, y in enumerate(ys):\n        run = run + 1 if i > 0 and y > ys[i - 1] else 1\n        best = max(best, run)\n    return best",
+   "wrong": "def longest_rise_odd_positions_run_lengths(numbers):\n    xs = numbers\n    ys = xs\n    best = run = 0\n    for i, y in enumerate(ys):\n        run = run + 1 if i > 0 and y > ys[i - 1] else 1\n        best = max(best, run)\n    return best",
+   "expected": [
+    "0",
+    "0",
+    "0",
+    "1",
+    "1",
+    "1"
+   ],
+   "wrong_outputs": [
+    "0",
+    "1",
+    "1",
+    "3",
+    "3",
+    "4"
+   ],
+   "probe_args": [
+    "([16, 18, -5, 20],)",
+    "([20, 14, 18, 12],)",
+    "([7],)",
+    "([-8, 16, 3],)",
+    "([15, -3, 5, 2, 16],)",
+    "([-8],)",
+    "([-1, 19, -9, 7, 12, 9, 9],)",
+    "([-7, 15, 17],)",
+    "([7, 0, -6, -5, 4, 19],)",
+    "([20, -7, 20, -6, 4, -7],)",
+    "([15, -5, 14, -9, 16, 5],)",
+    "([-9, 6, 20, 18, 1, 14],)",
+    "([2],)",
+    "([],)",
+    "([-4, -9, 17, -2, 17],)",
+    "([10],)",
+    "([-9, -3, 12],)",
+    "([14],)",
+    "([2, 13, -9, 20],)",
+    "([18, -5, -4],)",
+    "([6],)",
+    "([-5, -9, -3, 2],)",
+    "([0, 0, 20, 19, 8, 11, 1],)",
+    "([-6],)",
+    "([-4, 3, 19, -5],)",
+    "([1, 7, -2],)",
+    "([0, 2],)",
+    "([10, -9],)",
+    "([13],)",
+    "([4, 0],)",
+    "([14, 20, -5, 9, 4, 0],)",
+    "([-7, -2, 5, 11, 2],)",
+    "([-9, 4, 14, 19, 1, 5],)",
+    "([0, 6, -7, -4, 16],)",
+    "([-6, 8, 10, 13],)",
+    "([20, 3, -4, 15, 4, 4, -4],)",
+    "([1, 20, 7, -5, 2, 5, 11],)",
+    "([0, -9, 17],)",
+    "([10, 5, -9, -3, 0, -6, 15],)",
+    "([8, 10, -5, 4],)"
+   ],
+   "probe_expected": [
+    "1",
+    "1",
+    "0",
+    "1",
+    "1",
+    "0",
+    "2",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "0",
+    "0",
+    "1",
+    "0",
+    "1",
+    "0",
+    "1",
+    "1",
+    "0",
+    "1",
+    "1",
+    "0",
+    "1",
+    "1",
+    "1",
+    "1",
+    "0",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:bestrun",
+   "name": "best_run_sum_after_first_run_lengths",
+   "params": "numbers",
+   "neighbour": "best_run_sum_all",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `best_run_sum_after_first_run_lengths(numbers)` that returns the largest sum of a stretch of one or more neighbouring values of the values of the lengths of the runs of equal neighbouring numbers in the list after the first one (None if there are none)."
+   },
+   "tests": "assert best_run_sum_after_first_run_lengths([]) == None\nassert best_run_sum_after_first_run_lengths([7]) == None\nassert best_run_sum_after_first_run_lengths([2]) == None\nassert best_run_sum_after_first_run_lengths([-5, -9, -3, 2]) == 3\nassert best_run_sum_after_first_run_lengths([-4, 3, 19, -5]) == 3\nassert best_run_sum_after_first_run_lengths([-6, 8, 10, 13]) == 3",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      7
+     ]
+    ],
+    [
+     [
+      2
+     ]
+    ],
+    [
+     [
+      -5,
+      -9,
+      -3,
+      2
+     ]
+    ],
+    [
+     [
+      -4,
+      3,
+      19,
+      -5
+     ]
+    ],
+    [
+     [
+      -6,
+      8,
+      10,
+      13
+     ]
+    ]
+   ],
+   "reference": "def best_run_sum_after_first_run_lengths(numbers):\n    xs = []\n    for i, x in enumerate(numbers):\n        if i > 0 and x == numbers[i - 1]:\n            xs[-1] += 1\n        else:\n            xs.append(1)\n    ys = xs[1:]\n    if not ys:\n        return None\n    best = cur = ys[0]\n    for y in ys[1:]:\n        cur = max(y, cur + y)\n        best = max(best, cur)\n    return best",
+   "wrong": "def best_run_sum_after_first_run_lengths(numbers):\n    xs = numbers\n    ys = xs\n    if not ys:\n        return None\n    best = cur = ys[0]\n    for y in ys[1:]:\n        cur = max(y, cur + y)\n        best = max(best, cur)\n    return best",
+   "expected": [
+    "None",
+    "None",
+    "None",
+    "3",
+    "3",
+    "3"
+   ],
+   "wrong_outputs": [
+    "None",
+    "7",
+    "2",
+    "2",
+    "22",
+    "31"
+   ],
+   "probe_args": [
+    "([16, 18, -5, 20],)",
+    "([20, 14, 18, 12],)",
+    "([7],)",
+    "([-8, 16, 3],)",
+    "([15, -3, 5, 2, 16],)",
+    "([-8],)",
+    "([-1, 19, -9, 7, 12, 9, 9],)",
+    "([-7, 15, 17],)",
+    "([7, 0, -6, -5, 4, 19],)",
+    "([20, -7, 20, -6, 4, -7],)",
+    "([15, -5, 14, -9, 16, 5],)",
+    "([-9, 6, 20, 18, 1, 14],)",
+    "([2],)",
+    "([],)",
+    "([-4, -9, 17, -2, 17],)",
+    "([10],)",
+    "([-9, -3, 12],)",
+    "([14],)",
+    "([2, 13, -9, 20],)",
+    "([18, -5, -4],)",
+    "([6],)",
+    "([-5, -9, -3, 2],)",
+    "([0, 0, 20, 19, 8, 11, 1],)",
+    "([-6],)",
+    "([-4, 3, 19, -5],)",
+    "([1, 7, -2],)",
+    "([0, 2],)",
+    "([10, -9],)",
+    "([13],)",
+    "([4, 0],)",
+    "([14, 20, -5, 9, 4, 0],)",
+    "([-7, -2, 5, 11, 2],)",
+    "([-9, 4, 14, 19, 1, 5],)",
+    "([0, 6, -7, -4, 16],)",
+    "([-6, 8, 10, 13],)",
+    "([20, 3, -4, 15, 4, 4, -4],)",
+    "([1, 20, 7, -5, 2, 5, 11],)",
+    "([0, -9, 17],)",
+    "([10, 5, -9, -3, 0, -6, 15],)",
+    "([8, 10, -5, 4],)"
+   ],
+   "probe_expected": [
+    "3",
+    "3",
+    "None",
+    "2",
+    "4",
+    "None",
+    "6",
+    "2",
+    "5",
+    "5",
+    "5",
+    "5",
+    "None",
+    "None",
+    "4",
+    "None",
+    "2",
+    "None",
+    "3",
+    "2",
+    "None",
+    "3",
+    "5",
+    "None",
+    "3",
+    "2",
+    "1",
+    "1",
+    "None",
+    "1",
+    "5",
+    "4",
+    "5",
+    "4",
+    "3",
+    "6",
+    "6",
+    "2",
+    "6",
+    "3"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:min",
+   "name": "min_steps_run_lengths",
+   "params": "numbers",
+   "neighbour": "min_steps",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `min_steps_run_lengths(numbers)` that returns the smallest of the differences between neighbouring values of the lengths of the runs of equal neighbouring numbers in the list (each minus the one before it) (None if there are none)."
+   },
+   "tests": "assert min_steps_run_lengths([]) == None\nassert min_steps_run_lengths([7]) == None\nassert min_steps_run_lengths([2]) == None\nassert min_steps_run_lengths([-5, -9, -3, 2]) == 0\nassert min_steps_run_lengths([-4, 3, 19, -5]) == 0\nassert min_steps_run_lengths([-6, 8, 10, 13]) == 0",
+   "test_inputs": [
+    [
+     []
+    ],
+    [
+     [
+      7
+     ]
+    ],
+    [
+     [
+      2
+     ]
+    ],
+    [
+     [
+      -5,
+      -9,
+      -3,
+      2
+     ]
+    ],
+    [
+     [
+      -4,
+      3,
+      19,
+      -5
+     ]
+    ],
+    [
+     [
+      -6,
+      8,
+      10,
+      13
+     ]
+    ]
+   ],
+   "reference": "def min_steps_run_lengths(numbers):\n    xs = []\n    for i, x in enumerate(numbers):\n        if i > 0 and x == numbers[i - 1]:\n            xs[-1] += 1\n        else:\n            xs.append(1)\n    ys = [b - a for a, b in zip(xs, xs[1:])]\n    return min(ys) if ys else None",
+   "wrong": "def min_steps_run_lengths(numbers):\n    xs = numbers\n    ys = [b - a for a, b in zip(xs, xs[1:])]\n    return min(ys) if ys else None",
+   "expected": [
+    "None",
+    "None",
+    "None",
+    "0",
+    "0",
+    "0"
+   ],
+   "wrong_outputs": [
+    "None",
+    "None",
+    "None",
+    "-4",
+    "-24",
+    "2"
+   ],
+   "probe_args": [
+    "([16, 18, -5, 20],)",
+    "([20, 14, 18, 12],)",
+    "([7],)",
+    "([-8, 16, 3],)",
+    "([15, -3, 5, 2, 16],)",
+    "([-8],)",
+    "([-1, 19, -9, 7, 12, 9, 9],)",
+    "([-7, 15, 17],)",
+    "([7, 0, -6, -5, 4, 19],)",
+    "([20, -7, 20, -6, 4, -7],)",
+    "([15, -5, 14, -9, 16, 5],)",
+    "([-9, 6, 20, 18, 1, 14],)",
+    "([2],)",
+    "([],)",
+    "([-4, -9, 17, -2, 17],)",
+    "([10],)",
+    "([-9, -3, 12],)",
+    "([14],)",
+    "([2, 13, -9, 20],)",
+    "([18, -5, -4],)",
+    "([6],)",
+    "([-5, -9, -3, 2],)",
+    "([0, 0, 20, 19, 8, 11, 1],)",
+    "([-6],)",
+    "([-4, 3, 19, -5],)",
+    "([1, 7, -2],)",
+    "([0, 2],)",
+    "([10, -9],)",
+    "([13],)",
+    "([4, 0],)",
+    "([14, 20, -5, 9, 4, 0],)",
+    "([-7, -2, 5, 11, 2],)",
+    "([-9, 4, 14, 19, 1, 5],)",
+    "([0, 6, -7, -4, 16],)",
+    "([-6, 8, 10, 13],)",
+    "([20, 3, -4, 15, 4, 4, -4],)",
+    "([1, 20, 7, -5, 2, 5, 11],)",
+    "([0, -9, 17],)",
+    "([10, 5, -9, -3, 0, -6, 15],)",
+    "([8, 10, -5, 4],)"
+   ],
+   "probe_expected": [
+    "0",
+    "0",
+    "None",
+    "0",
+    "0",
+    "None",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "None",
+    "None",
+    "0",
+    "None",
+    "0",
+    "None",
+    "0",
+    "0",
+    "None",
+    "0",
+    "-1",
+    "None",
+    "0",
+    "0",
+    "0",
+    "0",
+    "None",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "-1",
+    "0",
+    "0",
+    "0",
+    "0"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:records",
+   "name": "records_letter_positions",
+   "params": "s",
+   "neighbour": "records_steps_letter_positions",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `records_letter_positions(s)` that returns how many of the alphabet positions of the lower-case letters of s (a = 1, b = 2, ...) are larger than every value before them."
+   },
+   "tests": "assert records_letter_positions('') == 0\nassert records_letter_positions('Y') == 0\nassert records_letter_positions('u') == 1\nassert records_letter_positions('oYX!o') == 1\nassert records_letter_positions('be9Yo') == 3\nassert records_letter_positions('Xb0ioi') == 3",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "Y"
+    ],
+    [
+     "u"
+    ],
+    [
+     "oYX!o"
+    ],
+    [
+     "be9Yo"
+    ],
+    [
+     "Xb0ioi"
+    ]
+   ],
+   "reference": "def records_letter_positions(s):\n    xs = [ord(c) - 96 for c in s if c.islower()]\n    ys = xs\n    return sum(1 for i, y in enumerate(ys) if all(y > z for z in ys[:i]))",
+   "wrong": "def records_letter_positions(s):\n    xs = [ord(c) - 96 for c in s if c.islower()]\n    ys = [b - a for a, b in zip(xs, xs[1:])]\n    return sum(1 for i, y in enumerate(ys) if all(y > z for z in ys[:i]))",
+   "expected": [
+    "0",
+    "0",
+    "1",
+    "1",
+    "3",
+    "3"
+   ],
+   "wrong_outputs": [
+    "0",
+    "0",
+    "0",
+    "1",
+    "2",
+    "1"
+   ],
+   "probe_args": [
+    "('b X1eY1',)",
+    "(' abi',)",
+    "('',)",
+    "('uY!Z',)",
+    "('Xb0ioi',)",
+    "('!eZbab1iiY',)",
+    "('Y',)",
+    "('!!1',)",
+    "('u',)",
+    "('iYcZ',)",
+    "('eYbu Yu01!',)",
+    "('iXoZ',)",
+    "('cb',)",
+    "('XcY io X0',)",
+    "('XX0',)",
+    "('X aXi',)",
+    "('a!ZeaoX',)",
+    "('b 9b 0! ',)",
+    "('ai9 0i0!e',)",
+    "('iebuX0ouc',)",
+    "(' ! ucX',)",
+    "('Yo',)",
+    "('!cX',)",
+    "('u1Xu0e',)",
+    "('XeZ',)",
+    "('b9coa0  ce',)",
+    "('Zb09',)",
+    "('1!!o',)",
+    "('a 0Y  Y',)",
+    "('ZXXi0X',)",
+    "('iaaac',)",
+    "('acb1u eZuY',)",
+    "('eoZbZ!b',)",
+    "('oYX!o',)",
+    "('be9Yo',)",
+    "('i 0',)",
+    "('iY9u',)",
+    "('o90eai!',)",
+    "('a',)",
+    "('0Xa!1uX',)"
+   ],
+   "probe_expected": [
+    "2",
+    "3",
+    "0",
+    "1",
+    "3",
+    "2",
+    "0",
+    "0",
+    "1",
+    "1",
+    "2",
+    "2",
+    "1",
+    "3",
+    "0",
+    "2",
+    "3",
+    "1",
+    "2",
+    "2",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "3",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "3",
+    "2",
+    "1",
+    "3",
+    "1",
+    "2",
+    "1",
+    "1",
+    "2"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:bestrun",
+   "name": "best_run_sum_steps_letter_positions",
+   "params": "s",
+   "neighbour": "best_run_sum_letter_positions",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `best_run_sum_steps_letter_positions(s)` that returns the largest sum of a stretch of one or more neighbouring values of the differences between neighbouring values of the alphabet positions of the lower-case letters of s (a = 1, b = 2, ...) (each minus the one before it) (None if there are none)."
+   },
+   "tests": "assert best_run_sum_steps_letter_positions('') == None\nassert best_run_sum_steps_letter_positions('Y') == None\nassert best_run_sum_steps_letter_positions('u') == None\nassert best_run_sum_steps_letter_positions('oYX!o') == 0\nassert best_run_sum_steps_letter_positions('be9Yo') == 13\nassert best_run_sum_steps_letter_positions('Xb0ioi') == 13",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "Y"
+    ],
+    [
+     "u"
+    ],
+    [
+     "oYX!o"
+    ],
+    [
+     "be9Yo"
+    ],
+    [
+     "Xb0ioi"
+    ]
+   ],
+   "reference": "def best_run_sum_steps_letter_positions(s):\n    xs = [ord(c) - 96 for c in s if c.islower()]\n    ys = [b - a for a, b in zip(xs, xs[1:])]\n    if not ys:\n        return None\n    best = cur = ys[0]\n    for y in ys[1:]:\n        cur = max(y, cur + y)\n        best = max(best, cur)\n    return best",
+   "wrong": "def best_run_sum_steps_letter_positions(s):\n    xs = [ord(c) - 96 for c in s if c.islower()]\n    ys = xs\n    if not ys:\n        return None\n    best = cur = ys[0]\n    for y in ys[1:]:\n        cur = max(y, cur + y)\n        best = max(best, cur)\n    return best",
+   "expected": [
+    "None",
+    "None",
+    "None",
+    "0",
+    "13",
+    "13"
+   ],
+   "wrong_outputs": [
+    "None",
+    "None",
+    "21",
+    "30",
+    "22",
+    "35"
+   ],
+   "probe_args": [
+    "('b X1eY1',)",
+    "(' abi',)",
+    "('',)",
+    "('uY!Z',)",
+    "('Xb0ioi',)",
+    "('!eZbab1iiY',)",
+    "('Y',)",
+    "('!!1',)",
+    "('u',)",
+    "('iYcZ',)",
+    "('eYbu Yu01!',)",
+    "('iXoZ',)",
+    "('cb',)",
+    "('XcY io X0',)",
+    "('XX0',)",
+    "('X aXi',)",
+    "('a!ZeaoX',)",
+    "('b 9b 0! ',)",
+    "('ai9 0i0!e',)",
+    "('iebuX0ouc',)",
+    "(' ! ucX',)",
+    "('Yo',)",
+    "('!cX',)",
+    "('u1Xu0e',)",
+    "('XeZ',)",
+    "('b9coa0  ce',)",
+    "('Zb09',)",
+    "('1!!o',)",
+    "('a 0Y  Y',)",
+    "('ZXXi0X',)",
+    "('iaaac',)",
+    "('acb1u eZuY',)",
+    "('eoZbZ!b',)",
+    "('oYX!o',)",
+    "('be9Yo',)",
+    "('i 0',)",
+    "('iY9u',)",
+    "('o90eai!',)",
+    "('a',)",
+    "('0Xa!1uX',)"
+   ],
+   "probe_expected": [
+    "3",
+    "8",
+    "None",
+    "None",
+    "13",
+    "8",
+    "None",
+    "None",
+    "None",
+    "-6",
+    "19",
+    "6",
+    "-1",
+    "12",
+    "None",
+    "8",
+    "14",
+    "0",
+    "8",
+    "19",
+    "-18",
+    "None",
+    "None",
+    "0",
+    "None",
+    "13",
+    "None",
+    "None",
+    "None",
+    "None",
+    "2",
+    "20",
+    "10",
+    "0",
+    "13",
+    "None",
+    "12",
+    "8",
+    "None",
+    "20"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:max",
+   "name": "max_letter_positions",
+   "params": "s",
+   "neighbour": "max_steps_letter_positions",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `max_letter_positions(s)` that returns the largest of the alphabet positions of the lower-case letters of s (a = 1, b = 2, ...) (None if there are none)."
+   },
+   "tests": "assert max_letter_positions('') == None\nassert max_letter_positions('Y') == None\nassert max_letter_positions('u') == 21\nassert max_letter_positions('oYX!o') == 15\nassert max_letter_positions('be9Yo') == 15\nassert max_letter_positions('Xb0ioi') == 15",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "Y"
+    ],
+    [
+     "u"
+    ],
+    [
+     "oYX!o"
+    ],
+    [
+     "be9Yo"
+    ],
+    [
+     "Xb0ioi"
+    ]
+   ],
+   "reference": "def max_letter_positions(s):\n    xs = [ord(c) - 96 for c in s if c.islower()]\n    ys = xs\n    return max(ys) if ys else None",
+   "wrong": "def max_letter_positions(s):\n    xs = [ord(c) - 96 for c in s if c.islower()]\n    ys = [b - a for a, b in zip(xs, xs[1:])]\n    return max(ys) if ys else None",
+   "expected": [
+    "None",
+    "None",
+    "21",
+    "15",
+    "15",
+    "15"
+   ],
+   "wrong_outputs": [
+    "None",
+    "None",
+    "None",
+    "0",
+    "10",
+    "7"
+   ],
+   "probe_args": [
+    "('b X1eY1',)",
+    "(' abi',)",
+    "('',)",
+    "('uY!Z',)",
+    "('Xb0ioi',)",
+    "('!eZbab1iiY',)",
+    "('Y',)",
+    "('!!1',)",
+    "('u',)",
+    "('iYcZ',)",
+    "('eYbu Yu01!',)",
+    "('iXoZ',)",
+    "('cb',)",
+    "('XcY io X0',)",
+    "('XX0',)",
+    "('X aXi',)",
+    "('a!ZeaoX',)",
+    "('b 9b 0! ',)",
+    "('ai9 0i0!e',)",
+    "('iebuX0ouc',)",
+    "(' ! ucX',)",
+    "('Yo',)",
+    "('!cX',)",
+    "('u1Xu0e',)",
+    "('XeZ',)",
+    "('b9coa0  ce',)",
+    "('Zb09',)",
+    "('1!!o',)",
+    "('a 0Y  Y',)",
+    "('ZXXi0X',)",
+    "('iaaac',)",
+    "('acb1u eZuY',)",
+    "('eoZbZ!b',)",
+    "('oYX!o',)",
+    "('be9Yo',)",
+    "('i 0',)",
+    "('iY9u',)",
+    "('o90eai!',)",
+    "('a',)",
+    "('0Xa!1uX',)"
+   ],
+   "probe_expected": [
+    "5",
+    "9",
+    "None",
+    "21",
+    "15",
+    "9",
+    "None",
+    "None",
+    "21",
+    "9",
+    "21",
+    "15",
+    "3",
+    "15",
+    "None",
+    "9",
+    "15",
+    "2",
+    "9",
+    "21",
+    "21",
+    "15",
+    "3",
+    "21",
+    "5",
+    "15",
+    "2",
+    "15",
+    "1",
+    "9",
+    "9",
+    "21",
+    "15",
+    "15",
+    "15",
+    "9",
+    "21",
+    "15",
+    "1",
+    "21"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:list",
+   "name": "list_distinct_letter_positions",
+   "params": "s",
+   "neighbour": "list_letter_positions",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `list_distinct_letter_positions(s)` that returns a list of the different values of the alphabet positions of the lower-case letters of s (a = 1, b = 2, ...), each once, in order of first appearance."
+   },
+   "tests": "assert list_distinct_letter_positions('') == []\nassert list_distinct_letter_positions('Y') == []\nassert list_distinct_letter_positions('u') == [21]\nassert list_distinct_letter_positions('oYX!o') == [15]\nassert list_distinct_letter_positions('be9Yo') == [2, 5, 15]\nassert list_distinct_letter_positions('Xb0ioi') == [2, 9, 15]",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "Y"
+    ],
+    [
+     "u"
+    ],
+    [
+     "oYX!o"
+    ],
+    [
+     "be9Yo"
+    ],
+    [
+     "Xb0ioi"
+    ]
+   ],
+   "reference": "def list_distinct_letter_positions(s):\n    xs = [ord(c) - 96 for c in s if c.islower()]\n    ys = list(dict.fromkeys(xs))\n    return list(ys)",
+   "wrong": "def list_distinct_letter_positions(s):\n    xs = [ord(c) - 96 for c in s if c.islower()]\n    ys = xs\n    return list(ys)",
+   "expected": [
+    "[]",
+    "[]",
+    "[21]",
+    "[15]",
+    "[2, 5, 15]",
+    "[2, 9, 15]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[]",
+    "[21]",
+    "[15, 15]",
+    "[2, 5, 15]",
+    "[2, 9, 15, 9]"
+   ],
+   "probe_args": [
+    "('b X1eY1',)",
+    "(' abi',)",
+    "('',)",
+    "('uY!Z',)",
+    "('Xb0ioi',)",
+    "('!eZbab1iiY',)",
+    "('Y',)",
+    "('!!1',)",
+    "('u',)",
+    "('iYcZ',)",
+    "('eYbu Yu01!',)",
+    "('iXoZ',)",
+    "('cb',)",
+    "('XcY io X0',)",
+    "('XX0',)",
+    "('X aXi',)",
+    "('a!ZeaoX',)",
+    "('b 9b 0! ',)",
+    "('ai9 0i0!e',)",
+    "('iebuX0ouc',)",
+    "(' ! ucX',)",
+    "('Yo',)",
+    "('!cX',)",
+    "('u1Xu0e',)",
+    "('XeZ',)",
+    "('b9coa0  ce',)",
+    "('Zb09',)",
+    "('1!!o',)",
+    "('a 0Y  Y',)",
+    "('ZXXi0X',)",
+    "('iaaac',)",
+    "('acb1u eZuY',)",
+    "('eoZbZ!b',)",
+    "('oYX!o',)",
+    "('be9Yo',)",
+    "('i 0',)",
+    "('iY9u',)",
+    "('o90eai!',)",
+    "('a',)",
+    "('0Xa!1uX',)"
+   ],
+   "probe_expected": [
+    "[2, 5]",
+    "[1, 2, 9]",
+    "[]",
+    "[21]",
+    "[2, 9, 15]",
+    "[5, 2, 1, 9]",
+    "[]",
+    "[]",
+    "[21]",
+    "[9, 3]",
+    "[5, 2, 21]",
+    "[9, 15]",
+    "[3, 2]",
+    "[3, 9, 15]",
+    "[]",
+    "[1, 9]",
+    "[1, 5, 15]",
+    "[2]",
+    "[1, 9, 5]",
+    "[9, 5, 2, 21, 15, 3]",
+    "[21, 3]",
+    "[15]",
+    "[3]",
+    "[21, 5]",
+    "[5]",
+    "[2, 3, 15, 1, 5]",
+    "[2]",
+    "[15]",
+    "[1]",
+    "[9]",
+    "[9, 1, 3]",
+    "[1, 3, 2, 21, 5]",
+    "[5, 15, 2]",
+    "[15]",
+    "[2, 5, 15]",
+    "[9]",
+    "[9, 21]",
+    "[15, 5, 1, 9]",
+    "[1]",
+    "[1, 21]"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:min",
+   "name": "min_after_first_letter_positions",
+   "params": "s",
+   "neighbour": "min_letter_positions",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `min_after_first_letter_positions(s)` that returns the smallest of the values of the alphabet positions of the lower-case letters of s (a = 1, b = 2, ...) after the first one (None if there are none)."
+   },
+   "tests": "assert min_after_first_letter_positions('') == None\nassert min_after_first_letter_positions('Y') == None\nassert min_after_first_letter_positions('u') == None\nassert min_after_first_letter_positions('oYX!o') == 15\nassert min_after_first_letter_positions('be9Yo') == 5\nassert min_after_first_letter_positions('Xb0ioi') == 9",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "Y"
+    ],
+    [
+     "u"
+    ],
+    [
+     "oYX!o"
+    ],
+    [
+     "be9Yo"
+    ],
+    [
+     "Xb0ioi"
+    ]
+   ],
+   "reference": "def min_after_first_letter_positions(s):\n    xs = [ord(c) - 96 for c in s if c.islower()]\n    ys = xs[1:]\n    return min(ys) if ys else None",
+   "wrong": "def min_after_first_letter_positions(s):\n    xs = [ord(c) - 96 for c in s if c.islower()]\n    ys = xs\n    return min(ys) if ys else None",
+   "expected": [
+    "None",
+    "None",
+    "None",
+    "15",
+    "5",
+    "9"
+   ],
+   "wrong_outputs": [
+    "None",
+    "None",
+    "21",
+    "15",
+    "2",
+    "2"
+   ],
+   "probe_args": [
+    "('b X1eY1',)",
+    "(' abi',)",
+    "('',)",
+    "('uY!Z',)",
+    "('Xb0ioi',)",
+    "('!eZbab1iiY',)",
+    "('Y',)",
+    "('!!1',)",
+    "('u',)",
+    "('iYcZ',)",
+    "('eYbu Yu01!',)",
+    "('iXoZ',)",
+    "('cb',)",
+    "('XcY io X0',)",
+    "('XX0',)",
+    "('X aXi',)",
+    "('a!ZeaoX',)",
+    "('b 9b 0! ',)",
+    "('ai9 0i0!e',)",
+    "('iebuX0ouc',)",
+    "(' ! ucX',)",
+    "('Yo',)",
+    "('!cX',)",
+    "('u1Xu0e',)",
+    "('XeZ',)",
+    "('b9coa0  ce',)",
+    "('Zb09',)",
+    "('1!!o',)",
+    "('a 0Y  Y',)",
+    "('ZXXi0X',)",
+    "('iaaac',)",
+    "('acb1u eZuY',)",
+    "('eoZbZ!b',)",
+    "('oYX!o',)",
+    "('be9Yo',)",
+    "('i 0',)",
+    "('iY9u',)",
+    "('o90eai!',)",
+    "('a',)",
+    "('0Xa!1uX',)"
+   ],
+   "probe_expected": [
+    "5",
+    "2",
+    "None",
+    "None",
+    "9",
+    "1",
+    "None",
+    "None",
+    "None",
+    "3",
+    "2",
+    "15",
+    "2",
+    "9",
+    "None",
+    "9",
+    "1",
+    "2",
+    "5",
+    "2",
+    "3",
+    "None",
+    "None",
+    "5",
+    "None",
+    "1",
+    "None",
+    "None",
+    "None",
+    "None",
+    "1",
+    "2",
+    "2",
+    "15",
+    "5",
+    "None",
+    "21",
+    "1",
+    "None",
+    "21"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:list",
+   "name": "list_steps_letter_positions",
+   "params": "s",
+   "neighbour": "list_letter_positions",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `list_steps_letter_positions(s)` that returns a list of the differences between neighbouring values of the alphabet positions of the lower-case letters of s (a = 1, b = 2, ...) (each minus the one before it)."
+   },
+   "tests": "assert list_steps_letter_positions('') == []\nassert list_steps_letter_positions('Y') == []\nassert list_steps_letter_positions('u') == []\nassert list_steps_letter_positions('oYX!o') == [0]\nassert list_steps_letter_positions('be9Yo') == [3, 10]\nassert list_steps_letter_positions('Xb0ioi') == [7, 6, -6]",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "Y"
+    ],
+    [
+     "u"
+    ],
+    [
+     "oYX!o"
+    ],
+    [
+     "be9Yo"
+    ],
+    [
+     "Xb0ioi"
+    ]
+   ],
+   "reference": "def list_steps_letter_positions(s):\n    xs = [ord(c) - 96 for c in s if c.islower()]\n    ys = [b - a for a, b in zip(xs, xs[1:])]\n    return list(ys)",
+   "wrong": "def list_steps_letter_positions(s):\n    xs = [ord(c) - 96 for c in s if c.islower()]\n    ys = xs\n    return list(ys)",
+   "expected": [
+    "[]",
+    "[]",
+    "[]",
+    "[0]",
+    "[3, 10]",
+    "[7, 6, -6]"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[]",
+    "[21]",
+    "[15, 15]",
+    "[2, 5, 15]",
+    "[2, 9, 15, 9]"
+   ],
+   "probe_args": [
+    "('b X1eY1',)",
+    "(' abi',)",
+    "('',)",
+    "('uY!Z',)",
+    "('Xb0ioi',)",
+    "('!eZbab1iiY',)",
+    "('Y',)",
+    "('!!1',)",
+    "('u',)",
+    "('iYcZ',)",
+    "('eYbu Yu01!',)",
+    "('iXoZ',)",
+    "('cb',)",
+    "('XcY io X0',)",
+    "('XX0',)",
+    "('X aXi',)",
+    "('a!ZeaoX',)",
+    "('b 9b 0! ',)",
+    "('ai9 0i0!e',)",
+    "('iebuX0ouc',)",
+    "(' ! ucX',)",
+    "('Yo',)",
+    "('!cX',)",
+    "('u1Xu0e',)",
+    "('XeZ',)",
+    "('b9coa0  ce',)",
+    "('Zb09',)",
+    "('1!!o',)",
+    "('a 0Y  Y',)",
+    "('ZXXi0X',)",
+    "('iaaac',)",
+    "('acb1u eZuY',)",
+    "('eoZbZ!b',)",
+    "('oYX!o',)",
+    "('be9Yo',)",
+    "('i 0',)",
+    "('iY9u',)",
+    "('o90eai!',)",
+    "('a',)",
+    "('0Xa!1uX',)"
+   ],
+   "probe_expected": [
+    "[3]",
+    "[1, 7]",
+    "[]",
+    "[]",
+    "[7, 6, -6]",
+    "[-3, -1, 1, 7, 0]",
+    "[]",
+    "[]",
+    "[]",
+    "[-6]",
+    "[-3, 19, 0]",
+    "[6]",
+    "[-1]",
+    "[6, 6]",
+    "[]",
+    "[8]",
+    "[4, -4, 14]",
+    "[0]",
+    "[8, 0, -4]",
+    "[-4, -3, 19, -6, 6, -18]",
+    "[-18]",
+    "[]",
+    "[]",
+    "[0, -16]",
+    "[]",
+    "[1, 12, -14, 2, 2]",
+    "[]",
+    "[]",
+    "[]",
+    "[]",
+    "[-8, 0, 0, 2]",
+    "[2, -1, 19, -16, 16]",
+    "[10, -13, 0]",
+    "[0]",
+    "[3, 10]",
+    "[]",
+    "[12]",
+    "[-10, -4, 8]",
+    "[]",
+    "[20]"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:bestrun",
+   "name": "best_run_sum_letter_positions",
+   "params": "s",
+   "neighbour": "best_run_sum_steps_letter_positions",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `best_run_sum_letter_positions(s)` that returns the largest sum of a stretch of one or more neighbouring values of the alphabet positions of the lower-case letters of s (a = 1, b = 2, ...) (None if there are none)."
+   },
+   "tests": "assert best_run_sum_letter_positions('') == None\nassert best_run_sum_letter_positions('Y') == None\nassert best_run_sum_letter_positions('u') == 21\nassert best_run_sum_letter_positions('oYX!o') == 30\nassert best_run_sum_letter_positions('be9Yo') == 22\nassert best_run_sum_letter_positions('Xb0ioi') == 35",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "Y"
+    ],
+    [
+     "u"
+    ],
+    [
+     "oYX!o"
+    ],
+    [
+     "be9Yo"
+    ],
+    [
+     "Xb0ioi"
+    ]
+   ],
+   "reference": "def best_run_sum_letter_positions(s):\n    xs = [ord(c) - 96 for c in s if c.islower()]\n    ys = xs\n    if not ys:\n        return None\n    best = cur = ys[0]\n    for y in ys[1:]:\n        cur = max(y, cur + y)\n        best = max(best, cur)\n    return best",
+   "wrong": "def best_run_sum_letter_positions(s):\n    xs = [ord(c) - 96 for c in s if c.islower()]\n    ys = [b - a for a, b in zip(xs, xs[1:])]\n    if not ys:\n        return None\n    best = cur = ys[0]\n    for y in ys[1:]:\n        cur = max(y, cur + y)\n        best = max(best, cur)\n    return best",
+   "expected": [
+    "None",
+    "None",
+    "21",
+    "30",
+    "22",
+    "35"
+   ],
+   "wrong_outputs": [
+    "None",
+    "None",
+    "None",
+    "0",
+    "13",
+    "13"
+   ],
+   "probe_args": [
+    "('b X1eY1',)",
+    "(' abi',)",
+    "('',)",
+    "('uY!Z',)",
+    "('Xb0ioi',)",
+    "('!eZbab1iiY',)",
+    "('Y',)",
+    "('!!1',)",
+    "('u',)",
+    "('iYcZ',)",
+    "('eYbu Yu01!',)",
+    "('iXoZ',)",
+    "('cb',)",
+    "('XcY io X0',)",
+    "('XX0',)",
+    "('X aXi',)",
+    "('a!ZeaoX',)",
+    "('b 9b 0! ',)",
+    "('ai9 0i0!e',)",
+    "('iebuX0ouc',)",
+    "(' ! ucX',)",
+    "('Yo',)",
+    "('!cX',)",
+    "('u1Xu0e',)",
+    "('XeZ',)",
+    "('b9coa0  ce',)",
+    "('Zb09',)",
+    "('1!!o',)",
+    "('a 0Y  Y',)",
+    "('ZXXi0X',)",
+    "('iaaac',)",
+    "('acb1u eZuY',)",
+    "('eoZbZ!b',)",
+    "('oYX!o',)",
+    "('be9Yo',)",
+    "('i 0',)",
+    "('iY9u',)",
+    "('o90eai!',)",
+    "('a',)",
+    "('0Xa!1uX',)"
+   ],
+   "probe_expected": [
+    "7",
+    "12",
+    "None",
+    "21",
+    "35",
+    "28",
+    "None",
+    "None",
+    "21",
+    "12",
+    "49",
+    "24",
+    "5",
+    "27",
+    "None",
+    "10",
+    "22",
+    "4",
+    "24",
+    "76",
+    "24",
+    "15",
+    "3",
+    "47",
+    "5",
+    "29",
+    "2",
+    "15",
+    "1",
+    "9",
+    "15",
+    "53",
+    "24",
+    "30",
+    "22",
+    "9",
+    "30",
+    "30",
+    "1",
+    "22"
+   ]
+  },
+  {
+   "group": "c3_trained",
+   "family": "comp3:bestrun",
+   "name": "best_run_sum_after_first_letter_positions",
+   "params": "s",
+   "neighbour": "best_run_sum_letter_positions",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `best_run_sum_after_first_letter_positions(s)` that returns the largest sum of a stretch of one or more neighbouring values of the values of the alphabet positions of the lower-case letters of s (a = 1, b = 2, ...) after the first one (None if there are none)."
+   },
+   "tests": "assert best_run_sum_after_first_letter_positions('') == None\nassert best_run_sum_after_first_letter_positions('Y') == None\nassert best_run_sum_after_first_letter_positions('u') == None\nassert best_run_sum_after_first_letter_positions('oYX!o') == 15\nassert best_run_sum_after_first_letter_positions('be9Yo') == 20\nassert best_run_sum_after_first_letter_positions('Xb0ioi') == 33",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     "Y"
+    ],
+    [
+     "u"
+    ],
+    [
+     "oYX!o"
+    ],
+    [
+     "be9Yo"
+    ],
+    [
+     "Xb0ioi"
+    ]
+   ],
+   "reference": "def best_run_sum_after_first_letter_positions(s):\n    xs = [ord(c) - 96 for c in s if c.islower()]\n    ys = xs[1:]\n    if not ys:\n        return None\n    best = cur = ys[0]\n    for y in ys[1:]:\n        cur = max(y, cur + y)\n        best = max(best, cur)\n    return best",
+   "wrong": "def best_run_sum_after_first_letter_positions(s):\n    xs = [ord(c) - 96 for c in s if c.islower()]\n    ys = xs\n    if not ys:\n        return None\n    best = cur = ys[0]\n    for y in ys[1:]:\n        cur = max(y, cur + y)\n        best = max(best, cur)\n    return best",
+   "expected": [
+    "None",
+    "None",
+    "None",
+    "15",
+    "20",
+    "33"
+   ],
+   "wrong_outputs": [
+    "None",
+    "None",
+    "21",
+    "30",
+    "22",
+    "35"
+   ],
+   "probe_args": [
+    "('b X1eY1',)",
+    "(' abi',)",
+    "('',)",
+    "('uY!Z',)",
+    "('Xb0ioi',)",
+    "('!eZbab1iiY',)",
+    "('Y',)",
+    "('!!1',)",
+    "('u',)",
+    "('iYcZ',)",
+    "('eYbu Yu01!',)",
+    "('iXoZ',)",
+    "('cb',)",
+    "('XcY io X0',)",
+    "('XX0',)",
+    "('X aXi',)",
+    "('a!ZeaoX',)",
+    "('b 9b 0! ',)",
+    "('ai9 0i0!e',)",
+    "('iebuX0ouc',)",
+    "(' ! ucX',)",
+    "('Yo',)",
+    "('!cX',)",
+    "('u1Xu0e',)",
+    "('XeZ',)",
+    "('b9coa0  ce',)",
+    "('Zb09',)",
+    "('1!!o',)",
+    "('a 0Y  Y',)",
+    "('ZXXi0X',)",
+    "('iaaac',)",
+    "('acb1u eZuY',)",
+    "('eoZbZ!b',)",
+    "('oYX!o',)",
+    "('be9Yo',)",
+    "('i 0',)",
+    "('iY9u',)",
+    "('o90eai!',)",
+    "('a',)",
+    "('0Xa!1uX',)"
+   ],
+   "probe_expected": [
+    "5",
+    "11",
+    "None",
+    "None",
+    "33",
+    "23",
+    "None",
+    "None",
+    "None",
+    "3",
+    "44",
+    "15",
+    "2",
+    "24",
+    "None",
+    "9",
+    "21",
+    "2",
+    "23",
+    "67",
+    "3",
+    "None",
+    "None",
+    "26",
+    "None",
+    "27",
+    "None",
+    "None",
+    "None",
+    "None",
+    "6",
+    "52",
+    "19",
+    "15",
+    "20",
+    "None",
+    "21",
+    "15",
+    "None",
+    "21"
+   ]
+  }
+ ]
+}
