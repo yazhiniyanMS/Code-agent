@@ -173,7 +173,43 @@ passes of wrong code. The pre-registered gate counts official passes, and it is 
    `experiments/v11/results/changed_outputs.md`. C2, R1 and V11-A answer both dev bug fixes with the
    prompt's code verbatim.
 
-FORGETTING_SCORES
+6. **Curriculum interference** was checked and ruled out.
+   - C2's 1,050 grammar v2 examples contain no `'_'`, no `replace(' ', ...)` and no
+     `len(x) < len(y)`.
+   - So the wrong tokens are not taught by similar-looking curriculum code.
+   - The model's behaviour on bug-fix prompts shifted from editing toward copying.
+7. **What C2 forgot on round 54's own training mix.**
+   - Every example of one production round (seed 1302, 4,378 examples; no dev, unseen or benchmark
+     item) was scored under round 54 and under C2. The score is the weighted answer loss, exactly
+     the training objective (`experiments/v11/forgetting_scores.py`, both passes in fp32 compute on
+     the bf16 weights).
+   - The scores are in `experiments/v11/results/forgetting_1302.json`; the summary below is in
+     `forgetting_1302_summary.txt`.
+
+   | Kind | Examples | Loss round 54 | Loss C2 | Mean rise | Share whose loss rose |
+   | --- | --- | --- | --- | --- | --- |
+   | write | 2,878 | 0.005 | 0.025 | +0.019 | 92% |
+   | bug fix, other edit | 660 | 0.001 | 0.011 | +0.010 | 100% |
+   | bug fix, literal only | 549 | 0.003 | 0.009 | +0.006 | 99% |
+   | bug fix, comparison only | 291 | 0.001 | 0.004 | +0.004 | 99% |
+   | all | 4,378 | 0.004 | 0.019 | +0.015 | 95% |
+
+   - C2 got worse on 95% of round 54's own training examples. The most forgotten are write examples
+     of non-grammar concepts (Collatz steps, divisors, element-wise products) and bug fixes such as
+     `remove_vowels` and `multiply_lists`.
+   - **By average loss, bug fixes are forgotten least.** The decisive token is one of about 60
+     answer tokens, so the average hides the one place the model now copies.
+   - The score that matters for the lost items is therefore not the one V11-B's sampler uses.
+     Drawing replay by this score shifts it toward write examples:
+
+   | Replay draw (same 50% token share, data seed 1302) | Examples | Comparison bug fixes | All bug fixes | Write |
+   | --- | --- | --- | --- | --- |
+   | uniform (R1) | 959 | 56 | 320 | 639 |
+   | by forgetting score (V11-B) | 976 | 20 | 205 | 771 |
+
+   - V11-B therefore tests whether restoring the broadly forgotten write skills helps. The plan
+     defined it this way before these numbers were known, and it runs as pre-registered.
+   - It is not expected to restore the bug-fix echo, which an average-loss score cannot see.
 
 ## 4. Experiments after the replication
 

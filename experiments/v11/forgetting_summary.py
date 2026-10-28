@@ -1,11 +1,12 @@
 """V11: summarise a forgetting-score file (experiments/v11/forgetting_scores.py) by kind of example.
 
-usage: forgetting_summary.py SCORES.json [--draw OWN_TOKENS]
+usage: forgetting_summary.py SCORES.json [--draw]
 
 Groups round 54's production examples by tag (write / bug fix) and, for bug fixes, by the kind of edit
 the fix makes (a flipped comparison, a changed literal, other), with C2's mean loss rise on each, and
-lists the most-forgotten examples. With --draw, also compares the replay a run would draw for that
-many curriculum tokens uniformly (R1) and by forgetting score (V11-B), using rounddata's own sampler.
+lists the most-forgotten examples. With --draw, also compares the replay the spec's arm draws for its own
+curriculum (computed as rounddata.write_round_dataset does) uniformly (R1) and by forgetting score
+(V11-B), using rounddata's own sampler.
 """
 from __future__ import annotations
 
@@ -45,7 +46,7 @@ def main() -> None:
 
     ap = argparse.ArgumentParser()
     ap.add_argument("scores")
-    ap.add_argument("--draw", type=int, default=None)
+    ap.add_argument("--draw", action="store_true")
     args = ap.parse_args()
     s = json.loads(Path(args.scores).read_text())
     spec = json.loads(Path(s["spec"]).read_text())
@@ -74,11 +75,16 @@ def main() -> None:
     for i in sorted(range(len(allf)), key=lambda i: -allf[i])[:15]:
         print(f"  {allf[i]:+.3f}  {kinds[i]:18s} {s['prompts_head'][i][:100]!r}")
     if args.draw:
+        from ycode.lm.data import encode_example
+        from ycode.lm.tokenizer import BPETokenizer
+
+        tok = BPETokenizer.load(spec["tokenizer"])
+        own = sum(len(encode_example(tok, e, weighted=True)[0]) for e in rounddata.round_examples_tagged(s["seed"], o)[0])
         logs = []
         idx = {(e.prompt, e.response): i for i, e in enumerate(production)}
         for label, weights in (("uniform (R1)", None), ("by forgetting (V11-B)", args.scores)):
             o2 = {**o, "legacy_weights": weights}
-            picked, tags, _ = rounddata._legacy_sample(s["seed"], o2, args.draw, spec["tokenizer"], spec.get("replay_dir"),
+            picked, tags, _ = rounddata._legacy_sample(s["seed"], o2, own, spec["tokenizer"], spec.get("replay_dir"),
                                                        logs.append)
             drawn = [idx[(e.prompt, e.response)] for e in picked]
             ks = [kinds[i] for i in drawn]

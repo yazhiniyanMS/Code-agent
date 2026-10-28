@@ -96,3 +96,45 @@
     own code. These are `write:remove_spaces` (an `isalpha` shortcut) and unseen
     `count_words_longer_than` (code that ignores `n`).
   - The category rule counts official passes, as pre-registered, and stays that way in V11.
+
+## Amendment 2 (written while V11-B trains, before any V11-B result; gates unchanged)
+
+**Two new findings:**
+
+- **Forgetting by average loss.** Scored on one production round of round 54's own mix (seed 1302),
+  C2's mean answer loss rose on 95% of the examples. It rose most on write examples (+0.019) and
+  least on bug fixes (+0.004 for comparison-only fixes).
+  - So V11-B's sampler, which draws by that score, cuts bug fixes in the replay: 20 comparison fixes
+    instead of 56, and 205 bug fixes instead of 320.
+  - The decisive-token copy bias of the lost bug fixes is invisible to an average over about 60
+    answer tokens.
+  - V11-B still runs as pre-registered. It now tests the write side of retention.
+- **No curriculum interference.** C2's grammar v2 examples contain no `'_'`, no `replace(' ', ...)`
+  and no `len(x) < len(y)`, so the wrong tokens are not taught by similar curriculum code.
+
+**New run W, after B and before C: interpolation with round 54 (WiSE-FT style), no training.**
+
+- **Hypothesis:** the R1 recipe's grammar gains and round 54's bug-fixing behaviour live in nearby
+  weights. Halfway between R1 and round 54 keeps most of the gains and the round-54 behaviour.
+  - Evidence: R1's decisive-token probability on `longest_word` is 0.40 against round 54's fix, so
+    the fix is close.
+- **Changed variable:** the weights only:
+  - θ = 0.5·θ(R1 recipe) + 0.5·θ(round 54), computed in fp32 and stored in bf16 like every kept
+    model;
+  - built by `experiments/v6/soup.py`;
+  - **0.5 is fixed now and not tuned.** There is no sweep, because a sweep would select on the
+    evaluation sets.
+- **Seeds:** both trained seeds of the R1 recipe, R1 (1301) and V11-A (1302). That is two seeds
+  straight away, so the promotion rule applies directly to the pair.
+- **Expected:** round 54's bug fixes back (both, or one) with combined >= 32.
+- **Risk:** the grammar gains halve or vanish (combined back to about 29-31).
+- **Cost:** no training; about 2.5 h of evaluation per seed.
+- **Stop:** if both seeds fail the second-seed gate, W is not pursued further. No other weight is
+  tried in V11.
+
+**C (retention from the start) is revised before it runs:**
+
+- The replay is drawn by forgetting score **within** each kind, write and bug fix.
+- Each kind keeps the share of the uniform draw: weights are normalised to mean 1 within a tag. So
+  bug fixes stay at round 54's third, and inside each kind the most-forgotten examples are preferred.
+- Everything else as in amendment 1. C runs after W if neither B nor W passes.
