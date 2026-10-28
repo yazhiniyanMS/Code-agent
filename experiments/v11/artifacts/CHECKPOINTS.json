@@ -1,0 +1,574 @@
+[
+ {
+  "name": "Round 54",
+  "parent": "YCode-LM v5 (models/ycode-lm-v5, step 60) + 72 fine-tuning steps (the V5 round loop)",
+  "config": null,
+  "seeds": null,
+  "gate": "validated: checkpoint of record (V5.1), unchanged; combined 29",
+  "role": "checkpoint of record (V5.1); the base every pack references",
+  "storage": "fp32 training checkpoint (trained layers fp32, frozen bf16)",
+  "files": [
+   {
+    "path": "/home/user/lmwork/loop/anchor/model.pt",
+    "bytes": 5206846811,
+    "sha256": "2538b55d5aee371899a988799168042af4da27c03cafff3417a3c9925b8e8e98"
+   },
+   {
+    "path": "/home/user/lmwork/loop/anchor/optim.pt",
+    "bytes": 2126780908,
+    "sha256": "bf51203b1f882b808c8b801d3dbe4cd5285972580af0a36c844fd83747638da2"
+   },
+   {
+    "path": "/home/user/lmwork/loop/anchor/info.json",
+    "bytes": 285,
+    "sha256": "bcd985c6677b05b7fa9bb5c8571d1fa3e2075d448b91a6dd50c2dfc079f93634"
+   },
+   {
+    "path": "/home/user/lmwork/loop/anchor/sampler.json",
+    "bytes": 28,
+    "sha256": "d4c8f80cf3635a13b1401e99883fadbbfbdbfee6752c9b9603c8ab151ff88ad3"
+   }
+  ],
+  "restore": "python -c \"from pathlib import Path; from ycode.lm.train import load_checkpoint; load_checkpoint(Path('/home/user/lmwork/loop/anchor'))\"",
+  "evaluate": "python -m ycode.lm.cli eval --model OUT_DIR --problems dev --device cpu --answers-out dev.jsonl",
+  "evaluation": {
+   "dev": {
+    "points": 39,
+    "of": 62,
+    "clean": 27,
+    "clean_of": 44,
+    "robust": 38,
+    "robust_of": 62,
+    "robust_clean": 26
+   },
+   "unseen": {
+    "points": 2,
+    "of": 53,
+    "clean": 2,
+    "clean_of": 53,
+    "robust": 1,
+    "robust_of": 53,
+    "robust_clean": 1
+   },
+   "bench": {
+    "points": 22,
+    "of": 65,
+    "clean": 19,
+    "clean_of": 61,
+    "robust": 20,
+    "robust_of": 65,
+    "robust_clean": 17
+   },
+   "combined_clean": 29,
+   "training": {}
+  },
+  "record": "experiments/v51/results/m4/anchor"
+ },
+ {
+  "name": "C2",
+  "parent": "Round 54",
+  "config": "experiments/v10/v10_c2_rebuild.json (= V9-1's C2)",
+  "seeds": {
+   "train": 1301,
+   "data": 1301
+  },
+  "gate": "starting point of the R1 recipe; combined 31; loses 5 of round 54's clean items (V10)",
+  "role": null,
+  "storage": "lossless pack (ycode/lm/packckpt.py): bf16 bits XOR round 54's, byte planes, zlib",
+  "files": [
+   {
+    "path": "/home/user/lmwork/v10/ckpt/C2_1301.ypk",
+    "bytes": 1315180010,
+    "sha256": "931ae406e1ff3f341edfd79390ceb37e3da10084858b36b05ed8b757455c2b26"
+   }
+  ],
+  "content_sha256": "cc2f2fa07777e69ed7de21696174ce8d6cfbe1f561115d1a126c14af38fd1bb7",
+  "restore": "python -m ycode.lm.packckpt unpack /home/user/lmwork/v10/ckpt/C2_1301.ypk OUT_DIR   # every tensor checked against the content sha256",
+  "needs": [
+   "/home/user/lmwork/loop/anchor (round 54: model.pt, info.json; the packs store XOR against it)",
+   "/home/user/lmwork/data/tokenizer.json"
+  ],
+  "evaluate": "python -m ycode.lm.cli eval --model OUT_DIR --problems dev --device cpu --answers-out dev.jsonl",
+  "evaluation": {
+   "dev": {
+    "points": 41,
+    "of": 62,
+    "clean": 28,
+    "clean_of": 44,
+    "robust": 41,
+    "robust_of": 62,
+    "robust_clean": 28
+   },
+   "unseen": {
+    "points": 3,
+    "of": 53,
+    "clean": 3,
+    "clean_of": 53,
+    "robust": 2,
+    "robust_of": 53,
+    "robust_clean": 2
+   },
+   "bench": {
+    "points": 21,
+    "of": 65,
+    "clean": 18,
+    "clean_of": 61,
+    "robust": 20,
+    "robust_of": 65,
+    "robust_clean": 17
+   },
+   "combined_clean": 31,
+   "training": {
+    "steps": 56,
+    "tokens": 229376,
+    "minutes": 165.7,
+    "peak_rss_mb": 11311,
+    "checkpoint_sha256": "9c1384982c9b95eb67819fd60b9b5fe5ced0973356dc16199eb3b4c683160d6f"
+   },
+   "minutes_total": 268.3
+  },
+  "record": "experiments/v9/results/runs/C2/1301"
+ },
+ {
+  "name": "R1",
+  "parent": "C2",
+  "config": "experiments/v10/v10_r1.json",
+  "seeds": {
+   "train": 1301,
+   "data": 1302
+  },
+  "gate": "NOT validated: combined 33 passes the score part of the second-seed gate, but 3 instruction-following losses fail the category rule; its replication V11-A reaches 31; the R1 recipe over two seeds: mean 32.0, mean instruction-following losses 3.0 -> fails promotion",
+  "role": null,
+  "storage": "lossless pack (ycode/lm/packckpt.py): bf16 bits XOR round 54's, byte planes, zlib",
+  "files": [
+   {
+    "path": "/home/user/lmwork/v10/ckpt/R1_1301.ypk",
+    "bytes": 1320073261,
+    "sha256": "eb7ec5951101986951521256ae98ee40e81ef673724058c3c89e7d001d408eb5"
+   }
+  ],
+  "content_sha256": "9909c511043b8a166b4a713e50ad206d84a47cbc927e9ed17bfc9b0e161c6ec3",
+  "restore": "python -m ycode.lm.packckpt unpack /home/user/lmwork/v10/ckpt/R1_1301.ypk OUT_DIR   # every tensor checked against the content sha256",
+  "needs": [
+   "/home/user/lmwork/loop/anchor (round 54: model.pt, info.json; the packs store XOR against it)",
+   "/home/user/lmwork/data/tokenizer.json"
+  ],
+  "evaluate": "python -m ycode.lm.cli eval --model OUT_DIR --problems dev --device cpu --answers-out dev.jsonl",
+  "evaluation": {
+   "dev": {
+    "points": 42,
+    "of": 62,
+    "clean": 30,
+    "clean_of": 44,
+    "robust": 42,
+    "robust_of": 62,
+    "robust_clean": 30
+   },
+   "unseen": {
+    "points": 3,
+    "of": 53,
+    "clean": 3,
+    "clean_of": 53,
+    "robust": 2,
+    "robust_of": 53,
+    "robust_clean": 2
+   },
+   "bench": {
+    "points": 23,
+    "of": 65,
+    "clean": 20,
+    "clean_of": 61,
+    "robust": 23,
+    "robust_of": 65,
+    "robust_clean": 20
+   },
+   "combined_clean": 33,
+   "training": {
+    "steps": 36,
+    "tokens": 147456,
+    "minutes": 73.66,
+    "peak_rss_mb": 10827,
+    "checkpoint_sha256": "0758684e76d6b4e98df74a510f90af3174365790e2077418eb25a81b9f433a93"
+   },
+   "minutes_total": 129.6
+  },
+  "record": "experiments/v10/results/runs/R1/1301"
+ },
+ {
+  "name": "R6",
+  "parent": "C2",
+  "config": "experiments/v10/v10_r6.json",
+  "seeds": {
+   "train": 1301,
+   "data": 1302
+  },
+  "gate": "NOT validated (V10): combined 31, 3 instruction-following losses",
+  "role": null,
+  "storage": "lossless pack (ycode/lm/packckpt.py): bf16 bits XOR round 54's, byte planes, zlib",
+  "files": [
+   {
+    "path": "/home/user/lmwork/v10/ckpt/R6_1301.ypk",
+    "bytes": 1351930866,
+    "sha256": "fcc97a345a292d1c12f95b72a38f94efdb82cd541996fcd4a359ab1dabb47922"
+   }
+  ],
+  "content_sha256": "0e8bf2a6a881b17411af8121b439ee176ab7103d0efebf8927b75542d3ab934c",
+  "restore": "python -m ycode.lm.packckpt unpack /home/user/lmwork/v10/ckpt/R6_1301.ypk OUT_DIR   # every tensor checked against the content sha256",
+  "needs": [
+   "/home/user/lmwork/loop/anchor (round 54: model.pt, info.json; the packs store XOR against it)",
+   "/home/user/lmwork/data/tokenizer.json"
+  ],
+  "evaluate": "python -m ycode.lm.cli eval --model OUT_DIR --problems dev --device cpu --answers-out dev.jsonl",
+  "evaluation": {
+   "dev": {
+    "points": 38,
+    "of": 62,
+    "clean": 26,
+    "clean_of": 44,
+    "robust": 38,
+    "robust_of": 62,
+    "robust_clean": 26
+   },
+   "unseen": {
+    "points": 5,
+    "of": 53,
+    "clean": 5,
+    "clean_of": 53,
+    "robust": 4,
+    "robust_of": 53,
+    "robust_clean": 4
+   },
+   "bench": {
+    "points": 21,
+    "of": 65,
+    "clean": 18,
+    "clean_of": 61,
+    "robust": 20,
+    "robust_of": 65,
+    "robust_clean": 17
+   },
+   "combined_clean": 31,
+   "training": {
+    "steps": 66,
+    "tokens": 270336,
+    "minutes": 128.3,
+    "peak_rss_mb": 10810,
+    "checkpoint_sha256": "bc429d345b3649357f8067e86c3c5e0fc4de38033bf0a559b05952b2aa3661cf"
+   },
+   "minutes_total": 211.9
+  },
+  "record": "experiments/v10/results/runs/R6/1301"
+ },
+ {
+  "name": "R7",
+  "parent": "C2",
+  "config": "experiments/v10/v10_r7.json",
+  "seeds": {
+   "train": 1301,
+   "data": 1302
+  },
+  "gate": "NOT validated (V10): combined 29, 3 instruction-following losses",
+  "role": null,
+  "storage": "lossless pack (ycode/lm/packckpt.py): bf16 bits XOR round 54's, byte planes, zlib",
+  "files": [
+   {
+    "path": "/home/user/lmwork/v10/ckpt/R7_1301.ypk",
+    "bytes": 1341076936,
+    "sha256": "cd3d6c78e329ff4b6d54beef62c161f4099b664b7442386910a6ea4fabb6c760"
+   }
+  ],
+  "content_sha256": "2d75e24a547473ad9f957132a931bb4bd9fc5ee6a636d2753168227d916b9b40",
+  "restore": "python -m ycode.lm.packckpt unpack /home/user/lmwork/v10/ckpt/R7_1301.ypk OUT_DIR   # every tensor checked against the content sha256",
+  "needs": [
+   "/home/user/lmwork/loop/anchor (round 54: model.pt, info.json; the packs store XOR against it)",
+   "/home/user/lmwork/data/tokenizer.json"
+  ],
+  "evaluate": "python -m ycode.lm.cli eval --model OUT_DIR --problems dev --device cpu --answers-out dev.jsonl",
+  "evaluation": {
+   "dev": {
+    "points": 38,
+    "of": 62,
+    "clean": 27,
+    "clean_of": 44,
+    "robust": 38,
+    "robust_of": 62,
+    "robust_clean": 27
+   },
+   "unseen": {
+    "points": 2,
+    "of": 53,
+    "clean": 2,
+    "clean_of": 53,
+    "robust": 1,
+    "robust_of": 53,
+    "robust_clean": 1
+   },
+   "bench": {
+    "points": 24,
+    "of": 65,
+    "clean": 21,
+    "clean_of": 61,
+    "robust": 21,
+    "robust_of": 65,
+    "robust_clean": 18
+   },
+   "combined_clean": 29,
+   "training": {
+    "steps": 74,
+    "tokens": 303104,
+    "minutes": 195.91,
+    "peak_rss_mb": 10941,
+    "checkpoint_sha256": "0001c192288a165f6ba31d71c34bf488c314de37ab9428b373dbd62625ed1938"
+   },
+   "minutes_total": 325.9
+  },
+  "record": "experiments/v10/results/runs/R7/1301"
+ },
+ {
+  "name": "V11-A",
+  "parent": "C2",
+  "config": "experiments/v11/v11_a.json",
+  "seeds": {
+   "train": 1302,
+   "data": 1303
+  },
+  "gate": "fails the second-seed gate: combined 31 (< 32) and 3 instruction-following losses",
+  "role": null,
+  "storage": "lossless pack (ycode/lm/packckpt.py): bf16 bits XOR round 54's, byte planes, zlib",
+  "files": [
+   {
+    "path": "/home/user/lmwork/v11/ckpt/A_1302.ypk",
+    "bytes": 1320218225,
+    "sha256": "45c7eeb8153c99b5ed10f554d3bf82efaf5006c363117a228ffa8b84ab69f2b5"
+   }
+  ],
+  "content_sha256": "944ded915c016b9d5077c127a5bb980c87f3cee8d45581f1469056610773dcd1",
+  "restore": "python -m ycode.lm.packckpt unpack /home/user/lmwork/v11/ckpt/A_1302.ypk OUT_DIR   # every tensor checked against the content sha256",
+  "needs": [
+   "/home/user/lmwork/loop/anchor (round 54: model.pt, info.json; the packs store XOR against it)",
+   "/home/user/lmwork/data/tokenizer.json"
+  ],
+  "evaluate": "python -m ycode.lm.cli eval --model OUT_DIR --problems dev --device cpu --answers-out dev.jsonl",
+  "evaluation": {
+   "dev": {
+    "points": 41,
+    "of": 62,
+    "clean": 30,
+    "clean_of": 44,
+    "robust": 41,
+    "robust_of": 62,
+    "robust_clean": 30
+   },
+   "unseen": {
+    "points": 1,
+    "of": 53,
+    "clean": 1,
+    "clean_of": 53,
+    "robust": 1,
+    "robust_of": 53,
+    "robust_clean": 1
+   },
+   "bench": {
+    "points": 27,
+    "of": 65,
+    "clean": 24,
+    "clean_of": 61,
+    "robust": 24,
+    "robust_of": 65,
+    "robust_clean": 21
+   },
+   "combined_clean": 31,
+   "training": {
+    "steps": 36,
+    "tokens": 147456,
+    "minutes": 83.06,
+    "peak_rss_mb": 10891,
+    "checkpoint_sha256": "c369abd0823f2cdd6fec28529212bbff3a704ede8672b99e3516cd44b8a939f2"
+   },
+   "minutes_total": 228.0
+  },
+  "record": "experiments/v11/results/runs/A/1302"
+ },
+ {
+  "name": "V11-B",
+  "parent": "C2",
+  "config": "experiments/v11/v11_b.json",
+  "seeds": {
+   "train": 1301,
+   "data": 1302
+  },
+  "gate": "fails the second-seed gate: combined 31 (< 32) and 3 reasoning losses",
+  "role": null,
+  "storage": "lossless pack (ycode/lm/packckpt.py): bf16 bits XOR round 54's, byte planes, zlib",
+  "files": [
+   {
+    "path": "/home/user/lmwork/v11/ckpt/B_1301.ypk",
+    "bytes": 1320702431,
+    "sha256": "7b9babf50f731fab93fae0df6345557d3a4da434234bb916dcecdc6bf8c8b42c"
+   }
+  ],
+  "content_sha256": "3861bcb030f17a0cf5fd741f1140b3289a1e650eeeba182d03baaaf3fad2c664",
+  "restore": "python -m ycode.lm.packckpt unpack /home/user/lmwork/v11/ckpt/B_1301.ypk OUT_DIR   # every tensor checked against the content sha256",
+  "needs": [
+   "/home/user/lmwork/loop/anchor (round 54: model.pt, info.json; the packs store XOR against it)",
+   "/home/user/lmwork/data/tokenizer.json"
+  ],
+  "evaluate": "python -m ycode.lm.cli eval --model OUT_DIR --problems dev --device cpu --answers-out dev.jsonl",
+  "evaluation": {
+   "dev": {
+    "points": 40,
+    "of": 62,
+    "clean": 29,
+    "clean_of": 44,
+    "robust": 40,
+    "robust_of": 62,
+    "robust_clean": 29
+   },
+   "unseen": {
+    "points": 2,
+    "of": 53,
+    "clean": 2,
+    "clean_of": 53,
+    "robust": 2,
+    "robust_of": 53,
+    "robust_clean": 2
+   },
+   "bench": {
+    "points": 26,
+    "of": 65,
+    "clean": 23,
+    "clean_of": 61,
+    "robust": 25,
+    "robust_of": 65,
+    "robust_clean": 22
+   },
+   "combined_clean": 31,
+   "training": {
+    "steps": 36,
+    "tokens": 147456,
+    "minutes": 82.03,
+    "peak_rss_mb": 10954,
+    "checkpoint_sha256": "462168ece2accc3c5f55f93c69f2207705835d6fec485d0c131d24220514db83"
+   },
+   "minutes_total": 177.0
+  },
+  "record": "experiments/v11/results/runs/B/1301"
+ },
+ {
+  "name": "V11-W",
+  "parent": "0.5 x R1 + 0.5 x Round 54 (no training)",
+  "config": "python experiments/v6/soup.py OUT_DIR R1_DIR:0.5 /home/user/lmwork/loop/anchor:0.5 (R1_DIR: R1 unpacked)",
+  "seeds": {
+   "train": 1301,
+   "data": 1302
+  },
+  "gate": "fails: combined 27 (<= 29, so no seed can satisfy 'every seed beats 29'); second seed not run (PLAN.md amendment 3)",
+  "role": null,
+  "storage": "not kept (deterministic from R1 and round 54; rebuild and compare the file sha256 below)",
+  "evaluate": "python -m ycode.lm.cli eval --model OUT_DIR --problems dev --device cpu --answers-out dev.jsonl",
+  "evaluation": {
+   "dev": {
+    "points": 37,
+    "of": 62,
+    "clean": 26,
+    "clean_of": 44,
+    "robust": 37,
+    "robust_of": 62,
+    "robust_clean": 26
+   },
+   "unseen": {
+    "points": 1,
+    "of": 53,
+    "clean": 1,
+    "clean_of": 53,
+    "robust": 1,
+    "robust_of": 53,
+    "robust_clean": 1
+   },
+   "bench": {
+    "points": 25,
+    "of": 65,
+    "clean": 24,
+    "clean_of": 61,
+    "robust": 23,
+    "robust_of": 65,
+    "robust_clean": 22
+   },
+   "combined_clean": 27,
+   "training": {
+    "steps": 0,
+    "tokens": 0,
+    "minutes": 0.5,
+    "peak_rss_mb": 16448,
+    "checkpoint_sha256": "0b4f6c8f994b267409fbb1fb8ca731af761cc04d0fabe6e1fa20431f8fd96004"
+   },
+   "minutes_total": 90.9
+  },
+  "record": "experiments/v11/results/runs/W/1301"
+ },
+ {
+  "name": "V11-C",
+  "parent": "Round 54",
+  "config": "experiments/v11/v11_c.json",
+  "seeds": {
+   "train": 1301,
+   "data": 1302
+  },
+  "gate": "fails the second-seed gate: combined 25 (< 32); at most 2 losses per category",
+  "role": null,
+  "storage": "lossless pack (ycode/lm/packckpt.py): bf16 bits XOR round 54's, byte planes, zlib",
+  "files": [
+   {
+    "path": "/home/user/lmwork/v11/ckpt/C_1301.ypk",
+    "bytes": 1390266105,
+    "sha256": "33dcebe3234115e1abdc8ae85d60521cd06043ed67795ee33444a930d615c160"
+   }
+  ],
+  "content_sha256": "14e953032857ae3beb52275bd07b5f2bd546dce77633ee60cf481cd4c9709e1b",
+  "restore": "python -m ycode.lm.packckpt unpack /home/user/lmwork/v11/ckpt/C_1301.ypk OUT_DIR   # every tensor checked against the content sha256",
+  "needs": [
+   "/home/user/lmwork/loop/anchor (round 54: model.pt, info.json; the packs store XOR against it)",
+   "/home/user/lmwork/data/tokenizer.json"
+  ],
+  "evaluate": "python -m ycode.lm.cli eval --model OUT_DIR --problems dev --device cpu --answers-out dev.jsonl",
+  "evaluation": {
+   "dev": {
+    "points": 36,
+    "of": 62,
+    "clean": 23,
+    "clean_of": 44,
+    "robust": 36,
+    "robust_of": 62,
+    "robust_clean": 23
+   },
+   "unseen": {
+    "points": 2,
+    "of": 53,
+    "clean": 2,
+    "clean_of": 53,
+    "robust": 1,
+    "robust_of": 53,
+    "robust_clean": 1
+   },
+   "bench": {
+    "points": 24,
+    "of": 65,
+    "clean": 20,
+    "clean_of": 61,
+    "robust": 24,
+    "robust_of": 65,
+    "robust_clean": 20
+   },
+   "combined_clean": 25,
+   "training": {
+    "steps": 88,
+    "tokens": 360448,
+    "minutes": 223.82,
+    "peak_rss_mb": 11316,
+    "checkpoint_sha256": "f9cbdd6fe2a0b350affd39eaf74c7be0e4ff450dc883b1b8ba5c1f17cb67d11f"
+   },
+   "minutes_total": 365.9
+  },
+  "record": "experiments/v11/results/runs/C/1301"
+ }
+]

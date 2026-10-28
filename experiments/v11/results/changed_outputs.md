@@ -1920,6 +1920,298 @@ def sum_at_odd_positions(numbers):
     return sum(ys)
 ```
 
+## V11-C 1301
+
+### dev:bugfix:double_all - gained (contaminated)
+
+Prompt: 'This function has a bug. Find and fix it:\n```python\ndef double_all(numbers):\n    """Return a new list with every number doubled."""\n    return [n + 2 for n in numbers]\n```'
+
+Round 54 (fails):
+
+```python
+def double_all(numbers):
+    """Return a new list with every number doubled."""
+    return [x double for x in numbers]
+```
+
+V11-C 1301 (passes):
+
+```python
+def double_all(numbers):
+    """Return a new list with every number doubled."""
+    return [2 * x for x in numbers]
+```
+
+### dev:bugfix:first_negative - gained (clean)
+
+Prompt: 'This function has a bug. Find and fix it:\n```python\ndef first_negative(numbers):\n    """Return the first negative number in the list, or None if there is none."""\n    for n in numbers:\n        if n > 0:\n            return n\n    return None\n```'
+
+Round 54 (fails):
+
+```python
+def first_negative(numbers):
+    """Return the first negative number in the list, or None if there is none."""
+    best = None
+    for n in numbers:
+        if n % 2 == 0 and (best is None or n < best):
+            best = n
+    return best
+```
+
+V11-C 1301 (passes):
+
+```python
+def first_negative(numbers):
+    """Return the first negative number in the list, or None if there is none."""
+    for n in numbers:
+        if n < 0:
+            return n
+    return None
+```
+
+### dev:bugfix:longest_word - LOST (clean)
+
+Prompt: 'This function has a bug. Find and fix it:\n```python\ndef longest_word(text):\n    """Return the longest word in text (the first one if there is a tie)."""\n    best = \'\'\n    for word in text.split():\n        if len(word) < len(best):\n            best = word\n    return best\n```'
+
+Round 54 (passes):
+
+```python
+def longest_word(text):
+    """Return the longest word in text (the first one if there is a tie)."""
+    best = ''
+    for word in text.split():
+        if len(word) > len(best):
+            best = word
+    return best
+```
+
+V11-C 1301 (fails):
+
+```python
+def longest_word(text):
+    """Return the longest word in text (the first one if there is a tie)."""
+    best = ' ' * text
+    return best
+```
+
+### dev:bugfix:product - gained (clean)
+
+Prompt: 'This function has a bug. Find and fix it:\n```python\ndef product(numbers):\n    """Return the product of a list of numbers."""\n    result = 0\n    for x in numbers:\n        result *= x\n    return result\n```'
+
+Round 54 (fails):
+
+```python
+def product(numbers):
+    """Return the product of a list of numbers."""
+    result = []
+    for x in numbers:
+        result.append(x)
+    return result
+```
+
+V11-C 1301 (passes):
+
+```python
+def product(numbers):
+    """Return the product of a list of numbers."""
+    result = 1
+    for x in numbers:
+        result *= x
+    return result
+```
+
+### dev:bugfix:remove_spaces - LOST (clean)
+
+Prompt: 'This function has a bug. Find and fix it:\n```python\ndef remove_spaces(s):\n    """Return s with all spaces removed."""\n    return s.replace(\' \', \'_\')\n```'
+
+Round 54 (passes):
+
+```python
+def remove_spaces(s):
+    """Return s with all spaces removed."""
+    return s.replace(' ', '')
+```
+
+V11-C 1301 (fails):
+
+```python
+def remove_spaces(s):
+    """Return s with all spaces removed."""
+    return s.replace(' ', '_')
+```
+
+### dev:bugfix:sum_of_squares - LOST (clean)
+
+Prompt: 'This function has a bug. Find and fix it:\n```python\ndef sum_of_squares(n):\n    """Return the sum of the squares of the integers from 1 to n."""\n    total = 0\n    for i in range(1, n):\n        total += i * i\n    return total\n```'
+
+Round 54 (passes):
+
+```python
+def sum_of_squares(n):
+    """Return the sum of the squares of the integers from 1 to n."""
+    total = 0
+    for i in range(1, n + 1):
+        total += i * i
+    return total
+```
+
+V11-C 1301 (fails):
+
+```python
+def sum_of_squares(n):
+    """Return the sum of the squares of the integers from 1 to n."""
+    total = 0
+    for i in range(1, n):
+        total += i * i
+    return total
+```
+
+### dev:write:cube - LOST (contaminated)
+
+Prompt: 'Write a Python function `cube(x)` that returns x cubed.'
+
+Round 54 (passes):
+
+```python
+def cube(x):
+    return x ** 3
+```
+
+V11-C 1301 (fails):
+
+```python
+def cube(x):
+    return x / 2
+```
+
+### dev:write:double_all - gained (contaminated)
+
+Prompt: 'Write a Python function `double_all(numbers)` that returns a new list with every number doubled.'
+
+Round 54 (fails):
+
+```python
+def double_all(numbers):
+    return [x double(x) for x in numbers]
+```
+
+V11-C 1301 (passes):
+
+```python
+def double_all(numbers):
+    result = []
+    for x in numbers:
+        result.append(2 * x)
+    return result
+```
+
+### dev:write:remove_spaces - LOST (clean)
+
+Prompt: 'Write a Python function `remove_spaces(s)` that returns s with all spaces removed.'
+
+Round 54 (passes):
+
+```python
+def remove_spaces(s):
+    return ''.join(c for c in s if c.isalpha())
+```
+
+V11-C 1301 (fails):
+
+```python
+def remove_spaces(s):
+    return s.c
+```
+
+### dev:write:scale_each_by_three - LOST (clean)
+
+Prompt: 'Write a Python function `scale_each_by_three(numbers)` that returns a new list with every number multiplied by 3.'
+
+Round 54 (passes):
+
+```python
+def scale_each_by_three(numbers):
+    result = []
+    for x in numbers:
+        result.append(3 * x)
+    return result
+```
+
+V11-C 1301 (fails):
+
+```python
+def scale_each_by_three(numbers):
+    result = []
+    for x in numbers:
+        result.append(3)
+    return result
+```
+
+### dev:write:subtract_three_each - LOST (clean)
+
+Prompt: 'Write a Python function `subtract_three_each(numbers)` that returns a new list with 3 subtracted from every number.'
+
+Round 54 (passes):
+
+```python
+def subtract_three_each(numbers):
+    result = []
+    for x in numbers:
+        result.append(x - 3)
+    return result
+```
+
+V11-C 1301 (fails):
+
+```python
+def subtract_three_each(numbers):
+    result = []
+    for x in numbers:
+        result.append(xsub(x, 3))
+    return result
+```
+
+### unseen:write:count_capitalized - gained (clean)
+
+Prompt: 'Write a Python function `count_capitalized(text)` that returns how many words in text start with an upper-case letter.'
+
+Round 54 (fails):
+
+```python
+def count_capitalized(text):
+    count = 0
+    for c in text.split():
+        if c in '.,!?':
+            count += 1
+    return count
+```
+
+V11-C 1301 (passes):
+
+```python
+def count_capitalized(text):
+    ys = [w for w in text.split() if w[0].isupper()]
+    return len(set(ys))
+```
+
+### unseen:write:count_words_longer_than - LOST (clean)
+
+Prompt: 'Write a Python function `count_words_longer_than(text, n)` that returns how many words in text have more than n characters.'
+
+Round 54 (passes):
+
+```python
+def count_words_longer_than(text, n):
+    return sum(1 for c in text.split()[2:] if c.isalpha())
+```
+
+V11-C 1301 (fails):
+
+```python
+def count_words_longer_than(text, n):
+    return len(text.split())
+```
+
 ## V11-W 1301
 
 ### dev:bugfix:cube - LOST (contaminated)

@@ -1,0 +1,11 @@
+{
+ "Round 54": "validated: checkpoint of record (V5.1), unchanged; combined 29",
+ "C2": "starting point of the R1 recipe; combined 31; loses 5 of round 54's clean items (V10)",
+ "R1": "NOT validated: combined 33 passes the score part of the second-seed gate, but 3 instruction-following losses fail the category rule; its replication V11-A reaches 31; the R1 recipe over two seeds: mean 32.0, mean instruction-following losses 3.0 -> fails promotion",
+ "R6": "NOT validated (V10): combined 31, 3 instruction-following losses",
+ "R7": "NOT validated (V10): combined 29, 3 instruction-following losses",
+ "V11-A": "fails the second-seed gate: combined 31 (< 32) and 3 instruction-following losses",
+ "V11-B": "fails the second-seed gate: combined 31 (< 32) and 3 reasoning losses",
+ "V11-W": "fails: combined 27 (<= 29, so no seed can satisfy 'every seed beats 29'); second seed not run (PLAN.md amendment 3)",
+ "V11-C": "fails the second-seed gate: combined 25 (< 32); at most 2 losses per category"
+}
