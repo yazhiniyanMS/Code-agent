@@ -22,10 +22,11 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 
-def example_losses(model_dir: str, examples: list, tok, log=print) -> list[float]:
+def example_losses(model_dir: str, examples: list, tok, log=print, cache: Path | None = None) -> list[float]:
     """Weighted answer-token loss of every example, scored in packed 1,025-token rows as training packs
     them (examples follow each other in a row; one that does not fit starts the next row; an example
-    longer than a row is cut to it)."""
+    longer than a row is cut to it). With ``cache``, the running sums are saved every 10 rows and a
+    rerun resumes from them (the container can restart during a multi-hour pass)."""
     import torch
     import torch.nn.functional as F
 
@@ -48,10 +49,18 @@ def example_losses(model_dir: str, examples: list, tok, log=print) -> list[float
         row.append((i, ids, w))
     if row:
         rows.append(row)
-    sums, wsums = [0.0] * len(examples), [0.0] * len(examples)
+    sums, wsums, start = [0.0] * len(examples), [0.0] * len(examples), 0
+    key = {"model_dir": str(model_dir), "n": len(examples), "rows": len(rows)}
+    if cache and cache.is_file():
+        saved = json.loads(cache.read_text())
+        if saved["key"] == key:
+            sums, wsums, start = saved["sums"], saved["wsums"], saved["rows_done"]
+            log(f"  {model_dir}: resuming at row {start}/{len(rows)} from {cache}")
     t0 = time.time()
     with torch.no_grad():
         for n, row in enumerate(rows):
+            if n < start:
+                continue
             ids = [t for _, x, _ in row for t in x]
             owner = [i for i, x, _ in row for _ in x]
             wts = [v for _, _, w in row for v in w]
@@ -62,6 +71,10 @@ def example_losses(model_dir: str, examples: list, tok, log=print) -> list[float
                 if wt > 0 and owner[j + 1] == owner[j]:  # a target inside the same example
                     sums[owner[j + 1]] += loss * wt
                     wsums[owner[j + 1]] += wt
+            if cache and ((n + 1) % 10 == 0 or n + 1 == len(rows)):
+                tmp = cache.with_suffix(".tmp")
+                tmp.write_text(json.dumps({"key": key, "rows_done": n + 1, "sums": sums, "wsums": wsums}))
+                tmp.replace(cache)  # atomic: a restart never leaves a half-written cache
             if n % 25 == 0:
                 log(f"  {model_dir}: row {n}/{len(rows)} ({time.time() - t0:.0f}s)")
     del model
@@ -88,8 +101,9 @@ def main() -> None:
     examples = production[: args.limit] if args.limit else production
     tok = BPETokenizer.load(spec["tokenizer"])
     print(f"seed {args.seed}: {len(production)} production examples, scoring {len(examples)}", flush=True)
-    before = example_losses(args.before, examples, tok, log=lambda m: print(m, flush=True))
-    after = example_losses(args.after, examples, tok, log=lambda m: print(m, flush=True))
+    say = lambda m: print(m, flush=True)
+    before = example_losses(args.before, examples, tok, log=say, cache=Path(args.out + ".before.cache"))
+    after = example_losses(args.after, examples, tok, log=say, cache=Path(args.out + ".after.cache"))
     forgetting = [a - b for a, b in zip(after, before)]
     pos = [f for f in forgetting if f > 0]
     floor = 0.05 * (sum(pos) / len(pos)) if pos else 1.0

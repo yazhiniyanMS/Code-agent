@@ -43,11 +43,137 @@ SUMMARY
 
 ## 2. V11-A: R1 replicated at another seed
 
-A_SECTION
+**Setup.** R1's spec (`experiments/v10/v10_r1.json`) with only the seeds changed (`experiments/v11/v11_a.json`):
+
+- training seed 1302 and data seed 1303 (`data_seed_offset` 1);
+- from the verified C2: the pack was unpacked with its content hash checked, and the trainer's log
+  records loading that directory;
+- otherwise identical: 36 steps, lr 1e-4 with warmup-stable-decay to 1e-5, batch 4, the top 24
+  layers trained, fp32, no optimizer state carried over, 2 new examples for each of grammar v2's 350
+  programs, and a 50% replay share from one production round of round 54's own mix.
+- The data manifest gives 160,912 tokens: 700 curriculum examples (46.0%), 1,017 production
+  examples (49.5%) and 43 original replay rows (4.5%).
+
+**Result** (identical evaluation pipeline, greedy decoding, the same item sets):
+
+| | Round 54 | C2 | R1 (seed 1301) | V11-A (seed 1302) | R1 recipe, mean of 2 seeds |
+| --- | --- | --- | --- | --- | --- |
+| Dev clean /44 | 27 | 28 | 30 | 30 | 30.0 |
+| Unseen-v1 clean /53 | 2 | 3 | 3 | 1 | 2.0 |
+| **Combined /97** | **29** | 31 | **33** | **31** | **32.0** |
+| Lost round-54 passes, instruction_following | - | 2 | 3 | 3 | **3.0** |
+| family_new /24 | 0 | 1 | 4 | 2 | 3.0 |
+| Neighbours /38 | 4 | 2 | 2 | 3 | 2.5 |
+| Held-out families /66 | 2 | 1 | 2 | 3 | 2.5 |
+| Reproduction c2 /40 | 0 | 26 | 36 | 38 | 37.0 |
+| Held-out combinations c2 /60 | 0 | 32 | 54 | 51 | 52.5 |
+| Benchmark official · clean · robust | 22 · 19 · 20 | 21 · 18 · 20 | 23 · 20 · 23 | 27 · 24 · 24 | 25 · 22 · 23.5 |
+| Robust dev /62 · unseen-v1 /53 | 38 · 2 | - | 40 · 3 | 41 · 1 | |
+
+V11-A cost 83 minutes of training (228 minutes with evaluation), 147,456 trained tokens, a peak of
+10,891 MB of RAM, and its checkpoint hash is `c369abd0823f...` (the pack's content hash is
+`944ded915c01...`).
+
+**What replicated and what did not:**
+
+- **Dev replicated exactly.** V11-A passes the same 30 clean dev items as R1, including R1's gains
+  `write:first_negative` and `write:longest_word` and the three bug fixes C2 learned.
+- **Unseen-v1 did not replicate.** It fell from 3 to 1; only `sum_at_odd_positions` remains.
+  R1's `count_capitalized` did not come back at this seed. The R1 recipe's mean on unseen-v1 is 2.0,
+  round 54's level, so the recipe's whole mean gain (+3) is on dev.
+- **The forgetting replicated exactly.** These round-54 passes were lost in both seeds:
+  - `bugfix:longest_word`
+  - `bugfix:remove_spaces`
+  - `write:remove_spaces`
+  - unseen `count_words_longer_than`
+
+  V11-A also lost unseen `keys_above` again; C2 loses it, and R1 had restored it. That is 3
+  instruction-following losses in both seeds.
+- **The held-out sets and the benchmark rose a little.** These sets are reported but never used to
+  select. V11-A's benchmark of 27 · 24 · 24 is the best of any model. The gain is not significant,
+  and the benchmark is never used to choose.
+
+**Gates (PLAN.md, unchanged):**
+
+- **Second-seed gate for V11-A:** combined 31 < 32, and 3 instruction-following losses → fails.
+- **Promotion of the R1 recipe:**
+  - every seed > 29: yes (33, 31);
+  - mean combined >= 32: yes (32.0);
+  - mean `items_lost` < 3 in every category: **no** (instruction_following 3.0).
+
+  → **not promoted.** Round 54 stays the checkpoint of record.
+
+**Conclusion:** R1's forgetting pattern is reproduced, not a single seed's accident. Whatever is
+lost is lost in C2 already (the 4 shared items) and R1's consolidation does not restore it. That
+triggers the forgetting investigation (section 3) and a retention-aware experiment (section 4).
+
+Exact outputs of every changed item: `experiments/v11/results/changed_outputs.md`.
 
 ## 3. Why `remove_spaces` and the `longest_word` bug fix are lost
 
-FORGETTING_SECTION
+There are four items. Round 54 passes them; C2, R1, V11-A and every V10 continuation fail them.
+
+| Item | Round 54's answer | C2 / R1 / V11-A answer | Round 54's pass under the robust tests |
+| --- | --- | --- | --- |
+| dev `bugfix:longest_word` | the fix (`<` back to `>`) | **the buggy code returned unchanged** | robust |
+| dev `bugfix:remove_spaces` | the fix (`'_'` back to `''`) | **the buggy code returned unchanged** | robust |
+| dev `write:remove_spaces` | `''.join(c for c in s if c.isalpha())` | unrelated code (`s.count('s')`, an indexing expression) | **weak**: drops digits and punctuation too |
+| unseen `count_words_longer_than` | `sum(1 for c in text.split()[2:] if c.isalpha())`, which never reads `n` | `len(text.split())` and similar | **weak**: passes the official tests by coincidence |
+
+So only the two bug fixes are robust skills that were really lost. The other two were coincidental
+passes of wrong code. The pre-registered gate counts official passes, and it is applied unchanged.
+
+**What was inspected** (`experiments/v11/forgetting_probe.py`, the production-data checks below, and
+`experiments/v11/results/forgetting_probe.json`):
+
+1. **Training targets.**
+   - Round 54's own mix has 1,500 bug-fix examples per production round (seed 1302).
+   - **None of them has the buggy code as its target.** All parse, and 1,475 of the 1,500 change
+     exactly one line.
+   - The target is always the concept's reference implementation, whose tests `verify_concepts()`
+     runs. The bug is kept only if the buggy code fails those tests
+     (`ycode/lm/basics.py: bugfix_examples`).
+   - 291 fixes change only a comparison and 549 only a literal.
+   - No production example uses the names `longest_word`, `remove_spaces`,
+     `count_words_longer_than` or `keys_above`. The runner's hygiene check also removes any example
+     sharing a name, AST skeleton or behaviour with a dev or unseen item.
+   - The grammar v2 curriculum has no bug-fix examples, so nothing in C2's or R1's data teaches a
+     wrong fix.
+2. **Tokenization and loss masking.**
+   - Prompt tokens weigh 0. In a bug fix the tokens the fix changes weigh 8 (`DIFF_WEIGHT`), the rest
+     of their line 3, and operators kept elsewhere 2 (`ycode/lm/data.py: answer_weights`).
+   - The decisive tokens (`>` and `''`) are therefore the most heavily trained tokens of such an
+     example. Masking is not the cause.
+3. **Sampling frequency.**
+   - Round 54's production mix is 34% bug fixes by example (1,500 of 4,378).
+   - C2's data holds about 1,473 production examples, a third of a round, beside 1,050 curriculum
+     examples. R1's holds 1,023 beside 700.
+   - So bug fixes fall to about 18-20% of the examples (about 500 in C2's data, 320 in R1's), and none of the curriculum examples is a bug
+     fix.
+   - Adding 350 correct bug-fix examples (V10-R5) did not restore a single item, so frequency alone
+     is not the cause either.
+4. **Per-token log-probabilities of the correct answer.** Exact items, read only for diagnosis,
+   never trained on:
+
+   | Item | Model | log p(correct fix) | log p(buggy code echoed) | At the decisive position |
+   | --- | --- | --- | --- | --- |
+   | `bugfix:longest_word` | round 54 | **-0.95** | -3.75 | fixes |
+   | | C2 | -2.63 | **-1.25** | p(`<`, buggy) 0.79 vs p(`>`) 0.20 |
+   | | R1 | -1.69 | **-1.29** | p(`<`) 0.59 vs p(`>`) 0.40 |
+   | `bugfix:remove_spaces` | round 54 | **-1.97** | -2.90 | fixes |
+   | | C2 | -3.45 | **-1.41** | prefers `'_'` (buggy) over `'')` |
+   | | R1 | -2.68 | **-1.28** | the same |
+   | `write:remove_spaces` | round 54 | -36.2 (its own `isalpha` answer: -23.0) | - | a weak pass |
+   | | C2 | -21.7 | - | its own answer writes `s.replace('_'` where the fix has `s.replace(' ', '')` |
+
+   - The fix is never far away: the correct token keeps 20-40% of the probability.
+   - What changed is a **copy bias at the one decisive token**: the model hands the buggy token back.
+   - R1's consolidation moves `longest_word` halfway back (0.20 → 0.40), not over the line.
+5. **Generated outputs.** All four models' exact outputs are in
+   `experiments/v11/results/changed_outputs.md`. C2, R1 and V11-A answer both dev bug fixes with the
+   prompt's code verbatim.
+
+FORGETTING_SCORES
 
 ## 4. Experiments after the replication
 
