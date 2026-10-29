@@ -1,0 +1,7 @@
+Loaded /dev/shm/ycode-keep/A/1302/model_bf16 (step 36, stage sft)
+Model: YCode-LM v5, 1523.20M parameters, context 1024, device cpu, precision fp32, optimizer lion, stage sft, grad checkpointing
+Loaded /dev/shm/ycode-keep/A/1302/model_bf16 (step 36, stage sft)
+Model: YCode-LM v5, 1523.20M parameters, context 1024, device cpu, precision fp32, optimizer lion, stage sft, grad checkpointing
+Loaded /dev/shm/ycode-keep/A/1302/model_bf16 (step 36, stage sft)
+Model: YCode-LM v5, 1523.20M parameters, context 1024, device cpu, precision fp32, optimizer lion, stage sft, grad checkpointing
+Saved model to /dev/shm/ycode-v12/S1/1302/model

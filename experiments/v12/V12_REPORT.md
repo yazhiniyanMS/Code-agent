@@ -1,8 +1,13 @@
 # YCode V12: breaking the generalization ceiling
 
-Status: **in progress.** P is complete; L was killed by container restarts; S1's first seed passes the
-second-seed gate, and its second seed is blocked on storage (section 5). Round 54 remains the validated
-checkpoint of record.
+Status: **S1 is promoted under the pre-registered rules.**
+
+- Its two seeds score combined 33 and 31 (mean 32.0, exactly the threshold), with at most 1.0 mean clean
+  loss in any category, and its audit finds no leakage.
+- **S1 seed 1301 replaces round 54 as the checkpoint of record** (section 5).
+- The gain is modest: on the robust tests, the two seeds average 29 against round 54's 27.
+- P refuted hypothesis C at lr 1e-4. L was lost to container restarts.
+- unseen-v2 was not evaluated. It stays reserved for the final protocol you authorize.
 
 ## 1. Starting point (verified 2026-10-28)
 
@@ -169,55 +174,163 @@ on the same model (`experiments/v11/eval_only.py`), 84 min in total.
   evaluation item. They are weak gains and reported as such; by the rule, a weak gain does not void
   the candidate.
 
-**Gates:**
+**Gates:** S1 seed 1301 **passes the second-seed gate**: combined 33 >= 32, and at most 1 clean
+loss in any category.
 
-- S1 seed 1301 **passes the second-seed gate**: combined 33 >= 32, and at most 1 clean loss in any
-  category.
-- Promotion needs the second seed, the same recipe applied to V11-A (`v12_s1_1302.json`, 8 steps).
+## 4c. S1's second seed, from V11-A
 
-**The second seed was killed by the kernel's OOM killer** during its final save (17 min in).
+**Setup** (`experiments/v12/v12_s1_1302.json`): S1's stage applied to V11-A, which is R1's recipe at
+seed 1302 / data seed 1303.
 
-- The cause: S1's 1.3 GB pack sat on the RAM disk next to the trainer (10.8 GB) and the 2.1 GB save.
-- PR #17 adds a pre-flight memory check that refuses such a run before it trains.
-- The second seed needs that pack off the RAM disk. It cannot be moved to the disk (0.59 GB free)
-  and was not deleted, because deleting a checkpoint needs your approval (section 5).
+- 8 steps (one epoch of 33,758 training tokens), seed 1302, data seed 1303.
+- 32,768 trained tokens; 11.8 min of training steps, 13.6 min with loading; peak RAM 10,768 MB.
+- Checkpoint `3fdbf898bc3e...`, pack content `9a198bc80668...`.
+
+**Getting it to run took three attempts:**
+
+1. **Killed by the kernel's OOM killer in its final save.** The kernel's report shows a 14.34 GB limit
+   for this session's processes:
+   - 11.43 GB in processes;
+   - 2.86 GB on the RAM disk (S1 1301's 1.32 GB pack and 1.54 GB of the save being written).
+2. **Two fixes, so that nothing had to be deleted:**
+   - **PR #20** frees the optimizer's 2.1 GB momentum before the final weights-only save. The saved
+     weights are unchanged.
+   - **PR #19** packs a checkpoint as a lossless delta from its parent. S1 1301 went to the disk as a
+     0.42 GB pack against R1, verified bit for bit.
+3. **A container restart killed the relaunch** at about step 3 and wiped the RAM disk, including S1
+   1301's RAM-disk pack.
+   - S1 1301 survived only as the delta pack on disk. It was restored from it and R1's pack, content
+     `5075d097...` verified.
+   - The third launch completed.
+
+| | Round 54 | R1 | V11-A | **S1 1301** | **S1 1302** | **S1 mean** |
+| --- | --- | --- | --- | --- | --- | --- |
+| Dev clean /44 | 27 | 30 | 30 | 30 | 30 | 30 |
+| Unseen-v1 clean /53 | 2 | 3 | 1 | 3 | 1 | 2 |
+| **Combined /97** | 29 | 33 | 31 | **33** | **31** | **32.0** |
+| Robust-clean dev + unseen-v1 | 27 | 32 | 31 | 28 | 30 | 29.0 |
+| Clean losses against round 54, by category | - | 4: instruction following 3 | 5: instruction following 3 | 1: hallucination 1 | 3: instruction following, reasoning, hallucination 1 each | max 1.0 |
+| Gains against round 54 that are weak (robust tests fail) | - | - | - | 3 of 5 | 0 of 5 | - |
+
+**What S1's stage changed on V11-A** (dev answers):
+
+- **Restored:**
+  - `bugfix:longest_word`, a genuine fix (`<` back to `>`);
+  - `write:remove_spaces`, with the same weak `isalpha` shortcut as round 54's own answer.
+- **Still lost:** `bugfix:remove_spaces`. The answer returns the buggy `s.replace(' ', '_')` unchanged.
+- **Lost against V11-A:** `bugfix:index_of_min` and `write:longest_word`, two of R1's grammar gains.
+- **All five of its gains against round 54 are robust:** `first_negative` (written and as a bug fix),
+  `product`, `first_three_chars` and unseen `sum_at_odd_positions`.
+
+SEED2_REST
+
+## 4d. Promotion and audit
+
+**The promotion rule** (V6, unchanged since V11 and fixed in `PLAN.md` before any V12 result):
+
+| Condition | S1 1301 | S1 1302 | Result |
+| --- | --- | --- | --- |
+| Every seed beats 29 | 33 | 31 | passes |
+| Mean combined >= 32 | | | 32.0, passes (at the threshold) |
+| Mean clean losses < 3 in every category | hallucination 1 | 1 each in 3 categories | max 1.0 (hallucination), passes |
+
+The R1 recipe alone, R1 and V11-A, also scored 33 and 31. It failed only on 3.0 mean instruction-following
+losses. S1's stage brings that category to 0.5.
+
+**The audit of every gained item** (V11's, before promotion; `experiments/v12/audit_s1.py` →
+`results/audit_s1.json`):
+
+- **The S1 data is the data trained on.** Each seed's dataset was rebuilt from its recorded seed and
+  options, and matched the run's manifest byte for byte.
+- **Hygiene:** the runs' check removed 0 examples in both seeds. It compares each example's name, AST
+  skeleton and behaviour with every dev, unseen and benchmark item.
+- **Duplicates:**
+  - No gained item's name occurs in either seed's training tokens as a function.
+  - The only match is the English phrase "product of", in other functions' descriptions (`times`,
+    `calc`, `scale_by_five`, `dot_product`) from round 54's own production replay. That is not the dev
+    item `product`.
+- **Robustness:**
+  - Seed 1301: 3 of its 5 gains are weak (`write:last_word`, unseen `count_capitalized` and
+    `sum_at_odd_positions`). Its other weak passes are the two `remove_spaces` items.
+  - Seed 1302: all 5 of its gains are robust. Its only weak pass is `write:remove_spaces`, which round
+    54 passes the same way.
+- **Starting points:** R1 and V11-A were audited in V10 and V11 (hygiene removed 0).
+- **Conclusion:** no leakage. Seed 1301's weak gains are reported as weak; by the rule, they do not
+  void the candidate.
 
 ## 5. Comparison, decision and next experiment
 
-Full tables: `experiments/v12/results/compare.md`. Failure mechanisms: `results/mechanism.json`
-and `results/mechanism_s1.json`.
+Full tables: `experiments/v12/results/compare.md`. Failure mechanisms: `results/mechanism.json` and
+`results/mechanism_s1.json`. Audit: `results/audit_s1.json`.
 
-**Decision (provisional until S1's second seed runs):**
+### Decision
 
-- **Round 54 stays the validated checkpoint of record.** No V12 candidate has completed the
-  promotion rule, which needs every seed.
-- **Strongest V12 candidate: S1 (seed 1301).**
-  - It is the first post-round-54 model to pass the category rule while keeping combined 33.
-  - It keeps R1's learned skills and has the best held-out-family score of any model.
-  - But its official gain over round 54 rests largely on weak passes: robust combined 28 against
-    27.
-- **R1 remains the best on robust scores** (32), with its 3 instruction-following losses.
+- **S1 is promoted.** It passes the promotion rule on both seeds and its audit (section 4d).
+- **The new checkpoint of record is S1 seed 1301.**
+  - Between the two seeds it is chosen by the established selection metric, combined clean dev +
+    unseen-v1: 33 against 31.
+  - Robust scores are "always reported, never used to select".
+- **Caveats:**
+  - **The promotion is at the threshold:** mean 32.0 against the required 32.
+  - **The robust gain is small:** a mean of 29 robust-clean passes against round 54's 27.
+  - **Seed 1301's official gain is mostly weak passes.** Its robust-clean score is 28, against round
+    54's 27. Seed 1302's is 30, with every gain robust.
+  - **unseen-v2 has not been evaluated.** It is reserved for the final protocol you authorize, which
+    is the confirmation this result now needs.
 - **Hypothesis C** (contrast weighting, run P) is refuted at lr 1e-4. It increased the failure it
   targets.
+- **Hypothesis D** (a short low-learning-rate second stage) is supported in this form. It removed
+  the instruction-following losses that blocked R1's recipe, at a cost of 2 of R1's grammar gains per
+  seed.
 
-**Next step, already specified and blocked on storage:** S1's second seed, from V11-A, seed 1302 /
-data 1303 (`v12_s1_1302.json`). It needs one of:
+### Comparison against round 54, C2 and the strongest V11 candidate
 
-- **(a) Disk space.** Approval to remove old V6/V7 lossless packs (`lmwork/v6/runs/{D,G}/1302`,
-  `v6/soups/DG130{1,2}c`, `v7/runs/L2/1301`; about 5.7 GB). Then S1's pack and future packs can be
-  kept on disk.
-- **(b) Approval to drop RAM-disk packs of runs that rebuild exactly.** S1 rebuilds from R1 and its
-  spec in about 16 min, and determinism was shown bit for bit: L's restarted run matched its first
-  attempt on every logged step. Its pack would then be dropped before the second seed trains.
+The strongest V11 candidate is the R1 recipe: R1 at seed 1301 and V11-A at seed 1302. It was not
+promoted.
 
-**Next experiment justified by the evidence, after S1's seeds:** make the restored skill genuine.
+| | Round 54 | C2 | R1 1301 | V11-A 1302 | **S1 1301 (new record)** | S1 1302 |
+| --- | --- | --- | --- | --- | --- | --- |
+| Combined clean /97 | 29 | 31 | 33 | 31 | **33** | 31 |
+| Dev · unseen-v1 clean | 27 · 2 | 28 · 3 | 30 · 3 | 30 · 1 | **30 · 3** | 30 · 1 |
+| Robust-clean combined | 27 | 30 | 32 | 31 | **28** | 30 |
+| Category rule (most clean losses in one category) | - | 2 | 3: fails | 3: fails | **1** | 1 |
+| New constants /24 · neighbours /38 · held-out families /66 | 0 · 4 · 2 | 1 · 2 · 1 | 4 · 2 · 2 | 2 · 3 · 3 | **4 · 3 · 4** | SEED2_SETS |
+| Benchmark official · clean · robust (reported only) | 22 · 19 · 20 | 21 · 18 · 20 | 23 · 20 · 23 | 27 · 24 · 24 | **22 · 19 · 22** | SEED2_BENCH |
 
-- S1 restored `remove_spaces` by retrieving `letters_only`. The literal bug fixes taught which
-  literal a `join` needs, not the `replace` pattern.
+### Configurations, hashes and cost
+
+| Run | Spec | Start | Steps · tokens | Training | Peak RAM | Checkpoint SHA-256 | Pack content SHA-256 | Stored |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| S1 1301 | `v12_s1.json` | R1 (pack `eb7ec595...`) | 7 · 28,672 | 16.6 min | 10,907 MB | `cbc133372f4f785f08192ab9b13400e15d6a1dabf3c37f6f8dceac8ad051a20d` | `5075d097a6571cc964907a011b6d4f634100bfb393b61bf5a18b897abb7837f7` | `lmwork/v12/ckpt/S1_1301.ypk`, 0.42 GB, delta against R1 (file `4b9f4898c35a...`) |
+| S1 1302 | `v12_s1_1302.json` | V11-A (pack content `944ded91...`) | 8 · 32,768 | 13.6 min | 10,768 MB | `3fdbf898bc3ea2b2b3748a767e43eb7a3c95843f767155557afa439a343abc73` | `9a198bc80668d9ae9c29eabc117f3419129d9cc40bcf46d6efb010f4a0267360` | RAM disk only (1.32 GB); rebuilds in about 14 min |
+| P 1301 | `v12_p.json` | C2 | 36 · 147,456 | 103 min | 11,061 MB | `12b0dcc3a716...` | `8c1cb2d6cf22...` | lost with the RAM disk; failed its gates |
+
+- **Shared settings:** lr 3e-5 warmup-stable-decay, 1 warmup step, batch 4 × 1,024, top 24 of 34 layers,
+  fp32, Lion, compact bf16 checkpoints.
+- **Data:** the 93 string-literal bug fixes plus a 50% share of uniform replay from round 54's
+  production mix (`literal_bugfix: 3`, `legacy_share: 0.5`, no curriculum).
+- **What the record depends on:** the S1 1301 checkpoint is its delta pack plus R1's pack
+  (`lmwork/v10/ckpt/R1_1301.ypk`, 1.32 GB) plus round 54. All three are on disk.
+- **Unpacking:** `python -m ycode.lm.packckpt unpack lmwork/v12/ckpt/S1_1301.ypk OUT_DIR` (needs
+  PR #19) checks both packs' content hashes.
+- **Full chain from round 54:** C2 (56 steps, 166 min), then R1 (36 steps, 74 min), then S1 (7 steps,
+  17 min).
+- **Lost to failures:** 2.4 h of training.
+  - L's two attempts, 88 and 33 min, were killed by restarts.
+  - S1 1302's first two attempts, 17 min (OOM) and 6 min (restart), were also lost.
+- **Evaluation:** S1 1301's took 67 min for all sets, and P's took 104 min.
+
+### Next experiment
+
+**Make the restored skills genuine.** Seed 1301 restored `remove_spaces` by retrieving `letters_only`.
+Seed 1302 did not restore the bug fix at all.
+
 - No training concept calls `replace` with literal arguments. The only one using `replace` is
   `replace_word`, with variables, and `remove_spaces` is a dev concept held out of training.
-- The next data change is therefore new verified training concepts with literal `replace(...)`,
-  `split(...)` and `strip(...)` calls, and literal bug fixes on them.
+- **The change:** new verified training concepts with literal `replace(...)`, `split(...)` and
+  `strip(...)` calls, and literal bug fixes on them.
   - None may share a name, skeleton or behaviour with an evaluation item; the hygiene check
     enforces this.
-  - Success is measured on the robust tests, not only the official ones.
+  - The same S1 stage, on the same two starting points.
+  - Success is measured on the robust tests as well as the official ones.
+- **Before that:** the final protocol on unseen-v2 for S1 1301, if you authorize it.
