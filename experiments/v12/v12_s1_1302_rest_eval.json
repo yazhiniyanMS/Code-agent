@@ -1,0 +1,84 @@
+{
+  "name": "v12-s1-seed1302-rest",
+  "note": "V12-S1's second seed (from V11-A, seed 1302 / data seed 1303, 8 steps; trained by experiments/v12/v12_s1_1302.json): the remaining sets after its screen, exactly as for seed 1301 (v12_s1_rest_eval.json): benchmark, family_new, c2_trained, c2_test, neighbours, t_families. Run after the promotion rule was applied on dev + unseen-v1; reported, never used to choose.",
+  "decision": "experiments/v12/PLAN.md rules (V6/V10 gates unchanged).",
+  "anchor": "/home/user/lmwork/loop/anchor",
+  "tokenizer": "/home/user/lmwork/data/tokenizer.json",
+  "replay_dir": "/home/user/lmwork/data",
+  "average_script": "/home/user/lmwork/average.py",
+  "work_dir": "/dev/shm/ycode-v12",
+  "metric": "unseen_clean",
+  "category_rule": "items_lost",
+  "out": "/home/user/lmwork/v12/runs",
+  "seeds": [
+    1302
+  ],
+  "keep_models": "compact",
+  "train": {
+    "steps": 8,
+    "lr": 3e-05,
+    "batch": 4,
+    "train_layers": 24,
+    "warmup": 1,
+    "precision": "fp32",
+    "init_optim": false,
+    "compact": true,
+    "save_every": 8,
+    "final_bf16": true
+  },
+  "eval": {
+    "dev": false,
+    "unseen": false,
+    "unseen2": false,
+    "bench": true,
+    "diagnose": 0,
+    "sets": [
+      {
+        "name": "family_new",
+        "set": "experiments/v8/sets/family_new.json"
+      },
+      {
+        "name": "c2_trained",
+        "set": "experiments/v9/sets/c2_trained.json"
+      },
+      {
+        "name": "c2_test",
+        "set": "experiments/v9/sets/c2_test.json"
+      },
+      {
+        "name": "neighbours",
+        "set": "experiments/v8/sets/neighbours.json",
+        "variants": "original"
+      },
+      {
+        "name": "t_families",
+        "set": "experiments/v8/sets/t_families.json"
+      }
+    ]
+  },
+  "comparisons": [],
+  "keep_dir": "/dev/shm/ycode-keep",
+  "init_from": "/dev/shm/ycode-keep/A/1302/model_bf16",
+  "arms": [
+    {
+      "name": "S1",
+      "data_seed_offset": 1,
+      "note": "from R1: lr 3e-5, literal bug fixes + 50% replay",
+      "data": {
+        "idioms_bugfix": 0,
+        "idioms_families": "v3",
+        "basics_write": 0,
+        "basics_bugfix": 0,
+        "compose_write": 0,
+        "compose_bugfix": 0,
+        "contrast": 0,
+        "novel_write": 0,
+        "replay": 0,
+        "legacy_share": 0.5,
+        "idioms_select": "v9_grammar_train",
+        "idioms_write": 0,
+        "literal_bugfix": 3
+      }
+    }
+  ]
+}

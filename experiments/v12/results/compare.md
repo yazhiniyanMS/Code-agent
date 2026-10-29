@@ -6,6 +6,7 @@
 | V11-A 1302 | 30 | 1 | **31** | 2/24 | 3/38 | 3/66 (1/7 · 2/59) | 38/40 · - | 51/60 · - | 27 · 24 · 24 |
 | V12-P 1301 | 26 | 2 | **28** | 0/24 | 2/38 | 3/66 (1/7 · 2/59) | 38/40 · - | 50/60 · - | 29 · 25 · 27 |
 | V12-S1 1301 | 30 | 3 | **33** | 4/24 | 3/38 | 4/66 (2/7 · 2/59) | 37/40 · - | 55/60 · - | 22 · 19 · 22 |
+| V12-S1 1302 | 30 | 1 | **31** | 3/24 | 3/38 | 2/66 (0/7 · 2/59) | 38/40 · - | 50/60 · - | 23 · 20 · 21 |
 
 | Model | Lost against round 54 (by category) | Gained against round 54 | Lost / gained against C2 | Category gate (>= 3 fails) |
 | --- | --- | --- | --- | --- |
@@ -14,6 +15,7 @@
 | V11-A 1302 | 5: dev:bugfix:longest_word, dev:bugfix:remove_spaces, dev:write:remove_spaces, unseen:write:count_words_longer_than, unseen:write:keys_above ({'instruction_following': 3, 'reasoning': 1, 'coding': 1}) | 7: dev:bugfix:first_negative, dev:bugfix:index_of_min, dev:bugfix:product, dev:write:first_negative, dev:write:first_three_chars, dev:write:longest_word, unseen:write:sum_at_odd_positions | 2 / 2 | fails |
 | V12-P 1301 | 4: dev:bugfix:longest_word, dev:bugfix:remove_spaces, dev:write:remove_spaces, unseen:write:count_words_longer_than ({'instruction_following': 2, 'formatting': 1, 'reasoning': 1}) | 3: dev:bugfix:first_negative, dev:bugfix:product, unseen:write:sum_at_odd_positions | 4 / 1 | passes |
 | V12-S1 1301 | 1: unseen:write:count_words_longer_than ({'hallucination': 1}) | 5: dev:bugfix:product, dev:write:last_word, dev:write:longest_word, unseen:write:count_capitalized, unseen:write:sum_at_odd_positions | 4 / 6 | passes |
+| V12-S1 1302 | 3: dev:bugfix:remove_spaces, unseen:write:count_words_longer_than, unseen:write:keys_above ({'instruction_following': 1, 'reasoning': 1, 'hallucination': 1}) | 5: dev:bugfix:first_negative, dev:bugfix:product, dev:write:first_negative, dev:write:first_three_chars, unseen:write:sum_at_odd_positions | 3 / 3 | passes |
 
 | Run | Start | Trained tokens | Steps | Train min | Total min | Peak RAM MB | Checkpoint sha256 | Packed content sha256 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -22,3 +24,4 @@
 | V11-A 1302 | C2 | 147,456 | 36 | 83 | 228 | 10891 | `c369abd0823f` | `944ded915c01` |
 | V12-P 1301 | C2 | 147,456 | 36 | 103 | 207 | 11061 | `12b0dcc3a716` | `8c1cb2d6cf22` |
 | V12-S1 1301 | R1 | 28,672 | 7 | 17 | 84 | 10907 | `cbc133372f4f` | `5075d097a657` |
+| V12-S1 1302 | A | 32,768 | 8 | 14 | 58 | 10768 | `3fdbf898bc3e` | `9a198bc80668` |

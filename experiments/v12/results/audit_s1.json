@@ -1,0 +1,74 @@
+{
+ "1301": {
+  "gains": [
+   {
+    "item": "dev:bugfix:product",
+    "robust": true,
+    "name_in_training_tokens": 3
+   },
+   {
+    "item": "dev:write:last_word",
+    "robust": false,
+    "name_in_training_tokens": 0
+   },
+   {
+    "item": "dev:write:longest_word",
+    "robust": true,
+    "name_in_training_tokens": 0
+   },
+   {
+    "item": "unseen:write:count_capitalized",
+    "robust": false,
+    "name_in_training_tokens": 0
+   },
+   {
+    "item": "unseen:write:sum_at_odd_positions",
+    "robust": false,
+    "name_in_training_tokens": 0
+   }
+  ],
+  "hygiene_removed": 0,
+  "weak_passes": [
+   "dev:bugfix:remove_spaces",
+   "dev:write:last_word",
+   "dev:write:remove_spaces",
+   "unseen:write:count_capitalized",
+   "unseen:write:sum_at_odd_positions"
+  ],
+  "training_tokens_checked": 116529
+ },
+ "1302": {
+  "gains": [
+   {
+    "item": "dev:bugfix:first_negative",
+    "robust": true,
+    "name_in_training_tokens": 0
+   },
+   {
+    "item": "dev:bugfix:product",
+    "robust": true,
+    "name_in_training_tokens": 4
+   },
+   {
+    "item": "dev:write:first_negative",
+    "robust": true,
+    "name_in_training_tokens": 0
+   },
+   {
+    "item": "dev:write:first_three_chars",
+    "robust": true,
+    "name_in_training_tokens": 0
+   },
+   {
+    "item": "unseen:write:sum_at_odd_positions",
+    "robust": true,
+    "name_in_training_tokens": 0
+   }
+  ],
+  "hygiene_removed": 0,
+  "weak_passes": [
+   "dev:write:remove_spaces"
+  ],
+  "training_tokens_checked": 120335
+ }
+}
