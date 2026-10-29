@@ -1,0 +1,84 @@
+{
+  "name": "v12-s1-staged-literal",
+  "note": "V12-S1 (PLAN.md amendment 2), hypotheses D and C: a short low-learning-rate second stage after R1's acquisition stage. From R1 (pack eb7ec595..., content 9909c511...), lr 3e-5 (R4's retaining rate) warmup-stable-decay, one epoch of: the 93 string-literal bug fixes round 54's mix lacks (basics.literal_bugfix_examples, 3 per bug) plus a 50% token share of uniform replay from round 54's production mix (data seed 1302, R1's). No new curriculum. Screened on dev + unseen-v1 first; the other sets only if the screen reaches the gate's score. Dry run before launch: 33,990 tokens (literal bug fixes 11,338 = 93 examples; production replay 21,503 = 273 examples; original replay 1,149), training split 32,481 tokens -> 7 steps.",
+  "decision": "experiments/v12/PLAN.md rules (V6/V10 gates unchanged).",
+  "anchor": "/home/user/lmwork/loop/anchor",
+  "tokenizer": "/home/user/lmwork/data/tokenizer.json",
+  "replay_dir": "/home/user/lmwork/data",
+  "average_script": "/home/user/lmwork/average.py",
+  "work_dir": "/dev/shm/ycode-v12",
+  "metric": "unseen_clean",
+  "category_rule": "items_lost",
+  "out": "/home/user/lmwork/v12/runs",
+  "seeds": [
+    1301
+  ],
+  "keep_models": "compact",
+  "train": {
+    "steps": 7,
+    "lr": 3e-05,
+    "batch": 4,
+    "train_layers": 24,
+    "warmup": 1,
+    "precision": "fp32",
+    "init_optim": false,
+    "compact": true,
+    "save_every": 7,
+    "final_bf16": true
+  },
+  "eval": {
+    "dev": false,
+    "unseen": false,
+    "unseen2": false,
+    "bench": true,
+    "diagnose": 0,
+    "sets": [
+      {
+        "name": "family_new",
+        "set": "experiments/v8/sets/family_new.json"
+      },
+      {
+        "name": "c2_trained",
+        "set": "experiments/v9/sets/c2_trained.json"
+      },
+      {
+        "name": "c2_test",
+        "set": "experiments/v9/sets/c2_test.json"
+      },
+      {
+        "name": "neighbours",
+        "set": "experiments/v8/sets/neighbours.json",
+        "variants": "original"
+      },
+      {
+        "name": "t_families",
+        "set": "experiments/v8/sets/t_families.json"
+      }
+    ]
+  },
+  "comparisons": [],
+  "keep_dir": "/dev/shm/ycode-keep",
+  "init_from": "/dev/shm/ycode-keep/R1/1301/model_bf16",
+  "arms": [
+    {
+      "name": "S1",
+      "data_seed_offset": 1,
+      "note": "from R1: lr 3e-5, literal bug fixes + 50% replay",
+      "data": {
+        "idioms_bugfix": 0,
+        "idioms_families": "v3",
+        "basics_write": 0,
+        "basics_bugfix": 0,
+        "compose_write": 0,
+        "compose_bugfix": 0,
+        "contrast": 0,
+        "novel_write": 0,
+        "replay": 0,
+        "legacy_share": 0.5,
+        "idioms_select": "v9_grammar_train",
+        "idioms_write": 0,
+        "literal_bugfix": 3
+      }
+    }
+  ]
+}
