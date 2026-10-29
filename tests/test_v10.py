@@ -142,6 +142,49 @@ def test_packing_a_checkpoint_restores_every_tensor_bit_for_bit(base_model, sft,
     assert all(torch.equal(m1[k], m2[k]) for k in m1)
 
 
+def test_a_delta_restores_every_bf16_bit_pattern_against_any_parent():
+    import zlib
+
+    import numpy as np
+
+    from ycode.lm import packckpt
+
+    every = np.arange(-32768, 32768, dtype=np.int16)  # every bf16 value, NaNs and infinities included
+    child = torch.from_numpy(every.copy()).view(torch.bfloat16)
+    for parent_bits in (every, np.random.default_rng(0).permutation(every)):
+        parent = torch.from_numpy(parent_bits.copy()).view(torch.bfloat16)
+        parts = [zlib.decompress(part) for part in packckpt._delta_parts(child, parent)]
+        restored = packckpt._restore_delta(parts, parent, list(child.shape))
+        assert torch.equal(restored.view(torch.int16), child.view(torch.int16))
+
+
+def test_a_checkpoint_packed_against_its_parent_is_smaller_and_restores_bit_for_bit(base_model, sft, tmp_path):
+    from ycode.lm import packckpt
+    from ycode.lm.train import load_checkpoint
+
+    first = _finetune(sft, base_model, tmp_path / "first", 1)
+    second = _finetune(sft, first, tmp_path / "second", 1)  # trained on from `first`
+    parent, plain, delta = tmp_path / "first.ypk", tmp_path / "plain.ypk", tmp_path / "delta.ypk"
+    packckpt.main(["pack", str(first), str(parent)])
+    packckpt.main(["pack", str(second), str(plain)])
+    packckpt.main(["pack", str(second), str(delta), str(parent)])
+    header = packckpt._read(delta)[1]
+    assert {e["kind"] for e in header["entries"]} == {"delta_bf16"}
+    first_state = torch.load(first / "model.pt", map_location="cpu", weights_only=True)["model"]
+    assert header["parent"]["content_sha256"] == packckpt.content_sha256(first_state)
+    assert delta.stat().st_size < plain.stat().st_size
+    # a reader without delta entries refuses the delta pack by its tag; plain packs keep theirs
+    assert delta.read_bytes()[:4] == b"YPK2" and plain.read_bytes()[:4] == b"YPK1"
+    assert packckpt.verify(second, delta) == packckpt.verify(second, plain)
+    out = packckpt.unpack(delta, tmp_path / "restored")
+    m1, m2 = load_checkpoint(second)[0].state_dict(), load_checkpoint(out.parent)[0].state_dict()
+    assert all(torch.equal(m1[k], m2[k]) for k in m1)
+    packckpt.pack(second, tmp_path / "against_dir.ypk", first)  # the parent as a checkpoint dir
+    assert packckpt.verify(second, tmp_path / "against_dir.ypk") == packckpt.verify(second, plain)
+    with pytest.raises(ValueError, match="parent checkpoint differs"):
+        packckpt.unpacked_state(delta, second)  # not the parent it was packed against
+
+
 def test_grammar3_parts_come_from_training_families_and_nothing_leaks():
     from pathlib import Path
 
