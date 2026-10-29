@@ -826,6 +826,9 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
             state = (trained_state(model) if compact else compact_state(model)) if cfg.train_layers else None
             inference = final and cfg.final_bf16
             if inference:
+                # the run's last save, weights only: free the optimizer's momentum first (2.1 GB for 24 trained
+                # layers), so the bf16 copy and the file it writes (in memory too on a RAM disk) do not add to it
+                optimizer.free_state()
                 state = {k: (v.to(torch.bfloat16) if v.is_floating_point() else v)
                          for k, v in (state if state is not None else model.state_dict()).items()}
                 (out_dir / "optim.pt").unlink(missing_ok=True)
