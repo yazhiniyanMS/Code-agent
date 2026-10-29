@@ -37,6 +37,31 @@ def _finetune(sft, init, out, layers):
     return out
 
 
+def test_the_final_weights_only_save_frees_the_optimizer_state_first(base_model, sft, tmp_path, monkeypatch):
+    from ycode.lm import train as T
+
+    optimizers, saves = [], []
+    build, save = T.build_optimizer, T.save_checkpoint
+    monkeypatch.setattr(T, "build_optimizer", lambda *a, **k: optimizers.append(build(*a, **k)) or optimizers[-1])
+    monkeypatch.setattr(T, "save_checkpoint", lambda *a, **k: saves.append(
+        (k["step"], k["optimizer"] is None, sum(len(o.state) for o in optimizers[-1].optimizers))) or save(*a, **k))
+
+    def run(out, final_bf16):
+        T.train(sft, out, T.TrainConfig(stage="sft", init_from=str(base_model), max_steps=2, batch_size=2,
+                                        warmup_steps=1, eval_iters=0, eval_interval=1000, save_interval=1,
+                                        device="cpu", precision="fp32", lr=1e-3, train_layers=1,
+                                        compact_checkpoints=True, final_bf16=final_bf16), log=lambda *_: None)
+        return torch.load(out / "model.pt", map_location="cpu", weights_only=True)["model"]
+
+    weights = run(tmp_path / "bf16", True)
+    assert saves[0][0] == 1 and not saves[0][1] and saves[0][2] > 0  # an intermediate save keeps the optimizer
+    assert saves[-1] == (2, True, 0)  # the final weights-only save: momentum freed before it
+    reference = run(tmp_path / "fp32", False)  # the same run, saved with its optimizer
+    assert saves[-1][2] > 0
+    assert set(weights) == set(reference)
+    assert all(torch.equal(weights[k], reference[k].to(torch.bfloat16)) for k in weights)
+
+
 def test_a_run_from_a_compact_checkpoint_references_the_plain_base(base_model, sft, tmp_path):
     from ycode.lm.train import load_checkpoint
 
