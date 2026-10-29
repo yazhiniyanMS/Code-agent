@@ -1,0 +1,91 @@
+{
+  "name": "v12-e-r6-replication",
+  "note": "V12-E, hypothesis E (compositional training across families): R6's recipe (experiments/v10/v10_r6.json: R1 plus grammar v3's 216 cross-family composition programs, 2 examples each, 66 steps, from C2) replicated with only the seeds changed: train seed 1302, data seed 1303, as V11-A replicated R1. R6 (seed 1301) reached unseen-v1 5/53, the highest of any model, with dev 26. Question: is the cross-family transfer real at a second seed? Runs only under PLAN.md's branch 3.",
+  "decision": "experiments/v12/PLAN.md rules (V6/V10 gates unchanged).",
+  "anchor": "/home/user/lmwork/loop/anchor",
+  "tokenizer": "/home/user/lmwork/data/tokenizer.json",
+  "replay_dir": "/home/user/lmwork/data",
+  "average_script": "/home/user/lmwork/average.py",
+  "work_dir": "/dev/shm/ycode-v12",
+  "metric": "unseen_clean",
+  "category_rule": "items_lost",
+  "out": "/home/user/lmwork/v12/runs",
+  "seeds": [
+    1302
+  ],
+  "keep_models": "compact",
+  "train": {
+    "steps": 66,
+    "lr": 0.0001,
+    "batch": 4,
+    "train_layers": 24,
+    "warmup": 2,
+    "precision": "fp32",
+    "init_optim": false,
+    "compact": true,
+    "save_every": 66,
+    "final_bf16": true
+  },
+  "eval": {
+    "dev": true,
+    "unseen": true,
+    "unseen2": false,
+    "bench": true,
+    "diagnose": 0,
+    "sets": [
+      {
+        "name": "family_new",
+        "set": "experiments/v8/sets/family_new.json"
+      },
+      {
+        "name": "c2_trained",
+        "set": "experiments/v9/sets/c2_trained.json"
+      },
+      {
+        "name": "c2_test",
+        "set": "experiments/v9/sets/c2_test.json"
+      },
+      {
+        "name": "neighbours",
+        "set": "experiments/v8/sets/neighbours.json",
+        "variants": "original"
+      },
+      {
+        "name": "t_families",
+        "set": "experiments/v8/sets/t_families.json"
+      },
+      {
+        "name": "c3_test",
+        "set": "experiments/v10/sets/c3_test.json"
+      },
+      {
+        "name": "c3_trained",
+        "set": "experiments/v10/sets/c3_trained.json"
+      }
+    ]
+  },
+  "comparisons": [],
+  "keep_dir": "/dev/shm/ycode-keep",
+  "init_from": "/dev/shm/ycode-keep/C2/1301/model_bf16",
+  "arms": [
+    {
+      "name": "E",
+      "data": {
+        "idioms_bugfix": 0,
+        "idioms_families": "v3",
+        "basics_write": 0,
+        "basics_bugfix": 0,
+        "compose_write": 0,
+        "compose_bugfix": 0,
+        "contrast": 0,
+        "novel_write": 0,
+        "replay": 0,
+        "legacy_share": 0.5,
+        "idioms_select": "v10_grammars_2_3",
+        "idioms_write": 2
+      },
+      "note": "from C2: R1 plus grammar v3, 2 examples per program",
+      "data_seed_offset": 1
+    }
+  ]
+}

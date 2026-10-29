@@ -1,0 +1,72 @@
+{
+  "summary": {
+    "steps": 7,
+    "minutes": 14.537840708096821,
+    "tokens": 28672,
+    "answer_tokens": 12163,
+    "empty_batches": 0,
+    "final": {
+      "step": 7
+    },
+    "params": 1523202304,
+    "out_dir": "/dev/shm/ycode-v12/S1/1301/model",
+    "world_size": 1,
+    "precision": "fp32",
+    "fp16_skipped_steps": 0,
+    "config": {
+      "stage": "sft",
+      "preset": "v2-small",
+      "model_overrides": {},
+      "batch_size": 4,
+      "grad_accum": 1,
+      "lr": 3e-05,
+      "min_lr": 3e-06,
+      "warmup_steps": 1,
+      "max_steps": 7,
+      "max_minutes": null,
+      "weight_decay": 0.1,
+      "grad_clip": 1.0,
+      "eval_interval": 100000,
+      "eval_iters": 0,
+      "log_interval": 10,
+      "device": "cpu",
+      "precision": "fp32",
+      "seed": 1301,
+      "init_from": "/dev/shm/ycode-keep/R1/1301/model_bf16",
+      "resume": true,
+      "schedule": "wsd",
+      "decay_frac": 0.2,
+      "anneal_mix": 0.0,
+      "pack": true,
+      "compile": false,
+      "grad_checkpoint": true,
+      "save_interval": 7,
+      "save_in_place": true,
+      "compact_checkpoints": true,
+      "init_optim": false,
+      "final_bf16": true,
+      "seq_len": null,
+      "until_step": null,
+      "optimizer": "lion",
+      "muon_lr": 0.02,
+      "shard": false,
+      "train_layers": 24
+    },
+    "init_sha256": null,
+    "data_files": {
+      "sft_tokens.bin": "542113122cf833a145a0db01a8685a43e50513dace7d4cf6231f6cfdc0e33434",
+      "sft_mask.bin": "64c1d1688b9017ce51fb2ef800f1cfa1b178a2293b3e7d5b65045a0f752da1ea",
+      "sft_index.npy": "7b85dcb74f678c8a3299ab35a7134cf8712b920914669f1733855d76d9223535",
+      "tokenizer.json": "7079ff7b8546a23c5416f8ae08adcb636ec69da4c14cd964114f12cee9745341"
+    },
+    "checkpoint_sha256": "cbc133372f4f785f08192ab9b13400e15d6a1dabf3c37f6f8dceac8ad051a20d",
+    "peak_rss_mb": 10908,
+    "torch": "2.14.1+cu130",
+    "threads": 4
+  },
+  "history": [
+    {
+      "step": 7
+    }
+  ]
+}

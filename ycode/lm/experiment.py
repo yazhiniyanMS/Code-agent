@@ -160,6 +160,15 @@ def _checkpoint_gb(anchor: Path, train: dict) -> float:
     return (model + optim) / 1e9
 
 
+def _disk_needed_gb(anchor: Path, train: dict) -> float:
+    """Free space a run needs before it starts training: the checkpoint it will write (2% slack) plus a
+    margin of half its size, at least 0.05 GB and at most 0.5 GB, capped at DISK_NEEDED_GB. Every real
+    checkpoint (1 GB and more) keeps the full 0.5 GB margin; a smoke-test model of a few MB needs ~0.05 GB
+    instead of 0.5, so it does not fail on a nearly full disk."""
+    checkpoint = _checkpoint_gb(anchor, train)
+    return min(DISK_NEEDED_GB, 1.02 * checkpoint + min(0.5, max(0.05, 0.5 * checkpoint)))
+
+
 def _training_ram_gb(anchor: Path, train: dict) -> float:
     """Peak resident memory of a training run, estimated from the model: every weight in the training precision
     (fp32: 4 bytes, otherwise 2) plus Lion's one momentum value per trained weight, plus 0.6 GB of activations
@@ -260,7 +269,7 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
 
     free_gb = shutil.disk_usage(cur.parent).free / 1e9
     # a run writes one checkpoint the size of the one it starts from (weights + optimizer state), plus margin
-    needed_gb = min(DISK_NEEDED_GB, 1.02 * _checkpoint_gb(Path(spec["anchor"]), train) + 0.5)
+    needed_gb = _disk_needed_gb(Path(spec["anchor"]), train)
     if free_gb < needed_gb:  # a checkpoint is ~7 GB; failing at the first save wastes the whole run
         raise RuntimeError(f"only {free_gb:.1f} GB free under {cur.parent}; training needs {needed_gb:.1f} GB "
                            "(remove leftover checkpoints, e.g. of an interrupted smoke run)")

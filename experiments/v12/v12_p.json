@@ -1,0 +1,85 @@
+{
+  "name": "v12-p-contrastive-pairs",
+  "note": "V12-P, hypothesis C at an effective learning rate: V10's pre-registered R3 arm, never run until now (experiments/v10/v10_r3.json). R1's recipe from C2 (same 350 grammar v2 programs, 2 examples each, data seed 1302, 50% replay of round 54's production mix, 36 steps, lr 1e-4 WSD to 1e-5, top 24 layers, seed 1301) with one change: every curriculum example is written next to a minimal-pair sibling (same parameters, exactly one part different and a different result on the program's inputs) as its contrast, and the answer tokens that differ from the sibling's code weigh 20 (ycode.lm.compositions2.minimal_pair_examples). V7 tested contrast weighting only at lr 1.5e-5, where nothing is learned. Replay draws uniformly, as in R1.",
+  "decision": "experiments/v12/PLAN.md rules (V6/V10 gates unchanged).",
+  "anchor": "/home/user/lmwork/loop/anchor",
+  "tokenizer": "/home/user/lmwork/data/tokenizer.json",
+  "replay_dir": "/home/user/lmwork/data",
+  "average_script": "/home/user/lmwork/average.py",
+  "work_dir": "/dev/shm/ycode-v12",
+  "metric": "unseen_clean",
+  "category_rule": "items_lost",
+  "out": "/home/user/lmwork/v12/runs",
+  "seeds": [
+    1301
+  ],
+  "keep_models": "compact",
+  "train": {
+    "steps": 36,
+    "lr": 0.0001,
+    "batch": 4,
+    "train_layers": 24,
+    "warmup": 2,
+    "precision": "fp32",
+    "init_optim": false,
+    "compact": true,
+    "save_every": 36,
+    "final_bf16": true
+  },
+  "eval": {
+    "dev": true,
+    "unseen": true,
+    "unseen2": false,
+    "bench": true,
+    "diagnose": 0,
+    "sets": [
+      {
+        "name": "family_new",
+        "set": "experiments/v8/sets/family_new.json"
+      },
+      {
+        "name": "c2_trained",
+        "set": "experiments/v9/sets/c2_trained.json"
+      },
+      {
+        "name": "c2_test",
+        "set": "experiments/v9/sets/c2_test.json"
+      },
+      {
+        "name": "neighbours",
+        "set": "experiments/v8/sets/neighbours.json",
+        "variants": "original"
+      },
+      {
+        "name": "t_families",
+        "set": "experiments/v8/sets/t_families.json"
+      }
+    ]
+  },
+  "comparisons": [],
+  "keep_dir": "/dev/shm/ycode-keep",
+  "init_from": "/dev/shm/ycode-keep/C2/1301/model_bf16",
+  "arms": [
+    {
+      "name": "P",
+      "data": {
+        "idioms_bugfix": 0,
+        "idioms_families": "v3",
+        "basics_write": 0,
+        "basics_bugfix": 0,
+        "compose_write": 0,
+        "compose_bugfix": 0,
+        "contrast": 0,
+        "novel_write": 0,
+        "replay": 0,
+        "legacy_share": 0.5,
+        "idioms_select": "v9_grammar_train",
+        "idioms_write": 0,
+        "idioms_pairs": 2,
+        "pair_weight": 20
+      },
+      "note": "from C2: R1 with minimal-pair contrast weighting",
+      "data_seed_offset": 1
+    }
+  ]
+}

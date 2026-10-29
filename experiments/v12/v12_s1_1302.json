@@ -1,0 +1,62 @@
+{
+  "name": "v12-s1-seed1302",
+  "note": "V12-S1's second seed (PLAN.md amendment 2): the same staged continuation applied to R1's second seed, V11-A (R1's recipe at seed 1302 / data seed 1303; pack A_1302.ypk, content 944ded91...), at seed 1302 / data seed 1303. lr 3e-5 WSD, one epoch of the 93 string-literal bug fixes plus a 50% share of uniform production replay (steps measured by a dry run before launch). Dry run before launch: 35,232 tokens (literal bug fixes 11,312, production replay 22,359, original replay 1,561), training split 33,758 tokens -> 8 steps.",
+  "decision": "experiments/v12/PLAN.md rules (V6/V10 gates unchanged).",
+  "anchor": "/home/user/lmwork/loop/anchor",
+  "tokenizer": "/home/user/lmwork/data/tokenizer.json",
+  "replay_dir": "/home/user/lmwork/data",
+  "average_script": "/home/user/lmwork/average.py",
+  "work_dir": "/dev/shm/ycode-v12",
+  "metric": "unseen_clean",
+  "category_rule": "items_lost",
+  "out": "/home/user/lmwork/v12/runs",
+  "seeds": [
+    1302
+  ],
+  "keep_models": "compact",
+  "train": {
+    "steps": 8,
+    "lr": 3e-05,
+    "batch": 4,
+    "train_layers": 24,
+    "warmup": 1,
+    "precision": "fp32",
+    "init_optim": false,
+    "compact": true,
+    "save_every": 8,
+    "final_bf16": true
+  },
+  "eval": {
+    "dev": true,
+    "unseen": true,
+    "unseen2": false,
+    "bench": false,
+    "diagnose": 0,
+    "sets": []
+  },
+  "comparisons": [],
+  "keep_dir": "/dev/shm/ycode-keep",
+  "init_from": "/dev/shm/ycode-keep/A/1302/model_bf16",
+  "arms": [
+    {
+      "name": "S1",
+      "data_seed_offset": 1,
+      "note": "from R1: lr 3e-5, literal bug fixes + 50% replay",
+      "data": {
+        "idioms_bugfix": 0,
+        "idioms_families": "v3",
+        "basics_write": 0,
+        "basics_bugfix": 0,
+        "compose_write": 0,
+        "compose_bugfix": 0,
+        "contrast": 0,
+        "novel_write": 0,
+        "replay": 0,
+        "legacy_share": 0.5,
+        "idioms_select": "v9_grammar_train",
+        "idioms_write": 0,
+        "literal_bugfix": 3
+      }
+    }
+  ]
+}
