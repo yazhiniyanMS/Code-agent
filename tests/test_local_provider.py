@@ -50,11 +50,26 @@ def test_empty_answer_gets_placeholder(tmp_path):
     assert "did not produce an answer" in response.message.text
 
 
-def test_missing_local_model_is_a_clear_error(tmp_path):
+def test_missing_local_model_is_a_clear_error(tmp_path, monkeypatch):
     pytest.importorskip("torch")
+    models = tmp_path / "models"  # the bundled models, independent of whether this checkout has models/
+    for name in ("ycode-lm-v2", "ycode-lm-v4"):
+        (models / name).mkdir(parents=True)
+        (models / name / "model.pt").write_bytes(b"")
+    monkeypatch.setenv("YCODE_MODELS_DIR", str(models))
     with pytest.raises(ConfigError) as info:
         create_provider(Config(provider="local", local_model=str(tmp_path / "none")))
-    assert "No model found" in str(info.value) and "v4" in info.value.hint  # lists the bundled models
+    assert "No model found" in str(info.value)
+    assert "Bundled models available: v2, v4" in info.value.hint  # lists the bundled models
+
+
+def test_missing_local_model_without_bundled_models_says_where_to_get_them(tmp_path, monkeypatch):
+    pytest.importorskip("torch")
+    monkeypatch.setenv("YCODE_MODELS_DIR", str(tmp_path / "no-models"))
+    with pytest.raises(ConfigError) as info:
+        create_provider(Config(provider="local", local_model=str(tmp_path / "none")))
+    assert "No model found" in str(info.value)
+    assert "models/ folder" in info.value.hint and "YCODE_MODELS_DIR" in info.value.hint
 
 
 def test_no_api_key_needed_for_local(tmp_path, monkeypatch):
@@ -127,9 +142,18 @@ def test_resolve_local_model(tmp_path, monkeypatch, isolated_home):
 
 
 def test_repository_ships_the_default_model():
-    from ycode.config import DEFAULT_BUNDLED_MODEL, bundled_models
+    import subprocess
 
-    assert DEFAULT_BUNDLED_MODEL in bundled_models()
+    from ycode.config import DEFAULT_BUNDLED_MODEL, bundled_models, bundled_models_dir
+
+    if DEFAULT_BUNDLED_MODEL in bundled_models():
+        return
+    # a sparse checkout can leave models/ out of the working tree: the repository still ships the model if
+    # Git tracks it (skip-worktree entries stay in the index)
+    path = f"models/{DEFAULT_BUNDLED_MODEL}/model.pt"
+    tracked = subprocess.run(["git", "-C", str(bundled_models_dir().parent), "ls-files", "--", path],
+                             capture_output=True, text=True)
+    assert tracked.stdout.strip() == path
 
 
 def test_claude_is_optional(monkeypatch):

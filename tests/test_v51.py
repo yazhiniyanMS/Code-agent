@@ -703,3 +703,12 @@ def test_spec_first_answers_restate_the_task_and_keep_the_code(monkeypatch):
             assert _passes(b.response.strip("`").removeprefix("python\n"), _rename_tests(tests[name], name))
             checked += 1
     assert checked > 50
+
+
+def test_disk_guard_keeps_the_full_margin_for_real_checkpoints_and_scales_it_for_tiny_ones(monkeypatch, tmp_path):
+    from ycode.lm import experiment
+
+    for checkpoint_gb, needed in ((7.3, 1.02 * 7.3 + 0.5), (2.1, 1.02 * 2.1 + 0.5), (1.0, 1.02 + 0.5),
+                                  (0.004, 1.02 * 0.004 + 0.05), (0.2, 1.02 * 0.2 + 0.1), (9.0, experiment.DISK_NEEDED_GB)):
+        monkeypatch.setattr(experiment, "_checkpoint_gb", lambda anchor, train, gb=checkpoint_gb: gb)
+        assert experiment._disk_needed_gb(tmp_path, {}) == pytest.approx(needed)
