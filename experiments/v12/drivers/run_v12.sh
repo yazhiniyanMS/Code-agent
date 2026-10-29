@@ -22,7 +22,7 @@ work=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['work_dir
 init=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1])).get('init_from') or '')" $spec)
 from_ram=0
 # a starting checkpoint on the RAM disk (/dev/shm/ycode-keep/NAME/1301/model_bf16) is restored from its verified pack
-declare -A PACKS=([C2]=/home/user/lmwork/v10/ckpt/C2_1301.ypk [R1]=/home/user/lmwork/v10/ckpt/R1_1301.ypk)
+declare -A PACKS=([C2]=/home/user/lmwork/v10/ckpt/C2_1301.ypk [R1]=/home/user/lmwork/v10/ckpt/R1_1301.ypk [A]=/home/user/lmwork/v11/ckpt/A_1302.ypk)
 init_name=$(echo "$init" | sed -n 's#^/dev/shm/ycode-keep/\([^/]*\)/.*#\1#p')
 if [ -n "$init_name" ]; then
   from_ram=1  # starts from a RAM-disk copy, dropped once the trainer has loaded it
