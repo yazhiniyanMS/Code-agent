@@ -46,10 +46,17 @@ def test_the_estimate_matches_the_measured_peak_of_real_runs():
     assert 2.0 < experiment._momentum_freed_gb(ROUND54, {"train_layers": 24}) < 2.2
 
 
-def test_available_memory_is_read_from_meminfo():
-    assert experiment._mem_available_gb("MemTotal: 16477352 kB\nMemAvailable:   11376884 kB\n") == \
-        pytest.approx(11376884 * 1024 / 1e9)
+def test_available_memory_is_read_from_meminfo(monkeypatch):
+    monkeypatch.delenv("YCODE_MEMORY_LIMIT_GB", raising=False)
+    meminfo = "MemTotal: 16477352 kB\nMemAvailable:   15984628 kB\n"  # this container with an empty RAM disk
+    assert experiment._mem_available_gb(meminfo) == pytest.approx(15984628 * 1024 / 1e9)
     assert experiment._mem_available_gb("MemTotal: 1 kB\n") is None
+    # its memory cgroup's limit, 14.34 GB, is 2.53 GB below MemTotal (16.87 GB): that much is not available
+    gap = 16477352 * 1024 / 1e9 - 14.34
+    assert experiment._mem_available_gb(meminfo, limit_gb=14.34) == pytest.approx(15984628 * 1024 / 1e9 - gap)
+    monkeypatch.setenv("YCODE_MEMORY_LIMIT_GB", "14.34")
+    assert experiment._mem_available_gb(meminfo) == pytest.approx(15984628 * 1024 / 1e9 - gap)
+    assert experiment._mem_available_gb(meminfo, limit_gb=20.0) == pytest.approx(15984628 * 1024 / 1e9)  # above total
 
 
 def test_a_ram_disk_is_recognised_by_its_longest_mount():

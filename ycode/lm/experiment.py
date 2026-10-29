@@ -208,21 +208,26 @@ def _momentum_freed_gb(anchor: Path, train: dict) -> float:
     return _weight_counts(anchor, train)[1] * 2 / 1e9
 
 
-# This session's memory-cgroup limit (14.34 GB in the kernel's OOM report) is below what /proc/meminfo calls
-# available with an empty RAM disk (14.6 GB), and the limit itself is not visible inside the container.
+# The estimate's error: V10-V12's measured peaks were within 0.3 GB of it.
 MEMORY_MARGIN_GB = 0.5
 
 
-def _mem_available_gb(meminfo: str | None = None) -> float | None:
-    """MemAvailable from /proc/meminfo, in GB (files on a RAM disk are not available memory); None if unknown."""
+def _mem_available_gb(meminfo: str | None = None, limit_gb: float | None = None) -> float | None:
+    """MemAvailable from /proc/meminfo, in GB (files on a RAM disk are not available memory); None if unknown.
+    A memory limit below the machine's total (``limit_gb``, by default $YCODE_MEMORY_LIMIT_GB) takes the
+    difference away too: a container's cgroup limit need not be visible inside it (this session's, 14.34 GB in
+    the kernel's OOM report, sits 2.5 GB below MemTotal)."""
     try:
         text = meminfo if meminfo is not None else Path("/proc/meminfo").read_text()
     except OSError:
         return None
-    for line in text.splitlines():
-        if line.startswith("MemAvailable:"):
-            return int(line.split()[1]) * 1024 / 1e9
-    return None
+    fields = {line.split(":")[0]: int(line.split()[1]) * 1024 / 1e9 for line in text.splitlines() if ":" in line}
+    if "MemAvailable" not in fields:
+        return None
+    if limit_gb is None and os.environ.get("YCODE_MEMORY_LIMIT_GB"):
+        limit_gb = float(os.environ["YCODE_MEMORY_LIMIT_GB"])
+    gap = max(0.0, fields.get("MemTotal", 0.0) - limit_gb) if limit_gb else 0.0
+    return fields["MemAvailable"] - gap
 
 
 def _on_tmpfs(path: Path, mounts: str | None = None) -> bool:
