@@ -1,0 +1,501 @@
+{
+ "arm": "S1-rest",
+ "seed": 1301,
+ "smoke": false,
+ "note": "S1 seed 1301: the sets the dev + unseen-v1 screen skipped (PLAN.md amendment 2)",
+ "eval": {
+  "dev": false,
+  "unseen": false,
+  "unseen2": false,
+  "bench": true,
+  "limit": null,
+  "diagnose": 0,
+  "sets": [
+   {
+    "name": "family_new",
+    "set": "experiments/v8/sets/family_new.json"
+   },
+   {
+    "name": "c2_trained",
+    "set": "experiments/v9/sets/c2_trained.json"
+   },
+   {
+    "name": "c2_test",
+    "set": "experiments/v9/sets/c2_test.json"
+   },
+   {
+    "name": "neighbours",
+    "set": "experiments/v8/sets/neighbours.json",
+    "variants": "original"
+   },
+   {
+    "name": "t_families",
+    "set": "experiments/v8/sets/t_families.json"
+   }
+  ]
+ },
+ "anchor": "/home/user/lmwork/loop/anchor",
+ "anchor_sha256": null,
+ "init_from": "/dev/shm/ycode-keep/R1/1301/model_bf16",
+ "training": {
+  "steps": 0,
+  "tokens": 0,
+  "minutes": 0.0,
+  "peak_rss_mb": 0,
+  "checkpoint_sha256": "cfa40dc9746391ac02105f1b59dfa3592b98cbc973ec31d9ef11c6f012b223a3",
+  "build": {}
+ },
+ "kept_model": {
+  "path": "/dev/shm/ycode-keep/S1/1301/model_bf16/model.pt",
+  "sha256": "cfa40dc9746391ac02105f1b59dfa3592b98cbc973ec31d9ef11c6f012b223a3"
+ },
+ "bench_run": {
+  "exit": 0,
+  "minutes": 18.85,
+  "peak_rss_mb": 3664
+ },
+ "bench": {
+  "points": 22,
+  "of": 65,
+  "clean": 19,
+  "clean_of": 61,
+  "robust": 22,
+  "robust_of": 65,
+  "robust_clean": 19,
+  "weak_passes": [],
+  "fingerprint": "c41681ec4ac20ed3ff3f5e19074f84804b391c6ebabc277d947495ffc27b14c0",
+  "eval_version": "eval-v5.1-1",
+  "groups": {
+   "fixed": 5,
+   "fresh": 9,
+   "standard": 8
+  },
+  "lost_by_category": {
+   "formatting": 2,
+   "instruction_following": 15,
+   "hallucination": 2,
+   "coding": 6,
+   "factual": 5,
+   "reasoning": 13
+  },
+  "hallucinations": 2,
+  "invalid_outputs": 2,
+  "passed": [
+   "bugfix:add",
+   "bugfix:filter_even",
+   "bugfix:is_even",
+   "bugfix:square",
+   "bugfix:subtract",
+   "write:add",
+   "write:add_one",
+   "write:char_count",
+   "write:count_letter_a",
+   "write:count_spaces",
+   "write:count_zeros",
+   "write:dict_size",
+   "write:filter_even",
+   "write:is_even",
+   "write:is_zero",
+   "write:square",
+   "write:subtract",
+   "write:sum_of_cubes",
+   "write:sum_of_evens",
+   "write:to_upper",
+   "write:total",
+   "write:triple"
+  ],
+  "categories": {
+   "write:maximum": "instruction_following",
+   "write:minimum": "reasoning",
+   "write:average": "reasoning",
+   "write:reverse_string": "instruction_following",
+   "write:is_palindrome": "reasoning",
+   "write:factorial": "factual",
+   "write:fibonacci": "coding",
+   "write:count_vowels": "instruction_following",
+   "write:is_prime": "factual",
+   "write:gcd": "instruction_following",
+   "write:celsius_to_fahrenheit": "instruction_following",
+   "write:unique": "hallucination",
+   "write:count_words": "coding",
+   "write:flatten": "reasoning",
+   "write:clamp": "reasoning",
+   "write:merge_dicts": "coding",
+   "write:first_word": "instruction_following",
+   "write:is_sorted": "instruction_following",
+   "write:second_largest": "instruction_following",
+   "write:binary_search": "hallucination",
+   "write:is_anagram": "reasoning",
+   "write:digit_sum": "reasoning",
+   "write:area_of_square": "formatting",
+   "write:ends_with_dot": "reasoning",
+   "write:second_item": "instruction_following",
+   "write:halve_all": "reasoning",
+   "write:max_length": "reasoning",
+   "write:seconds_to_minutes": "factual",
+   "write:is_empty": "instruction_following",
+   "write:starts_with_vowel": "factual",
+   "write:middle_item": "instruction_following",
+   "write:all_strings_short": "reasoning",
+   "write:join_words": "instruction_following",
+   "bugfix:total": "reasoning",
+   "bugfix:factorial": "factual",
+   "bugfix:maximum": "coding",
+   "bugfix:minimum": "coding",
+   "bugfix:count_vowels": "instruction_following",
+   "bugfix:is_sorted": "coding",
+   "bugfix:celsius_to_fahrenheit": "instruction_following",
+   "bugfix:char_count": "instruction_following",
+   "bugfix:clamp": "reasoning",
+   "bugfix:is_palindrome": "formatting"
+  },
+  "contaminated": [
+   "bugfix:total",
+   "write:dict_size",
+   "write:sum_of_cubes",
+   "write:total"
+  ]
+ },
+ "sets": {
+  "family_new": {
+   "run": {
+    "exit": 0,
+    "minutes": 3.27,
+    "peak_rss_mb": 3668
+   },
+   "scores": {
+    "original": {
+     "tasks": 24,
+     "strict": 4,
+     "tests": 5,
+     "wrong": 0,
+     "strict_names": [
+      "digits_above_6",
+      "digits_above_2",
+      "words_longer_than_5",
+      "words_longer_than_6"
+     ]
+    },
+    "original:family_new": {
+     "tasks": 24,
+     "strict": 4,
+     "tests": 5,
+     "wrong": 0,
+     "strict_names": [
+      "digits_above_6",
+      "digits_above_2",
+      "words_longer_than_5",
+      "words_longer_than_6"
+     ]
+    }
+   }
+  },
+  "c2_trained": {
+   "run": {
+    "exit": 0,
+    "minutes": 7.04,
+    "peak_rss_mb": 3856
+   },
+   "scores": {
+    "original": {
+     "tasks": 40,
+     "strict": 37,
+     "tests": 37,
+     "wrong": 0,
+     "strict_names": [
+      "list_capped_after_first",
+      "first_capped_before_negative",
+      "list_squares_pair_sums",
+      "prod_abs_last_three",
+      "first_steps",
+      "min_doubles",
+      "prod_doubles_running_max",
+      "sum_capped_odd_positions",
+      "prod_squares_before_negative",
+      "prod_doubles_before_negative",
+      "first_doubles_digits_reversed",
+      "prod_squares_even_digits",
+      "min_digits_above_4",
+      "min_squares_digits_above_4",
+      "prod_even_digits",
+      "min_doubles_nonzero_digits",
+      "list_squares_digits_reversed",
+      "first_squares_odd_digits",
+      "last_squares_nonzero_digits",
+      "max_doubles_digits_above_4",
+      "first_lowercase_chars_reversed",
+      "join_lowercase_chars_reversed",
+      "list_digit_chars",
+      "ndistinct_vowels",
+      "last_digit_chars",
+      "join_uppercase_first_half_chars",
+      "list_vowels",
+      "join_uppercase_words",
+      "ndistinct_words",
+      "max_lengths_words_with_a",
+      "ndistinct_lengths_first_two_words",
+      "ndistinct_lengths_words",
+      "first_uppercase_words_with_a",
+      "sorted_distinct_lengths_long_words",
+      "join_uppercase_first_two_words",
+      "list_backwards_capitalized_words",
+      "min_lengths_first_two_words"
+     ]
+    },
+    "original:c2_trained": {
+     "tasks": 40,
+     "strict": 37,
+     "tests": 37,
+     "wrong": 0,
+     "strict_names": [
+      "list_capped_after_first",
+      "first_capped_before_negative",
+      "list_squares_pair_sums",
+      "prod_abs_last_three",
+      "first_steps",
+      "min_doubles",
+      "prod_doubles_running_max",
+      "sum_capped_odd_positions",
+      "prod_squares_before_negative",
+      "prod_doubles_before_negative",
+      "first_doubles_digits_reversed",
+      "prod_squares_even_digits",
+      "min_digits_above_4",
+      "min_squares_digits_above_4",
+      "prod_even_digits",
+      "min_doubles_nonzero_digits",
+      "list_squares_digits_reversed",
+      "first_squares_odd_digits",
+      "last_squares_nonzero_digits",
+      "max_doubles_digits_above_4",
+      "first_lowercase_chars_reversed",
+      "join_lowercase_chars_reversed",
+      "list_digit_chars",
+      "ndistinct_vowels",
+      "last_digit_chars",
+      "join_uppercase_first_half_chars",
+      "list_vowels",
+      "join_uppercase_words",
+      "ndistinct_words",
+      "max_lengths_words_with_a",
+      "ndistinct_lengths_first_two_words",
+      "ndistinct_lengths_words",
+      "first_uppercase_words_with_a",
+      "sorted_distinct_lengths_long_words",
+      "join_uppercase_first_two_words",
+      "list_backwards_capitalized_words",
+      "min_lengths_first_two_words"
+     ]
+    }
+   }
+  },
+  "c2_test": {
+   "run": {
+    "exit": 0,
+    "minutes": 10.57,
+    "peak_rss_mb": 3909
+   },
+   "scores": {
+    "original": {
+     "tasks": 60,
+     "strict": 55,
+     "tests": 57,
+     "wrong": 0,
+     "strict_names": [
+      "last_doubles_after_first",
+      "list_abs_running_max",
+      "last_pair_sums",
+      "sorted_distinct_abs_steps",
+      "first_abs_odd_positions",
+      "prod_pair_sums",
+      "sorted_distinct_doubles_last_three",
+      "count_above_3_abs_steps",
+      "count_above_3_squares_last_three",
+      "prod_capped_odd_positions",
+      "first_capped_odd_positions",
+      "prod_squares_after_first",
+      "first_doubles_odd_digits",
+      "prod_squares_odd_digits",
+      "list_squares_nonzero_digits",
+      "list_even_digits",
+      "prod_distinct_digits",
+      "last_squares_distinct_digits",
+      "sorted_distinct_even_digits",
+      "min_squares_nonzero_digits",
+      "sorted_distinct_squares_nonzero_digits",
+      "last_doubles_even_digits",
+      "sorted_distinct_doubles_digits",
+      "max_even_digits",
+      "last_digits_above_4",
+      "sum_digits_above_4",
+      "prod_doubles_digits_above_4",
+      "list_uppercase_letters",
+      "sorted_distinct_lowercase_first_half_chars",
+      "join_uppercase_letters",
+      "first_uppercase_chars",
+      "sorted_distinct_digit_chars",
+      "sorted_distinct_uppercase_chars",
+      "first_lowercase_chars",
+      "first_lowercase_first_half_chars",
+      "sorted_distinct_lowercase_upper_letters",
+      "first_uppercase_first_half_chars",
+      "list_lowercase_letters",
+      "ndistinct_letters",
+      "sorted_distinct_upper_letters",
+      "last_lowercase_letters",
+      "sorted_distinct_uppercase_vowels",
+      "count_above_3_lengths_words_with_a",
+      "list_initials_words_reversed",
+      "join_backwards_capitalized_words",
+      "sorted_distinct_lengths_words_with_a",
+      "first_initials_sorted_words",
+      "list_long_words",
+      "join_initials_words",
+      "list_uppercase_capitalized_words",
+      "ndistinct_words_with_a",
+      "join_capitalized_words",
+      "last_uppercase_capitalized_words",
+      "join_uppercase_capitalized_words",
+      "join_initials_words_with_a"
+     ]
+    },
+    "original:c2_test": {
+     "tasks": 60,
+     "strict": 55,
+     "tests": 57,
+     "wrong": 0,
+     "strict_names": [
+      "last_doubles_after_first",
+      "list_abs_running_max",
+      "last_pair_sums",
+      "sorted_distinct_abs_steps",
+      "first_abs_odd_positions",
+      "prod_pair_sums",
+      "sorted_distinct_doubles_last_three",
+      "count_above_3_abs_steps",
+      "count_above_3_squares_last_three",
+      "prod_capped_odd_positions",
+      "first_capped_odd_positions",
+      "prod_squares_after_first",
+      "first_doubles_odd_digits",
+      "prod_squares_odd_digits",
+      "list_squares_nonzero_digits",
+      "list_even_digits",
+      "prod_distinct_digits",
+      "last_squares_distinct_digits",
+      "sorted_distinct_even_digits",
+      "min_squares_nonzero_digits",
+      "sorted_distinct_squares_nonzero_digits",
+      "last_doubles_even_digits",
+      "sorted_distinct_doubles_digits",
+      "max_even_digits",
+      "last_digits_above_4",
+      "sum_digits_above_4",
+      "prod_doubles_digits_above_4",
+      "list_uppercase_letters",
+      "sorted_distinct_lowercase_first_half_chars",
+      "join_uppercase_letters",
+      "first_uppercase_chars",
+      "sorted_distinct_digit_chars",
+      "sorted_distinct_uppercase_chars",
+      "first_lowercase_chars",
+      "first_lowercase_first_half_chars",
+      "sorted_distinct_lowercase_upper_letters",
+      "first_uppercase_first_half_chars",
+      "list_lowercase_letters",
+      "ndistinct_letters",
+      "sorted_distinct_upper_letters",
+      "last_lowercase_letters",
+      "sorted_distinct_uppercase_vowels",
+      "count_above_3_lengths_words_with_a",
+      "list_initials_words_reversed",
+      "join_backwards_capitalized_words",
+      "sorted_distinct_lengths_words_with_a",
+      "first_initials_sorted_words",
+      "list_long_words",
+      "join_initials_words",
+      "list_uppercase_capitalized_words",
+      "ndistinct_words_with_a",
+      "join_capitalized_words",
+      "last_uppercase_capitalized_words",
+      "join_uppercase_capitalized_words",
+      "join_initials_words_with_a"
+     ]
+    }
+   }
+  },
+  "neighbours": {
+   "run": {
+    "exit": 0,
+    "minutes": 4.17,
+    "peak_rss_mb": 3761
+   },
+   "scores": {
+    "original": {
+     "tasks": 38,
+     "strict": 3,
+     "tests": 3,
+     "wrong": 7,
+     "strict_names": [
+      "first_four_chars",
+      "mirror_digits",
+      "has_366_days"
+     ]
+    },
+    "original:same_wording": {
+     "tasks": 19,
+     "strict": 1,
+     "tests": 1,
+     "wrong": 6,
+     "strict_names": [
+      "first_four_chars"
+     ]
+    },
+    "original:new_wording": {
+     "tasks": 19,
+     "strict": 2,
+     "tests": 2,
+     "wrong": 1,
+     "strict_names": [
+      "mirror_digits",
+      "has_366_days"
+     ]
+    }
+   }
+  },
+  "t_families": {
+   "run": {
+    "exit": 0,
+    "minutes": 9.14,
+    "peak_rss_mb": 3905
+   },
+   "scores": {
+    "original": {
+     "tasks": 66,
+     "strict": 4,
+     "tests": 5,
+     "wrong": 0,
+     "strict_names": [
+      "sum_of_even_digits",
+      "sum_of_odd_digits",
+      "keep_even_values",
+      "most_common"
+     ]
+    },
+    "original:t_families": {
+     "tasks": 66,
+     "strict": 4,
+     "tests": 5,
+     "wrong": 0,
+     "strict_names": [
+      "sum_of_even_digits",
+      "sum_of_odd_digits",
+      "keep_even_values",
+      "most_common"
+     ]
+    }
+   }
+  }
+ },
+ "minutes_total": 53.0
+}

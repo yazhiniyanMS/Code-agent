@@ -1,6 +1,7 @@
 # YCode V12: breaking the generalization ceiling
 
-Status: **in progress.** Run P is complete; run L is training. Round 54 remains the validated
+Status: **in progress.** P is complete; L was killed by container restarts; S1's first seed passes the
+second-seed gate, and its second seed is blocked on storage (section 5). Round 54 remains the validated
 checkpoint of record.
 
 ## 1. Starting point (verified 2026-10-28)
