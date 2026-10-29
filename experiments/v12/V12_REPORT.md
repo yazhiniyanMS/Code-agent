@@ -185,6 +185,7 @@ seed 1302 / data seed 1303.
 - 8 steps (one epoch of 33,758 training tokens), seed 1302, data seed 1303.
 - 32,768 trained tokens; 11.8 min of training steps, 13.6 min with loading; peak RAM 10,768 MB.
 - Checkpoint `3fdbf898bc3e...`, pack content `9a198bc80668...`.
+- Code: commit 527444b, which is main plus PR #20. PR #20 changes only the final save's memory use.
 
 **Getting it to run took three attempts:**
 
@@ -222,7 +223,29 @@ seed 1302 / data seed 1303.
 - **All five of its gains against round 54 are robust:** `first_negative` (written and as a bug fix),
   `product`, `first_three_chars` and unseen `sum_at_odd_positions`.
 
-SEED2_REST
+**The remaining sets** were evaluated after the promotion rule had been applied. They are reported
+only, never used to choose (`experiments/v11/eval_only.py`, 31 min):
+
+| | S1 1301 | S1 1302 | V11-A (its start) |
+| --- | --- | --- | --- |
+| New constants, trained families /24 | 4 | 3 | 2 |
+| Neighbour probe /38 | 3 | 3 | 3 |
+| Held-out families /66 | 4 | 2 | 3 |
+| Training-program reproduction /40 | 37 | 38 | 38 |
+| Held-out combinations /60 | 55 | 50 | 51 |
+| Benchmark official · clean · robust | 22 · 19 · 22 | 23 · 20 · 21 | 27 · 24 · 24 |
+| Failures: wrong function retrieved | 32 | 31 | 33 |
+
+Failure mechanisms, from `results/mechanism_s1_1302.json`:
+
+- wrong function retrieved: 31;
+- correct concept with a wrong implementation: 23;
+- prompt misunderstood: 5;
+- edge cases: 6;
+- syntax or format: 1.
+
+On seed 1302 the stage cost 4 benchmark points against its start (27 → 23). That is reported only;
+the benchmark varied by 3-4 items between seeds in V11.
 
 ## 4d. Promotion and audit
 
@@ -294,8 +317,8 @@ promoted.
 | Dev · unseen-v1 clean | 27 · 2 | 28 · 3 | 30 · 3 | 30 · 1 | **30 · 3** | 30 · 1 |
 | Robust-clean combined | 27 | 30 | 32 | 31 | **28** | 30 |
 | Category rule (most clean losses in one category) | - | 2 | 3: fails | 3: fails | **1** | 1 |
-| New constants /24 · neighbours /38 · held-out families /66 | 0 · 4 · 2 | 1 · 2 · 1 | 4 · 2 · 2 | 2 · 3 · 3 | **4 · 3 · 4** | SEED2_SETS |
-| Benchmark official · clean · robust (reported only) | 22 · 19 · 20 | 21 · 18 · 20 | 23 · 20 · 23 | 27 · 24 · 24 | **22 · 19 · 22** | SEED2_BENCH |
+| New constants /24 · neighbours /38 · held-out families /66 | 0 · 4 · 2 | 1 · 2 · 1 | 4 · 2 · 2 | 2 · 3 · 3 | **4 · 3 · 4** | 3 · 3 · 2 |
+| Benchmark official · clean · robust (reported only) | 22 · 19 · 20 | 21 · 18 · 20 | 23 · 20 · 23 | 27 · 24 · 24 | **22 · 19 · 22** | 23 · 20 · 21 |
 
 ### Configurations, hashes and cost
 
