@@ -51,6 +51,43 @@ PRODUCTION = {k: DEFAULTS[k] for k in ("basics_write", "basics_bugfix", "compose
                                        "novel_write", "replay")}
 
 
+def validate_curriculum(examples: list, tags: list[str], programs: list) -> dict:
+    """Execute every curriculum example's answer and check that it computes its program (V12).
+
+    A curriculum example is tagged with the program its answer implements ("curriculum:<family>:<name>",
+    matched by normalised body). Its code is run on that program's inputs (``idioms._run``: a fresh
+    namespace and a 2 s limit) and the outputs are compared with the program's reference implementation's.
+    An answer that has no function, raises, times out or computes anything else is a failure. An example
+    tagged "curriculum:other" matched no program's body and is counted as unmatched (it cannot be checked)."""
+    import re
+
+    from ycode.lm.idioms import _run
+
+    by_name = {p.name: p for p in programs}
+    expected: dict[str, str] = {}
+    checked, failures, unmatched = 0, [], 0
+    for i, (e, tag) in enumerate(zip(examples, tags)):
+        if not tag.startswith("curriculum:"):
+            continue
+        p = by_name.get(tag.rsplit(":", 1)[-1])
+        if p is None:
+            unmatched += 1
+            continue
+        checked += 1
+        code = re.search(r"```python\n(.*?)\n```", e.response, re.S)
+        fn = re.search(r"^def (\w+)\(", code.group(1), re.M) if code else None
+        if fn is None:
+            failures.append({"index": i, "program": p.name, "reason": "no function in the answer", "prompt": e.prompt[:120]})
+            continue
+        if p.name not in expected:
+            expected[p.name] = repr(_run(p.source(0), p.name, list(p.inputs)))
+        got = _run(code.group(1), fn.group(1), list(p.inputs))
+        if got is None or repr(got) != expected[p.name]:
+            failures.append({"index": i, "program": p.name, "prompt": e.prompt[:120],
+                             "reason": "raises or times out" if got is None else "computes something else"})
+    return {"checked": checked, "passed": checked - len(failures), "failures": failures, "unmatched": unmatched}
+
+
 def round_examples(seed: int, options: dict):
     """The generated examples of one round (no replay), built exactly like the production mix."""
     return round_examples_tagged(seed, options)[0]
@@ -336,6 +373,14 @@ def write_round_dataset(out_dir, seed: int, tokenizer_path, *, replay_dir=None, 
     if unknown:
         raise ValueError(f"unknown data options: {sorted(unknown)}")
     examples, tags = round_examples_tagged(seed, o)
+    validation = None
+    if any(t.startswith("curriculum:") for t in tags):  # V12: no curriculum example trains on a wrong target
+        validation = validate_curriculum(examples, tags, _curriculum_programs(o))
+        log(f"Curriculum check: {validation['passed']}/{validation['checked']} answers compute their program on its "
+            f"inputs ({validation['unmatched']} unmatched)")
+        if validation["failures"]:
+            raise ValueError(f"{len(validation['failures'])} curriculum answers do not compute their program, e.g. "
+                             f"{validation['failures'][:3]}")
     replay_rows = o["replay"]
     if o["legacy_share"]:
         from ycode.lm.data import encode_example
@@ -362,6 +407,7 @@ def write_round_dataset(out_dir, seed: int, tokenizer_path, *, replay_dir=None, 
     manifest = {
         "seed": seed, "options": o, "code_version": _git_commit(),
         "generated": len(examples), "removed": reasons, "kept": len(kept), **info,
+        "curriculum_validation": validation and {k: v for k, v in validation.items() if k != "failures"},
         "tokens_by_source": tokens_by_source(out_dir),
         "files": {name: _sha256(out_dir / name) for name in ("sft_tokens.bin", "sft_mask.bin", "sft_index.npy",
                                                               "tokenizer.json")},
