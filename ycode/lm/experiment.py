@@ -160,6 +160,68 @@ def _checkpoint_gb(anchor: Path, train: dict) -> float:
     return (model + optim) / 1e9
 
 
+def _training_ram_gb(anchor: Path, train: dict) -> float:
+    """Peak resident memory of a training run, estimated from the model: every weight in the training precision
+    (fp32: 4 bytes, otherwise 2) plus Lion's one momentum value per trained weight, plus 0.6 GB of activations
+    and buffers. For the 1.52B model with 24 of 34 layers trained in fp32 this gives 11.0 GB; V10-V12's runs
+    measured 10.8-11.3 GB."""
+    import torch
+
+    payload = torch.load(anchor / "model.pt", map_location="cpu", weights_only=True, mmap=True)
+    state = payload["model"]
+    if payload.get("base"):  # a base-referenced checkpoint: the base holds the tensors it does not store
+        from ycode.lm.train import base_state
+
+        state = {**base_state(payload), **state}
+    n_layer = payload["config"]["n_layer"]
+    first = n_layer - (train.get("train_layers") or n_layer)
+    total = sum(v.numel() for v in state.values())
+    trained = sum(v.numel() for k, v in state.items()
+                  if k.startswith("norm.") or (k.startswith("blocks.") and int(k.split(".")[1]) >= first)) if first > 0 else total
+    width = 4 if train.get("precision", "fp32") == "fp32" else 2
+    return (total + trained) * width / 1e9 + 0.6
+
+
+def _mem_available_gb(meminfo: str | None = None) -> float | None:
+    """MemAvailable from /proc/meminfo, in GB (files on a RAM disk are not available memory); None if unknown."""
+    try:
+        text = meminfo if meminfo is not None else Path("/proc/meminfo").read_text()
+    except OSError:
+        return None
+    for line in text.splitlines():
+        if line.startswith("MemAvailable:"):
+            return int(line.split()[1]) * 1024 / 1e9
+    return None
+
+
+def _on_tmpfs(path: Path, mounts: str | None = None) -> bool:
+    """Whether ``path`` is on a RAM-backed file system (the mount with the longest matching prefix is a tmpfs)."""
+    try:
+        text = mounts if mounts is not None else Path("/proc/mounts").read_text()
+    except OSError:
+        return False
+    target, best = str(Path(path).resolve()), ("", "")
+    for line in text.splitlines():
+        parts = line.split()
+        if len(parts) >= 3 and (target == parts[1] or target.startswith(parts[1].rstrip("/") + "/")) \
+                and len(parts[1]) > len(best[0]):
+            best = (parts[1], parts[2])
+    return best[1] == "tmpfs"
+
+
+def _check_memory(anchor: Path, train: dict, work_dir: Path) -> tuple[float, float | None]:
+    """Refuse to start a run the machine cannot hold. The trainer's peak memory, plus, when the run writes its
+    checkpoint to a RAM disk, that checkpoint (a RAM disk's files share the same memory), must fit in the memory
+    available now. Such a run is otherwise killed by the kernel at its first save, after the whole training."""
+    needed = _training_ram_gb(anchor, train) + (_checkpoint_gb(anchor, train) if _on_tmpfs(work_dir) else 0.0)
+    available = _mem_available_gb()
+    if available is not None and available < needed:
+        raise RuntimeError(f"only {available:.1f} GB of memory available; training needs about {needed:.1f} GB "
+                           f"(model and optimizer state{', plus its checkpoint on the RAM disk ' + str(work_dir) if _on_tmpfs(work_dir) else ''}). "
+                           "Free memory first, e.g. models or packs kept on the RAM disk")
+    return needed, available
+
+
 def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False, log=print) -> dict:
     from ycode.lm.rounddata import write_round_dataset
     from ycode.lm.train import assert_finite_weights, load_checkpoint, verify_checkpoint
@@ -202,6 +264,8 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
     if free_gb < needed_gb:  # a checkpoint is ~7 GB; failing at the first save wastes the whole run
         raise RuntimeError(f"only {free_gb:.1f} GB free under {cur.parent}; training needs {needed_gb:.1f} GB "
                            "(remove leftover checkpoints, e.g. of an interrupted smoke run)")
+    ram_needed, ram_available = _check_memory(Path(spec["anchor"]), train, cur.parent)
+    record["memory_check_gb"] = {"needed": round(ram_needed, 2), "available": ram_available and round(ram_available, 2)}
     log(f"{arm['name']} seed {seed}: training {train['steps']} steps")
     # V10: a run can start from another checkpoint than the anchor (e.g. C2); the anchor stays the reference
     init = arm.get("init_from") or spec.get("init_from") or spec["anchor"]
