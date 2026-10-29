@@ -211,6 +211,11 @@ class CombinedOptimizer:
             for group in opt.param_groups:
                 group.setdefault("base_lr", group["lr"])
 
+    def free_state(self) -> None:
+        """Drop every optimizer's state (momentum, second moments): for after the last step."""
+        for opt in self.optimizers:
+            opt.state.clear()
+
 
 def build_optimizer(model: torch.nn.Module, *, kind: str, lr: float, muon_lr: float, weight_decay: float,
                     fused: bool = False) -> CombinedOptimizer:
