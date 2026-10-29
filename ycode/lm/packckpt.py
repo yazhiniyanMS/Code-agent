@@ -29,6 +29,7 @@ import numpy as np
 import torch
 
 MAGIC = b"YPK1"
+MAGIC_DELTA = b"YPK2"  # a pack with delta entries: a reader that predates them refuses it outright
 LEVEL = 6
 
 
@@ -97,7 +98,7 @@ def pack(src: Path | str, dst: Path | str, parent: Path | str | None = None) -> 
     dst = Path(dst)
     tmp = dst.with_suffix(".tmp")
     f = tmp.open("wb")
-    f.write(MAGIC)
+    f.write(MAGIC if parent is None else MAGIC_DELTA)
     for k, t in state.items():
         t = t.contiguous()
         p = parent_state.get(k)
@@ -134,7 +135,7 @@ def _read(dst: Path):
 
     f = Path(dst).open("rb")
     data = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
-    if data[:4] != MAGIC:
+    if data[:4] not in (MAGIC, MAGIC_DELTA):
         raise ValueError(f"{dst} is not a packed checkpoint")
     n = int.from_bytes(data[-8:], "little")
     header = json.loads(data[-8 - n:-8])
@@ -173,6 +174,8 @@ def _restore(e: dict, parts: list, base: dict) -> torch.Tensor:
         ref =base[e["key"]].to(torch.bfloat16).contiguous().view(torch.int16).numpy().reshape(-1)
         bits = planes.reshape(-1).view(np.int16) ^ ref
         return torch.from_numpy(bits.copy()).view(torch.bfloat16).reshape(e["shape"])
+    if e["kind"] != "torch":
+        raise ValueError(f"unknown packed tensor kind {e['kind']!r} for {e['key']}")
     return torch.load(io.BytesIO(parts[0]), map_location="cpu", weights_only=True)
 
 

@@ -173,6 +173,8 @@ def test_a_checkpoint_packed_against_its_parent_is_smaller_and_restores_bit_for_
     first_state = torch.load(first / "model.pt", map_location="cpu", weights_only=True)["model"]
     assert header["parent"]["content_sha256"] == packckpt.content_sha256(first_state)
     assert delta.stat().st_size < plain.stat().st_size
+    # a reader without delta entries refuses the delta pack by its tag; plain packs keep theirs
+    assert delta.read_bytes()[:4] == b"YPK2" and plain.read_bytes()[:4] == b"YPK1"
     assert packckpt.verify(second, delta) == packckpt.verify(second, plain)
     out = packckpt.unpack(delta, tmp_path / "restored")
     m1, m2 = load_checkpoint(second)[0].state_dict(), load_checkpoint(out.parent)[0].state_dict()
