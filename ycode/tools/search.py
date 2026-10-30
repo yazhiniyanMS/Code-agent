@@ -14,11 +14,27 @@ from ycode.tools.filesystem import iter_files
 MAX_FILE_BYTES = 1_000_000
 
 
+def _globstar_forms(pattern: str) -> set[str]:
+    """The pattern, and each form of it with one or more of its "**/" dropped: a "**/" also stands for no
+    directory at all, so src/**/*.ts matches src/auth.ts (fnmatch alone needs a directory there)."""
+    forms, todo = {pattern}, [pattern]
+    while todo:
+        p = todo.pop()
+        i = p.find("**/")
+        while i != -1:
+            form = p[:i] + p[i + 3:]
+            if form not in forms:
+                forms.add(form)
+                todo.append(form)
+            i = p.find("**/", i + 1)
+    return forms
+
+
 def _matches_glob(rel: str, pattern: str | None) -> bool:
     if not pattern:
         return True
     name = rel.rsplit("/", 1)[-1]
-    patterns = [p.strip() for p in pattern.split(",") if p.strip()]
+    patterns = [f for p in pattern.split(",") if p.strip() for f in _globstar_forms(p.strip())]
     return any(
         fnmatch.fnmatch(rel, p) or fnmatch.fnmatch(name, p) or fnmatch.fnmatch(rel, f"**/{p}") for p in patterns
     )

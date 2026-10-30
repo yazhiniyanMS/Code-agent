@@ -191,3 +191,17 @@ def test_find_files(workspace, make_ctx):
     (workspace / "a" / "x.ts").write_text("")
     result = FindFilesTool().run({"pattern": "*.test.ts"}, make_ctx(workspace))
     assert result.content.strip() == "a/x.test.ts"
+
+
+def test_globstar_also_matches_no_directory(workspace, make_ctx, registry):
+    # src/**/*.ts (the example in search_files' description) used to miss src/auth.ts
+    for rel in ("src/auth.ts", "src/lib/token.ts", "src/lib/deep/x.ts", "docs/a.ts", "src/readme.md"):
+        (workspace / rel).parent.mkdir(parents=True, exist_ok=True)
+        (workspace / rel).write_text("validateToken\n")
+    ctx = make_ctx(workspace)
+    found = registry.dispatch("find_files", {"pattern": "src/**/*.ts"}, ctx).content.splitlines()
+    assert found == ["src/auth.ts", "src/lib/token.ts", "src/lib/deep/x.ts"]
+    result = registry.dispatch("search_files", {"pattern": "validateToken", "glob": "src/**/*.ts"}, ctx)
+    assert "src/auth.ts:1:" in result.content and "docs/a.ts" not in result.content
+    found = registry.dispatch("find_files", {"pattern": "src/**/lib/**/*.ts"}, ctx).content.splitlines()
+    assert found == ["src/lib/token.ts", "src/lib/deep/x.ts"]  # both **/ may stand for no directory
