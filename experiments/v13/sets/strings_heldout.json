@@ -1,0 +1,4794 @@
+{
+ "version": "v13-strings-1",
+ "variants": [
+  "original"
+ ],
+ "probes": 40,
+ "tasks": [
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "periods_to_commas",
+   "params": "text",
+   "neighbour": "commas_to_semicolons",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `periods_to_commas(text)` that returns text with every period replaced by a comma."
+   },
+   "tests": "assert periods_to_commas('') == ''\nassert periods_to_commas(' ') == ' '\nassert periods_to_commas('a') == 'a'\nassert periods_to_commas('x; y;;z') == 'x; y;;z'\nassert periods_to_commas('--dash--') == '--dash--'\nassert periods_to_commas('archive.') == 'archive,'\nassert periods_to_commas('report.final.pdf') == 'report,final,pdf'\nassert periods_to_commas('path/to/file.txt') == 'path/to/file,txt'\nassert periods_to_commas(' , ') == ' , '\nassert periods_to_commas('...') == ',,,'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     " "
+    ],
+    [
+     "a"
+    ],
+    [
+     "x; y;;z"
+    ],
+    [
+     "--dash--"
+    ],
+    [
+     "archive."
+    ],
+    [
+     "report.final.pdf"
+    ],
+    [
+     "path/to/file.txt"
+    ],
+    [
+     " , "
+    ],
+    [
+     "..."
+    ]
+   ],
+   "reference": "def periods_to_commas(text):\n    return text.replace('.', ',')",
+   "wrong": "def periods_to_commas(text):\n    return text.replace(',', ';')",
+   "expected": [
+    "''",
+    "' '",
+    "'a'",
+    "'x; y;;z'",
+    "'--dash--'",
+    "'archive,'",
+    "'report,final,pdf'",
+    "'path/to/file,txt'",
+    "' , '",
+    "',,,'"
+   ],
+   "wrong_outputs": [
+    "''",
+    "' '",
+    "'a'",
+    "'x; y;;z'",
+    "'--dash--'",
+    "'archive.'",
+    "'report.final.pdf'",
+    "'path/to/file.txt'",
+    "' ; '",
+    "'...'"
+   ],
+   "probe_args": [
+    "('',)",
+    "(' ',)",
+    "('a',)",
+    "('aaa',)",
+    "('Ab',)",
+    "('  lead',)",
+    "('trail  ',)",
+    "('  both ends  ',)",
+    "('Hello, World!',)",
+    "('a,b,,c',)",
+    "(' , ',)",
+    "('x.y.z',)",
+    "('...',)",
+    "('end.',)",
+    "('.start',)",
+    "('snake_case_name',)",
+    "('camelCaseName',)",
+    "('kebab-case-name',)",
+    "('--dash--',)",
+    "('MiXeD cAsE',)",
+    "('UPPER',)",
+    "('Title Case Words',)",
+    "('12abc34',)",
+    "('007',)",
+    "('a b  c',)",
+    "('one  two   three',)",
+    "('key = value',)",
+    "('name: Ada',)",
+    "('a:b:c',)",
+    "('report.final.pdf',)",
+    "('README',)",
+    "('archive.',)",
+    "('path/to/file.txt',)",
+    "('tab\\there',)",
+    "('line1\\nline2',)",
+    "('[tag] rest',)",
+    "('a|b| c |',)",
+    "('x; y;;z',)",
+    "('!?;:',)",
+    "('Mississippi',)"
+   ],
+   "probe_expected": [
+    "''",
+    "' '",
+    "'a'",
+    "'aaa'",
+    "'Ab'",
+    "'  lead'",
+    "'trail  '",
+    "'  both ends  '",
+    "'Hello, World!'",
+    "'a,b,,c'",
+    "' , '",
+    "'x,y,z'",
+    "',,,'",
+    "'end,'",
+    "',start'",
+    "'snake_case_name'",
+    "'camelCaseName'",
+    "'kebab-case-name'",
+    "'--dash--'",
+    "'MiXeD cAsE'",
+    "'UPPER'",
+    "'Title Case Words'",
+    "'12abc34'",
+    "'007'",
+    "'a b  c'",
+    "'one  two   three'",
+    "'key = value'",
+    "'name: Ada'",
+    "'a:b:c'",
+    "'report,final,pdf'",
+    "'README'",
+    "'archive,'",
+    "'path/to/file,txt'",
+    "'tab\\there'",
+    "'line1\\nline2'",
+    "'[tag] rest'",
+    "'a|b| c |'",
+    "'x; y;;z'",
+    "'!?;:'",
+    "'Mississippi'"
+   ]
+  },
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "spaces_to_plus",
+   "params": "text",
+   "neighbour": "commas_to_semicolons",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `spaces_to_plus(text)` that returns text with every space replaced by a plus sign."
+   },
+   "tests": "assert spaces_to_plus('') == ''\nassert spaces_to_plus(' ') == '+'\nassert spaces_to_plus('a') == 'a'\nassert spaces_to_plus('x; y;;z') == 'x;+y;;z'\nassert spaces_to_plus('--dash--') == '--dash--'\nassert spaces_to_plus('archive.') == 'archive.'\nassert spaces_to_plus('report.final.pdf') == 'report.final.pdf'\nassert spaces_to_plus('path/to/file.txt') == 'path/to/file.txt'\nassert spaces_to_plus(' , ') == '+,+'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     " "
+    ],
+    [
+     "a"
+    ],
+    [
+     "x; y;;z"
+    ],
+    [
+     "--dash--"
+    ],
+    [
+     "archive."
+    ],
+    [
+     "report.final.pdf"
+    ],
+    [
+     "path/to/file.txt"
+    ],
+    [
+     " , "
+    ]
+   ],
+   "reference": "def spaces_to_plus(text):\n    return text.replace(' ', '+')",
+   "wrong": "def spaces_to_plus(text):\n    return text.replace(',', ';')",
+   "expected": [
+    "''",
+    "'+'",
+    "'a'",
+    "'x;+y;;z'",
+    "'--dash--'",
+    "'archive.'",
+    "'report.final.pdf'",
+    "'path/to/file.txt'",
+    "'+,+'"
+   ],
+   "wrong_outputs": [
+    "''",
+    "' '",
+    "'a'",
+    "'x; y;;z'",
+    "'--dash--'",
+    "'archive.'",
+    "'report.final.pdf'",
+    "'path/to/file.txt'",
+    "' ; '"
+   ],
+   "probe_args": [
+    "('',)",
+    "(' ',)",
+    "('a',)",
+    "('aaa',)",
+    "('Ab',)",
+    "('  lead',)",
+    "('trail  ',)",
+    "('  both ends  ',)",
+    "('Hello, World!',)",
+    "('a,b,,c',)",
+    "(' , ',)",
+    "('x.y.z',)",
+    "('...',)",
+    "('end.',)",
+    "('.start',)",
+    "('snake_case_name',)",
+    "('camelCaseName',)",
+    "('kebab-case-name',)",
+    "('--dash--',)",
+    "('MiXeD cAsE',)",
+    "('UPPER',)",
+    "('Title Case Words',)",
+    "('12abc34',)",
+    "('007',)",
+    "('a b  c',)",
+    "('one  two   three',)",
+    "('key = value',)",
+    "('name: Ada',)",
+    "('a:b:c',)",
+    "('report.final.pdf',)",
+    "('README',)",
+    "('archive.',)",
+    "('path/to/file.txt',)",
+    "('tab\\there',)",
+    "('line1\\nline2',)",
+    "('[tag] rest',)",
+    "('a|b| c |',)",
+    "('x; y;;z',)",
+    "('!?;:',)",
+    "('Mississippi',)"
+   ],
+   "probe_expected": [
+    "''",
+    "'+'",
+    "'a'",
+    "'aaa'",
+    "'Ab'",
+    "'++lead'",
+    "'trail++'",
+    "'++both+ends++'",
+    "'Hello,+World!'",
+    "'a,b,,c'",
+    "'+,+'",
+    "'x.y.z'",
+    "'...'",
+    "'end.'",
+    "'.start'",
+    "'snake_case_name'",
+    "'camelCaseName'",
+    "'kebab-case-name'",
+    "'--dash--'",
+    "'MiXeD+cAsE'",
+    "'UPPER'",
+    "'Title+Case+Words'",
+    "'12abc34'",
+    "'007'",
+    "'a+b++c'",
+    "'one++two+++three'",
+    "'key+=+value'",
+    "'name:+Ada'",
+    "'a:b:c'",
+    "'report.final.pdf'",
+    "'README'",
+    "'archive.'",
+    "'path/to/file.txt'",
+    "'tab\\there'",
+    "'line1\\nline2'",
+    "'[tag]+rest'",
+    "'a|b|+c+|'",
+    "'x;+y;;z'",
+    "'!?;:'",
+    "'Mississippi'"
+   ]
+  },
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "collapse_double_dashes",
+   "params": "text",
+   "neighbour": "capitalized_words_with_dashes",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `collapse_double_dashes(text)` that returns text with each pair of consecutive dashes, read from the left, replaced by a single dash."
+   },
+   "tests": "assert collapse_double_dashes('') == ''\nassert collapse_double_dashes(' ') == ' '\nassert collapse_double_dashes('a') == 'a'\nassert collapse_double_dashes('x; y;;z') == 'x; y;;z'\nassert collapse_double_dashes('--dash--') == '-dash-'\nassert collapse_double_dashes('archive.') == 'archive.'\nassert collapse_double_dashes('report.final.pdf') == 'report.final.pdf'\nassert collapse_double_dashes('path/to/file.txt') == 'path/to/file.txt'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     " "
+    ],
+    [
+     "a"
+    ],
+    [
+     "x; y;;z"
+    ],
+    [
+     "--dash--"
+    ],
+    [
+     "archive."
+    ],
+    [
+     "report.final.pdf"
+    ],
+    [
+     "path/to/file.txt"
+    ]
+   ],
+   "reference": "def collapse_double_dashes(text):\n    return text.replace('--', '-')",
+   "wrong": "def collapse_double_dashes(text):\n    return '-'.join(word.capitalize() for word in text.split())",
+   "expected": [
+    "''",
+    "' '",
+    "'a'",
+    "'x; y;;z'",
+    "'-dash-'",
+    "'archive.'",
+    "'report.final.pdf'",
+    "'path/to/file.txt'"
+   ],
+   "wrong_outputs": [
+    "''",
+    "''",
+    "'A'",
+    "'X;-Y;;z'",
+    "'--dash--'",
+    "'Archive.'",
+    "'Report.final.pdf'",
+    "'Path/to/file.txt'"
+   ],
+   "probe_args": [
+    "('',)",
+    "(' ',)",
+    "('a',)",
+    "('aaa',)",
+    "('Ab',)",
+    "('  lead',)",
+    "('trail  ',)",
+    "('  both ends  ',)",
+    "('Hello, World!',)",
+    "('a,b,,c',)",
+    "(' , ',)",
+    "('x.y.z',)",
+    "('...',)",
+    "('end.',)",
+    "('.start',)",
+    "('snake_case_name',)",
+    "('camelCaseName',)",
+    "('kebab-case-name',)",
+    "('--dash--',)",
+    "('MiXeD cAsE',)",
+    "('UPPER',)",
+    "('Title Case Words',)",
+    "('12abc34',)",
+    "('007',)",
+    "('a b  c',)",
+    "('one  two   three',)",
+    "('key = value',)",
+    "('name: Ada',)",
+    "('a:b:c',)",
+    "('report.final.pdf',)",
+    "('README',)",
+    "('archive.',)",
+    "('path/to/file.txt',)",
+    "('tab\\there',)",
+    "('line1\\nline2',)",
+    "('[tag] rest',)",
+    "('a|b| c |',)",
+    "('x; y;;z',)",
+    "('!?;:',)",
+    "('Mississippi',)"
+   ],
+   "probe_expected": [
+    "''",
+    "' '",
+    "'a'",
+    "'aaa'",
+    "'Ab'",
+    "'  lead'",
+    "'trail  '",
+    "'  both ends  '",
+    "'Hello, World!'",
+    "'a,b,,c'",
+    "' , '",
+    "'x.y.z'",
+    "'...'",
+    "'end.'",
+    "'.start'",
+    "'snake_case_name'",
+    "'camelCaseName'",
+    "'kebab-case-name'",
+    "'-dash-'",
+    "'MiXeD cAsE'",
+    "'UPPER'",
+    "'Title Case Words'",
+    "'12abc34'",
+    "'007'",
+    "'a b  c'",
+    "'one  two   three'",
+    "'key = value'",
+    "'name: Ada'",
+    "'a:b:c'",
+    "'report.final.pdf'",
+    "'README'",
+    "'archive.'",
+    "'path/to/file.txt'",
+    "'tab\\there'",
+    "'line1\\nline2'",
+    "'[tag] rest'",
+    "'a|b| c |'",
+    "'x; y;;z'",
+    "'!?;:'",
+    "'Mississippi'"
+   ]
+  },
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "replace_first_two",
+   "params": "text, old, new",
+   "neighbour": "replace_first",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `replace_first_two(text, old, new)` that returns text with the first two occurrences of old replaced by new."
+   },
+   "tests": "assert replace_first_two('', 'a', '+') == ''\nassert replace_first_two(' ', 'ss', '') == ' '\nassert replace_first_two('a', ',', '+') == 'a'\nassert replace_first_two('trail  ', 'ss', '+') == 'trail  '\nassert replace_first_two('--dash--', ' ', '+') == '--dash--'\nassert replace_first_two('name: Ada', ',', '') == 'name: Ada'\nassert replace_first_two('Title Case Words', 'ss', '') == 'Title Case Words'\nassert replace_first_two('path/to/file.txt', ',', '+') == 'path/to/file.txt'\nassert replace_first_two('snake_case_name', 'a', '') == 'snke_cse_name'",
+   "test_inputs": [
+    [
+     "",
+     "a",
+     "+"
+    ],
+    [
+     " ",
+     "ss",
+     ""
+    ],
+    [
+     "a",
+     ",",
+     "+"
+    ],
+    [
+     "trail  ",
+     "ss",
+     "+"
+    ],
+    [
+     "--dash--",
+     " ",
+     "+"
+    ],
+    [
+     "name: Ada",
+     ",",
+     ""
+    ],
+    [
+     "Title Case Words",
+     "ss",
+     ""
+    ],
+    [
+     "path/to/file.txt",
+     ",",
+     "+"
+    ],
+    [
+     "snake_case_name",
+     "a",
+     ""
+    ]
+   ],
+   "reference": "def replace_first_two(text, old, new):\n    return text.replace(old, new, 2)",
+   "wrong": "def replace_first_two(text, old, new):\n    return text.replace(old, new, 1)",
+   "expected": [
+    "''",
+    "' '",
+    "'a'",
+    "'trail  '",
+    "'--dash--'",
+    "'name: Ada'",
+    "'Title Case Words'",
+    "'path/to/file.txt'",
+    "'snke_cse_name'"
+   ],
+   "wrong_outputs": [
+    "''",
+    "' '",
+    "'a'",
+    "'trail  '",
+    "'--dash--'",
+    "'name: Ada'",
+    "'Title Case Words'",
+    "'path/to/file.txt'",
+    "'snke_case_name'"
+   ],
+   "probe_args": [
+    "('', 'a', '+')",
+    "(' ', 'ss', '')",
+    "('a', ',', '+')",
+    "('aaa', ' ', '')",
+    "('Ab', '-', '+')",
+    "('  lead', 'a', '')",
+    "('trail  ', 'ss', '+')",
+    "('  both ends  ', ',', '')",
+    "('Hello, World!', ' ', '+')",
+    "('a,b,,c', '-', '')",
+    "(' , ', 'a', '+')",
+    "('x.y.z', 'ss', '')",
+    "('...', ',', '+')",
+    "('end.', ' ', '')",
+    "('.start', '-', '+')",
+    "('snake_case_name', 'a', '')",
+    "('camelCaseName', 'ss', '+')",
+    "('kebab-case-name', ',', '')",
+    "('--dash--', ' ', '+')",
+    "('MiXeD cAsE', '-', '')",
+    "('UPPER', 'a', '+')",
+    "('Title Case Words', 'ss', '')",
+    "('12abc34', ',', '+')",
+    "('007', ' ', '')",
+    "('a b  c', '-', '+')",
+    "('one  two   three', 'a', '')",
+    "('key = value', 'ss', '+')",
+    "('name: Ada', ',', '')",
+    "('a:b:c', ' ', '+')",
+    "('report.final.pdf', '-', '')",
+    "('README', 'a', '+')",
+    "('archive.', 'ss', '')",
+    "('path/to/file.txt', ',', '+')",
+    "('tab\\there', ' ', '')",
+    "('line1\\nline2', '-', '+')",
+    "('[tag] rest', 'a', '')",
+    "('a|b| c |', 'ss', '+')",
+    "('x; y;;z', ',', '')",
+    "('!?;:', ' ', '+')",
+    "('Mississippi', '-', '')"
+   ],
+   "probe_expected": [
+    "''",
+    "' '",
+    "'a'",
+    "'aaa'",
+    "'Ab'",
+    "'  led'",
+    "'trail  '",
+    "'  both ends  '",
+    "'Hello,+World!'",
+    "'a,b,,c'",
+    "' , '",
+    "'x.y.z'",
+    "'...'",
+    "'end.'",
+    "'.start'",
+    "'snke_cse_name'",
+    "'camelCaseName'",
+    "'kebab-case-name'",
+    "'--dash--'",
+    "'MiXeD cAsE'",
+    "'UPPER'",
+    "'Title Case Words'",
+    "'12abc34'",
+    "'007'",
+    "'a b  c'",
+    "'one  two   three'",
+    "'key = value'",
+    "'name: Ada'",
+    "'a:b:c'",
+    "'report.final.pdf'",
+    "'README'",
+    "'archive.'",
+    "'path/to/file.txt'",
+    "'tab\\there'",
+    "'line1\\nline2'",
+    "'[tg] rest'",
+    "'a|b| c |'",
+    "'x; y;;z'",
+    "'!?;:'",
+    "'Mississippi'"
+   ]
+  },
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "join_words_with_underscores",
+   "params": "text",
+   "neighbour": "capitalized_words_with_dashes",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `join_words_with_underscores(text)` that returns the words of text joined with underscores."
+   },
+   "tests": "assert join_words_with_underscores('') == ''\nassert join_words_with_underscores(' ') == ''\nassert join_words_with_underscores('a') == 'a'\nassert join_words_with_underscores('x; y;;z') == 'x;_y;;z'\nassert join_words_with_underscores('--dash--') == '--dash--'\nassert join_words_with_underscores('archive.') == 'archive.'\nassert join_words_with_underscores('report.final.pdf') == 'report.final.pdf'\nassert join_words_with_underscores('path/to/file.txt') == 'path/to/file.txt'\nassert join_words_with_underscores('aaa') == 'aaa'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     " "
+    ],
+    [
+     "a"
+    ],
+    [
+     "x; y;;z"
+    ],
+    [
+     "--dash--"
+    ],
+    [
+     "archive."
+    ],
+    [
+     "report.final.pdf"
+    ],
+    [
+     "path/to/file.txt"
+    ],
+    [
+     "aaa"
+    ]
+   ],
+   "reference": "def join_words_with_underscores(text):\n    return '_'.join(text.split())",
+   "wrong": "def join_words_with_underscores(text):\n    return '-'.join(word.capitalize() for word in text.split())",
+   "expected": [
+    "''",
+    "''",
+    "'a'",
+    "'x;_y;;z'",
+    "'--dash--'",
+    "'archive.'",
+    "'report.final.pdf'",
+    "'path/to/file.txt'",
+    "'aaa'"
+   ],
+   "wrong_outputs": [
+    "''",
+    "''",
+    "'A'",
+    "'X;-Y;;z'",
+    "'--dash--'",
+    "'Archive.'",
+    "'Report.final.pdf'",
+    "'Path/to/file.txt'",
+    "'Aaa'"
+   ],
+   "probe_args": [
+    "('',)",
+    "(' ',)",
+    "('a',)",
+    "('aaa',)",
+    "('Ab',)",
+    "('  lead',)",
+    "('trail  ',)",
+    "('  both ends  ',)",
+    "('Hello, World!',)",
+    "('a,b,,c',)",
+    "(' , ',)",
+    "('x.y.z',)",
+    "('...',)",
+    "('end.',)",
+    "('.start',)",
+    "('snake_case_name',)",
+    "('camelCaseName',)",
+    "('kebab-case-name',)",
+    "('--dash--',)",
+    "('MiXeD cAsE',)",
+    "('UPPER',)",
+    "('Title Case Words',)",
+    "('12abc34',)",
+    "('007',)",
+    "('a b  c',)",
+    "('one  two   three',)",
+    "('key = value',)",
+    "('name: Ada',)",
+    "('a:b:c',)",
+    "('report.final.pdf',)",
+    "('README',)",
+    "('archive.',)",
+    "('path/to/file.txt',)",
+    "('tab\\there',)",
+    "('line1\\nline2',)",
+    "('[tag] rest',)",
+    "('a|b| c |',)",
+    "('x; y;;z',)",
+    "('!?;:',)",
+    "('Mississippi',)"
+   ],
+   "probe_expected": [
+    "''",
+    "''",
+    "'a'",
+    "'aaa'",
+    "'Ab'",
+    "'lead'",
+    "'trail'",
+    "'both_ends'",
+    "'Hello,_World!'",
+    "'a,b,,c'",
+    "','",
+    "'x.y.z'",
+    "'...'",
+    "'end.'",
+    "'.start'",
+    "'snake_case_name'",
+    "'camelCaseName'",
+    "'kebab-case-name'",
+    "'--dash--'",
+    "'MiXeD_cAsE'",
+    "'UPPER'",
+    "'Title_Case_Words'",
+    "'12abc34'",
+    "'007'",
+    "'a_b_c'",
+    "'one_two_three'",
+    "'key_=_value'",
+    "'name:_Ada'",
+    "'a:b:c'",
+    "'report.final.pdf'",
+    "'README'",
+    "'archive.'",
+    "'path/to/file.txt'",
+    "'tab_here'",
+    "'line1_line2'",
+    "'[tag]_rest'",
+    "'a|b|_c_|'",
+    "'x;_y;;z'",
+    "'!?;:'",
+    "'Mississippi'"
+   ]
+  },
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "last_comma_part",
+   "params": "text",
+   "neighbour": "file_extension",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `last_comma_part(text)` that returns the part of text after its last comma, without surrounding spaces (all of text without surrounding spaces if it has no comma)."
+   },
+   "tests": "assert last_comma_part('') == ''\nassert last_comma_part(' ') == ''\nassert last_comma_part('a') == 'a'\nassert last_comma_part('x; y;;z') == 'x; y;;z'\nassert last_comma_part('--dash--') == '--dash--'\nassert last_comma_part('archive.') == 'archive.'\nassert last_comma_part('report.final.pdf') == 'report.final.pdf'\nassert last_comma_part('path/to/file.txt') == 'path/to/file.txt'\nassert last_comma_part('Ab') == 'Ab'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     " "
+    ],
+    [
+     "a"
+    ],
+    [
+     "x; y;;z"
+    ],
+    [
+     "--dash--"
+    ],
+    [
+     "archive."
+    ],
+    [
+     "report.final.pdf"
+    ],
+    [
+     "path/to/file.txt"
+    ],
+    [
+     "Ab"
+    ]
+   ],
+   "reference": "def last_comma_part(text):\n    return text.split(',')[-1].strip()",
+   "wrong": "def last_comma_part(filename):\n    return filename.rsplit('.', 1)[1] if '.' in filename else ''",
+   "expected": [
+    "''",
+    "''",
+    "'a'",
+    "'x; y;;z'",
+    "'--dash--'",
+    "'archive.'",
+    "'report.final.pdf'",
+    "'path/to/file.txt'",
+    "'Ab'"
+   ],
+   "wrong_outputs": [
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "'pdf'",
+    "'txt'",
+    "''"
+   ],
+   "probe_args": [
+    "('',)",
+    "(' ',)",
+    "('a',)",
+    "('aaa',)",
+    "('Ab',)",
+    "('  lead',)",
+    "('trail  ',)",
+    "('  both ends  ',)",
+    "('Hello, World!',)",
+    "('a,b,,c',)",
+    "(' , ',)",
+    "('x.y.z',)",
+    "('...',)",
+    "('end.',)",
+    "('.start',)",
+    "('snake_case_name',)",
+    "('camelCaseName',)",
+    "('kebab-case-name',)",
+    "('--dash--',)",
+    "('MiXeD cAsE',)",
+    "('UPPER',)",
+    "('Title Case Words',)",
+    "('12abc34',)",
+    "('007',)",
+    "('a b  c',)",
+    "('one  two   three',)",
+    "('key = value',)",
+    "('name: Ada',)",
+    "('a:b:c',)",
+    "('report.final.pdf',)",
+    "('README',)",
+    "('archive.',)",
+    "('path/to/file.txt',)",
+    "('tab\\there',)",
+    "('line1\\nline2',)",
+    "('[tag] rest',)",
+    "('a|b| c |',)",
+    "('x; y;;z',)",
+    "('!?;:',)",
+    "('Mississippi',)"
+   ],
+   "probe_expected": [
+    "''",
+    "''",
+    "'a'",
+    "'aaa'",
+    "'Ab'",
+    "'lead'",
+    "'trail'",
+    "'both ends'",
+    "'World!'",
+    "'c'",
+    "''",
+    "'x.y.z'",
+    "'...'",
+    "'end.'",
+    "'.start'",
+    "'snake_case_name'",
+    "'camelCaseName'",
+    "'kebab-case-name'",
+    "'--dash--'",
+    "'MiXeD cAsE'",
+    "'UPPER'",
+    "'Title Case Words'",
+    "'12abc34'",
+    "'007'",
+    "'a b  c'",
+    "'one  two   three'",
+    "'key = value'",
+    "'name: Ada'",
+    "'a:b:c'",
+    "'report.final.pdf'",
+    "'README'",
+    "'archive.'",
+    "'path/to/file.txt'",
+    "'tab\\there'",
+    "'line1\\nline2'",
+    "'[tag] rest'",
+    "'a|b| c |'",
+    "'x; y;;z'",
+    "'!?;:'",
+    "'Mississippi'"
+   ]
+  },
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "count_dot_parts",
+   "params": "text",
+   "neighbour": "strip_trailing_dots",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `count_dot_parts(text)` that returns how many non-empty parts text has when split at its dots."
+   },
+   "tests": "assert count_dot_parts('') == 0\nassert count_dot_parts(' ') == 1\nassert count_dot_parts('a') == 1\nassert count_dot_parts('x; y;;z') == 1\nassert count_dot_parts('--dash--') == 1\nassert count_dot_parts('archive.') == 1\nassert count_dot_parts('report.final.pdf') == 3\nassert count_dot_parts('path/to/file.txt') == 2",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     " "
+    ],
+    [
+     "a"
+    ],
+    [
+     "x; y;;z"
+    ],
+    [
+     "--dash--"
+    ],
+    [
+     "archive."
+    ],
+    [
+     "report.final.pdf"
+    ],
+    [
+     "path/to/file.txt"
+    ]
+   ],
+   "reference": "def count_dot_parts(text):\n    return len([part for part in text.split('.') if part])",
+   "wrong": "def count_dot_parts(text):\n    return text.rstrip('.')",
+   "expected": [
+    "0",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "3",
+    "2"
+   ],
+   "wrong_outputs": [
+    "''",
+    "' '",
+    "'a'",
+    "'x; y;;z'",
+    "'--dash--'",
+    "'archive'",
+    "'report.final.pdf'",
+    "'path/to/file.txt'"
+   ],
+   "probe_args": [
+    "('',)",
+    "(' ',)",
+    "('a',)",
+    "('aaa',)",
+    "('Ab',)",
+    "('  lead',)",
+    "('trail  ',)",
+    "('  both ends  ',)",
+    "('Hello, World!',)",
+    "('a,b,,c',)",
+    "(' , ',)",
+    "('x.y.z',)",
+    "('...',)",
+    "('end.',)",
+    "('.start',)",
+    "('snake_case_name',)",
+    "('camelCaseName',)",
+    "('kebab-case-name',)",
+    "('--dash--',)",
+    "('MiXeD cAsE',)",
+    "('UPPER',)",
+    "('Title Case Words',)",
+    "('12abc34',)",
+    "('007',)",
+    "('a b  c',)",
+    "('one  two   three',)",
+    "('key = value',)",
+    "('name: Ada',)",
+    "('a:b:c',)",
+    "('report.final.pdf',)",
+    "('README',)",
+    "('archive.',)",
+    "('path/to/file.txt',)",
+    "('tab\\there',)",
+    "('line1\\nline2',)",
+    "('[tag] rest',)",
+    "('a|b| c |',)",
+    "('x; y;;z',)",
+    "('!?;:',)",
+    "('Mississippi',)"
+   ],
+   "probe_expected": [
+    "0",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "3",
+    "0",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "3",
+    "1",
+    "1",
+    "2",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1"
+   ]
+  },
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "split_on_pipes",
+   "params": "text",
+   "neighbour": "split_on_commas",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `split_on_pipes(text)` that returns the parts of text separated by '|' with surrounding spaces removed, leaving out empty parts."
+   },
+   "tests": "assert split_on_pipes('') == []\nassert split_on_pipes(' ') == []\nassert split_on_pipes('a') == ['a']\nassert split_on_pipes('x; y;;z') == ['x; y;;z']\nassert split_on_pipes('--dash--') == ['--dash--']\nassert split_on_pipes('archive.') == ['archive.']\nassert split_on_pipes('report.final.pdf') == ['report.final.pdf']\nassert split_on_pipes('path/to/file.txt') == ['path/to/file.txt']\nassert split_on_pipes(' , ') == [',']\nassert split_on_pipes('a,b,,c') == ['a,b,,c']",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     " "
+    ],
+    [
+     "a"
+    ],
+    [
+     "x; y;;z"
+    ],
+    [
+     "--dash--"
+    ],
+    [
+     "archive."
+    ],
+    [
+     "report.final.pdf"
+    ],
+    [
+     "path/to/file.txt"
+    ],
+    [
+     " , "
+    ],
+    [
+     "a,b,,c"
+    ]
+   ],
+   "reference": "def split_on_pipes(text):\n    return [part.strip() for part in text.split('|') if part.strip()]",
+   "wrong": "def split_on_pipes(text):\n    return [part.strip() for part in text.split(',') if part.strip()]",
+   "expected": [
+    "[]",
+    "[]",
+    "['a']",
+    "['x; y;;z']",
+    "['--dash--']",
+    "['archive.']",
+    "['report.final.pdf']",
+    "['path/to/file.txt']",
+    "[',']",
+    "['a,b,,c']"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[]",
+    "['a']",
+    "['x; y;;z']",
+    "['--dash--']",
+    "['archive.']",
+    "['report.final.pdf']",
+    "['path/to/file.txt']",
+    "[]",
+    "['a', 'b', 'c']"
+   ],
+   "probe_args": [
+    "('',)",
+    "(' ',)",
+    "('a',)",
+    "('aaa',)",
+    "('Ab',)",
+    "('  lead',)",
+    "('trail  ',)",
+    "('  both ends  ',)",
+    "('Hello, World!',)",
+    "('a,b,,c',)",
+    "(' , ',)",
+    "('x.y.z',)",
+    "('...',)",
+    "('end.',)",
+    "('.start',)",
+    "('snake_case_name',)",
+    "('camelCaseName',)",
+    "('kebab-case-name',)",
+    "('--dash--',)",
+    "('MiXeD cAsE',)",
+    "('UPPER',)",
+    "('Title Case Words',)",
+    "('12abc34',)",
+    "('007',)",
+    "('a b  c',)",
+    "('one  two   three',)",
+    "('key = value',)",
+    "('name: Ada',)",
+    "('a:b:c',)",
+    "('report.final.pdf',)",
+    "('README',)",
+    "('archive.',)",
+    "('path/to/file.txt',)",
+    "('tab\\there',)",
+    "('line1\\nline2',)",
+    "('[tag] rest',)",
+    "('a|b| c |',)",
+    "('x; y;;z',)",
+    "('!?;:',)",
+    "('Mississippi',)"
+   ],
+   "probe_expected": [
+    "[]",
+    "[]",
+    "['a']",
+    "['aaa']",
+    "['Ab']",
+    "['lead']",
+    "['trail']",
+    "['both ends']",
+    "['Hello, World!']",
+    "['a,b,,c']",
+    "[',']",
+    "['x.y.z']",
+    "['...']",
+    "['end.']",
+    "['.start']",
+    "['snake_case_name']",
+    "['camelCaseName']",
+    "['kebab-case-name']",
+    "['--dash--']",
+    "['MiXeD cAsE']",
+    "['UPPER']",
+    "['Title Case Words']",
+    "['12abc34']",
+    "['007']",
+    "['a b  c']",
+    "['one  two   three']",
+    "['key = value']",
+    "['name: Ada']",
+    "['a:b:c']",
+    "['report.final.pdf']",
+    "['README']",
+    "['archive.']",
+    "['path/to/file.txt']",
+    "['tab\\there']",
+    "['line1\\nline2']",
+    "['[tag] rest']",
+    "['a', 'b', 'c']",
+    "['x; y;;z']",
+    "['!?;:']",
+    "['Mississippi']"
+   ]
+  },
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "strip_commas",
+   "params": "text",
+   "neighbour": "strip_both_ends",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `strip_commas(text)` that returns text without the commas at its start and end."
+   },
+   "tests": "assert strip_commas('') == ''\nassert strip_commas(' ') == ' '\nassert strip_commas('a') == 'a'\nassert strip_commas('x; y;;z') == 'x; y;;z'\nassert strip_commas('--dash--') == '--dash--'\nassert strip_commas('archive.') == 'archive.'\nassert strip_commas('report.final.pdf') == 'report.final.pdf'\nassert strip_commas('path/to/file.txt') == 'path/to/file.txt'\nassert strip_commas(' , ') == ' , '",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     " "
+    ],
+    [
+     "a"
+    ],
+    [
+     "x; y;;z"
+    ],
+    [
+     "--dash--"
+    ],
+    [
+     "archive."
+    ],
+    [
+     "report.final.pdf"
+    ],
+    [
+     "path/to/file.txt"
+    ],
+    [
+     " , "
+    ]
+   ],
+   "reference": "def strip_commas(text):\n    return text.strip(',')",
+   "wrong": "def strip_commas(text):\n    return text.strip()",
+   "expected": [
+    "''",
+    "' '",
+    "'a'",
+    "'x; y;;z'",
+    "'--dash--'",
+    "'archive.'",
+    "'report.final.pdf'",
+    "'path/to/file.txt'",
+    "' , '"
+   ],
+   "wrong_outputs": [
+    "''",
+    "''",
+    "'a'",
+    "'x; y;;z'",
+    "'--dash--'",
+    "'archive.'",
+    "'report.final.pdf'",
+    "'path/to/file.txt'",
+    "','"
+   ],
+   "probe_args": [
+    "('',)",
+    "(' ',)",
+    "('a',)",
+    "('aaa',)",
+    "('Ab',)",
+    "('  lead',)",
+    "('trail  ',)",
+    "('  both ends  ',)",
+    "('Hello, World!',)",
+    "('a,b,,c',)",
+    "(' , ',)",
+    "('x.y.z',)",
+    "('...',)",
+    "('end.',)",
+    "('.start',)",
+    "('snake_case_name',)",
+    "('camelCaseName',)",
+    "('kebab-case-name',)",
+    "('--dash--',)",
+    "('MiXeD cAsE',)",
+    "('UPPER',)",
+    "('Title Case Words',)",
+    "('12abc34',)",
+    "('007',)",
+    "('a b  c',)",
+    "('one  two   three',)",
+    "('key = value',)",
+    "('name: Ada',)",
+    "('a:b:c',)",
+    "('report.final.pdf',)",
+    "('README',)",
+    "('archive.',)",
+    "('path/to/file.txt',)",
+    "('tab\\there',)",
+    "('line1\\nline2',)",
+    "('[tag] rest',)",
+    "('a|b| c |',)",
+    "('x; y;;z',)",
+    "('!?;:',)",
+    "('Mississippi',)"
+   ],
+   "probe_expected": [
+    "''",
+    "' '",
+    "'a'",
+    "'aaa'",
+    "'Ab'",
+    "'  lead'",
+    "'trail  '",
+    "'  both ends  '",
+    "'Hello, World!'",
+    "'a,b,,c'",
+    "' , '",
+    "'x.y.z'",
+    "'...'",
+    "'end.'",
+    "'.start'",
+    "'snake_case_name'",
+    "'camelCaseName'",
+    "'kebab-case-name'",
+    "'--dash--'",
+    "'MiXeD cAsE'",
+    "'UPPER'",
+    "'Title Case Words'",
+    "'12abc34'",
+    "'007'",
+    "'a b  c'",
+    "'one  two   three'",
+    "'key = value'",
+    "'name: Ada'",
+    "'a:b:c'",
+    "'report.final.pdf'",
+    "'README'",
+    "'archive.'",
+    "'path/to/file.txt'",
+    "'tab\\there'",
+    "'line1\\nline2'",
+    "'[tag] rest'",
+    "'a|b| c |'",
+    "'x; y;;z'",
+    "'!?;:'",
+    "'Mississippi'"
+   ]
+  },
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "strip_leading_dashes",
+   "params": "text",
+   "neighbour": "strip_start",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `strip_leading_dashes(text)` that returns text without the dashes at its start."
+   },
+   "tests": "assert strip_leading_dashes('') == ''\nassert strip_leading_dashes(' ') == ' '\nassert strip_leading_dashes('a') == 'a'\nassert strip_leading_dashes('x; y;;z') == 'x; y;;z'\nassert strip_leading_dashes('--dash--') == 'dash--'\nassert strip_leading_dashes('archive.') == 'archive.'\nassert strip_leading_dashes('report.final.pdf') == 'report.final.pdf'\nassert strip_leading_dashes('path/to/file.txt') == 'path/to/file.txt'\nassert strip_leading_dashes(' , ') == ' , '",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     " "
+    ],
+    [
+     "a"
+    ],
+    [
+     "x; y;;z"
+    ],
+    [
+     "--dash--"
+    ],
+    [
+     "archive."
+    ],
+    [
+     "report.final.pdf"
+    ],
+    [
+     "path/to/file.txt"
+    ],
+    [
+     " , "
+    ]
+   ],
+   "reference": "def strip_leading_dashes(text):\n    return text.lstrip('-')",
+   "wrong": "def strip_leading_dashes(text):\n    return text.lstrip()",
+   "expected": [
+    "''",
+    "' '",
+    "'a'",
+    "'x; y;;z'",
+    "'dash--'",
+    "'archive.'",
+    "'report.final.pdf'",
+    "'path/to/file.txt'",
+    "' , '"
+   ],
+   "wrong_outputs": [
+    "''",
+    "''",
+    "'a'",
+    "'x; y;;z'",
+    "'--dash--'",
+    "'archive.'",
+    "'report.final.pdf'",
+    "'path/to/file.txt'",
+    "', '"
+   ],
+   "probe_args": [
+    "('',)",
+    "(' ',)",
+    "('a',)",
+    "('aaa',)",
+    "('Ab',)",
+    "('  lead',)",
+    "('trail  ',)",
+    "('  both ends  ',)",
+    "('Hello, World!',)",
+    "('a,b,,c',)",
+    "(' , ',)",
+    "('x.y.z',)",
+    "('...',)",
+    "('end.',)",
+    "('.start',)",
+    "('snake_case_name',)",
+    "('camelCaseName',)",
+    "('kebab-case-name',)",
+    "('--dash--',)",
+    "('MiXeD cAsE',)",
+    "('UPPER',)",
+    "('Title Case Words',)",
+    "('12abc34',)",
+    "('007',)",
+    "('a b  c',)",
+    "('one  two   three',)",
+    "('key = value',)",
+    "('name: Ada',)",
+    "('a:b:c',)",
+    "('report.final.pdf',)",
+    "('README',)",
+    "('archive.',)",
+    "('path/to/file.txt',)",
+    "('tab\\there',)",
+    "('line1\\nline2',)",
+    "('[tag] rest',)",
+    "('a|b| c |',)",
+    "('x; y;;z',)",
+    "('!?;:',)",
+    "('Mississippi',)"
+   ],
+   "probe_expected": [
+    "''",
+    "' '",
+    "'a'",
+    "'aaa'",
+    "'Ab'",
+    "'  lead'",
+    "'trail  '",
+    "'  both ends  '",
+    "'Hello, World!'",
+    "'a,b,,c'",
+    "' , '",
+    "'x.y.z'",
+    "'...'",
+    "'end.'",
+    "'.start'",
+    "'snake_case_name'",
+    "'camelCaseName'",
+    "'kebab-case-name'",
+    "'dash--'",
+    "'MiXeD cAsE'",
+    "'UPPER'",
+    "'Title Case Words'",
+    "'12abc34'",
+    "'007'",
+    "'a b  c'",
+    "'one  two   three'",
+    "'key = value'",
+    "'name: Ada'",
+    "'a:b:c'",
+    "'report.final.pdf'",
+    "'README'",
+    "'archive.'",
+    "'path/to/file.txt'",
+    "'tab\\there'",
+    "'line1\\nline2'",
+    "'[tag] rest'",
+    "'a|b| c |'",
+    "'x; y;;z'",
+    "'!?;:'",
+    "'Mississippi'"
+   ]
+  },
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "strip_leading_dots",
+   "params": "text",
+   "neighbour": "strip_dots",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `strip_leading_dots(text)` that returns text without the dots at its start."
+   },
+   "tests": "assert strip_leading_dots('') == ''\nassert strip_leading_dots(' ') == ' '\nassert strip_leading_dots('a') == 'a'\nassert strip_leading_dots('x; y;;z') == 'x; y;;z'\nassert strip_leading_dots('--dash--') == '--dash--'\nassert strip_leading_dots('archive.') == 'archive.'\nassert strip_leading_dots('report.final.pdf') == 'report.final.pdf'\nassert strip_leading_dots('path/to/file.txt') == 'path/to/file.txt'\nassert strip_leading_dots('end.') == 'end.'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     " "
+    ],
+    [
+     "a"
+    ],
+    [
+     "x; y;;z"
+    ],
+    [
+     "--dash--"
+    ],
+    [
+     "archive."
+    ],
+    [
+     "report.final.pdf"
+    ],
+    [
+     "path/to/file.txt"
+    ],
+    [
+     "end."
+    ]
+   ],
+   "reference": "def strip_leading_dots(text):\n    return text.lstrip('.')",
+   "wrong": "def strip_leading_dots(text):\n    return text.strip('.')",
+   "expected": [
+    "''",
+    "' '",
+    "'a'",
+    "'x; y;;z'",
+    "'--dash--'",
+    "'archive.'",
+    "'report.final.pdf'",
+    "'path/to/file.txt'",
+    "'end.'"
+   ],
+   "wrong_outputs": [
+    "''",
+    "' '",
+    "'a'",
+    "'x; y;;z'",
+    "'--dash--'",
+    "'archive'",
+    "'report.final.pdf'",
+    "'path/to/file.txt'",
+    "'end'"
+   ],
+   "probe_args": [
+    "('',)",
+    "(' ',)",
+    "('a',)",
+    "('aaa',)",
+    "('Ab',)",
+    "('  lead',)",
+    "('trail  ',)",
+    "('  both ends  ',)",
+    "('Hello, World!',)",
+    "('a,b,,c',)",
+    "(' , ',)",
+    "('x.y.z',)",
+    "('...',)",
+    "('end.',)",
+    "('.start',)",
+    "('snake_case_name',)",
+    "('camelCaseName',)",
+    "('kebab-case-name',)",
+    "('--dash--',)",
+    "('MiXeD cAsE',)",
+    "('UPPER',)",
+    "('Title Case Words',)",
+    "('12abc34',)",
+    "('007',)",
+    "('a b  c',)",
+    "('one  two   three',)",
+    "('key = value',)",
+    "('name: Ada',)",
+    "('a:b:c',)",
+    "('report.final.pdf',)",
+    "('README',)",
+    "('archive.',)",
+    "('path/to/file.txt',)",
+    "('tab\\there',)",
+    "('line1\\nline2',)",
+    "('[tag] rest',)",
+    "('a|b| c |',)",
+    "('x; y;;z',)",
+    "('!?;:',)",
+    "('Mississippi',)"
+   ],
+   "probe_expected": [
+    "''",
+    "' '",
+    "'a'",
+    "'aaa'",
+    "'Ab'",
+    "'  lead'",
+    "'trail  '",
+    "'  both ends  '",
+    "'Hello, World!'",
+    "'a,b,,c'",
+    "' , '",
+    "'x.y.z'",
+    "''",
+    "'end.'",
+    "'start'",
+    "'snake_case_name'",
+    "'camelCaseName'",
+    "'kebab-case-name'",
+    "'--dash--'",
+    "'MiXeD cAsE'",
+    "'UPPER'",
+    "'Title Case Words'",
+    "'12abc34'",
+    "'007'",
+    "'a b  c'",
+    "'one  two   three'",
+    "'key = value'",
+    "'name: Ada'",
+    "'a:b:c'",
+    "'report.final.pdf'",
+    "'README'",
+    "'archive.'",
+    "'path/to/file.txt'",
+    "'tab\\there'",
+    "'line1\\nline2'",
+    "'[tag] rest'",
+    "'a|b| c |'",
+    "'x; y;;z'",
+    "'!?;:'",
+    "'Mississippi'"
+   ]
+  },
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "strip_and_upper",
+   "params": "text",
+   "neighbour": "strip_both_ends",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `strip_and_upper(text)` that returns text without the spaces at its start and end, in uppercase."
+   },
+   "tests": "assert strip_and_upper('') == ''\nassert strip_and_upper(' ') == ''\nassert strip_and_upper('a') == 'A'\nassert strip_and_upper('x; y;;z') == 'X; Y;;Z'\nassert strip_and_upper('--dash--') == '--DASH--'\nassert strip_and_upper('archive.') == 'ARCHIVE.'\nassert strip_and_upper('report.final.pdf') == 'REPORT.FINAL.PDF'\nassert strip_and_upper('path/to/file.txt') == 'PATH/TO/FILE.TXT'\nassert strip_and_upper('Ab') == 'AB'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     " "
+    ],
+    [
+     "a"
+    ],
+    [
+     "x; y;;z"
+    ],
+    [
+     "--dash--"
+    ],
+    [
+     "archive."
+    ],
+    [
+     "report.final.pdf"
+    ],
+    [
+     "path/to/file.txt"
+    ],
+    [
+     "Ab"
+    ]
+   ],
+   "reference": "def strip_and_upper(text):\n    return text.strip().upper()",
+   "wrong": "def strip_and_upper(text):\n    return text.strip()",
+   "expected": [
+    "''",
+    "''",
+    "'A'",
+    "'X; Y;;Z'",
+    "'--DASH--'",
+    "'ARCHIVE.'",
+    "'REPORT.FINAL.PDF'",
+    "'PATH/TO/FILE.TXT'",
+    "'AB'"
+   ],
+   "wrong_outputs": [
+    "''",
+    "''",
+    "'a'",
+    "'x; y;;z'",
+    "'--dash--'",
+    "'archive.'",
+    "'report.final.pdf'",
+    "'path/to/file.txt'",
+    "'Ab'"
+   ],
+   "probe_args": [
+    "('',)",
+    "(' ',)",
+    "('a',)",
+    "('aaa',)",
+    "('Ab',)",
+    "('  lead',)",
+    "('trail  ',)",
+    "('  both ends  ',)",
+    "('Hello, World!',)",
+    "('a,b,,c',)",
+    "(' , ',)",
+    "('x.y.z',)",
+    "('...',)",
+    "('end.',)",
+    "('.start',)",
+    "('snake_case_name',)",
+    "('camelCaseName',)",
+    "('kebab-case-name',)",
+    "('--dash--',)",
+    "('MiXeD cAsE',)",
+    "('UPPER',)",
+    "('Title Case Words',)",
+    "('12abc34',)",
+    "('007',)",
+    "('a b  c',)",
+    "('one  two   three',)",
+    "('key = value',)",
+    "('name: Ada',)",
+    "('a:b:c',)",
+    "('report.final.pdf',)",
+    "('README',)",
+    "('archive.',)",
+    "('path/to/file.txt',)",
+    "('tab\\there',)",
+    "('line1\\nline2',)",
+    "('[tag] rest',)",
+    "('a|b| c |',)",
+    "('x; y;;z',)",
+    "('!?;:',)",
+    "('Mississippi',)"
+   ],
+   "probe_expected": [
+    "''",
+    "''",
+    "'A'",
+    "'AAA'",
+    "'AB'",
+    "'LEAD'",
+    "'TRAIL'",
+    "'BOTH ENDS'",
+    "'HELLO, WORLD!'",
+    "'A,B,,C'",
+    "','",
+    "'X.Y.Z'",
+    "'...'",
+    "'END.'",
+    "'.START'",
+    "'SNAKE_CASE_NAME'",
+    "'CAMELCASENAME'",
+    "'KEBAB-CASE-NAME'",
+    "'--DASH--'",
+    "'MIXED CASE'",
+    "'UPPER'",
+    "'TITLE CASE WORDS'",
+    "'12ABC34'",
+    "'007'",
+    "'A B  C'",
+    "'ONE  TWO   THREE'",
+    "'KEY = VALUE'",
+    "'NAME: ADA'",
+    "'A:B:C'",
+    "'REPORT.FINAL.PDF'",
+    "'README'",
+    "'ARCHIVE.'",
+    "'PATH/TO/FILE.TXT'",
+    "'TAB\\tHERE'",
+    "'LINE1\\nLINE2'",
+    "'[TAG] REST'",
+    "'A|B| C |'",
+    "'X; Y;;Z'",
+    "'!?;:'",
+    "'MISSISSIPPI'"
+   ]
+  },
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "keep_uppercase",
+   "params": "text",
+   "neighbour": "keep_digits",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `keep_uppercase(text)` that returns only the uppercase letters in text, in order."
+   },
+   "tests": "assert keep_uppercase('') == ''\nassert keep_uppercase(' ') == ''\nassert keep_uppercase('a') == ''\nassert keep_uppercase('x; y;;z') == ''\nassert keep_uppercase('--dash--') == ''\nassert keep_uppercase('archive.') == ''\nassert keep_uppercase('report.final.pdf') == ''\nassert keep_uppercase('path/to/file.txt') == ''\nassert keep_uppercase('Ab') == 'A'\nassert keep_uppercase('007') == ''",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     " "
+    ],
+    [
+     "a"
+    ],
+    [
+     "x; y;;z"
+    ],
+    [
+     "--dash--"
+    ],
+    [
+     "archive."
+    ],
+    [
+     "report.final.pdf"
+    ],
+    [
+     "path/to/file.txt"
+    ],
+    [
+     "Ab"
+    ],
+    [
+     "007"
+    ]
+   ],
+   "reference": "def keep_uppercase(text):\n    return ''.join(c for c in text if c.isupper())",
+   "wrong": "def keep_uppercase(text):\n    return ''.join(c for c in text if c.isdigit())",
+   "expected": [
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "'A'",
+    "''"
+   ],
+   "wrong_outputs": [
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "'007'"
+   ],
+   "probe_args": [
+    "('',)",
+    "(' ',)",
+    "('a',)",
+    "('aaa',)",
+    "('Ab',)",
+    "('  lead',)",
+    "('trail  ',)",
+    "('  both ends  ',)",
+    "('Hello, World!',)",
+    "('a,b,,c',)",
+    "(' , ',)",
+    "('x.y.z',)",
+    "('...',)",
+    "('end.',)",
+    "('.start',)",
+    "('snake_case_name',)",
+    "('camelCaseName',)",
+    "('kebab-case-name',)",
+    "('--dash--',)",
+    "('MiXeD cAsE',)",
+    "('UPPER',)",
+    "('Title Case Words',)",
+    "('12abc34',)",
+    "('007',)",
+    "('a b  c',)",
+    "('one  two   three',)",
+    "('key = value',)",
+    "('name: Ada',)",
+    "('a:b:c',)",
+    "('report.final.pdf',)",
+    "('README',)",
+    "('archive.',)",
+    "('path/to/file.txt',)",
+    "('tab\\there',)",
+    "('line1\\nline2',)",
+    "('[tag] rest',)",
+    "('a|b| c |',)",
+    "('x; y;;z',)",
+    "('!?;:',)",
+    "('Mississippi',)"
+   ],
+   "probe_expected": [
+    "''",
+    "''",
+    "''",
+    "''",
+    "'A'",
+    "''",
+    "''",
+    "''",
+    "'HW'",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "'CN'",
+    "''",
+    "''",
+    "'MXDAE'",
+    "'UPPER'",
+    "'TCW'",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "'A'",
+    "''",
+    "''",
+    "'README'",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "'M'"
+   ]
+  },
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "vowels_to_stars",
+   "params": "text",
+   "neighbour": "double_the_vowels",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `vowels_to_stars(text)` that returns text with every vowel (a, e, i, o or u, either case) replaced by '*'."
+   },
+   "tests": "assert vowels_to_stars('') == ''\nassert vowels_to_stars(' ') == ' '\nassert vowels_to_stars('a') == '*'\nassert vowels_to_stars('x; y;;z') == 'x; y;;z'\nassert vowels_to_stars('--dash--') == '--d*sh--'\nassert vowels_to_stars('archive.') == '*rch*v*.'\nassert vowels_to_stars('report.final.pdf') == 'r*p*rt.f*n*l.pdf'\nassert vowels_to_stars('path/to/file.txt') == 'p*th/t*/f*l*.txt'\nassert vowels_to_stars('Ab') == '*b'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     " "
+    ],
+    [
+     "a"
+    ],
+    [
+     "x; y;;z"
+    ],
+    [
+     "--dash--"
+    ],
+    [
+     "archive."
+    ],
+    [
+     "report.final.pdf"
+    ],
+    [
+     "path/to/file.txt"
+    ],
+    [
+     "Ab"
+    ]
+   ],
+   "reference": "def vowels_to_stars(text):\n    return ''.join('*' if c in 'aeiouAEIOU' else c for c in text)",
+   "wrong": "def vowels_to_stars(text):\n    return ''.join(c * 2 if c in 'aeiouAEIOU' else c for c in text)",
+   "expected": [
+    "''",
+    "' '",
+    "'*'",
+    "'x; y;;z'",
+    "'--d*sh--'",
+    "'*rch*v*.'",
+    "'r*p*rt.f*n*l.pdf'",
+    "'p*th/t*/f*l*.txt'",
+    "'*b'"
+   ],
+   "wrong_outputs": [
+    "''",
+    "' '",
+    "'aa'",
+    "'x; y;;z'",
+    "'--daash--'",
+    "'aarchiivee.'",
+    "'reepoort.fiinaal.pdf'",
+    "'paath/too/fiilee.txt'",
+    "'AAb'"
+   ],
+   "probe_args": [
+    "('',)",
+    "(' ',)",
+    "('a',)",
+    "('aaa',)",
+    "('Ab',)",
+    "('  lead',)",
+    "('trail  ',)",
+    "('  both ends  ',)",
+    "('Hello, World!',)",
+    "('a,b,,c',)",
+    "(' , ',)",
+    "('x.y.z',)",
+    "('...',)",
+    "('end.',)",
+    "('.start',)",
+    "('snake_case_name',)",
+    "('camelCaseName',)",
+    "('kebab-case-name',)",
+    "('--dash--',)",
+    "('MiXeD cAsE',)",
+    "('UPPER',)",
+    "('Title Case Words',)",
+    "('12abc34',)",
+    "('007',)",
+    "('a b  c',)",
+    "('one  two   three',)",
+    "('key = value',)",
+    "('name: Ada',)",
+    "('a:b:c',)",
+    "('report.final.pdf',)",
+    "('README',)",
+    "('archive.',)",
+    "('path/to/file.txt',)",
+    "('tab\\there',)",
+    "('line1\\nline2',)",
+    "('[tag] rest',)",
+    "('a|b| c |',)",
+    "('x; y;;z',)",
+    "('!?;:',)",
+    "('Mississippi',)"
+   ],
+   "probe_expected": [
+    "''",
+    "' '",
+    "'*'",
+    "'***'",
+    "'*b'",
+    "'  l**d'",
+    "'tr**l  '",
+    "'  b*th *nds  '",
+    "'H*ll*, W*rld!'",
+    "'*,b,,c'",
+    "' , '",
+    "'x.y.z'",
+    "'...'",
+    "'*nd.'",
+    "'.st*rt'",
+    "'sn*k*_c*s*_n*m*'",
+    "'c*m*lC*s*N*m*'",
+    "'k*b*b-c*s*-n*m*'",
+    "'--d*sh--'",
+    "'M*X*D c*s*'",
+    "'*PP*R'",
+    "'T*tl* C*s* W*rds'",
+    "'12*bc34'",
+    "'007'",
+    "'* b  c'",
+    "'*n*  tw*   thr**'",
+    "'k*y = v*l**'",
+    "'n*m*: *d*'",
+    "'*:b:c'",
+    "'r*p*rt.f*n*l.pdf'",
+    "'R**DM*'",
+    "'*rch*v*.'",
+    "'p*th/t*/f*l*.txt'",
+    "'t*b\\th*r*'",
+    "'l*n*1\\nl*n*2'",
+    "'[t*g] r*st'",
+    "'*|b| c |'",
+    "'x; y;;z'",
+    "'!?;:'",
+    "'M*ss*ss*pp*'"
+   ]
+  },
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "remove_letters",
+   "params": "text",
+   "neighbour": "strip_start",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `remove_letters(text)` that returns text without its letters."
+   },
+   "tests": "assert remove_letters('') == ''\nassert remove_letters(' ') == ' '\nassert remove_letters('a') == ''\nassert remove_letters('x; y;;z') == '; ;;'\nassert remove_letters('--dash--') == '----'\nassert remove_letters('archive.') == '.'\nassert remove_letters('report.final.pdf') == '..'\nassert remove_letters('path/to/file.txt') == '//.'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     " "
+    ],
+    [
+     "a"
+    ],
+    [
+     "x; y;;z"
+    ],
+    [
+     "--dash--"
+    ],
+    [
+     "archive."
+    ],
+    [
+     "report.final.pdf"
+    ],
+    [
+     "path/to/file.txt"
+    ]
+   ],
+   "reference": "def remove_letters(text):\n    return ''.join(c for c in text if not c.isalpha())",
+   "wrong": "def remove_letters(text):\n    return text.lstrip()",
+   "expected": [
+    "''",
+    "' '",
+    "''",
+    "'; ;;'",
+    "'----'",
+    "'.'",
+    "'..'",
+    "'//.'"
+   ],
+   "wrong_outputs": [
+    "''",
+    "''",
+    "'a'",
+    "'x; y;;z'",
+    "'--dash--'",
+    "'archive.'",
+    "'report.final.pdf'",
+    "'path/to/file.txt'"
+   ],
+   "probe_args": [
+    "('',)",
+    "(' ',)",
+    "('a',)",
+    "('aaa',)",
+    "('Ab',)",
+    "('  lead',)",
+    "('trail  ',)",
+    "('  both ends  ',)",
+    "('Hello, World!',)",
+    "('a,b,,c',)",
+    "(' , ',)",
+    "('x.y.z',)",
+    "('...',)",
+    "('end.',)",
+    "('.start',)",
+    "('snake_case_name',)",
+    "('camelCaseName',)",
+    "('kebab-case-name',)",
+    "('--dash--',)",
+    "('MiXeD cAsE',)",
+    "('UPPER',)",
+    "('Title Case Words',)",
+    "('12abc34',)",
+    "('007',)",
+    "('a b  c',)",
+    "('one  two   three',)",
+    "('key = value',)",
+    "('name: Ada',)",
+    "('a:b:c',)",
+    "('report.final.pdf',)",
+    "('README',)",
+    "('archive.',)",
+    "('path/to/file.txt',)",
+    "('tab\\there',)",
+    "('line1\\nline2',)",
+    "('[tag] rest',)",
+    "('a|b| c |',)",
+    "('x; y;;z',)",
+    "('!?;:',)",
+    "('Mississippi',)"
+   ],
+   "probe_expected": [
+    "''",
+    "' '",
+    "''",
+    "''",
+    "''",
+    "'  '",
+    "'  '",
+    "'     '",
+    "', !'",
+    "',,,'",
+    "' , '",
+    "'..'",
+    "'...'",
+    "'.'",
+    "'.'",
+    "'__'",
+    "''",
+    "'--'",
+    "'----'",
+    "' '",
+    "''",
+    "'  '",
+    "'1234'",
+    "'007'",
+    "'   '",
+    "'     '",
+    "' = '",
+    "': '",
+    "'::'",
+    "'..'",
+    "''",
+    "'.'",
+    "'//.'",
+    "'\\t'",
+    "'1\\n2'",
+    "'[] '",
+    "'||  |'",
+    "'; ;;'",
+    "'!?;:'",
+    "''"
+   ]
+  },
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "keep_punctuation",
+   "params": "text",
+   "neighbour": "keep_digits",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `keep_punctuation(text)` that returns only the characters . , ! ? ; and : in text, in order."
+   },
+   "tests": "assert keep_punctuation('') == ''\nassert keep_punctuation(' ') == ''\nassert keep_punctuation('a') == ''\nassert keep_punctuation('x; y;;z') == ';;;'\nassert keep_punctuation('--dash--') == ''\nassert keep_punctuation('archive.') == '.'\nassert keep_punctuation('report.final.pdf') == '..'\nassert keep_punctuation('path/to/file.txt') == '.'\nassert keep_punctuation(' , ') == ','\nassert keep_punctuation('...') == '...'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     " "
+    ],
+    [
+     "a"
+    ],
+    [
+     "x; y;;z"
+    ],
+    [
+     "--dash--"
+    ],
+    [
+     "archive."
+    ],
+    [
+     "report.final.pdf"
+    ],
+    [
+     "path/to/file.txt"
+    ],
+    [
+     " , "
+    ],
+    [
+     "..."
+    ]
+   ],
+   "reference": "def keep_punctuation(text):\n    return ''.join(c for c in text if c in '.,!?;:')",
+   "wrong": "def keep_punctuation(text):\n    return ''.join(c for c in text if c.isdigit())",
+   "expected": [
+    "''",
+    "''",
+    "''",
+    "';;;'",
+    "''",
+    "'.'",
+    "'..'",
+    "'.'",
+    "','",
+    "'...'"
+   ],
+   "wrong_outputs": [
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''"
+   ],
+   "probe_args": [
+    "('',)",
+    "(' ',)",
+    "('a',)",
+    "('aaa',)",
+    "('Ab',)",
+    "('  lead',)",
+    "('trail  ',)",
+    "('  both ends  ',)",
+    "('Hello, World!',)",
+    "('a,b,,c',)",
+    "(' , ',)",
+    "('x.y.z',)",
+    "('...',)",
+    "('end.',)",
+    "('.start',)",
+    "('snake_case_name',)",
+    "('camelCaseName',)",
+    "('kebab-case-name',)",
+    "('--dash--',)",
+    "('MiXeD cAsE',)",
+    "('UPPER',)",
+    "('Title Case Words',)",
+    "('12abc34',)",
+    "('007',)",
+    "('a b  c',)",
+    "('one  two   three',)",
+    "('key = value',)",
+    "('name: Ada',)",
+    "('a:b:c',)",
+    "('report.final.pdf',)",
+    "('README',)",
+    "('archive.',)",
+    "('path/to/file.txt',)",
+    "('tab\\there',)",
+    "('line1\\nline2',)",
+    "('[tag] rest',)",
+    "('a|b| c |',)",
+    "('x; y;;z',)",
+    "('!?;:',)",
+    "('Mississippi',)"
+   ],
+   "probe_expected": [
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "',!'",
+    "',,,'",
+    "','",
+    "'..'",
+    "'...'",
+    "'.'",
+    "'.'",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "':'",
+    "'::'",
+    "'..'",
+    "''",
+    "'.'",
+    "'.'",
+    "''",
+    "''",
+    "''",
+    "''",
+    "';;;'",
+    "'!?;:'",
+    "''"
+   ]
+  },
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "first_half",
+   "params": "text",
+   "neighbour": "prefix_before_digit",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `first_half(text)` that returns the first half of text (the shorter half if its length is odd)."
+   },
+   "tests": "assert first_half('') == ''\nassert first_half(' ') == ''\nassert first_half('a') == ''\nassert first_half('x; y;;z') == 'x; '\nassert first_half('--dash--') == '--da'\nassert first_half('archive.') == 'arch'\nassert first_half('report.final.pdf') == 'report.f'\nassert first_half('path/to/file.txt') == 'path/to/'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     " "
+    ],
+    [
+     "a"
+    ],
+    [
+     "x; y;;z"
+    ],
+    [
+     "--dash--"
+    ],
+    [
+     "archive."
+    ],
+    [
+     "report.final.pdf"
+    ],
+    [
+     "path/to/file.txt"
+    ]
+   ],
+   "reference": "def first_half(text):\n    return text[:len(text) // 2]",
+   "wrong": "def first_half(text):\n    for i, c in enumerate(text):\n        if c.isdigit():\n            return text[:i]\n    return text",
+   "expected": [
+    "''",
+    "''",
+    "''",
+    "'x; '",
+    "'--da'",
+    "'arch'",
+    "'report.f'",
+    "'path/to/'"
+   ],
+   "wrong_outputs": [
+    "''",
+    "' '",
+    "'a'",
+    "'x; y;;z'",
+    "'--dash--'",
+    "'archive.'",
+    "'report.final.pdf'",
+    "'path/to/file.txt'"
+   ],
+   "probe_args": [
+    "('',)",
+    "(' ',)",
+    "('a',)",
+    "('aaa',)",
+    "('Ab',)",
+    "('  lead',)",
+    "('trail  ',)",
+    "('  both ends  ',)",
+    "('Hello, World!',)",
+    "('a,b,,c',)",
+    "(' , ',)",
+    "('x.y.z',)",
+    "('...',)",
+    "('end.',)",
+    "('.start',)",
+    "('snake_case_name',)",
+    "('camelCaseName',)",
+    "('kebab-case-name',)",
+    "('--dash--',)",
+    "('MiXeD cAsE',)",
+    "('UPPER',)",
+    "('Title Case Words',)",
+    "('12abc34',)",
+    "('007',)",
+    "('a b  c',)",
+    "('one  two   three',)",
+    "('key = value',)",
+    "('name: Ada',)",
+    "('a:b:c',)",
+    "('report.final.pdf',)",
+    "('README',)",
+    "('archive.',)",
+    "('path/to/file.txt',)",
+    "('tab\\there',)",
+    "('line1\\nline2',)",
+    "('[tag] rest',)",
+    "('a|b| c |',)",
+    "('x; y;;z',)",
+    "('!?;:',)",
+    "('Mississippi',)"
+   ],
+   "probe_expected": [
+    "''",
+    "''",
+    "''",
+    "'a'",
+    "'A'",
+    "'  l'",
+    "'tra'",
+    "'  both'",
+    "'Hello,'",
+    "'a,b'",
+    "' '",
+    "'x.'",
+    "'.'",
+    "'en'",
+    "'.st'",
+    "'snake_c'",
+    "'camelC'",
+    "'kebab-c'",
+    "'--da'",
+    "'MiXeD'",
+    "'UP'",
+    "'Title Ca'",
+    "'12a'",
+    "'0'",
+    "'a b'",
+    "'one  two'",
+    "'key ='",
+    "'name'",
+    "'a:'",
+    "'report.f'",
+    "'REA'",
+    "'arch'",
+    "'path/to/'",
+    "'tab\\t'",
+    "'line1'",
+    "'[tag]'",
+    "'a|b|'",
+    "'x; '",
+    "'!?'",
+    "'Missi'"
+   ]
+  },
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "after_last_slash",
+   "params": "path",
+   "neighbour": "file_extension",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `after_last_slash(path)` that returns the part of path after its last slash (all of path if it has none)."
+   },
+   "tests": "assert after_last_slash('') == ''\nassert after_last_slash(' ') == ' '\nassert after_last_slash('a') == 'a'\nassert after_last_slash('x; y;;z') == 'x; y;;z'\nassert after_last_slash('--dash--') == '--dash--'\nassert after_last_slash('archive.') == 'archive.'\nassert after_last_slash('report.final.pdf') == 'report.final.pdf'\nassert after_last_slash('path/to/file.txt') == 'file.txt'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     " "
+    ],
+    [
+     "a"
+    ],
+    [
+     "x; y;;z"
+    ],
+    [
+     "--dash--"
+    ],
+    [
+     "archive."
+    ],
+    [
+     "report.final.pdf"
+    ],
+    [
+     "path/to/file.txt"
+    ]
+   ],
+   "reference": "def after_last_slash(path):\n    return path.rsplit('/', 1)[-1]",
+   "wrong": "def after_last_slash(filename):\n    return filename.rsplit('.', 1)[1] if '.' in filename else ''",
+   "expected": [
+    "''",
+    "' '",
+    "'a'",
+    "'x; y;;z'",
+    "'--dash--'",
+    "'archive.'",
+    "'report.final.pdf'",
+    "'file.txt'"
+   ],
+   "wrong_outputs": [
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "'pdf'",
+    "'txt'"
+   ],
+   "probe_args": [
+    "('',)",
+    "(' ',)",
+    "('a',)",
+    "('aaa',)",
+    "('Ab',)",
+    "('  lead',)",
+    "('trail  ',)",
+    "('  both ends  ',)",
+    "('Hello, World!',)",
+    "('a,b,,c',)",
+    "(' , ',)",
+    "('x.y.z',)",
+    "('...',)",
+    "('end.',)",
+    "('.start',)",
+    "('snake_case_name',)",
+    "('camelCaseName',)",
+    "('kebab-case-name',)",
+    "('--dash--',)",
+    "('MiXeD cAsE',)",
+    "('UPPER',)",
+    "('Title Case Words',)",
+    "('12abc34',)",
+    "('007',)",
+    "('a b  c',)",
+    "('one  two   three',)",
+    "('key = value',)",
+    "('name: Ada',)",
+    "('a:b:c',)",
+    "('report.final.pdf',)",
+    "('README',)",
+    "('archive.',)",
+    "('path/to/file.txt',)",
+    "('tab\\there',)",
+    "('line1\\nline2',)",
+    "('[tag] rest',)",
+    "('a|b| c |',)",
+    "('x; y;;z',)",
+    "('!?;:',)",
+    "('Mississippi',)"
+   ],
+   "probe_expected": [
+    "''",
+    "' '",
+    "'a'",
+    "'aaa'",
+    "'Ab'",
+    "'  lead'",
+    "'trail  '",
+    "'  both ends  '",
+    "'Hello, World!'",
+    "'a,b,,c'",
+    "' , '",
+    "'x.y.z'",
+    "'...'",
+    "'end.'",
+    "'.start'",
+    "'snake_case_name'",
+    "'camelCaseName'",
+    "'kebab-case-name'",
+    "'--dash--'",
+    "'MiXeD cAsE'",
+    "'UPPER'",
+    "'Title Case Words'",
+    "'12abc34'",
+    "'007'",
+    "'a b  c'",
+    "'one  two   three'",
+    "'key = value'",
+    "'name: Ada'",
+    "'a:b:c'",
+    "'report.final.pdf'",
+    "'README'",
+    "'archive.'",
+    "'file.txt'",
+    "'tab\\there'",
+    "'line1\\nline2'",
+    "'[tag] rest'",
+    "'a|b| c |'",
+    "'x; y;;z'",
+    "'!?;:'",
+    "'Mississippi'"
+   ]
+  },
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "find_last_char",
+   "params": "text, ch",
+   "neighbour": "find_char",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `find_last_char(text, ch)` that returns the position of the last occurrence of the character ch in text, or -1 if it does not occur."
+   },
+   "tests": "assert find_last_char('', ',') == -1\nassert find_last_char(' ', '.') == -1\nassert find_last_char('a', ' ') == -1\nassert find_last_char('x; y;;z', ' ') == 2\nassert find_last_char('--dash--', '-') == 7\nassert find_last_char('archive.', 'a') == 0\nassert find_last_char('report.final.pdf', '.') == 12\nassert find_last_char('path/to/file.txt', '-') == -1\nassert find_last_char('aaa', 'a') == 2",
+   "test_inputs": [
+    [
+     "",
+     ","
+    ],
+    [
+     " ",
+     "."
+    ],
+    [
+     "a",
+     " "
+    ],
+    [
+     "x; y;;z",
+     " "
+    ],
+    [
+     "--dash--",
+     "-"
+    ],
+    [
+     "archive.",
+     "a"
+    ],
+    [
+     "report.final.pdf",
+     "."
+    ],
+    [
+     "path/to/file.txt",
+     "-"
+    ],
+    [
+     "aaa",
+     "a"
+    ]
+   ],
+   "reference": "def find_last_char(text, ch):\n    return text.rfind(ch)",
+   "wrong": "def find_last_char(text, ch):\n    return text.find(ch)",
+   "expected": [
+    "-1",
+    "-1",
+    "-1",
+    "2",
+    "7",
+    "0",
+    "12",
+    "-1",
+    "2"
+   ],
+   "wrong_outputs": [
+    "-1",
+    "-1",
+    "-1",
+    "2",
+    "0",
+    "0",
+    "6",
+    "-1",
+    "0"
+   ],
+   "probe_args": [
+    "('', ',')",
+    "(' ', '.')",
+    "('a', ' ')",
+    "('aaa', 'a')",
+    "('Ab', '-')",
+    "('  lead', ':')",
+    "('trail  ', 's')",
+    "('  both ends  ', ',')",
+    "('Hello, World!', '.')",
+    "('a,b,,c', ' ')",
+    "(' , ', 'a')",
+    "('x.y.z', '-')",
+    "('...', ':')",
+    "('end.', 's')",
+    "('.start', ',')",
+    "('snake_case_name', '.')",
+    "('camelCaseName', ' ')",
+    "('kebab-case-name', 'a')",
+    "('--dash--', '-')",
+    "('MiXeD cAsE', ':')",
+    "('UPPER', 's')",
+    "('Title Case Words', ',')",
+    "('12abc34', '.')",
+    "('007', ' ')",
+    "('a b  c', 'a')",
+    "('one  two   three', '-')",
+    "('key = value', ':')",
+    "('name: Ada', 's')",
+    "('a:b:c', ',')",
+    "('report.final.pdf', '.')",
+    "('README', ' ')",
+    "('archive.', 'a')",
+    "('path/to/file.txt', '-')",
+    "('tab\\there', ':')",
+    "('line1\\nline2', 's')",
+    "('[tag] rest', ',')",
+    "('a|b| c |', '.')",
+    "('x; y;;z', ' ')",
+    "('!?;:', 'a')",
+    "('Mississippi', '-')"
+   ],
+   "probe_expected": [
+    "-1",
+    "-1",
+    "-1",
+    "2",
+    "-1",
+    "-1",
+    "-1",
+    "-1",
+    "-1",
+    "-1",
+    "-1",
+    "-1",
+    "-1",
+    "-1",
+    "-1",
+    "-1",
+    "-1",
+    "12",
+    "7",
+    "-1",
+    "-1",
+    "-1",
+    "-1",
+    "-1",
+    "0",
+    "-1",
+    "-1",
+    "-1",
+    "-1",
+    "12",
+    "-1",
+    "0",
+    "-1",
+    "-1",
+    "-1",
+    "-1",
+    "-1",
+    "2",
+    "-1",
+    "-1"
+   ]
+  },
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "text_in_brackets",
+   "params": "text",
+   "neighbour": "text_after_colon",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `text_in_brackets(text)` that returns the text between the first '[' in text and the next ']', or an empty string if there is no such pair."
+   },
+   "tests": "assert text_in_brackets('') == ''\nassert text_in_brackets(' ') == ''\nassert text_in_brackets('a') == ''\nassert text_in_brackets('x; y;;z') == ''\nassert text_in_brackets('--dash--') == ''\nassert text_in_brackets('archive.') == ''\nassert text_in_brackets('report.final.pdf') == ''\nassert text_in_brackets('path/to/file.txt') == ''\nassert text_in_brackets('a:b:c') == ''\nassert text_in_brackets('name: Ada') == ''",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     " "
+    ],
+    [
+     "a"
+    ],
+    [
+     "x; y;;z"
+    ],
+    [
+     "--dash--"
+    ],
+    [
+     "archive."
+    ],
+    [
+     "report.final.pdf"
+    ],
+    [
+     "path/to/file.txt"
+    ],
+    [
+     "a:b:c"
+    ],
+    [
+     "name: Ada"
+    ]
+   ],
+   "reference": "def text_in_brackets(text):\n    start = text.find('[')\n    end = text.find(']', start + 1)\n    return text[start + 1:end] if start >= 0 and end >= 0 else ''",
+   "wrong": "def text_in_brackets(text):\n    return text.split(':', 1)[1].strip() if ':' in text else ''",
+   "expected": [
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''"
+   ],
+   "wrong_outputs": [
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "'b:c'",
+    "'Ada'"
+   ],
+   "probe_args": [
+    "('',)",
+    "(' ',)",
+    "('a',)",
+    "('aaa',)",
+    "('Ab',)",
+    "('  lead',)",
+    "('trail  ',)",
+    "('  both ends  ',)",
+    "('Hello, World!',)",
+    "('a,b,,c',)",
+    "(' , ',)",
+    "('x.y.z',)",
+    "('...',)",
+    "('end.',)",
+    "('.start',)",
+    "('snake_case_name',)",
+    "('camelCaseName',)",
+    "('kebab-case-name',)",
+    "('--dash--',)",
+    "('MiXeD cAsE',)",
+    "('UPPER',)",
+    "('Title Case Words',)",
+    "('12abc34',)",
+    "('007',)",
+    "('a b  c',)",
+    "('one  two   three',)",
+    "('key = value',)",
+    "('name: Ada',)",
+    "('a:b:c',)",
+    "('report.final.pdf',)",
+    "('README',)",
+    "('archive.',)",
+    "('path/to/file.txt',)",
+    "('tab\\there',)",
+    "('line1\\nline2',)",
+    "('[tag] rest',)",
+    "('a|b| c |',)",
+    "('x; y;;z',)",
+    "('!?;:',)",
+    "('Mississippi',)"
+   ],
+   "probe_expected": [
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "'tag'",
+    "''",
+    "''",
+    "''",
+    "''"
+   ]
+  },
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "upper_first_and_last",
+   "params": "text",
+   "neighbour": "drop_first_and_last_char",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `upper_first_and_last(text)` that returns text with its first and last characters in uppercase."
+   },
+   "tests": "assert upper_first_and_last('') == ''\nassert upper_first_and_last(' ') == ' '\nassert upper_first_and_last('a') == 'A'\nassert upper_first_and_last('x; y;;z') == 'X; y;;Z'\nassert upper_first_and_last('--dash--') == '--dash--'\nassert upper_first_and_last('archive.') == 'Archive.'\nassert upper_first_and_last('report.final.pdf') == 'Report.final.pdF'\nassert upper_first_and_last('path/to/file.txt') == 'Path/to/file.txT'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     " "
+    ],
+    [
+     "a"
+    ],
+    [
+     "x; y;;z"
+    ],
+    [
+     "--dash--"
+    ],
+    [
+     "archive."
+    ],
+    [
+     "report.final.pdf"
+    ],
+    [
+     "path/to/file.txt"
+    ]
+   ],
+   "reference": "def upper_first_and_last(text):\n    return text[:1].upper() + text[1:-1] + text[-1:].upper() if len(text) > 1 else text.upper()",
+   "wrong": "def upper_first_and_last(text):\n    return text[1:-1]",
+   "expected": [
+    "''",
+    "' '",
+    "'A'",
+    "'X; y;;Z'",
+    "'--dash--'",
+    "'Archive.'",
+    "'Report.final.pdF'",
+    "'Path/to/file.txT'"
+   ],
+   "wrong_outputs": [
+    "''",
+    "''",
+    "''",
+    "'; y;;'",
+    "'-dash-'",
+    "'rchive'",
+    "'eport.final.pd'",
+    "'ath/to/file.tx'"
+   ],
+   "probe_args": [
+    "('',)",
+    "(' ',)",
+    "('a',)",
+    "('aaa',)",
+    "('Ab',)",
+    "('  lead',)",
+    "('trail  ',)",
+    "('  both ends  ',)",
+    "('Hello, World!',)",
+    "('a,b,,c',)",
+    "(' , ',)",
+    "('x.y.z',)",
+    "('...',)",
+    "('end.',)",
+    "('.start',)",
+    "('snake_case_name',)",
+    "('camelCaseName',)",
+    "('kebab-case-name',)",
+    "('--dash--',)",
+    "('MiXeD cAsE',)",
+    "('UPPER',)",
+    "('Title Case Words',)",
+    "('12abc34',)",
+    "('007',)",
+    "('a b  c',)",
+    "('one  two   three',)",
+    "('key = value',)",
+    "('name: Ada',)",
+    "('a:b:c',)",
+    "('report.final.pdf',)",
+    "('README',)",
+    "('archive.',)",
+    "('path/to/file.txt',)",
+    "('tab\\there',)",
+    "('line1\\nline2',)",
+    "('[tag] rest',)",
+    "('a|b| c |',)",
+    "('x; y;;z',)",
+    "('!?;:',)",
+    "('Mississippi',)"
+   ],
+   "probe_expected": [
+    "''",
+    "' '",
+    "'A'",
+    "'AaA'",
+    "'AB'",
+    "'  leaD'",
+    "'Trail  '",
+    "'  both ends  '",
+    "'Hello, World!'",
+    "'A,b,,C'",
+    "' , '",
+    "'X.y.Z'",
+    "'...'",
+    "'End.'",
+    "'.starT'",
+    "'Snake_case_namE'",
+    "'CamelCaseNamE'",
+    "'Kebab-case-namE'",
+    "'--dash--'",
+    "'MiXeD cAsE'",
+    "'UPPER'",
+    "'Title Case WordS'",
+    "'12abc34'",
+    "'007'",
+    "'A b  C'",
+    "'One  two   threE'",
+    "'Key = valuE'",
+    "'Name: AdA'",
+    "'A:b:C'",
+    "'Report.final.pdF'",
+    "'README'",
+    "'Archive.'",
+    "'Path/to/file.txT'",
+    "'Tab\\therE'",
+    "'Line1\\nline2'",
+    "'[tag] resT'",
+    "'A|b| c |'",
+    "'X; y;;Z'",
+    "'!?;:'",
+    "'MississippI'"
+   ]
+  },
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "uppercase_vowels",
+   "params": "text",
+   "neighbour": "double_the_vowels",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `uppercase_vowels(text)` that returns text with every lowercase vowel (a, e, i, o, u) in uppercase."
+   },
+   "tests": "assert uppercase_vowels('') == ''\nassert uppercase_vowels(' ') == ' '\nassert uppercase_vowels('a') == 'A'\nassert uppercase_vowels('x; y;;z') == 'x; y;;z'\nassert uppercase_vowels('--dash--') == '--dAsh--'\nassert uppercase_vowels('archive.') == 'ArchIvE.'\nassert uppercase_vowels('report.final.pdf') == 'rEpOrt.fInAl.pdf'\nassert uppercase_vowels('path/to/file.txt') == 'pAth/tO/fIlE.txt'\nassert uppercase_vowels('Ab') == 'Ab'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     " "
+    ],
+    [
+     "a"
+    ],
+    [
+     "x; y;;z"
+    ],
+    [
+     "--dash--"
+    ],
+    [
+     "archive."
+    ],
+    [
+     "report.final.pdf"
+    ],
+    [
+     "path/to/file.txt"
+    ],
+    [
+     "Ab"
+    ]
+   ],
+   "reference": "def uppercase_vowels(text):\n    return ''.join(c.upper() if c in 'aeiou' else c for c in text)",
+   "wrong": "def uppercase_vowels(text):\n    return ''.join(c * 2 if c in 'aeiouAEIOU' else c for c in text)",
+   "expected": [
+    "''",
+    "' '",
+    "'A'",
+    "'x; y;;z'",
+    "'--dAsh--'",
+    "'ArchIvE.'",
+    "'rEpOrt.fInAl.pdf'",
+    "'pAth/tO/fIlE.txt'",
+    "'Ab'"
+   ],
+   "wrong_outputs": [
+    "''",
+    "' '",
+    "'aa'",
+    "'x; y;;z'",
+    "'--daash--'",
+    "'aarchiivee.'",
+    "'reepoort.fiinaal.pdf'",
+    "'paath/too/fiilee.txt'",
+    "'AAb'"
+   ],
+   "probe_args": [
+    "('',)",
+    "(' ',)",
+    "('a',)",
+    "('aaa',)",
+    "('Ab',)",
+    "('  lead',)",
+    "('trail  ',)",
+    "('  both ends  ',)",
+    "('Hello, World!',)",
+    "('a,b,,c',)",
+    "(' , ',)",
+    "('x.y.z',)",
+    "('...',)",
+    "('end.',)",
+    "('.start',)",
+    "('snake_case_name',)",
+    "('camelCaseName',)",
+    "('kebab-case-name',)",
+    "('--dash--',)",
+    "('MiXeD cAsE',)",
+    "('UPPER',)",
+    "('Title Case Words',)",
+    "('12abc34',)",
+    "('007',)",
+    "('a b  c',)",
+    "('one  two   three',)",
+    "('key = value',)",
+    "('name: Ada',)",
+    "('a:b:c',)",
+    "('report.final.pdf',)",
+    "('README',)",
+    "('archive.',)",
+    "('path/to/file.txt',)",
+    "('tab\\there',)",
+    "('line1\\nline2',)",
+    "('[tag] rest',)",
+    "('a|b| c |',)",
+    "('x; y;;z',)",
+    "('!?;:',)",
+    "('Mississippi',)"
+   ],
+   "probe_expected": [
+    "''",
+    "' '",
+    "'A'",
+    "'AAA'",
+    "'Ab'",
+    "'  lEAd'",
+    "'trAIl  '",
+    "'  bOth Ends  '",
+    "'HEllO, WOrld!'",
+    "'A,b,,c'",
+    "' , '",
+    "'x.y.z'",
+    "'...'",
+    "'End.'",
+    "'.stArt'",
+    "'snAkE_cAsE_nAmE'",
+    "'cAmElCAsENAmE'",
+    "'kEbAb-cAsE-nAmE'",
+    "'--dAsh--'",
+    "'MIXED cAsE'",
+    "'UPPER'",
+    "'TItlE CAsE WOrds'",
+    "'12Abc34'",
+    "'007'",
+    "'A b  c'",
+    "'OnE  twO   thrEE'",
+    "'kEy = vAlUE'",
+    "'nAmE: AdA'",
+    "'A:b:c'",
+    "'rEpOrt.fInAl.pdf'",
+    "'README'",
+    "'ArchIvE.'",
+    "'pAth/tO/fIlE.txt'",
+    "'tAb\\thErE'",
+    "'lInE1\\nlInE2'",
+    "'[tAg] rEst'",
+    "'A|b| c |'",
+    "'x; y;;z'",
+    "'!?;:'",
+    "'MIssIssIppI'"
+   ]
+  },
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "kebab_to_title",
+   "params": "name",
+   "neighbour": "capitalized_words_with_dashes",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `kebab_to_title(name)` that returns the dash-separated words of name, each capitalized, joined with spaces."
+   },
+   "tests": "assert kebab_to_title('') == ''\nassert kebab_to_title(' ') == ' '\nassert kebab_to_title('a') == 'A'\nassert kebab_to_title('x; y;;z') == 'X; y;;z'\nassert kebab_to_title('--dash--') == 'Dash'\nassert kebab_to_title('archive.') == 'Archive.'\nassert kebab_to_title('report.final.pdf') == 'Report.final.pdf'\nassert kebab_to_title('path/to/file.txt') == 'Path/to/file.txt'\nassert kebab_to_title(' , ') == ' , '",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     " "
+    ],
+    [
+     "a"
+    ],
+    [
+     "x; y;;z"
+    ],
+    [
+     "--dash--"
+    ],
+    [
+     "archive."
+    ],
+    [
+     "report.final.pdf"
+    ],
+    [
+     "path/to/file.txt"
+    ],
+    [
+     " , "
+    ]
+   ],
+   "reference": "def kebab_to_title(name):\n    return ' '.join(word.capitalize() for word in name.split('-') if word)",
+   "wrong": "def kebab_to_title(text):\n    return '-'.join(word.capitalize() for word in text.split())",
+   "expected": [
+    "''",
+    "' '",
+    "'A'",
+    "'X; y;;z'",
+    "'Dash'",
+    "'Archive.'",
+    "'Report.final.pdf'",
+    "'Path/to/file.txt'",
+    "' , '"
+   ],
+   "wrong_outputs": [
+    "''",
+    "''",
+    "'A'",
+    "'X;-Y;;z'",
+    "'--dash--'",
+    "'Archive.'",
+    "'Report.final.pdf'",
+    "'Path/to/file.txt'",
+    "','"
+   ],
+   "probe_args": [
+    "('',)",
+    "(' ',)",
+    "('a',)",
+    "('aaa',)",
+    "('Ab',)",
+    "('  lead',)",
+    "('trail  ',)",
+    "('  both ends  ',)",
+    "('Hello, World!',)",
+    "('a,b,,c',)",
+    "(' , ',)",
+    "('x.y.z',)",
+    "('...',)",
+    "('end.',)",
+    "('.start',)",
+    "('snake_case_name',)",
+    "('camelCaseName',)",
+    "('kebab-case-name',)",
+    "('--dash--',)",
+    "('MiXeD cAsE',)",
+    "('UPPER',)",
+    "('Title Case Words',)",
+    "('12abc34',)",
+    "('007',)",
+    "('a b  c',)",
+    "('one  two   three',)",
+    "('key = value',)",
+    "('name: Ada',)",
+    "('a:b:c',)",
+    "('report.final.pdf',)",
+    "('README',)",
+    "('archive.',)",
+    "('path/to/file.txt',)",
+    "('tab\\there',)",
+    "('line1\\nline2',)",
+    "('[tag] rest',)",
+    "('a|b| c |',)",
+    "('x; y;;z',)",
+    "('!?;:',)",
+    "('Mississippi',)"
+   ],
+   "probe_expected": [
+    "''",
+    "' '",
+    "'A'",
+    "'Aaa'",
+    "'Ab'",
+    "'  lead'",
+    "'Trail  '",
+    "'  both ends  '",
+    "'Hello, world!'",
+    "'A,b,,c'",
+    "' , '",
+    "'X.y.z'",
+    "'...'",
+    "'End.'",
+    "'.start'",
+    "'Snake_case_name'",
+    "'Camelcasename'",
+    "'Kebab Case Name'",
+    "'Dash'",
+    "'Mixed case'",
+    "'Upper'",
+    "'Title case words'",
+    "'12abc34'",
+    "'007'",
+    "'A b  c'",
+    "'One  two   three'",
+    "'Key = value'",
+    "'Name: ada'",
+    "'A:b:c'",
+    "'Report.final.pdf'",
+    "'Readme'",
+    "'Archive.'",
+    "'Path/to/file.txt'",
+    "'Tab\\there'",
+    "'Line1\\nline2'",
+    "'[tag] rest'",
+    "'A|b| c |'",
+    "'X; y;;z'",
+    "'!?;:'",
+    "'Mississippi'"
+   ]
+  },
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "swap_case_of_first",
+   "params": "text",
+   "neighbour": "lowercase_first_letter",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `swap_case_of_first(text)` that returns text with the case of its first character swapped."
+   },
+   "tests": "assert swap_case_of_first('') == ''\nassert swap_case_of_first(' ') == ' '\nassert swap_case_of_first('a') == 'A'\nassert swap_case_of_first('x; y;;z') == 'X; y;;z'\nassert swap_case_of_first('--dash--') == '--dash--'\nassert swap_case_of_first('archive.') == 'Archive.'\nassert swap_case_of_first('report.final.pdf') == 'Report.final.pdf'\nassert swap_case_of_first('path/to/file.txt') == 'Path/to/file.txt'\nassert swap_case_of_first('aaa') == 'Aaa'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     " "
+    ],
+    [
+     "a"
+    ],
+    [
+     "x; y;;z"
+    ],
+    [
+     "--dash--"
+    ],
+    [
+     "archive."
+    ],
+    [
+     "report.final.pdf"
+    ],
+    [
+     "path/to/file.txt"
+    ],
+    [
+     "aaa"
+    ]
+   ],
+   "reference": "def swap_case_of_first(text):\n    return text[:1].swapcase() + text[1:]",
+   "wrong": "def swap_case_of_first(text):\n    return text[:1].lower() + text[1:]",
+   "expected": [
+    "''",
+    "' '",
+    "'A'",
+    "'X; y;;z'",
+    "'--dash--'",
+    "'Archive.'",
+    "'Report.final.pdf'",
+    "'Path/to/file.txt'",
+    "'Aaa'"
+   ],
+   "wrong_outputs": [
+    "''",
+    "' '",
+    "'a'",
+    "'x; y;;z'",
+    "'--dash--'",
+    "'archive.'",
+    "'report.final.pdf'",
+    "'path/to/file.txt'",
+    "'aaa'"
+   ],
+   "probe_args": [
+    "('',)",
+    "(' ',)",
+    "('a',)",
+    "('aaa',)",
+    "('Ab',)",
+    "('  lead',)",
+    "('trail  ',)",
+    "('  both ends  ',)",
+    "('Hello, World!',)",
+    "('a,b,,c',)",
+    "(' , ',)",
+    "('x.y.z',)",
+    "('...',)",
+    "('end.',)",
+    "('.start',)",
+    "('snake_case_name',)",
+    "('camelCaseName',)",
+    "('kebab-case-name',)",
+    "('--dash--',)",
+    "('MiXeD cAsE',)",
+    "('UPPER',)",
+    "('Title Case Words',)",
+    "('12abc34',)",
+    "('007',)",
+    "('a b  c',)",
+    "('one  two   three',)",
+    "('key = value',)",
+    "('name: Ada',)",
+    "('a:b:c',)",
+    "('report.final.pdf',)",
+    "('README',)",
+    "('archive.',)",
+    "('path/to/file.txt',)",
+    "('tab\\there',)",
+    "('line1\\nline2',)",
+    "('[tag] rest',)",
+    "('a|b| c |',)",
+    "('x; y;;z',)",
+    "('!?;:',)",
+    "('Mississippi',)"
+   ],
+   "probe_expected": [
+    "''",
+    "' '",
+    "'A'",
+    "'Aaa'",
+    "'ab'",
+    "'  lead'",
+    "'Trail  '",
+    "'  both ends  '",
+    "'hello, World!'",
+    "'A,b,,c'",
+    "' , '",
+    "'X.y.z'",
+    "'...'",
+    "'End.'",
+    "'.start'",
+    "'Snake_case_name'",
+    "'CamelCaseName'",
+    "'Kebab-case-name'",
+    "'--dash--'",
+    "'miXeD cAsE'",
+    "'uPPER'",
+    "'title Case Words'",
+    "'12abc34'",
+    "'007'",
+    "'A b  c'",
+    "'One  two   three'",
+    "'Key = value'",
+    "'Name: Ada'",
+    "'A:b:c'",
+    "'Report.final.pdf'",
+    "'rEADME'",
+    "'Archive.'",
+    "'Path/to/file.txt'",
+    "'Tab\\there'",
+    "'Line1\\nline2'",
+    "'[tag] rest'",
+    "'A|b| c |'",
+    "'X; y;;z'",
+    "'!?;:'",
+    "'mississippi'"
+   ]
+  },
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "hashtag",
+   "params": "text",
+   "neighbour": "capitalized_words_with_dashes",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `hashtag(text)` that returns '#' followed by the words of text, each capitalized, with no spaces."
+   },
+   "tests": "assert hashtag('') == '#'\nassert hashtag(' ') == '#'\nassert hashtag('a') == '#A'\nassert hashtag('x; y;;z') == '#X;Y;;z'\nassert hashtag('--dash--') == '#--dash--'\nassert hashtag('archive.') == '#Archive.'\nassert hashtag('report.final.pdf') == '#Report.final.pdf'\nassert hashtag('path/to/file.txt') == '#Path/to/file.txt'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     " "
+    ],
+    [
+     "a"
+    ],
+    [
+     "x; y;;z"
+    ],
+    [
+     "--dash--"
+    ],
+    [
+     "archive."
+    ],
+    [
+     "report.final.pdf"
+    ],
+    [
+     "path/to/file.txt"
+    ]
+   ],
+   "reference": "def hashtag(text):\n    return '#' + ''.join(word.capitalize() for word in text.split())",
+   "wrong": "def hashtag(text):\n    return '-'.join(word.capitalize() for word in text.split())",
+   "expected": [
+    "'#'",
+    "'#'",
+    "'#A'",
+    "'#X;Y;;z'",
+    "'#--dash--'",
+    "'#Archive.'",
+    "'#Report.final.pdf'",
+    "'#Path/to/file.txt'"
+   ],
+   "wrong_outputs": [
+    "''",
+    "''",
+    "'A'",
+    "'X;-Y;;z'",
+    "'--dash--'",
+    "'Archive.'",
+    "'Report.final.pdf'",
+    "'Path/to/file.txt'"
+   ],
+   "probe_args": [
+    "('',)",
+    "(' ',)",
+    "('a',)",
+    "('aaa',)",
+    "('Ab',)",
+    "('  lead',)",
+    "('trail  ',)",
+    "('  both ends  ',)",
+    "('Hello, World!',)",
+    "('a,b,,c',)",
+    "(' , ',)",
+    "('x.y.z',)",
+    "('...',)",
+    "('end.',)",
+    "('.start',)",
+    "('snake_case_name',)",
+    "('camelCaseName',)",
+    "('kebab-case-name',)",
+    "('--dash--',)",
+    "('MiXeD cAsE',)",
+    "('UPPER',)",
+    "('Title Case Words',)",
+    "('12abc34',)",
+    "('007',)",
+    "('a b  c',)",
+    "('one  two   three',)",
+    "('key = value',)",
+    "('name: Ada',)",
+    "('a:b:c',)",
+    "('report.final.pdf',)",
+    "('README',)",
+    "('archive.',)",
+    "('path/to/file.txt',)",
+    "('tab\\there',)",
+    "('line1\\nline2',)",
+    "('[tag] rest',)",
+    "('a|b| c |',)",
+    "('x; y;;z',)",
+    "('!?;:',)",
+    "('Mississippi',)"
+   ],
+   "probe_expected": [
+    "'#'",
+    "'#'",
+    "'#A'",
+    "'#Aaa'",
+    "'#Ab'",
+    "'#Lead'",
+    "'#Trail'",
+    "'#BothEnds'",
+    "'#Hello,World!'",
+    "'#A,b,,c'",
+    "'#,'",
+    "'#X.y.z'",
+    "'#...'",
+    "'#End.'",
+    "'#.start'",
+    "'#Snake_case_name'",
+    "'#Camelcasename'",
+    "'#Kebab-case-name'",
+    "'#--dash--'",
+    "'#MixedCase'",
+    "'#Upper'",
+    "'#TitleCaseWords'",
+    "'#12abc34'",
+    "'#007'",
+    "'#ABC'",
+    "'#OneTwoThree'",
+    "'#Key=Value'",
+    "'#Name:Ada'",
+    "'#A:b:c'",
+    "'#Report.final.pdf'",
+    "'#Readme'",
+    "'#Archive.'",
+    "'#Path/to/file.txt'",
+    "'#TabHere'",
+    "'#Line1Line2'",
+    "'#[tag]Rest'",
+    "'#A|b|C|'",
+    "'#X;Y;;z'",
+    "'#!?;:'",
+    "'#Mississippi'"
+   ]
+  },
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "capitalized_words_with_underscores",
+   "params": "text",
+   "neighbour": "capitalized_words_with_dashes",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `capitalized_words_with_underscores(text)` that returns the words of text, each capitalized, joined with underscores."
+   },
+   "tests": "assert capitalized_words_with_underscores('') == ''\nassert capitalized_words_with_underscores(' ') == ''\nassert capitalized_words_with_underscores('a') == 'A'\nassert capitalized_words_with_underscores('x; y;;z') == 'X;_Y;;z'\nassert capitalized_words_with_underscores('--dash--') == '--dash--'\nassert capitalized_words_with_underscores('archive.') == 'Archive.'\nassert capitalized_words_with_underscores('report.final.pdf') == 'Report.final.pdf'\nassert capitalized_words_with_underscores('path/to/file.txt') == 'Path/to/file.txt'\nassert capitalized_words_with_underscores('a b  c') == 'A_B_C'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     " "
+    ],
+    [
+     "a"
+    ],
+    [
+     "x; y;;z"
+    ],
+    [
+     "--dash--"
+    ],
+    [
+     "archive."
+    ],
+    [
+     "report.final.pdf"
+    ],
+    [
+     "path/to/file.txt"
+    ],
+    [
+     "a b  c"
+    ]
+   ],
+   "reference": "def capitalized_words_with_underscores(text):\n    return '_'.join(word.capitalize() for word in text.split())",
+   "wrong": "def capitalized_words_with_underscores(text):\n    return '-'.join(word.capitalize() for word in text.split())",
+   "expected": [
+    "''",
+    "''",
+    "'A'",
+    "'X;_Y;;z'",
+    "'--dash--'",
+    "'Archive.'",
+    "'Report.final.pdf'",
+    "'Path/to/file.txt'",
+    "'A_B_C'"
+   ],
+   "wrong_outputs": [
+    "''",
+    "''",
+    "'A'",
+    "'X;-Y;;z'",
+    "'--dash--'",
+    "'Archive.'",
+    "'Report.final.pdf'",
+    "'Path/to/file.txt'",
+    "'A-B-C'"
+   ],
+   "probe_args": [
+    "('',)",
+    "(' ',)",
+    "('a',)",
+    "('aaa',)",
+    "('Ab',)",
+    "('  lead',)",
+    "('trail  ',)",
+    "('  both ends  ',)",
+    "('Hello, World!',)",
+    "('a,b,,c',)",
+    "(' , ',)",
+    "('x.y.z',)",
+    "('...',)",
+    "('end.',)",
+    "('.start',)",
+    "('snake_case_name',)",
+    "('camelCaseName',)",
+    "('kebab-case-name',)",
+    "('--dash--',)",
+    "('MiXeD cAsE',)",
+    "('UPPER',)",
+    "('Title Case Words',)",
+    "('12abc34',)",
+    "('007',)",
+    "('a b  c',)",
+    "('one  two   three',)",
+    "('key = value',)",
+    "('name: Ada',)",
+    "('a:b:c',)",
+    "('report.final.pdf',)",
+    "('README',)",
+    "('archive.',)",
+    "('path/to/file.txt',)",
+    "('tab\\there',)",
+    "('line1\\nline2',)",
+    "('[tag] rest',)",
+    "('a|b| c |',)",
+    "('x; y;;z',)",
+    "('!?;:',)",
+    "('Mississippi',)"
+   ],
+   "probe_expected": [
+    "''",
+    "''",
+    "'A'",
+    "'Aaa'",
+    "'Ab'",
+    "'Lead'",
+    "'Trail'",
+    "'Both_Ends'",
+    "'Hello,_World!'",
+    "'A,b,,c'",
+    "','",
+    "'X.y.z'",
+    "'...'",
+    "'End.'",
+    "'.start'",
+    "'Snake_case_name'",
+    "'Camelcasename'",
+    "'Kebab-case-name'",
+    "'--dash--'",
+    "'Mixed_Case'",
+    "'Upper'",
+    "'Title_Case_Words'",
+    "'12abc34'",
+    "'007'",
+    "'A_B_C'",
+    "'One_Two_Three'",
+    "'Key_=_Value'",
+    "'Name:_Ada'",
+    "'A:b:c'",
+    "'Report.final.pdf'",
+    "'Readme'",
+    "'Archive.'",
+    "'Path/to/file.txt'",
+    "'Tab_Here'",
+    "'Line1_Line2'",
+    "'[tag]_Rest'",
+    "'A|b|_C_|'",
+    "'X;_Y;;z'",
+    "'!?;:'",
+    "'Mississippi'"
+   ]
+  },
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "first_letters_lower",
+   "params": "text",
+   "neighbour": "dotted_initials",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `first_letters_lower(text)` that returns the first letter of each word in text, in lowercase, joined together."
+   },
+   "tests": "assert first_letters_lower('') == ''\nassert first_letters_lower(' ') == ''\nassert first_letters_lower('a') == 'a'\nassert first_letters_lower('x; y;;z') == 'xy'\nassert first_letters_lower('--dash--') == '-'\nassert first_letters_lower('archive.') == 'a'\nassert first_letters_lower('report.final.pdf') == 'r'\nassert first_letters_lower('path/to/file.txt') == 'p'\nassert first_letters_lower('Ab') == 'a'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     " "
+    ],
+    [
+     "a"
+    ],
+    [
+     "x; y;;z"
+    ],
+    [
+     "--dash--"
+    ],
+    [
+     "archive."
+    ],
+    [
+     "report.final.pdf"
+    ],
+    [
+     "path/to/file.txt"
+    ],
+    [
+     "Ab"
+    ]
+   ],
+   "reference": "def first_letters_lower(text):\n    return ''.join(word[0].lower() for word in text.split())",
+   "wrong": "def first_letters_lower(name):\n    return ''.join(word[0].upper() + '.' for word in name.split())",
+   "expected": [
+    "''",
+    "''",
+    "'a'",
+    "'xy'",
+    "'-'",
+    "'a'",
+    "'r'",
+    "'p'",
+    "'a'"
+   ],
+   "wrong_outputs": [
+    "''",
+    "''",
+    "'A.'",
+    "'X.Y.'",
+    "'-.'",
+    "'A.'",
+    "'R.'",
+    "'P.'",
+    "'A.'"
+   ],
+   "probe_args": [
+    "('',)",
+    "(' ',)",
+    "('a',)",
+    "('aaa',)",
+    "('Ab',)",
+    "('  lead',)",
+    "('trail  ',)",
+    "('  both ends  ',)",
+    "('Hello, World!',)",
+    "('a,b,,c',)",
+    "(' , ',)",
+    "('x.y.z',)",
+    "('...',)",
+    "('end.',)",
+    "('.start',)",
+    "('snake_case_name',)",
+    "('camelCaseName',)",
+    "('kebab-case-name',)",
+    "('--dash--',)",
+    "('MiXeD cAsE',)",
+    "('UPPER',)",
+    "('Title Case Words',)",
+    "('12abc34',)",
+    "('007',)",
+    "('a b  c',)",
+    "('one  two   three',)",
+    "('key = value',)",
+    "('name: Ada',)",
+    "('a:b:c',)",
+    "('report.final.pdf',)",
+    "('README',)",
+    "('archive.',)",
+    "('path/to/file.txt',)",
+    "('tab\\there',)",
+    "('line1\\nline2',)",
+    "('[tag] rest',)",
+    "('a|b| c |',)",
+    "('x; y;;z',)",
+    "('!?;:',)",
+    "('Mississippi',)"
+   ],
+   "probe_expected": [
+    "''",
+    "''",
+    "'a'",
+    "'a'",
+    "'a'",
+    "'l'",
+    "'t'",
+    "'be'",
+    "'hw'",
+    "'a'",
+    "','",
+    "'x'",
+    "'.'",
+    "'e'",
+    "'.'",
+    "'s'",
+    "'c'",
+    "'k'",
+    "'-'",
+    "'mc'",
+    "'u'",
+    "'tcw'",
+    "'1'",
+    "'0'",
+    "'abc'",
+    "'ott'",
+    "'k=v'",
+    "'na'",
+    "'a'",
+    "'r'",
+    "'r'",
+    "'a'",
+    "'p'",
+    "'th'",
+    "'ll'",
+    "'[r'",
+    "'ac|'",
+    "'xy'",
+    "'!'",
+    "'m'"
+   ]
+  },
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "reverse_comma_parts",
+   "params": "text",
+   "neighbour": "split_on_commas",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `reverse_comma_parts(text)` that returns the comma-separated parts of text in reverse order, without surrounding spaces, joined with commas."
+   },
+   "tests": "assert reverse_comma_parts('') == ''\nassert reverse_comma_parts(' ') == ''\nassert reverse_comma_parts('a') == 'a'\nassert reverse_comma_parts('x; y;;z') == 'x; y;;z'\nassert reverse_comma_parts('--dash--') == '--dash--'\nassert reverse_comma_parts('archive.') == 'archive.'\nassert reverse_comma_parts('report.final.pdf') == 'report.final.pdf'\nassert reverse_comma_parts('path/to/file.txt') == 'path/to/file.txt'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     " "
+    ],
+    [
+     "a"
+    ],
+    [
+     "x; y;;z"
+    ],
+    [
+     "--dash--"
+    ],
+    [
+     "archive."
+    ],
+    [
+     "report.final.pdf"
+    ],
+    [
+     "path/to/file.txt"
+    ]
+   ],
+   "reference": "def reverse_comma_parts(text):\n    return ','.join(part.strip() for part in text.split(',')[::-1])",
+   "wrong": "def reverse_comma_parts(text):\n    return [part.strip() for part in text.split(',') if part.strip()]",
+   "expected": [
+    "''",
+    "''",
+    "'a'",
+    "'x; y;;z'",
+    "'--dash--'",
+    "'archive.'",
+    "'report.final.pdf'",
+    "'path/to/file.txt'"
+   ],
+   "wrong_outputs": [
+    "[]",
+    "[]",
+    "['a']",
+    "['x; y;;z']",
+    "['--dash--']",
+    "['archive.']",
+    "['report.final.pdf']",
+    "['path/to/file.txt']"
+   ],
+   "probe_args": [
+    "('',)",
+    "(' ',)",
+    "('a',)",
+    "('aaa',)",
+    "('Ab',)",
+    "('  lead',)",
+    "('trail  ',)",
+    "('  both ends  ',)",
+    "('Hello, World!',)",
+    "('a,b,,c',)",
+    "(' , ',)",
+    "('x.y.z',)",
+    "('...',)",
+    "('end.',)",
+    "('.start',)",
+    "('snake_case_name',)",
+    "('camelCaseName',)",
+    "('kebab-case-name',)",
+    "('--dash--',)",
+    "('MiXeD cAsE',)",
+    "('UPPER',)",
+    "('Title Case Words',)",
+    "('12abc34',)",
+    "('007',)",
+    "('a b  c',)",
+    "('one  two   three',)",
+    "('key = value',)",
+    "('name: Ada',)",
+    "('a:b:c',)",
+    "('report.final.pdf',)",
+    "('README',)",
+    "('archive.',)",
+    "('path/to/file.txt',)",
+    "('tab\\there',)",
+    "('line1\\nline2',)",
+    "('[tag] rest',)",
+    "('a|b| c |',)",
+    "('x; y;;z',)",
+    "('!?;:',)",
+    "('Mississippi',)"
+   ],
+   "probe_expected": [
+    "''",
+    "''",
+    "'a'",
+    "'aaa'",
+    "'Ab'",
+    "'lead'",
+    "'trail'",
+    "'both ends'",
+    "'World!,Hello'",
+    "'c,,b,a'",
+    "','",
+    "'x.y.z'",
+    "'...'",
+    "'end.'",
+    "'.start'",
+    "'snake_case_name'",
+    "'camelCaseName'",
+    "'kebab-case-name'",
+    "'--dash--'",
+    "'MiXeD cAsE'",
+    "'UPPER'",
+    "'Title Case Words'",
+    "'12abc34'",
+    "'007'",
+    "'a b  c'",
+    "'one  two   three'",
+    "'key = value'",
+    "'name: Ada'",
+    "'a:b:c'",
+    "'report.final.pdf'",
+    "'README'",
+    "'archive.'",
+    "'path/to/file.txt'",
+    "'tab\\there'",
+    "'line1\\nline2'",
+    "'[tag] rest'",
+    "'a|b| c |'",
+    "'x; y;;z'",
+    "'!?;:'",
+    "'Mississippi'"
+   ]
+  },
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "text_after_last_colon",
+   "params": "text",
+   "neighbour": "text_after_colon",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `text_after_last_colon(text)` that returns the text after the last colon in text with surrounding spaces removed, or an empty string if there is no colon."
+   },
+   "tests": "assert text_after_last_colon('') == ''\nassert text_after_last_colon(' ') == ''\nassert text_after_last_colon('a') == ''\nassert text_after_last_colon('x; y;;z') == ''\nassert text_after_last_colon('--dash--') == ''\nassert text_after_last_colon('archive.') == ''\nassert text_after_last_colon('report.final.pdf') == ''\nassert text_after_last_colon('path/to/file.txt') == ''\nassert text_after_last_colon('a:b:c') == 'c'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     " "
+    ],
+    [
+     "a"
+    ],
+    [
+     "x; y;;z"
+    ],
+    [
+     "--dash--"
+    ],
+    [
+     "archive."
+    ],
+    [
+     "report.final.pdf"
+    ],
+    [
+     "path/to/file.txt"
+    ],
+    [
+     "a:b:c"
+    ]
+   ],
+   "reference": "def text_after_last_colon(text):\n    return text.rsplit(':', 1)[1].strip() if ':' in text else ''",
+   "wrong": "def text_after_last_colon(text):\n    return text.split(':', 1)[1].strip() if ':' in text else ''",
+   "expected": [
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "'c'"
+   ],
+   "wrong_outputs": [
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "'b:c'"
+   ],
+   "probe_args": [
+    "('',)",
+    "(' ',)",
+    "('a',)",
+    "('aaa',)",
+    "('Ab',)",
+    "('  lead',)",
+    "('trail  ',)",
+    "('  both ends  ',)",
+    "('Hello, World!',)",
+    "('a,b,,c',)",
+    "(' , ',)",
+    "('x.y.z',)",
+    "('...',)",
+    "('end.',)",
+    "('.start',)",
+    "('snake_case_name',)",
+    "('camelCaseName',)",
+    "('kebab-case-name',)",
+    "('--dash--',)",
+    "('MiXeD cAsE',)",
+    "('UPPER',)",
+    "('Title Case Words',)",
+    "('12abc34',)",
+    "('007',)",
+    "('a b  c',)",
+    "('one  two   three',)",
+    "('key = value',)",
+    "('name: Ada',)",
+    "('a:b:c',)",
+    "('report.final.pdf',)",
+    "('README',)",
+    "('archive.',)",
+    "('path/to/file.txt',)",
+    "('tab\\there',)",
+    "('line1\\nline2',)",
+    "('[tag] rest',)",
+    "('a|b| c |',)",
+    "('x; y;;z',)",
+    "('!?;:',)",
+    "('Mississippi',)"
+   ],
+   "probe_expected": [
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "'Ada'",
+    "'c'",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''",
+    "''"
+   ]
+  },
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "file_stem_first",
+   "params": "filename",
+   "neighbour": "file_stem",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `file_stem_first(filename)` that returns the part of filename before its first dot, or filename itself if it has no dot."
+   },
+   "tests": "assert file_stem_first('') == ''\nassert file_stem_first(' ') == ' '\nassert file_stem_first('a') == 'a'\nassert file_stem_first('x; y;;z') == 'x; y;;z'\nassert file_stem_first('--dash--') == '--dash--'\nassert file_stem_first('archive.') == 'archive'\nassert file_stem_first('report.final.pdf') == 'report'\nassert file_stem_first('path/to/file.txt') == 'path/to/file'\nassert file_stem_first('...') == ''\nassert file_stem_first('x.y.z') == 'x'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     " "
+    ],
+    [
+     "a"
+    ],
+    [
+     "x; y;;z"
+    ],
+    [
+     "--dash--"
+    ],
+    [
+     "archive."
+    ],
+    [
+     "report.final.pdf"
+    ],
+    [
+     "path/to/file.txt"
+    ],
+    [
+     "..."
+    ],
+    [
+     "x.y.z"
+    ]
+   ],
+   "reference": "def file_stem_first(filename):\n    return filename.split('.', 1)[0]",
+   "wrong": "def file_stem_first(filename):\n    return filename.rsplit('.', 1)[0]",
+   "expected": [
+    "''",
+    "' '",
+    "'a'",
+    "'x; y;;z'",
+    "'--dash--'",
+    "'archive'",
+    "'report'",
+    "'path/to/file'",
+    "''",
+    "'x'"
+   ],
+   "wrong_outputs": [
+    "''",
+    "' '",
+    "'a'",
+    "'x; y;;z'",
+    "'--dash--'",
+    "'archive'",
+    "'report.final'",
+    "'path/to/file'",
+    "'..'",
+    "'x.y'"
+   ],
+   "probe_args": [
+    "('',)",
+    "(' ',)",
+    "('a',)",
+    "('aaa',)",
+    "('Ab',)",
+    "('  lead',)",
+    "('trail  ',)",
+    "('  both ends  ',)",
+    "('Hello, World!',)",
+    "('a,b,,c',)",
+    "(' , ',)",
+    "('x.y.z',)",
+    "('...',)",
+    "('end.',)",
+    "('.start',)",
+    "('snake_case_name',)",
+    "('camelCaseName',)",
+    "('kebab-case-name',)",
+    "('--dash--',)",
+    "('MiXeD cAsE',)",
+    "('UPPER',)",
+    "('Title Case Words',)",
+    "('12abc34',)",
+    "('007',)",
+    "('a b  c',)",
+    "('one  two   three',)",
+    "('key = value',)",
+    "('name: Ada',)",
+    "('a:b:c',)",
+    "('report.final.pdf',)",
+    "('README',)",
+    "('archive.',)",
+    "('path/to/file.txt',)",
+    "('tab\\there',)",
+    "('line1\\nline2',)",
+    "('[tag] rest',)",
+    "('a|b| c |',)",
+    "('x; y;;z',)",
+    "('!?;:',)",
+    "('Mississippi',)"
+   ],
+   "probe_expected": [
+    "''",
+    "' '",
+    "'a'",
+    "'aaa'",
+    "'Ab'",
+    "'  lead'",
+    "'trail  '",
+    "'  both ends  '",
+    "'Hello, World!'",
+    "'a,b,,c'",
+    "' , '",
+    "'x'",
+    "''",
+    "'end'",
+    "''",
+    "'snake_case_name'",
+    "'camelCaseName'",
+    "'kebab-case-name'",
+    "'--dash--'",
+    "'MiXeD cAsE'",
+    "'UPPER'",
+    "'Title Case Words'",
+    "'12abc34'",
+    "'007'",
+    "'a b  c'",
+    "'one  two   three'",
+    "'key = value'",
+    "'name: Ada'",
+    "'a:b:c'",
+    "'report'",
+    "'README'",
+    "'archive'",
+    "'path/to/file'",
+    "'tab\\there'",
+    "'line1\\nline2'",
+    "'[tag] rest'",
+    "'a|b| c |'",
+    "'x; y;;z'",
+    "'!?;:'",
+    "'Mississippi'"
+   ]
+  },
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "lowercase_last_two",
+   "params": "text",
+   "neighbour": "lowercase_last_letter",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `lowercase_last_two(text)` that returns text with its last two characters in lowercase."
+   },
+   "tests": "assert lowercase_last_two('') == ''\nassert lowercase_last_two(' ') == ' '\nassert lowercase_last_two('a') == 'a'\nassert lowercase_last_two('x; y;;z') == 'x; y;;z'\nassert lowercase_last_two('--dash--') == '--dash--'\nassert lowercase_last_two('archive.') == 'archive.'\nassert lowercase_last_two('report.final.pdf') == 'report.final.pdf'\nassert lowercase_last_two('path/to/file.txt') == 'path/to/file.txt'\nassert lowercase_last_two('Ab') == 'ab'\nassert lowercase_last_two('UPPER') == 'UPPer'",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     " "
+    ],
+    [
+     "a"
+    ],
+    [
+     "x; y;;z"
+    ],
+    [
+     "--dash--"
+    ],
+    [
+     "archive."
+    ],
+    [
+     "report.final.pdf"
+    ],
+    [
+     "path/to/file.txt"
+    ],
+    [
+     "Ab"
+    ],
+    [
+     "UPPER"
+    ]
+   ],
+   "reference": "def lowercase_last_two(text):\n    return text[:-2] + text[-2:].lower()",
+   "wrong": "def lowercase_last_two(text):\n    return text[:-1] + text[-1:].lower()",
+   "expected": [
+    "''",
+    "' '",
+    "'a'",
+    "'x; y;;z'",
+    "'--dash--'",
+    "'archive.'",
+    "'report.final.pdf'",
+    "'path/to/file.txt'",
+    "'ab'",
+    "'UPPer'"
+   ],
+   "wrong_outputs": [
+    "''",
+    "' '",
+    "'a'",
+    "'x; y;;z'",
+    "'--dash--'",
+    "'archive.'",
+    "'report.final.pdf'",
+    "'path/to/file.txt'",
+    "'Ab'",
+    "'UPPEr'"
+   ],
+   "probe_args": [
+    "('',)",
+    "(' ',)",
+    "('a',)",
+    "('aaa',)",
+    "('Ab',)",
+    "('  lead',)",
+    "('trail  ',)",
+    "('  both ends  ',)",
+    "('Hello, World!',)",
+    "('a,b,,c',)",
+    "(' , ',)",
+    "('x.y.z',)",
+    "('...',)",
+    "('end.',)",
+    "('.start',)",
+    "('snake_case_name',)",
+    "('camelCaseName',)",
+    "('kebab-case-name',)",
+    "('--dash--',)",
+    "('MiXeD cAsE',)",
+    "('UPPER',)",
+    "('Title Case Words',)",
+    "('12abc34',)",
+    "('007',)",
+    "('a b  c',)",
+    "('one  two   three',)",
+    "('key = value',)",
+    "('name: Ada',)",
+    "('a:b:c',)",
+    "('report.final.pdf',)",
+    "('README',)",
+    "('archive.',)",
+    "('path/to/file.txt',)",
+    "('tab\\there',)",
+    "('line1\\nline2',)",
+    "('[tag] rest',)",
+    "('a|b| c |',)",
+    "('x; y;;z',)",
+    "('!?;:',)",
+    "('Mississippi',)"
+   ],
+   "probe_expected": [
+    "''",
+    "' '",
+    "'a'",
+    "'aaa'",
+    "'ab'",
+    "'  lead'",
+    "'trail  '",
+    "'  both ends  '",
+    "'Hello, World!'",
+    "'a,b,,c'",
+    "' , '",
+    "'x.y.z'",
+    "'...'",
+    "'end.'",
+    "'.start'",
+    "'snake_case_name'",
+    "'camelCaseName'",
+    "'kebab-case-name'",
+    "'--dash--'",
+    "'MiXeD cAse'",
+    "'UPPer'",
+    "'Title Case Words'",
+    "'12abc34'",
+    "'007'",
+    "'a b  c'",
+    "'one  two   three'",
+    "'key = value'",
+    "'name: Ada'",
+    "'a:b:c'",
+    "'report.final.pdf'",
+    "'READme'",
+    "'archive.'",
+    "'path/to/file.txt'",
+    "'tab\\there'",
+    "'line1\\nline2'",
+    "'[tag] rest'",
+    "'a|b| c |'",
+    "'x; y;;z'",
+    "'!?;:'",
+    "'Mississippi'"
+   ]
+  },
+  {
+   "group": "strings_heldout",
+   "family": "strings_heldout",
+   "name": "split_on_spaces_and_commas",
+   "params": "text",
+   "neighbour": "words_on_lines",
+   "same_as": null,
+   "prompts": {
+    "original": "Write a Python function `split_on_spaces_and_commas(text)` that returns the words of text, treating commas as spaces."
+   },
+   "tests": "assert split_on_spaces_and_commas('') == []\nassert split_on_spaces_and_commas(' ') == []\nassert split_on_spaces_and_commas('a') == ['a']\nassert split_on_spaces_and_commas('x; y;;z') == ['x;', 'y;;z']\nassert split_on_spaces_and_commas('--dash--') == ['--dash--']\nassert split_on_spaces_and_commas('archive.') == ['archive.']\nassert split_on_spaces_and_commas('report.final.pdf') == ['report.final.pdf']\nassert split_on_spaces_and_commas('path/to/file.txt') == ['path/to/file.txt']",
+   "test_inputs": [
+    [
+     ""
+    ],
+    [
+     " "
+    ],
+    [
+     "a"
+    ],
+    [
+     "x; y;;z"
+    ],
+    [
+     "--dash--"
+    ],
+    [
+     "archive."
+    ],
+    [
+     "report.final.pdf"
+    ],
+    [
+     "path/to/file.txt"
+    ]
+   ],
+   "reference": "def split_on_spaces_and_commas(text):\n    return text.replace(',', ' ').split()",
+   "wrong": "def split_on_spaces_and_commas(text):\n    return '\\n'.join(text.split())",
+   "expected": [
+    "[]",
+    "[]",
+    "['a']",
+    "['x;', 'y;;z']",
+    "['--dash--']",
+    "['archive.']",
+    "['report.final.pdf']",
+    "['path/to/file.txt']"
+   ],
+   "wrong_outputs": [
+    "''",
+    "''",
+    "'a'",
+    "'x;\\ny;;z'",
+    "'--dash--'",
+    "'archive.'",
+    "'report.final.pdf'",
+    "'path/to/file.txt'"
+   ],
+   "probe_args": [
+    "('',)",
+    "(' ',)",
+    "('a',)",
+    "('aaa',)",
+    "('Ab',)",
+    "('  lead',)",
+    "('trail  ',)",
+    "('  both ends  ',)",
+    "('Hello, World!',)",
+    "('a,b,,c',)",
+    "(' , ',)",
+    "('x.y.z',)",
+    "('...',)",
+    "('end.',)",
+    "('.start',)",
+    "('snake_case_name',)",
+    "('camelCaseName',)",
+    "('kebab-case-name',)",
+    "('--dash--',)",
+    "('MiXeD cAsE',)",
+    "('UPPER',)",
+    "('Title Case Words',)",
+    "('12abc34',)",
+    "('007',)",
+    "('a b  c',)",
+    "('one  two   three',)",
+    "('key = value',)",
+    "('name: Ada',)",
+    "('a:b:c',)",
+    "('report.final.pdf',)",
+    "('README',)",
+    "('archive.',)",
+    "('path/to/file.txt',)",
+    "('tab\\there',)",
+    "('line1\\nline2',)",
+    "('[tag] rest',)",
+    "('a|b| c |',)",
+    "('x; y;;z',)",
+    "('!?;:',)",
+    "('Mississippi',)"
+   ],
+   "probe_expected": [
+    "[]",
+    "[]",
+    "['a']",
+    "['aaa']",
+    "['Ab']",
+    "['lead']",
+    "['trail']",
+    "['both', 'ends']",
+    "['Hello', 'World!']",
+    "['a', 'b', 'c']",
+    "[]",
+    "['x.y.z']",
+    "['...']",
+    "['end.']",
+    "['.start']",
+    "['snake_case_name']",
+    "['camelCaseName']",
+    "['kebab-case-name']",
+    "['--dash--']",
+    "['MiXeD', 'cAsE']",
+    "['UPPER']",
+    "['Title', 'Case', 'Words']",
+    "['12abc34']",
+    "['007']",
+    "['a', 'b', 'c']",
+    "['one', 'two', 'three']",
+    "['key', '=', 'value']",
+    "['name:', 'Ada']",
+    "['a:b:c']",
+    "['report.final.pdf']",
+    "['README']",
+    "['archive.']",
+    "['path/to/file.txt']",
+    "['tab', 'here']",
+    "['line1', 'line2']",
+    "['[tag]', 'rest']",
+    "['a|b|', 'c', '|']",
+    "['x;', 'y;;z']",
+    "['!?;:']",
+    "['Mississippi']"
+   ]
+  }
+ ]
+}
