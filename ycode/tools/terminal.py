@@ -15,6 +15,7 @@ from ycode.errors import PermissionDenied, ToolError
 from ycode.tools.base import Tool, ToolContext, ToolResult, truncate_middle
 
 MAX_TIMEOUT = 1800
+DRAIN_SECONDS = 5  # reading what is left after a timeout or Ctrl+C
 
 # Never hand credentials to child processes: the model sees their output.
 _SECRET_ENV_VARS = ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "YCODE_API_KEY")
@@ -54,6 +55,19 @@ def _kill(proc: subprocess.Popen) -> None:
         pass
 
 
+def _drain(proc: subprocess.Popen) -> tuple[bytes, bytes]:
+    """Output left after the process group was killed. A process that left the group (setsid, a daemon)
+    can hold the pipes open for ever, so stop reading after DRAIN_SECONDS and keep what was read."""
+    try:
+        return proc.communicate(timeout=DRAIN_SECONDS)
+    except subprocess.TimeoutExpired as exc:
+        for pipe in (proc.stdout, proc.stderr):
+            if pipe:
+                pipe.close()
+        proc.wait()  # the shell itself was in the killed group
+        return exc.output or b"", exc.stderr or b""
+
+
 def execute(command: str, cwd: Path, timeout: int) -> CommandOutput:
     """Run ``command`` through the shell. Ctrl+C kills the child and re-raises."""
     start = time.monotonic()
@@ -76,11 +90,11 @@ def execute(command: str, cwd: Path, timeout: int) -> CommandOutput:
         timed_out = False
     except subprocess.TimeoutExpired:
         _kill(proc)
-        out, err = proc.communicate()
+        out, err = _drain(proc)
         timed_out = True
     except KeyboardInterrupt:
         _kill(proc)
-        proc.communicate()
+        _drain(proc)
         raise
     return CommandOutput(
         command=command,

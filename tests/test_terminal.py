@@ -1,6 +1,11 @@
+import os
+import signal
 import sys
+import time
 
-from ycode.tools import ToolRegistry, default_tools
+import pytest
+
+from ycode.tools import ToolRegistry, default_tools, terminal
 from ycode.tools.terminal import RunCommandTool, execute
 
 PY = sys.executable
@@ -24,6 +29,21 @@ def test_execute_runs_in_workspace(workspace):
 def test_execute_timeout(workspace):
     out = execute(f'{PY} -c "import time; time.sleep(10)"', workspace, timeout=1)
     assert out.timed_out and out.exit_code is None
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX process groups")
+def test_execute_timeout_with_a_process_that_left_the_group(workspace, monkeypatch):
+    # the escaped process keeps stdout open: after the timeout, execute used to wait until it exited (for a
+    # server started with setsid, for ever)
+    monkeypatch.setattr(terminal, "DRAIN_SECONDS", 1)
+    escaped = f'{PY} -c "import os, time; os.setsid(); open(\'pid\', \'w\').write(str(os.getpid())); time.sleep(60)"'
+    start = time.monotonic()
+    out = execute(f"echo started; {escaped} &", workspace, timeout=2)
+    try:
+        assert time.monotonic() - start < 10
+        assert out.timed_out and out.exit_code is None and out.stdout == "started\n"
+    finally:
+        os.kill(int((workspace / "pid").read_text()), signal.SIGKILL)
 
 
 def test_api_key_not_passed_to_children(workspace, monkeypatch):
