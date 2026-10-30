@@ -673,14 +673,14 @@ _TEXT_MUTATIONS = (
 )
 
 
-def _text_bugs(fixed: str) -> list[tuple[str, str, str]]:
+def _text_bugs(fixed: str, mutations=_TEXT_MUTATIONS) -> list[tuple[str, str, str]]:
     """(buggy_source, buggy_line, fixed_line) for each single-line text mutation that applies."""
     lines = fixed.splitlines(keepends=True)
     bugs = []
     for i, line in enumerate(lines):
         if line.lstrip().startswith(("def ", '"""')):
             continue
-        for old, new in _TEXT_MUTATIONS:
+        for old, new in mutations:
             if old in line:
                 mutated = line.replace(old, new, 1)
                 buggy = "".join(lines[:i] + [mutated] + lines[i + 1:])
@@ -688,13 +688,14 @@ def _text_bugs(fixed: str) -> list[tuple[str, str, str]]:
     return bugs
 
 
-def bugfix_examples(rng: random.Random, per_concept: int = 5, concepts=None) -> list[InstructionExample]:
+def bugfix_examples(rng: random.Random, per_concept: int = 5, concepts=None,
+                    mutations=_TEXT_MUTATIONS) -> list[InstructionExample]:
     out = []
     for c in training_concepts() if concepts is None else concepts:
         names = (c.name, *c.aliases)
         made = set()
         name = names[0]
-        candidates = _text_bugs(_with_doc(c, name, c.body))
+        candidates = _text_bugs(_with_doc(c, name, c.body), mutations)
         rng.shuffle(candidates)
         for attempt in range(per_concept * 6):
             if len(made) >= per_concept:
