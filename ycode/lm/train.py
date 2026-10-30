@@ -439,6 +439,14 @@ class SFTData:
         # training rows consumed: file row index -> [tokens, answer tokens] actually trained (a packed row
         # cuts its last example short, so partly seen examples count partly)
         self.consumed: dict[int, list[int]] = {}
+        # the source group of every file row ("legacy", "replay", "strings", ...: the part of its sft_tags.json
+        # tag before ":"), so a training batch can say where each target token came from (loss by source)
+        tags_path = data_dir / "sft_tags.json"
+        tags = json.loads(tags_path.read_text()) if tags_path.is_file() else None
+        self.source_names = sorted({t.split(":", 1)[0] for t in tags}) if tags else []
+        self._source_of_row = (np.array([self.source_names.index(t.split(":", 1)[0]) for t in tags], dtype=np.int64)
+                               if tags else None)
+        self.last_sources: torch.Tensor | None = None  # per target token of the last training batch: source id
 
     def state_dict(self) -> dict:
         return {"epoch": self.epoch, "cursor": self.cursor}
@@ -479,38 +487,66 @@ class SFTData:
         seen[1] += int((mask[1:used] > 0).sum())  # targets are shifted by one: token 0 is never a target
 
     def _row(self, split: str, gen: torch.Generator, ordered: bool):
+        """(tokens, mask, source id per token) of one row; the source ids only for tagged training rows."""
         need = self.block_size + 1
         count = ordered and split == "train"
+        track = count and self._source_of_row is not None
         if not self.pack:
             t, m = self._example(split, gen, ordered)
             if count:
                 self._count(self._last, m, min(len(t), need))
-            return t[:need], m[:need]
-        toks, masks, size = [], [], 0
+            src = np.full(len(t), self._source_of_row[self._last]) if track else None
+            return t[:need], m[:need], src[:need] if track else None
+        toks, masks, srcs, size = [], [], [], 0
         while size < need:
             t, m = self._example(split, gen, ordered)
             if count:
                 self._count(self._last, m, min(len(t), need - size))
+            if track:
+                srcs.append(np.full(len(t), self._source_of_row[self._last]))
             toks.append(t)
             masks.append(m)
             size += len(t)
-        return np.concatenate(toks)[:need], np.concatenate(masks)[:need]
+        return (np.concatenate(toks)[:need], np.concatenate(masks)[:need],
+                np.concatenate(srcs)[:need] if track else None)
 
     def batch(self, split: str, gen: torch.Generator, mix: float = 0.0, ordered: bool = False):
         seqs = [self._row(split, gen, ordered) for _ in range(self.batch_size)]
-        width = max(len(t) for t, _ in seqs) - 1
+        width = max(len(t) for t, _, _ in seqs) - 1
         x = torch.full((len(seqs), width), self.pad_id, dtype=torch.long)
         y = torch.full((len(seqs), width), self.pad_id, dtype=torch.long)
         m = torch.zeros((len(seqs), width), dtype=torch.long)
-        for row, (t, mk) in enumerate(seqs):
+        tracked = all(src is not None for _, _, src in seqs)
+        sources = torch.zeros((len(seqs), width), dtype=torch.long) if tracked else None
+        for row, (t, mk, src) in enumerate(seqs):
             n = len(t) - 1
             x[row, :n] = torch.from_numpy(t[:-1])
             y[row, :n] = torch.from_numpy(t[1:])
             m[row, :n] = torch.from_numpy(mk[1:])
+            if tracked:
+                sources[row, :n] = torch.from_numpy(src[1:])  # the source of each target token
+        self.last_sources = sources
         return x.to(self.device), y.to(self.device), m.to(self.device)
 
 
 # --------------------------------------------------------------- training
+
+
+@torch.no_grad()
+def _add_loss_by_source(acc: dict, logits: torch.Tensor, y: torch.Tensor, m: torch.Tensor,
+                        sources: torch.Tensor) -> None:
+    """Add each source's answer-token loss sum and weight in this batch to ``acc`` (source id -> [loss sum,
+    weight]), weighted like the training loss (sum(loss * mask) / sum(mask)). The model's logits are reused, so
+    this costs one cross-entropy over the batch and changes nothing that is trained."""
+    losses = torch.nn.functional.cross_entropy(logits.detach().float().view(-1, logits.size(-1)), y.reshape(-1),
+                                               reduction="none")
+    w = m.reshape(-1).float()
+    src = sources.reshape(-1).to(losses.device)
+    for g in torch.unique(src[w > 0]).tolist():
+        sel = (src == g) & (w > 0)
+        total = acc.setdefault(int(g), [0.0, 0.0])
+        total[0] += float((losses[sel] * w[sel]).sum())
+        total[1] += float(w[sel].sum())
 
 
 def lr_at(step: int, cfg: TrainConfig, progress: float | None = None) -> float:
@@ -886,6 +922,7 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
             log(f"Decay phase: annealing with {mix:.0%} instruction data.")
             annealing_logged = True
         loss_total = 0.0
+        by_source: dict[int, list[float]] = {}  # V13: answer-token loss by data source, to watch forgetting per step
         loss_scale = scaler.scale if scaler else 1.0
         for micro in range(cfg.grad_accum):
             x, y, m = data.batch("train", gen, mix=mix, ordered=True)
@@ -899,7 +936,10 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
                 empty_batches += 1
             with sync:
                 with autocast:
-                    _, loss = train_model(x, y, loss_mask=m)
+                    logits, loss = train_model(x, y, loss_mask=m)
+                if getattr(data, "last_sources", None) is not None and m is not None:
+                    _add_loss_by_source(by_source, logits, y, m, data.last_sources)
+                del logits
                 if not torch.isfinite(loss.detach()):
                     # Before backward: Lion would apply the update during backward itself.
                     raise FloatingPointError(f"non-finite loss ({loss.item()}) at step {step + 1}; "
@@ -933,11 +973,17 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
 
         elapsed = time.time() - t0
         if main:
-            metrics.write(json.dumps({"step": step, "loss": round(loss_total, 6), "lr": lr,
-                                      "grad_norm": None if grad_norm is None else round(grad_norm, 6),
-                                      "tokens": tokens_seen, "answer_tokens": answer_tokens,
-                                      "elapsed_s": round(elapsed, 1),
-                                      "tok_per_s": round(tokens_seen / max(elapsed, 1e-9), 1)}) + "\n")
+            row = {"step": step, "loss": round(loss_total, 6), "lr": lr,
+                   "grad_norm": None if grad_norm is None else round(grad_norm, 6),
+                   "tokens": tokens_seen, "answer_tokens": answer_tokens,
+                   "elapsed_s": round(elapsed, 1),
+                   "tok_per_s": round(tokens_seen / max(elapsed, 1e-9), 1)}
+            if by_source:
+                row["loss_by_source"] = {data.source_names[g]: round(total / weight, 6)
+                                         for g, (total, weight) in sorted(by_source.items())}
+                row["answer_weight_by_source"] = {data.source_names[g]: int(weight)
+                                                  for g, (_, weight) in sorted(by_source.items())}
+            metrics.write(json.dumps(row) + "\n")
             metrics.flush()
         if step % cfg.log_interval == 0:
             log(f"step {step:>6} | loss {loss_total:.3f} | lr {lr:.2e} | "
