@@ -141,13 +141,18 @@ def _metrics_tail(path: Path, n: int = 10) -> dict:
             "answer_tokens": rows[-1]["answer_tokens"]}
 
 
+def _final_only(train: dict) -> bool:
+    """Whether a run's only save is its final bf16 inference checkpoint, written without optimizer state."""
+    steps = train.get("steps") or 0
+    return bool(train.get("final_bf16") and (train.get("save_every") or max(1, steps // 2)) >= steps)
+
+
 def _checkpoint_gb(anchor: Path, train: dict) -> float:
     """Size of the checkpoint a run writes: the anchor's, or with compact checkpoints only its trained
     blocks and final norm in fp32 (the rest stays referenced), plus the optimizer state."""
     optim = (anchor / "optim.pt").stat().st_size if (anchor / "optim.pt").is_file() else 0
     model = sum(f.stat().st_size for f in anchor.glob("*.pt") if f.name != "optim.pt")
-    steps = train.get("steps") or 0
-    final_only = train.get("final_bf16") and (train.get("save_every") or max(1, steps // 2)) >= steps
+    final_only = _final_only(train)
     if train.get("compact") and train.get("train_layers"):
         import torch
 
@@ -167,6 +172,97 @@ def _disk_needed_gb(anchor: Path, train: dict) -> float:
     instead of 0.5, so it does not fail on a nearly full disk."""
     checkpoint = _checkpoint_gb(anchor, train)
     return min(DISK_NEEDED_GB, 1.02 * checkpoint + min(0.5, max(0.05, 0.5 * checkpoint)))
+
+
+def _weight_counts(anchor: Path, train: dict) -> tuple[int, int]:
+    """(every weight, the trained ones) of a run from ``anchor``: the top ``train_layers`` blocks and the final norm."""
+    import torch
+
+    payload = torch.load(anchor / "model.pt", map_location="cpu", weights_only=True, mmap=True)
+    state = payload["model"]
+    if payload.get("base"):  # a base-referenced checkpoint: the base holds the tensors it does not store
+        from ycode.lm.train import base_state
+
+        state = {**base_state(payload), **state}
+    n_layer = payload["config"]["n_layer"]
+    first = n_layer - (train.get("train_layers") or n_layer)
+    total = sum(v.numel() for v in state.values())
+    trained = sum(v.numel() for k, v in state.items()
+                  if k.startswith("norm.") or (k.startswith("blocks.") and int(k.split(".")[1]) >= first)) if first > 0 else total
+    return total, trained
+
+
+def _training_ram_gb(anchor: Path, train: dict) -> float:
+    """Peak resident memory of a training run, estimated from the model: every weight in the training precision
+    (fp32: 4 bytes, otherwise 2) plus Lion's one momentum value per trained weight, plus 0.6 GB of activations
+    and buffers. For the 1.52B model with 24 of 34 layers trained in fp32 this gives 11.0 GB; V10-V12's runs
+    measured 10.8-11.3 GB."""
+    total, trained = _weight_counts(anchor, train)
+    width = 4 if train.get("precision", "fp32") == "fp32" else 2
+    return (total + trained) * width / 1e9 + 0.6
+
+
+def _momentum_freed_gb(anchor: Path, train: dict) -> float:
+    """Optimizer state the trainer frees before a final weights-only save: at least Lion's bf16 momentum, 2 bytes
+    per trained weight (AdamW keeps more), 2.1 GB for 24 of 34 layers."""
+    return _weight_counts(anchor, train)[1] * 2 / 1e9
+
+
+# The estimate's error: V10-V12's measured peaks were within 0.3 GB of it.
+MEMORY_MARGIN_GB = 0.5
+
+
+def _mem_available_gb(meminfo: str | None = None, limit_gb: float | None = None) -> float | None:
+    """MemAvailable from /proc/meminfo, in GB (files on a RAM disk are not available memory); None if unknown.
+    A memory limit below the machine's total (``limit_gb``, by default $YCODE_MEMORY_LIMIT_GB) takes the
+    difference away too: a container's cgroup limit need not be visible inside it (this session's, 14.34 GB in
+    the kernel's OOM report, sits 2.5 GB below MemTotal)."""
+    try:
+        text = meminfo if meminfo is not None else Path("/proc/meminfo").read_text()
+    except OSError:
+        return None
+    fields = {line.split(":")[0]: int(line.split()[1]) * 1024 / 1e9 for line in text.splitlines() if ":" in line}
+    if "MemAvailable" not in fields:
+        return None
+    if limit_gb is None and os.environ.get("YCODE_MEMORY_LIMIT_GB"):
+        limit_gb = float(os.environ["YCODE_MEMORY_LIMIT_GB"])
+    gap = max(0.0, fields.get("MemTotal", 0.0) - limit_gb) if limit_gb else 0.0
+    return fields["MemAvailable"] - gap
+
+
+def _on_tmpfs(path: Path, mounts: str | None = None) -> bool:
+    """Whether ``path`` is on a RAM-backed file system (the mount with the longest matching prefix is a tmpfs)."""
+    try:
+        text = mounts if mounts is not None else Path("/proc/mounts").read_text()
+    except OSError:
+        return False
+    target, best = str(Path(path).resolve()), ("", "")
+    for line in text.splitlines():
+        parts = line.split()
+        if len(parts) >= 3 and (target == parts[1] or target.startswith(parts[1].rstrip("/") + "/")) \
+                and len(parts[1]) > len(best[0]):
+            best = (parts[1], parts[2])
+    return best[1] == "tmpfs"
+
+
+def _check_memory(anchor: Path, train: dict, work_dir: Path) -> tuple[float, float | None]:
+    """Refuse to start a run the machine cannot hold. The trainer's peak memory, plus, when the run writes its
+    checkpoint to a RAM disk, that checkpoint (a RAM disk's files share the same memory), plus MEMORY_MARGIN_GB,
+    must fit in the memory available now. Such a run is otherwise killed by the kernel at its first save, after
+    the whole training. When that save is the run's only one, weights only, the trainer frees the optimizer state
+    first, so the save needs the checkpoint minus that state on top of the model."""
+    needed = training = _training_ram_gb(anchor, train)
+    if _on_tmpfs(work_dir):
+        checkpoint = _checkpoint_gb(anchor, train)
+        needed = (max(training, training - _momentum_freed_gb(anchor, train) + checkpoint) if _final_only(train)
+                  else training + checkpoint)
+    needed += MEMORY_MARGIN_GB
+    available = _mem_available_gb()
+    if available is not None and available < needed:
+        raise RuntimeError(f"only {available:.1f} GB of memory available; training needs about {needed:.1f} GB "
+                           f"(model and optimizer state{', plus its checkpoint on the RAM disk ' + str(work_dir) if _on_tmpfs(work_dir) else ''}). "
+                           "Free memory first, e.g. models or packs kept on the RAM disk")
+    return needed, available
 
 
 def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False, log=print) -> dict:
@@ -211,6 +307,8 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
     if free_gb < needed_gb:  # a checkpoint is ~7 GB; failing at the first save wastes the whole run
         raise RuntimeError(f"only {free_gb:.1f} GB free under {cur.parent}; training needs {needed_gb:.1f} GB "
                            "(remove leftover checkpoints, e.g. of an interrupted smoke run)")
+    ram_needed, ram_available = _check_memory(Path(spec["anchor"]), train, cur.parent)
+    record["memory_check_gb"] = {"needed": round(ram_needed, 2), "available": ram_available and round(ram_available, 2)}
     log(f"{arm['name']} seed {seed}: training {train['steps']} steps")
     # V10: a run can start from another checkpoint than the anchor (e.g. C2); the anchor stays the reference
     init = arm.get("init_from") or spec.get("init_from") or spec["anchor"]
