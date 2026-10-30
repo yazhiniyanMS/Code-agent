@@ -124,6 +124,26 @@ def test_search_files(workspace, make_ctx):
     assert "other.py" not in result.content
 
 
+def test_search_does_not_bypass_the_approval_for_sensitive_files(workspace, make_ctx, registry, approver):
+    # read_file asks before sending .env to the model; search_files used to print its lines without asking
+    (workspace / ".env").write_text("API_TOKEN=sk-live-1234\n")
+    (workspace / "id_rsa").write_text("-----BEGIN KEY-----\n")
+    (workspace / "app.py").write_text("token = os.environ['API_TOKEN']\n")
+    ctx = make_ctx(workspace)
+    result = registry.dispatch("search_files", {"pattern": "API_TOKEN"}, ctx)
+    assert "app.py:1:" in result.content and "sk-live" not in result.content
+    assert "Matches in .env not shown" in result.content
+    assert [(r.kind, r.subject) for r in approver.requests] == [("read", ".env")]  # id_rsa did not match: no prompt
+    result = registry.dispatch("search_files", {"pattern": "sk-", "path": ".env"}, ctx)
+    assert "sk-live" not in result.content and result.content.startswith("No matches shown.")
+    approver.answer = "yes"
+    result = registry.dispatch("search_files", {"pattern": "API_TOKEN"}, ctx)
+    assert ".env:1: API_TOKEN=sk-live-1234" in result.content and "not shown" not in result.content
+    approver.requests.clear()
+    result = registry.dispatch("search_files", {"pattern": "API_TOKEN"}, make_ctx(workspace, mode="auto"))
+    assert ".env:1:" in result.content and not approver.requests  # as read_file: auto mode does not ask
+
+
 def test_search_invalid_regex(workspace, make_ctx, registry):
     result = registry.dispatch("search_files", {"pattern": "("}, make_ctx(workspace))
     assert result.is_error and "regular expression" in result.content
