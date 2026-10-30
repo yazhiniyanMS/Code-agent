@@ -95,6 +95,42 @@ def test_edit_file_identical_strings(workspace, make_ctx, registry):
     assert result.is_error
 
 
+def test_edit_file_refuses_a_file_that_is_not_utf8(workspace, make_ctx, registry):
+    # editing line 2 used to rewrite line 1's Latin-1 bytes as U+FFFD, and report success
+    original = "# owner: Ren\xe9e\nx = 1\n".encode("latin-1")
+    (workspace / "m.py").write_bytes(original)
+    result = registry.dispatch("edit_file", {"path": "m.py", "old_string": "x = 1", "new_string": "x = 2"},
+                               make_ctx(workspace))
+    assert result.is_error and "not valid UTF-8" in result.content
+    assert (workspace / "m.py").read_bytes() == original
+    assert not registry.dispatch("read_file", {"path": "m.py"}, make_ctx(workspace)).is_error  # reading still works
+
+
+def test_edit_file_keeps_crlf_line_endings(workspace, make_ctx, registry):
+    path = workspace / "calc.py"
+    path.write_bytes(b"def add(a, b):\r\n    return a - b\r\n")
+    ctx = make_ctx(workspace)
+    shown = registry.dispatch("read_file", {"path": "calc.py"}, ctx).content
+    assert "\r" not in shown  # so the model writes old_string with LF only
+    result = registry.dispatch("edit_file", {"path": "calc.py", "old_string": "def add(a, b):\n    return a - b",
+                                             "new_string": "def add(a, b):\n    # sum\n    return a + b"}, ctx)
+    assert not result.is_error and "+2 -1" in result.summary
+    assert path.read_bytes() == b"def add(a, b):\r\n    # sum\r\n    return a + b\r\n"
+    result = registry.dispatch("edit_file", {"path": "calc.py", "old_string": "# sum\n    return a * b",
+                                             "new_string": "x"}, ctx)
+    assert result.is_error and "not found" in result.content and "mixes" not in result.content
+
+
+def test_edit_file_with_mixed_line_endings_matches_exactly(workspace, make_ctx, registry):
+    path = workspace / "m.py"
+    path.write_bytes(b"a = 1\r\nb = 2\nc = 3\r\n")
+    ctx = make_ctx(workspace)
+    result = registry.dispatch("edit_file", {"path": "m.py", "old_string": "a = 1\nb = 2", "new_string": "a = 0"}, ctx)
+    assert result.is_error and "mixes CRLF and LF" in result.content
+    result = registry.dispatch("edit_file", {"path": "m.py", "old_string": "b = 2\nc", "new_string": "b = 0\nc"}, ctx)
+    assert not result.is_error and path.read_bytes() == b"a = 1\r\nb = 0\nc = 3\r\n"
+
+
 def test_strict_mode_asks_before_writing(workspace, make_ctx, registry, approver):
     result = registry.dispatch("write_file", {"path": "x.txt", "content": "hi"}, make_ctx(workspace, mode="strict"))
     assert result.is_error and not (workspace / "x.txt").exists()
