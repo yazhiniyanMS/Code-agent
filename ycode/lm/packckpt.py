@@ -144,6 +144,12 @@ def _read(dst: Path):
     return data, header, meta, 4
 
 
+def describe(dst: Path | str) -> tuple[dict, list[str]]:
+    """(metadata, tensor names) of a pack, without decoding a tensor or loading its parent."""
+    _, header, meta, _ = _read(Path(dst))
+    return meta, [e["key"] for e in header["entries"]]
+
+
 def tensors(dst: Path | str, parent: Path | str | None = None):
     """(meta, header, iterator of (key, tensor)): every tensor restored bit for bit, one at a time. A pack made
     against a parent needs it: ``parent``, or the path recorded when packing; its content hash must match."""
