@@ -102,3 +102,19 @@ def test_the_round_option_adds_tagged_examples_that_pass_the_dataset_hygiene_che
     both, _ = round_examples_tagged(1301, {"basics_write": 1, **{k: 0 for k in PRODUCTION if k != "basics_write"},
                                            "strings_write": 1})
     assert both[:len(base)] == base
+
+
+def test_every_concept_gets_bug_fixes_and_every_bug_is_real():
+    from ycode.lm.evaluate import extract_code
+
+    made = strings.string_examples(random.Random(1302), write_per_concept=1, bugfix_per_concept=2)
+    fixes = [(ex, strings.BY_NAME[tag.rsplit(":", 1)[1]]) for ex, tag in made if ":bugfix:" in tag]
+    assert {c.name for _, c in fixes} == set(strings.BY_NAME)  # STRING_MUTATIONS reach every concept
+    for ex, concept in fixes:
+        buggy = extract_code(ex.prompt)
+        name = strings._name_of(buggy)
+        assert basics._parses(buggy) and not basics._passes(buggy, basics._rename_tests(concept.tests, name)), buggy
+        assert strings.check_example(ex, concept)
+    # the production generators keep their own mutations
+    assert basics.bugfix_examples.__defaults__[-1] is basics._TEXT_MUTATIONS
+    assert not set(strings.STRING_MUTATIONS) & set(basics._TEXT_MUTATIONS)

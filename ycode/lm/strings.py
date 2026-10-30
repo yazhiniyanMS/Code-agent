@@ -244,6 +244,22 @@ MINIMAL_PAIRS: tuple[tuple[str, str], ...] = (
 )
 
 
+# Single-line bugs of string code that basics._TEXT_MUTATIONS cannot make: the wrong end stripped, searched or
+# split from, a lost count or filter, the wrong character class or case, an index that fails on the empty string,
+# a swapped separator. Every bug made from them must still parse and fail the concept's tests (basics.bugfix_examples).
+STRING_MUTATIONS = (
+    (".strip()", ".lstrip()"), (".strip()", ".rstrip()"), (".lstrip()", ".rstrip()"), (".rstrip()", ".lstrip()"),
+    (".strip(", ".lstrip("), (".lstrip(", ".rstrip("), (".rstrip(", ".lstrip("),
+    (".find(", ".rfind("), (".rfind(", ".find("), (".split(", ".rsplit("), (".rsplit(", ".split("),
+    (".partition(", ".rpartition("), (", 1)", ")"),
+    ("[1::2]", "[::2]"), ("[1:-1]", "[1:]"), ("[:-1]", "[:-2]"), ("text[:1]", "text[0]"), ("text[-1:]", "text[-1]"),
+    (".isdigit()", ".isalpha()"), (".isalpha()", ".isdigit()"), (".islower()", ".isupper()"),
+    (".capitalize()", ".title()"), (".swapcase()", ".upper()"), (" if part.strip()]", "]"), (" if part)", ")"),
+    ("','", "';'"), ("';'", "','"), ("'/'", "'.'"), ("'.'", "','"), ("'\\n'", "' '"), ("'-'", "'_'"), ("'_'", "'-'"),
+    ("(ch, '')", "(ch, ' ')"), ("[start:end]", "[start + 1:end]"),
+)
+
+
 def _name_of(code: str) -> str:
     match = re.search(r"def (\w+)\(", code)
     if match is None:
@@ -266,7 +282,8 @@ def string_examples(rng: random.Random, write_per_concept: int = 4,
     out, seen = [], set()
     for concept in STRING_CONCEPTS:
         for kind, examples in (("write", basics.write_examples(rng, write_per_concept, concepts=(concept,))),
-                               ("bugfix", basics.bugfix_examples(rng, bugfix_per_concept, concepts=(concept,)))):
+                               ("bugfix", basics.bugfix_examples(rng, bugfix_per_concept, concepts=(concept,),
+                                                            mutations=basics._TEXT_MUTATIONS + STRING_MUTATIONS))):
             for ex in examples:
                 if (ex.prompt, ex.response) in seen:
                     continue
