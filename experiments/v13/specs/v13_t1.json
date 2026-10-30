@@ -1,0 +1,69 @@
+{
+  "name": "v13-t1",
+  "note": "V13 run T1 (experiments/v13/PLAN.md): from S1 1301 (lmwork/v12/ckpt/S1_1301.ypk, content 5075d097...), S1's own stage settings (lr 3e-5 WSD, 1 warmup step), one epoch of the V13 string curriculum (4 written + 2 bug fixes per concept, #22/#24), S1's 31 literal bug fixes once each, and a 50% token share of uniform round-54 production replay. Dry run: 58,377 tokens (strings 34.7%, legacy 55.7%, replay 3.2%, retention 6.4%), hygiene removed none, training split 55,816 tokens -> 13 steps. Screened on dev, unseen-v1 and strings_heldout first.",
+  "decision": "experiments/v13/PLAN.md gates G1-G5 and promotion rule.",
+  "anchor": "/home/user/lmwork/loop/anchor",
+  "tokenizer": "/home/user/lmwork/data/tokenizer.json",
+  "replay_dir": "/home/user/lmwork/data",
+  "average_script": "/home/user/lmwork/average.py",
+  "work_dir": "/dev/shm/ycode-v13",
+  "metric": "unseen_clean",
+  "category_rule": "items_lost",
+  "out": "/home/user/lmwork/v13/runs",
+  "seeds": [
+    1301
+  ],
+  "keep_models": "compact",
+  "train": {
+    "steps": 13,
+    "lr": 3e-05,
+    "batch": 4,
+    "train_layers": 24,
+    "warmup": 1,
+    "precision": "fp32",
+    "init_optim": false,
+    "compact": true,
+    "save_every": 13,
+    "final_bf16": true
+  },
+  "eval": {
+    "dev": true,
+    "unseen": true,
+    "unseen2": false,
+    "bench": false,
+    "diagnose": 0,
+    "sets": [
+      {
+        "name": "strings_heldout",
+        "set": "experiments/v13/sets/strings_heldout.json"
+      }
+    ]
+  },
+  "comparisons": [],
+  "keep_dir": "/dev/shm/ycode-keep",
+  "init_from": "/dev/shm/ycode-keep/S1/1301/model_bf16",
+  "arms": [
+    {
+      "name": "T1",
+      "data_seed_offset": 1,
+      "note": "from S1: lr 3e-5, strings 4+2, literal bug fixes 1, 50% replay",
+      "data": {
+        "idioms_bugfix": 0,
+        "idioms_families": "v3",
+        "basics_write": 0,
+        "basics_bugfix": 0,
+        "compose_write": 0,
+        "compose_bugfix": 0,
+        "contrast": 0,
+        "novel_write": 0,
+        "replay": 0,
+        "legacy_share": 0.5,
+        "idioms_select": "v9_grammar_train",
+        "idioms_write": 0,
+        "literal_bugfix": 1,
+        "strings_write": 4,
+        "strings_bugfix": 2
+      }
+    }
+  ]
+}
