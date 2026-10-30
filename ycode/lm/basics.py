@@ -646,9 +646,9 @@ def _with_doc(c: Concept, name: str, body: str) -> str:
 SPEC_FIRST = False
 
 
-def write_examples(rng: random.Random, per_concept: int = 6) -> list[InstructionExample]:
+def write_examples(rng: random.Random, per_concept: int = 6, concepts=None) -> list[InstructionExample]:
     out = []
-    for c in training_concepts():
+    for c in training_concepts() if concepts is None else concepts:
         for _ in range(per_concept):
             name = rng.choice((c.name, *c.aliases))
             template = rng.choice(_WRITE_TEMPLATES)
@@ -688,9 +688,9 @@ def _text_bugs(fixed: str) -> list[tuple[str, str, str]]:
     return bugs
 
 
-def bugfix_examples(rng: random.Random, per_concept: int = 5) -> list[InstructionExample]:
+def bugfix_examples(rng: random.Random, per_concept: int = 5, concepts=None) -> list[InstructionExample]:
     out = []
-    for c in training_concepts():
+    for c in training_concepts() if concepts is None else concepts:
         names = (c.name, *c.aliases)
         made = set()
         name = names[0]
