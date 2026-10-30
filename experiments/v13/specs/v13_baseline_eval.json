@@ -1,0 +1,71 @@
+{
+  "name": "v13-baseline-S1-1301",
+  "note": "V13 baseline: S1 seed 1301 (the champion, lmwork/v12/ckpt/S1_1301.ypk, content 5075d097...) on the V13 string-operation sets (experiments/v13/sets), before any V13 training. Evaluation only.",
+  "decision": "experiments/v12/PLAN.md rules (V6/V10 gates unchanged).",
+  "anchor": "/home/user/lmwork/loop/anchor",
+  "tokenizer": "/home/user/lmwork/data/tokenizer.json",
+  "replay_dir": "/home/user/lmwork/data",
+  "average_script": "/home/user/lmwork/average.py",
+  "work_dir": "/dev/shm/ycode-v12",
+  "metric": "unseen_clean",
+  "category_rule": "items_lost",
+  "out": "/home/user/lmwork/v13/runs",
+  "seeds": [
+    1301
+  ],
+  "keep_models": "compact",
+  "train": {
+    "steps": 7,
+    "lr": 3e-05,
+    "batch": 4,
+    "train_layers": 24,
+    "warmup": 1,
+    "precision": "fp32",
+    "init_optim": false,
+    "compact": true,
+    "save_every": 7,
+    "final_bf16": true
+  },
+  "eval": {
+    "dev": false,
+    "unseen": false,
+    "unseen2": false,
+    "bench": false,
+    "diagnose": 0,
+    "sets": [
+      {
+        "name": "strings_heldout",
+        "set": "experiments/v13/sets/strings_heldout.json"
+      },
+      {
+        "name": "strings_trained",
+        "set": "experiments/v13/sets/strings_trained.json"
+      }
+    ]
+  },
+  "comparisons": [],
+  "keep_dir": "/dev/shm/ycode-keep",
+  "init_from": "/dev/shm/ycode-keep/R1/1301/model_bf16",
+  "arms": [
+    {
+      "name": "S1",
+      "data_seed_offset": 1,
+      "note": "from R1: lr 3e-5, literal bug fixes + 50% replay",
+      "data": {
+        "idioms_bugfix": 0,
+        "idioms_families": "v3",
+        "basics_write": 0,
+        "basics_bugfix": 0,
+        "compose_write": 0,
+        "compose_bugfix": 0,
+        "contrast": 0,
+        "novel_write": 0,
+        "replay": 0,
+        "legacy_share": 0.5,
+        "idioms_select": "v9_grammar_train",
+        "idioms_write": 0,
+        "literal_bugfix": 3
+      }
+    }
+  ]
+}
