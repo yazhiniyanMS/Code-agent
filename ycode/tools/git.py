@@ -31,7 +31,7 @@ class FileChange:
 def run_git(args: list[str], cwd: Path, timeout: int = 30) -> tuple[int, str, str]:
     try:
         proc = subprocess.run(
-            ["git", *args],
+            ["git", "-c", "core.quotePath=false", *args],  # non-ASCII names as they are, not octal-escaped
             cwd=str(cwd),
             capture_output=True,
             text=True,
@@ -67,17 +67,19 @@ def current_branch(cwd: Path) -> str | None:
 
 
 def status_entries(cwd: Path) -> list[FileChange]:
-    code, out, _ = run_git(["status", "--porcelain=v1", "--untracked-files=all"], cwd)
+    # -z: paths as they are, NUL-separated (without it git quotes and octal-escapes names such as café.py)
+    code, out, _ = run_git(["status", "--porcelain=v1", "-z", "--untracked-files=all"], cwd)
     if code != 0:
         return []
     entries = []
-    for line in out.splitlines():
-        if len(line) < 4:
+    fields = iter(out.split("\0"))
+    for field in fields:
+        if len(field) < 4:
             continue
-        status, path = line[:2], line[3:]
-        if " -> " in path:
-            path = path.split(" -> ", 1)[1]
-        entries.append(FileChange(status, path.strip('"')))
+        status, path = field[:2], field[3:]
+        if "R" in status or "C" in status:
+            next(fields, None)  # a rename or copy is followed by its original path
+        entries.append(FileChange(status, path))
     return entries
 
 

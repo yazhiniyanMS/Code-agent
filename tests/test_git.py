@@ -23,6 +23,19 @@ def test_status_and_branch(git_workspace, make_ctx):
     assert result.summary == "2 changed files"
 
 
+def test_status_paths_are_real_file_names(git_workspace, make_ctx):
+    # porcelain without -z quotes such names: café.py came back as caf\303\251.py, so the task summary,
+    # which matches status paths against the files the agent changed, left it out
+    for name in ("café.py", "naïve test.py"):
+        (git_workspace / name).write_text("x\n")
+    git(git_workspace, "mv", "app.py", "renamed_é.py")
+    entries = {e.path: e.status for e in status_entries(git_workspace)}
+    assert entries == {"café.py": "??", "naïve test.py": "??", "renamed_é.py": "R "}
+    assert all((git_workspace / path).exists() for path in entries)
+    shown = ToolRegistry(default_tools()).dispatch("git_status", {}, make_ctx(git_workspace)).content
+    assert "café.py" in shown and "renamed_é.py" in shown and "\\303" not in shown  # what the model reads
+
+
 def test_diff_tool(git_workspace, make_ctx):
     (git_workspace / "app.py").write_text("print('changed')\n")
     (git_workspace / "new.py").write_text("x = 1\n")
