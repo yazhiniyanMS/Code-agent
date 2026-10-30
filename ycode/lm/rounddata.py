@@ -44,6 +44,8 @@ DEFAULTS = {
     "legacy_share": 0.0,
     "legacy_weights": None,   # V11: JSON of per-example replay weights for this seed's production round (retention-aware)
     "literal_bugfix": 0,      # V12: examples per string-literal bug (basics.literal_bugfix_examples), tagged "retention:bugfix"
+    "strings_write": 0,       # V13: written functions per string concept (ycode.lm.strings), tagged "strings:write:<name>"
+    "strings_bugfix": 0,      # V13: bug fixes per string concept, tagged "strings:bugfix:<name>"
     "legacy_weights_within_tag": False,  # V11-C: weights normalised to mean 1 within each tag (write / bug fix), so
                                          # each kind keeps its share of the round and only the choice inside it changes
 }
@@ -107,8 +109,17 @@ def round_examples_tagged(seed: int, options: dict) -> tuple[list, list[str]]:
         from ycode.lm.basics import literal_bugfix_examples
 
         retention = literal_bugfix_examples(random.Random(seed * 1009 + 12), per_bug=o["literal_bugfix"])
-    return (legacy + curriculum + retention,
-            [_legacy_tag(e) for e in legacy] + ctags + ["retention:bugfix"] * len(retention))
+    strings, stags = [], []
+    if o["strings_write"] or o["strings_bugfix"]:  # V13: its own random stream too; every answer executed on its tests
+        import random
+
+        from ycode.lm.strings import string_examples
+
+        made = string_examples(random.Random(seed * 1009 + 13), write_per_concept=o["strings_write"],
+                               bugfix_per_concept=o["strings_bugfix"])
+        strings, stags = [ex for ex, _ in made], [tag for _, tag in made]
+    return (legacy + curriculum + retention + strings,
+            [_legacy_tag(e) for e in legacy] + ctags + ["retention:bugfix"] * len(retention) + stags)
 
 
 def _legacy_tag(ex) -> str:
