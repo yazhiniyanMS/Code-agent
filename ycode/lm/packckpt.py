@@ -13,7 +13,11 @@ with the values grouped by the parent's exponent before compression (a weight's 
 steps it moved, depends on its exponent; the parent gives the grouping back when unpacking). For V12-S1, 7
 steps after R1, that is 0.42 GB instead of 1.32 GB. Unpacking needs the parent and checks its content hash.
 
+An existing pack can be re-encoded against a parent without unpacking it to disk (``repack``): the new pack
+must restore the same tensors and metadata, checked before it is kept, and the source pack is left as it is.
+
 usage: python -m ycode.lm.packckpt pack SRC_DIR DST.ypk [PARENT] | unpack DST.ypk OUT_DIR | verify SRC_DIR DST.ypk
+       | repack SRC.ypk DST.ypk PARENT
 """
 from __future__ import annotations
 
@@ -91,41 +95,48 @@ def pack(src: Path | str, dst: Path | str, parent: Path | str | None = None) -> 
     payload = torch.load(path, map_location="cpu", weights_only=True, mmap=True)
     if not payload.get("base"):
         raise ValueError(f"{path} is not base-referenced: nothing to pack against")
-    base = _base_state(payload)
-    state = payload["model"]
+    meta = {k: v for k, v in payload.items() if k != "model"}
+    return _write(payload["model"], meta, Path(dst), parent, source=str(path), source_bytes=path.stat().st_size)
+
+
+def _write(state: dict, meta: dict, dst: Path, parent: Path | str | None, *, source: str, source_bytes: int) -> dict:
+    base = _base_state(meta)
     parent_state, parent_hash = _parent_state(parent) if parent is not None else ({}, None)
     entries = []
-    dst = Path(dst)
     tmp = dst.with_suffix(".tmp")
     f = tmp.open("wb")
-    f.write(MAGIC if parent is None else MAGIC_DELTA)
-    for k, t in state.items():
-        t = t.contiguous()
-        p = parent_state.get(k)
-        if t.dtype == torch.bfloat16 and p is not None and p.dtype == torch.bfloat16 and p.shape == t.shape:
-            parts, kind = _delta_parts(t, p), "delta_bf16"
-        elif t.dtype == torch.bfloat16 and k in base and base[k].shape == t.shape:
-            bits = t.view(torch.int16).numpy() ^ base[k].to(torch.bfloat16).contiguous().view(torch.int16).numpy()
-            planes = bits.view(np.uint8).reshape(-1, 2)
-            parts = [zlib.compress(planes[:, 0].tobytes(), LEVEL), zlib.compress(planes[:, 1].tobytes(), LEVEL)]
-            kind = "xor_bf16"
-        else:
-            buf = io.BytesIO()
-            torch.save(t.clone(), buf)
-            parts, kind = [zlib.compress(buf.getvalue(), LEVEL)], "torch"
-        entries.append({"key": k, "kind": kind, "shape": list(t.shape), "sizes": [len(p) for p in parts]})
-        for part in parts:
-            f.write(part)
-    meta = {k: v for k, v in payload.items() if k != "model"}
-    meta_buf = io.BytesIO()
-    torch.save(meta, meta_buf)
-    header = {"entries": entries, "meta_size": len(meta_buf.getvalue()), "content_sha256": content_sha256(state),
-              "source": str(path), "source_bytes": path.stat().st_size}
-    if parent is not None:
-        header["parent"] = {"path": str(Path(parent).resolve()), "content_sha256": parent_hash}
-    head = json.dumps(header).encode()
-    f.write(meta_buf.getvalue() + head + len(head).to_bytes(8, "little"))
-    f.close()
+    try:  # a failed write (a full disk, say) leaves no partial file behind
+        f.write(MAGIC if parent is None else MAGIC_DELTA)
+        for k, t in state.items():
+            t = t.contiguous()
+            p = parent_state.get(k)
+            if t.dtype == torch.bfloat16 and p is not None and p.dtype == torch.bfloat16 and p.shape == t.shape:
+                parts, kind = _delta_parts(t, p), "delta_bf16"
+            elif t.dtype == torch.bfloat16 and k in base and base[k].shape == t.shape:
+                bits = t.view(torch.int16).numpy() ^ base[k].to(torch.bfloat16).contiguous().view(torch.int16).numpy()
+                planes = bits.view(np.uint8).reshape(-1, 2)
+                parts = [zlib.compress(planes[:, 0].tobytes(), LEVEL), zlib.compress(planes[:, 1].tobytes(), LEVEL)]
+                kind = "xor_bf16"
+            else:
+                buf = io.BytesIO()
+                torch.save(t.clone(), buf)
+                parts, kind = [zlib.compress(buf.getvalue(), LEVEL)], "torch"
+            entries.append({"key": k, "kind": kind, "shape": list(t.shape), "sizes": [len(p) for p in parts]})
+            for part in parts:
+                f.write(part)
+        meta_buf = io.BytesIO()
+        torch.save(meta, meta_buf)
+        header = {"entries": entries, "meta_size": len(meta_buf.getvalue()), "content_sha256": content_sha256(state),
+                  "source": source, "source_bytes": source_bytes}
+        if parent is not None:
+            header["parent"] = {"path": str(Path(parent).resolve()), "content_sha256": parent_hash}
+        head = json.dumps(header).encode()
+        f.write(meta_buf.getvalue() + head + len(head).to_bytes(8, "little"))
+        f.close()
+    except BaseException:
+        f.close()
+        tmp.unlink(missing_ok=True)
+        raise
     tmp.replace(dst)
     return header
 
@@ -205,6 +216,26 @@ def unpack(dst: Path | str, out_dir: Path | str) -> Path:
     return out_dir / "model.pt"
 
 
+def repack(src: Path | str, dst: Path | str, parent: Path | str) -> dict:
+    """Re-encode the pack ``src`` as ``dst``, a delta from ``parent`` (the checkpoint it was trained from); returns
+    the new header. ``dst`` must restore ``src``'s tensors and metadata exactly, or it is removed and this raises.
+    ``src`` is never modified: replacing it is a separate, deliberate step."""
+    src, dst = Path(src), Path(dst)
+    if dst.resolve() == src.resolve():
+        raise ValueError(f"{dst}: repack writes a new pack; it never overwrites its source")
+    state, meta, header = unpacked_state(src)
+    new = _write(state, meta, dst, parent, source=header["source"], source_bytes=header["source_bytes"])
+    del state
+    try:
+        _, restored_meta, _ = unpacked_state(dst)  # checks the restored tensors against dst's own hash
+        if new["content_sha256"] != header["content_sha256"] or repr(restored_meta) != repr(meta):
+            raise ValueError(f"{dst} does not restore {src} exactly")
+    except Exception:
+        dst.unlink(missing_ok=True)
+        raise
+    return new
+
+
 def verify(src: Path | str, dst: Path | str) -> str:
     """Raise unless ``dst`` restores ``src``'s tensors and metadata exactly; return the content hash."""
     src = Path(src)
@@ -239,6 +270,13 @@ def main(argv: list[str]) -> None:
             shutil.copy(info, Path(dst).with_suffix(".info.json"))
         print(json.dumps({"content_sha256": header["content_sha256"], "packed_bytes": Path(dst).stat().st_size,
                           "source_bytes": header["source_bytes"]}))
+    elif cmd == "repack":
+        src, dst, parent = map(Path, rest)
+        header = repack(src, dst, parent)
+        if src.with_suffix(".info.json").is_file():
+            shutil.copy(src.with_suffix(".info.json"), dst.with_suffix(".info.json"))
+        print(json.dumps({"content_sha256": header["content_sha256"], "packed_bytes": dst.stat().st_size,
+                          "source_pack_bytes": src.stat().st_size}))
     elif cmd == "unpack":
         print(unpack(*rest))
     elif cmd == "verify":
