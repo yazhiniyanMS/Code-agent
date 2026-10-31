@@ -41,7 +41,7 @@
   },
   "comparisons": [],
   "keep_dir": "/dev/shm/ycode-keep",
-  "init_from": "/dev/shm/ycode-keep/S1/1301/model_bf16",
+  "init_from": "/home/user/lmwork/v12/ckpt/S1_1301.ypk",
   "arms": [
     {
       "name": "T1",
