@@ -1,0 +1,11 @@
+data/meta.json b1e6d1a072e3f5d3
+data/sft_index.npy b173e5ae75cb31e1
+data/sft_mask.bin cbb47b6874dd534e
+data/sft_tokens.bin 502fc30eb16c75d3
+data/tokenizer.json 2ac7760e4cff07c7
+data/train.bin 957682646127c74e
+data/val.bin 56d9052b3da40ee1
+sft/sft_index.npy 5dcc99c1da8b8ed2
+sft/sft_mask.bin 4b5d0836bffa44a4
+sft/sft_tokens.bin fe31ca9b0aab91d1
+sft/tokenizer.json 2ac7760e4cff07c7
