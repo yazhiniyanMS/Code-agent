@@ -215,6 +215,9 @@ def run_one(spec: dict, arm: dict, seed: int, out: Path, *, smoke: bool = False,
     # V10: a run can start from another checkpoint than the anchor (e.g. C2); the anchor stays the reference
     init = arm.get("init_from") or spec.get("init_from") or spec["anchor"]
     record["init_from"] = init
+    chain = arm.get("init_chain") if arm.get("init_from") else spec.get("init_chain")
+    if chain:  # named by identity (V13): the pack, its parents and base, as located and checked
+        record["init_chain"] = chain
     cmd = [sys.executable, "-m", "ycode.lm.cli", "sft", "--data", str(data), "--init-from", init,
            "--out", str(cur), "--steps", str(train["steps"]), "--warmup", str(train["warmup"]),
            "--batch-size", str(train["batch"]), "--optimizer", "lion", "--lr", str(train["lr"]),
@@ -492,6 +495,35 @@ def _anchor_hash(anchor: Path, out: Path, verify) -> str:
     return digest
 
 
+def resolve_checkpoints(spec: dict) -> dict:
+    """Checkpoints a spec names by identity instead of by path (V13): ``anchor_checkpoint`` and
+    ``init_checkpoint`` (the spec's or an arm's) are located under the checkpoint directory
+    (``YCODE_CHECKPOINT_DIR``, see ycode.lm.ckptstore) and checked, with every parent and base, before any
+    run starts. Their paths fill ``anchor`` and ``init_from``; nothing else is ever used in their place."""
+    from ycode.lm import ckptstore
+
+    root = ckptstore.checkpoint_dir()
+    if spec.get("anchor_checkpoint"):
+        if spec.get("anchor"):
+            raise ValueError("the spec gives both anchor and anchor_checkpoint: give one")
+        ref = spec["anchor_checkpoint"]
+        spec["anchor"] = str(ckptstore.resolve_base(ref, root))
+        spec["anchor_sha256"] = ref["sha256"]
+    for holder in [spec, *spec.get("arms", [])]:
+        if holder.get("init_checkpoint"):
+            if holder.get("init_from"):
+                raise ValueError("init_from and init_checkpoint are both given: give one")
+            chain = ckptstore.resolve_pack(holder["init_checkpoint"], root)
+            holder["init_from"] = str(chain[0].path)
+            holder["init_chain"] = [link.record() for link in chain]
+    checked = {spec["anchor_checkpoint"]["sha256"]} if spec.get("anchor_checkpoint") else set()
+    checked |= {h["init_checkpoint"]["base"]["sha256"] for h in [spec, *spec.get("arms", [])]
+                if h.get("init_checkpoint", {}).get("base", {}).get("sha256")}
+    if checked:  # the training and evaluation processes find the same bases, checked against these
+        os.environ[ckptstore.ENV_BASES] = ",".join(sorted(checked | ckptstore.expected_bases()))
+    return spec
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Run or summarize a controlled fine-tuning experiment.")
     ap.add_argument("spec", type=Path)
@@ -512,6 +544,7 @@ def main(argv: list[str] | None = None) -> int:
     if not args.summarize:
         from ycode.lm.train import verify_checkpoint
 
+        resolve_checkpoints(spec)  # before anything is built: a missing or wrong checkpoint stops here
         spec.setdefault("anchor_sha256", _anchor_hash(Path(spec["anchor"]), out, verify_checkpoint))
         wanted = set(args.arms.split(",")) if args.arms else None
         seeds = spec["seeds"][:1] if args.smoke else spec["seeds"]
