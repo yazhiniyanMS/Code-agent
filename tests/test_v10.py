@@ -210,6 +210,48 @@ def test_a_checkpoint_packed_against_its_parent_is_smaller_and_restores_bit_for_
         packckpt.unpacked_state(delta, second)  # not the parent it was packed against
 
 
+def test_repack_turns_a_plain_pack_into_a_verified_delta_and_leaves_the_source_alone(base_model, sft, tmp_path,
+                                                                                    monkeypatch):
+    import hashlib
+
+    from ycode.lm import packckpt
+
+    first = _finetune(sft, base_model, tmp_path / "first", 1)
+    second = _finetune(sft, first, tmp_path / "second", 1)
+    parent, plain, delta = tmp_path / "first.ypk", tmp_path / "plain.ypk", tmp_path / "delta.ypk"
+    packckpt.main(["pack", str(first), str(parent)])
+    packckpt.main(["pack", str(second), str(plain)])
+    before = hashlib.sha256(plain.read_bytes()).hexdigest()
+    packckpt.main(["repack", str(plain), str(delta), str(parent)])
+    assert hashlib.sha256(plain.read_bytes()).hexdigest() == before  # the source pack is untouched
+    assert {e["kind"] for e in packckpt._read(delta)[1]["entries"]} == {"delta_bf16"}
+    assert delta.read_bytes()[:4] == b"YPK2" and delta.stat().st_size < plain.stat().st_size
+    assert packckpt.verify(second, delta) == packckpt.verify(second, plain)  # the same tensors and metadata
+    assert (tmp_path / "delta.info.json").is_file()  # the sidecar comes along
+    with pytest.raises(ValueError, match="never overwrites its source"):
+        packckpt.repack(plain, plain, parent)
+    # a delta that does not restore its source is not kept
+    real = packckpt._delta_parts
+    monkeypatch.setattr(packckpt, "_delta_parts", lambda t, p: real(t + 1, p))
+    with pytest.raises(ValueError, match="unpacked tensors differ"):
+        packckpt.repack(plain, tmp_path / "bad.ypk", parent)
+    assert not (tmp_path / "bad.ypk").exists() and not (tmp_path / "bad.tmp").exists()
+
+
+def test_a_failed_pack_write_leaves_no_partial_file(base_model, sft, tmp_path, monkeypatch):
+    from ycode.lm import packckpt
+
+    first = _finetune(sft, base_model, tmp_path / "first", 1)
+
+    def full_disk(state):
+        raise OSError(28, "No space left on device")
+
+    monkeypatch.setattr(packckpt, "content_sha256", full_disk)  # fails after every tensor has been written
+    with pytest.raises(OSError, match="No space left"):
+        packckpt.pack(first, tmp_path / "first.ypk")
+    assert list(tmp_path.glob("first.*")) == []
+
+
 def test_grammar3_parts_come_from_training_families_and_nothing_leaks():
     from pathlib import Path
 

@@ -21,9 +21,11 @@ HALF_PRECISION_PARAMS = 500e6
 
 
 def stored_params(model_dir: Path) -> int | None:
-    """Parameter count from a model folder's info.json, without loading the weights."""
+    """Parameter count from a model folder's (or a pack's) info.json, without loading the weights."""
+    from ycode.lm.train import info_path
+
     try:
-        return int(json.loads((Path(model_dir) / "info.json").read_text())["params"])
+        return int(json.loads(info_path(model_dir).read_text())["params"])
     except (OSError, ValueError, KeyError, TypeError):
         return None
 

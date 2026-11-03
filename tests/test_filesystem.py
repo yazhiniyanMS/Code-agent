@@ -95,6 +95,42 @@ def test_edit_file_identical_strings(workspace, make_ctx, registry):
     assert result.is_error
 
 
+def test_edit_file_refuses_a_file_that_is_not_utf8(workspace, make_ctx, registry):
+    # editing line 2 used to rewrite line 1's Latin-1 bytes as U+FFFD, and report success
+    original = "# owner: Ren\xe9e\nx = 1\n".encode("latin-1")
+    (workspace / "m.py").write_bytes(original)
+    result = registry.dispatch("edit_file", {"path": "m.py", "old_string": "x = 1", "new_string": "x = 2"},
+                               make_ctx(workspace))
+    assert result.is_error and "not valid UTF-8" in result.content
+    assert (workspace / "m.py").read_bytes() == original
+    assert not registry.dispatch("read_file", {"path": "m.py"}, make_ctx(workspace)).is_error  # reading still works
+
+
+def test_edit_file_keeps_crlf_line_endings(workspace, make_ctx, registry):
+    path = workspace / "calc.py"
+    path.write_bytes(b"def add(a, b):\r\n    return a - b\r\n")
+    ctx = make_ctx(workspace)
+    shown = registry.dispatch("read_file", {"path": "calc.py"}, ctx).content
+    assert "\r" not in shown  # so the model writes old_string with LF only
+    result = registry.dispatch("edit_file", {"path": "calc.py", "old_string": "def add(a, b):\n    return a - b",
+                                             "new_string": "def add(a, b):\n    # sum\n    return a + b"}, ctx)
+    assert not result.is_error and "+2 -1" in result.summary
+    assert path.read_bytes() == b"def add(a, b):\r\n    # sum\r\n    return a + b\r\n"
+    result = registry.dispatch("edit_file", {"path": "calc.py", "old_string": "# sum\n    return a * b",
+                                             "new_string": "x"}, ctx)
+    assert result.is_error and "not found" in result.content and "mixes" not in result.content
+
+
+def test_edit_file_with_mixed_line_endings_matches_exactly(workspace, make_ctx, registry):
+    path = workspace / "m.py"
+    path.write_bytes(b"a = 1\r\nb = 2\nc = 3\r\n")
+    ctx = make_ctx(workspace)
+    result = registry.dispatch("edit_file", {"path": "m.py", "old_string": "a = 1\nb = 2", "new_string": "a = 0"}, ctx)
+    assert result.is_error and "mixes CRLF and LF" in result.content
+    result = registry.dispatch("edit_file", {"path": "m.py", "old_string": "b = 2\nc", "new_string": "b = 0\nc"}, ctx)
+    assert not result.is_error and path.read_bytes() == b"a = 1\r\nb = 0\nc = 3\r\n"
+
+
 def test_strict_mode_asks_before_writing(workspace, make_ctx, registry, approver):
     result = registry.dispatch("write_file", {"path": "x.txt", "content": "hi"}, make_ctx(workspace, mode="strict"))
     assert result.is_error and not (workspace / "x.txt").exists()
@@ -124,6 +160,26 @@ def test_search_files(workspace, make_ctx):
     assert "other.py" not in result.content
 
 
+def test_search_does_not_bypass_the_approval_for_sensitive_files(workspace, make_ctx, registry, approver):
+    # read_file asks before sending .env to the model; search_files used to print its lines without asking
+    (workspace / ".env").write_text("API_TOKEN=sk-live-1234\n")
+    (workspace / "id_rsa").write_text("-----BEGIN KEY-----\n")
+    (workspace / "app.py").write_text("token = os.environ['API_TOKEN']\n")
+    ctx = make_ctx(workspace)
+    result = registry.dispatch("search_files", {"pattern": "API_TOKEN"}, ctx)
+    assert "app.py:1:" in result.content and "sk-live" not in result.content
+    assert "Matches in .env not shown" in result.content
+    assert [(r.kind, r.subject) for r in approver.requests] == [("read", ".env")]  # id_rsa did not match: no prompt
+    result = registry.dispatch("search_files", {"pattern": "sk-", "path": ".env"}, ctx)
+    assert "sk-live" not in result.content and result.content.startswith("No matches shown.")
+    approver.answer = "yes"
+    result = registry.dispatch("search_files", {"pattern": "API_TOKEN"}, ctx)
+    assert ".env:1: API_TOKEN=sk-live-1234" in result.content and "not shown" not in result.content
+    approver.requests.clear()
+    result = registry.dispatch("search_files", {"pattern": "API_TOKEN"}, make_ctx(workspace, mode="auto"))
+    assert ".env:1:" in result.content and not approver.requests  # as read_file: auto mode does not ask
+
+
 def test_search_invalid_regex(workspace, make_ctx, registry):
     result = registry.dispatch("search_files", {"pattern": "("}, make_ctx(workspace))
     assert result.is_error and "regular expression" in result.content
@@ -135,3 +191,17 @@ def test_find_files(workspace, make_ctx):
     (workspace / "a" / "x.ts").write_text("")
     result = FindFilesTool().run({"pattern": "*.test.ts"}, make_ctx(workspace))
     assert result.content.strip() == "a/x.test.ts"
+
+
+def test_globstar_also_matches_no_directory(workspace, make_ctx, registry):
+    # src/**/*.ts (the example in search_files' description) used to miss src/auth.ts
+    for rel in ("src/auth.ts", "src/lib/token.ts", "src/lib/deep/x.ts", "docs/a.ts", "src/readme.md"):
+        (workspace / rel).parent.mkdir(parents=True, exist_ok=True)
+        (workspace / rel).write_text("validateToken\n")
+    ctx = make_ctx(workspace)
+    found = registry.dispatch("find_files", {"pattern": "src/**/*.ts"}, ctx).content.splitlines()
+    assert found == ["src/auth.ts", "src/lib/token.ts", "src/lib/deep/x.ts"]
+    result = registry.dispatch("search_files", {"pattern": "validateToken", "glob": "src/**/*.ts"}, ctx)
+    assert "src/auth.ts:1:" in result.content and "docs/a.ts" not in result.content
+    found = registry.dispatch("find_files", {"pattern": "src/**/lib/**/*.ts"}, ctx).content.splitlines()
+    assert found == ["src/lib/token.ts", "src/lib/deep/x.ts"]  # both **/ may stand for no directory

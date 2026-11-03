@@ -14,11 +14,27 @@ from ycode.tools.filesystem import iter_files
 MAX_FILE_BYTES = 1_000_000
 
 
+def _globstar_forms(pattern: str) -> set[str]:
+    """The pattern, and each form of it with one or more of its "**/" dropped: a "**/" also stands for no
+    directory at all, so src/**/*.ts matches src/auth.ts (fnmatch alone needs a directory there)."""
+    forms, todo = {pattern}, [pattern]
+    while todo:
+        p = todo.pop()
+        i = p.find("**/")
+        while i != -1:
+            form = p[:i] + p[i + 3:]
+            if form not in forms:
+                forms.add(form)
+                todo.append(form)
+            i = p.find("**/", i + 1)
+    return forms
+
+
 def _matches_glob(rel: str, pattern: str | None) -> bool:
     if not pattern:
         return True
     name = rel.rsplit("/", 1)[-1]
-    patterns = [p.strip() for p in pattern.split(",") if p.strip()]
+    patterns = [f for p in pattern.split(",") if p.strip() for f in _globstar_forms(p.strip())]
     return any(
         fnmatch.fnmatch(rel, p) or fnmatch.fnmatch(name, p) or fnmatch.fnmatch(rel, f"**/{p}") for p in patterns
     )
@@ -58,6 +74,7 @@ class SearchFilesTool(Tool):
         limit = min(max(int(args.get("max_results") or 100), 1), 1000)
         files = [root] if root.is_file() else iter_files(root, ctx.ignore_dirs)
         results: list[str] = []
+        withheld: list[str] = []
         files_matched = 0
         for file in files:
             rel = ctx.permissions.paths.relative(file)
@@ -71,21 +88,27 @@ class SearchFilesTool(Tool):
                 continue
             if b"\x00" in data[:8192]:
                 continue
-            hit = False
+            hits: list[str] = []
             for lineno, line in enumerate(data.decode("utf-8", errors="replace").splitlines(), 1):
                 if regex.search(line):
-                    hit = True
-                    results.append(f"{rel}:{lineno}: {line.strip()[:300]}")
-                    if len(results) >= limit:
+                    hits.append(f"{rel}:{lineno}: {line.strip()[:300]}")
+                    if len(results) + len(hits) >= limit:
                         break
-            files_matched += hit
+            # matching lines of a sensitive file (.env, keys, ...) need the same approval as read_file
+            if hits and not ctx.permissions.check_read(file):
+                withheld.append(rel)
+                continue
+            results += hits
+            files_matched += bool(hits)
             if len(results) >= limit:
                 break
+        note = f"\n[Matches in {', '.join(withheld)} not shown: reading them was declined.]" if withheld else ""
         if not results:
-            return ToolResult(content="No matches found.", summary="No matches")
+            return ToolResult(content=("No matches shown." if withheld else "No matches found.") + note,
+                              summary="No matches")
         suffix = f"\n[Stopped after {limit} results; refine the pattern.]" if len(results) >= limit else ""
         return ToolResult(
-            content="\n".join(results) + suffix,
+            content="\n".join(results) + suffix + note,
             summary=f"{len(results)} matches in {files_matched} files",
         )
 

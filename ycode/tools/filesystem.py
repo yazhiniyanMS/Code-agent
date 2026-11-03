@@ -19,7 +19,9 @@ def _is_binary(data: bytes) -> bool:
     return b"\x00" in data[:8192]
 
 
-def _read_text(path: Path) -> str:
+def _read_text(path: Path, strict: bool = False) -> str:
+    """The file's text. strict (for editing): refuse bytes that are not UTF-8 instead of replacing them,
+    because writing the text back would replace them in the file too."""
     if not path.exists():
         raise ToolError(f"File not found: {path}")
     if path.is_dir():
@@ -33,7 +35,18 @@ def _read_text(path: Path) -> str:
     data = path.read_bytes()
     if _is_binary(data):
         raise ToolError(f"{path} looks like a binary file")
-    return data.decode("utf-8", errors="replace")
+    try:
+        return data.decode("utf-8", errors="strict" if strict else "replace")
+    except UnicodeDecodeError as exc:
+        raise ToolError(
+            f"{path} is not valid UTF-8 (byte {exc.start}); editing it would rewrite every such byte. "
+            "Convert the file to UTF-8 first, or change it with run_command."
+        ) from None
+
+
+def _crlf_only(text: str) -> bool:
+    """True when the text has line breaks and every one of them is CRLF."""
+    return "\r\n" in text and text.count("\n") == text.count("\r\n")
 
 
 def make_diff(before: str, after: str, rel: str, context: int = 3) -> str:
@@ -170,13 +183,18 @@ class EditFileTool(Tool):
             raise ToolError("old_string and new_string are identical; nothing to change")
         if old == "":
             raise ToolError("old_string must not be empty; use write_file to create files")
-        before = _read_text(path)
+        before = _read_text(path, strict=True)
+        if _crlf_only(before) and "\r" not in old + new:
+            # read_file shows lines without their CR, so the model writes LF: match and write CRLF instead
+            old, new = old.replace("\n", "\r\n"), new.replace("\n", "\r\n")
         count = before.count(old)
         if count == 0:
             hint = ""
             stripped = old.strip()
             if stripped and stripped in before:
                 hint = " (a whitespace-trimmed version exists - check indentation and line endings)"
+            elif "\n" in old and "\r\n" in before and not _crlf_only(before):
+                hint = " (the file mixes CRLF and LF line endings - match them exactly)"
             raise ToolError(f"old_string not found in {rel}{hint}. Re-read the file and try again.")
         if count > 1 and not args.get("replace_all"):
             raise ToolError(
@@ -186,7 +204,7 @@ class EditFileTool(Tool):
         if not ctx.permissions.check_write(path):
             raise PermissionDenied(f"user declined editing {rel}")
         after = before.replace(old, new) if args.get("replace_all") else before.replace(old, new, 1)
-        path.write_text(after, encoding="utf-8")
+        path.write_bytes(after.encode("utf-8"))  # as is: write_text would turn each \n into \r\n on Windows
         ctx.changed_files.add(rel)
         diff = make_diff(before, after, rel)
         added, removed = _diff_stats(diff)

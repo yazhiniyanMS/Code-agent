@@ -21,6 +21,15 @@ from ycode.lm.tokenizer import BPETokenizer
 
 Log = Callable[[str], None]
 CHECKPOINT_NAME = "model.pt"
+PACK_SUFFIX = ".ypk"  # a lossless checkpoint pack (ycode.lm.packckpt), loadable wherever a model directory is
+
+
+def info_path(model: Path | str) -> Path:
+    """The info.json describing a model: a model directory's own, or the sidecar a pack is written with."""
+    model = Path(model)
+    if model.suffix == PACK_SUFFIX:
+        return model.with_suffix(".info.json")
+    return (model if model.is_dir() else model.parent) / "info.json"
 
 
 def pick_device(requested: str = "auto") -> str:
@@ -73,7 +82,7 @@ class TrainConfig:
     device: str = "auto"
     precision: str = "auto"  # auto | fp32 | bf16 | fp16 (fp16 uses dynamic loss scaling)
     seed: int = 1337
-    init_from: str | None = None  # checkpoint dir to start from (required for sft)
+    init_from: str | None = None  # checkpoint dir, or .ypk pack, to start from (required for sft)
     resume: bool = False
     # v2 efficiency / quality options
     schedule: str = "wsd"  # wsd (warmup-stable-decay) | cosine
@@ -222,11 +231,17 @@ def plain_base(init_dir: Path | str, trained: set[str]) -> Path:
     ``init_dir`` is its own base. A base-referenced one (a compact fine-tune, e.g. V9's C2) stores
     only its trained tensors; when this run trains every one of them, all the tensors it does not
     train are that checkpoint's base's, so the base stands in for it."""
-    payload = torch.load(Path(init_dir) / CHECKPOINT_NAME, map_location="cpu", weights_only=True, mmap=True)
+    if Path(init_dir).suffix == PACK_SUFFIX:  # its names and metadata, without decoding a tensor
+        from ycode.lm import packckpt
+
+        payload, stored = packckpt.describe(init_dir)
+    else:
+        payload = torch.load(Path(init_dir) / CHECKPOINT_NAME, map_location="cpu", weights_only=True, mmap=True)
+        stored = list(payload["model"])
     base = payload.get("base")
     if not base:
         return Path(init_dir)
-    untrained = sorted(set(payload["model"]) - trained)
+    untrained = sorted(set(stored) - trained)
     if untrained:
         raise ValueError(f"{init_dir} stores tensors this run does not train ({', '.join(untrained[:3])}, ...): "
                          "a compact checkpoint cannot reference its base for them")
@@ -260,7 +275,13 @@ def load_checkpoint(path: Path, device: str = "cpu", *,
         raise FileNotFoundError(f"No model checkpoint at {path}")
     # Memory-map on CPU: a 1.5B checkpoint is 6 GB, and mapping avoids holding a second copy in RAM.
     mmap = {"mmap": True} if device == "cpu" else {}
-    payload = torch.load(path, map_location=device, weights_only=True, **mmap)
+    if path.suffix == PACK_SUFFIX:  # unpacked in memory, every tensor checked against the pack's content hash
+        from ycode.lm import packckpt
+
+        state, meta, _ = packckpt.unpacked_state(path)
+        payload = {**meta, "model": state}
+    else:
+        payload = torch.load(path, map_location=device, weights_only=True, **mmap)
     if payload.get("format") != "ycode-lm":
         raise ValueError(f"{path} is not a YCode model checkpoint")
     if "shards" in payload:  # large exported models are split into several files
@@ -1026,7 +1047,7 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
         from dataclasses import asdict
 
         metrics.close()
-        init_info = Path(cfg.init_from) / "info.json" if cfg.init_from else None
+        init_info = info_path(cfg.init_from) if cfg.init_from else None
         data_manifest = data_dir / "manifest.json"
         summary = {"steps": step, "minutes": (time.time() - t0) / 60, "tokens": tokens_seen,
                    "answer_tokens": answer_tokens, "empty_batches": empty_batches,

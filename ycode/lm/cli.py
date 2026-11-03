@@ -31,7 +31,8 @@ def _train_args(p: argparse.ArgumentParser, *, sft: bool) -> None:
     p.add_argument("--data", required=True, type=Path, help="Directory produced by `ycode-lm prepare`.")
     p.add_argument("--out", type=Path, default=None, help="Where to write the model.")
     if sft:
-        p.add_argument("--init-from", required=True, type=Path, help="Pretrained model directory.")
+        p.add_argument("--init-from", required=True, type=Path,
+                       help="Pretrained model directory, or a .ypk pack of one (ycode.lm.packckpt).")
         p.add_argument("--resume", action="store_true",
                        help="Continue an interrupted SFT run in --out (falls back to --init-from).")
     else:
@@ -177,7 +178,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = sub.add_parser("eval", help="Score models: bits/byte on held-out code + pass rate on coding problems.")
     p.add_argument("--model", action="append", type=Path, default=[],
-                   help="Model directory (repeat to compare several, e.g. v1 and v2).")
+                   help="Model directory or .ypk pack (repeat to compare several, e.g. v1 and v2).")
     p.add_argument("--heldout", action="append", type=Path, default=[],
                    help="Code the models never trained on, for bits-per-byte (repeatable).")
     p.add_argument("--samples", type=int, default=1, help="Samples per problem for pass@k (default 1 = greedy).")
