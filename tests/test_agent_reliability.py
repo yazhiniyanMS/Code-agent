@@ -127,3 +127,27 @@ def test_the_summary_does_not_call_a_failed_last_command_a_success(ui):
     assert "the last command failed" in text and "pytest -q" in text
     ui.print_task_summary(TaskResult(TaskStatus.COMPLETED, "All done!", 2, commands_run=[("pytest -q", 0)]), [])
     assert console_text(ui.console).count("the last command failed") == 1
+
+
+def test_the_same_call_returning_the_same_result_is_flagged_then_stopped(workspace, make_ctx):
+    (workspace / "a.py").write_text("x = 1\n")
+    read = ("read_file", {"path": "a.py"})
+    agent, provider = make_agent(workspace, make_ctx, [reply(calls=[read]) for _ in range(10)])
+    result = agent.run("look at a.py")
+    assert result.status is TaskStatus.STUCK and result.steps == 4
+    assert "returned the same result 2 times" in _results(provider, 2)[0].content
+    assert "x = 1" in _results(provider, 2)[0].content  # the result itself is still there
+    notices = [e for e in agent.events.events if e[0] == "notice"]
+    assert "read_file returned the same result 4 times" in notices[-1][2]
+
+
+def test_repeating_a_call_whose_result_changes_is_progress(workspace, make_ctx):
+    (workspace / "a.py").write_text("x = 0\n")
+    read = ("read_file", {"path": "a.py"})
+    script = []
+    for i in range(4):  # read, edit, read, edit, ...: the same read call, a different result each time
+        script += [reply(calls=[read]),
+                   reply(calls=[("edit_file", {"path": "a.py", "old_string": f"x = {i}", "new_string": f"x = {i + 1}"})])]
+    agent, provider = make_agent(workspace, make_ctx, script + [reply("done")])
+    assert agent.run("count up").status is TaskStatus.COMPLETED
+    assert (workspace / "a.py").read_text() == "x = 4\n"
