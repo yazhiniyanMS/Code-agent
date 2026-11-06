@@ -217,6 +217,12 @@ class ConsoleUI(AgentEvents):
                 suffix = "" if ok else (" (timed out)" if code is None else f" (exit {code})")
                 self.console.print(Text.assemble((f"   {mark} ", style), command, (suffix, "muted")))
             self.console.print()
+        if result.status is TaskStatus.COMPLETED and result.commands_run and result.commands_run[-1][1] != 0:
+            command, code = result.commands_run[-1]
+            status = "timed out" if code is None else f"exit {code}"
+            self.console.print(Text.assemble(
+                (f"  {self.sym['warn']} Note: the last command failed: ", "warn"), command, (f" ({status}). ", "muted"),
+                ("Check its output before relying on the result.", "muted")))
         style = {TaskStatus.COMPLETED: "ok", TaskStatus.INTERRUPTED: "warn",
                  TaskStatus.STEP_LIMIT: "warn"}.get(result.status, "err")
         mark = self.sym["ok"] if result.status is TaskStatus.COMPLETED else self.sym["warn"]

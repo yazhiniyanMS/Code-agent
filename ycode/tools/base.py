@@ -42,6 +42,9 @@ class ToolContext:
     changed_files: set[str] = field(default_factory=set)
     # Commands run during the current task: (command, exit_code).
     commands_run: list[tuple[str, int | None]] = field(default_factory=list)
+    # SHA-256 of each file's content as the agent last read or wrote it (resolved path -> hash): a file that
+    # changed since is not overwritten or edited blind.
+    seen_files: dict[str, str] = field(default_factory=dict)
 
 
 class Tool(abc.ABC):
