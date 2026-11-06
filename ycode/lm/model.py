@@ -12,7 +12,9 @@ checkpoints load unchanged: the new fields default to v1 behaviour.
 
 from __future__ import annotations
 
+import contextlib
 import math
+import warnings
 from dataclasses import asdict, dataclass
 
 import torch
@@ -92,6 +94,43 @@ class RMSNorm(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         norm = x.float().pow(2).mean(-1, keepdim=True).add(self.eps).rsqrt()
         return (x.float() * norm).type_as(x) * self.weight
+
+
+class WeightPrecisionError(RuntimeError):
+    """16-bit weights on a device where PyTorch will not autocast that type."""
+
+
+def autocast_on(device_type: str) -> bool:
+    """Whether autocast is on for ``device_type`` in this thread. Autocast is per device type: a
+    ``torch.autocast("cpu")`` context leaves tensors on MPS or CUDA uncast."""
+    try:
+        return torch.is_autocast_enabled(device_type)
+    except TypeError:  # PyTorch < 2.4 has no per-device query (and no MPS autocast)
+        legacy = {"cpu": torch.is_autocast_cpu_enabled, "cuda": torch.is_autocast_enabled}.get(device_type)
+        return bool(legacy and legacy())
+
+
+@contextlib.contextmanager
+def weight_autocast(device_type: str, dtype: torch.dtype):
+    """Autocast to the weights' 16-bit ``dtype`` on ``device_type``. PyTorch disables an autocast it cannot
+    run with only a warning, so this checks that it is really on, and raises WeightPrecisionError if not."""
+    def unsupported(why: str) -> WeightPrecisionError:
+        name = str(dtype).removeprefix("torch.")
+        return WeightPrecisionError(
+            f"the model's weights are {name} on {device_type}, and its fp32 activations can only meet them under "
+            f"autocast, which PyTorch {torch.__version__} does not run for {name} there ({why}). Load the model "
+            f"in fp32, or in a 16-bit type this device can autocast.")
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        try:
+            context = torch.autocast(device_type=device_type, dtype=dtype)
+        except (RuntimeError, ValueError) as exc:  # a device type PyTorch has no autocast for
+            raise unsupported(str(exc)) from exc
+    with context:
+        if not autocast_on(device_type):
+            raise unsupported("; ".join(str(w.message) for w in caught) or "autocast stayed off")
+        yield
 
 
 def rope_tables(head_dim: int, length: int, device=None, base: float = 10000.0):
@@ -222,6 +261,16 @@ class GPT(nn.Module):
 
     def forward(self, idx: torch.Tensor, targets: torch.Tensor | None = None,
                 loss_mask: torch.Tensor | None = None, caches=None, start_pos: int = 0):
+        # The residual stream is fp32 (below), so 16-bit weights compute under autocast on the tensors' own
+        # device. A caller's autocast for that device type is used as it is; with none (or one for another
+        # device type, e.g. torch.autocast("cpu") around MPS tensors), one is entered at the weights' dtype.
+        dtype = self.embed.weight.dtype
+        if dtype in (torch.float16, torch.bfloat16) and not autocast_on(idx.device.type):
+            with weight_autocast(idx.device.type, dtype):
+                return self._forward(idx, targets, loss_mask, caches, start_pos)
+        return self._forward(idx, targets, loss_mask, caches, start_pos)
+
+    def _forward(self, idx, targets, loss_mask, caches, start_pos):
         B, T = idx.shape
         if start_pos + T > self.cfg.block_size:
             raise ValueError(f"sequence length {start_pos + T} exceeds block_size {self.cfg.block_size}")

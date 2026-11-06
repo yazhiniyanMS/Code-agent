@@ -11,6 +11,7 @@ from typing import Callable
 import torch
 
 from ycode.lm.data import format_chat
+from ycode.lm.model import weight_autocast
 from ycode.lm.tokenizer import END, USER
 from ycode.lm.train import load_checkpoint, pick_device
 
@@ -55,10 +56,12 @@ class LocalLM:
         return torch.bfloat16
 
     def precision(self):
-        """16-bit weights compute under autocast; activations between layers stay fp32."""
+        """16-bit weights compute under autocast on the model's own device type (cpu, cuda or mps: a CPU
+        autocast does nothing for tensors on MPS); activations between layers stay fp32. A device that
+        cannot autocast the weights' type raises WeightPrecisionError, saying so."""
         if self.dtype is None:
             return contextlib.nullcontext()
-        return torch.autocast(device_type="cuda" if self.device.startswith("cuda") else "cpu", dtype=self.dtype)
+        return weight_autocast(self.device.split(":")[0], self.dtype)
 
     @property
     def version(self) -> int:
