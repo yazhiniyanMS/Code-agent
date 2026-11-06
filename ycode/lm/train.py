@@ -84,6 +84,7 @@ class TrainConfig:
     seed: int = 1337
     init_from: str | None = None  # checkpoint dir, or .ypk pack, to start from (required for sft)
     resume: bool = False
+    overwrite: bool = False  # start a new run in an out_dir that already holds a checkpoint (replacing it)
     # v2 efficiency / quality options
     schedule: str = "wsd"  # wsd (warmup-stable-decay) | cosine
     decay_frac: float = 0.2  # wsd: final fraction of training spent decaying the LR
@@ -131,6 +132,21 @@ def _load_optimizer(optimizer, state, model, cfg, dev_type, log):
     return optimizer
 
 
+def _save_durable(obj, path: Path) -> None:
+    """torch.save into a temporary file, flushed to disk, then renamed over ``path``: a crash or a full disk
+    part-way leaves the previous file (or none) under the real name, never a truncated one."""
+    tmp = path.with_name(path.name + ".tmp")
+    try:
+        with tmp.open("wb") as f:
+            torch.save(obj, f)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, path)
+    except BaseException:
+        tmp.unlink(missing_ok=True)
+        raise
+
+
 def save_checkpoint(out_dir: Path, model: GPT, tok: BPETokenizer, *, step: int, stage: str,
                     val_loss: float | None, optimizer=None, state: dict | None = None,
                     in_place: bool = False, base: dict | None = None) -> Path:
@@ -156,19 +172,19 @@ def save_checkpoint(out_dir: Path, model: GPT, tok: BPETokenizer, *, step: int, 
     if base is not None:
         payload["base"] = base
     path = out_dir / CHECKPOINT_NAME
-    tmp = path.with_suffix(".tmp")
-    torch.save(payload, tmp)
-    os.replace(tmp, path)
+    _save_durable(payload, path)
     if optimizer is not None:
         # Write-then-rename: a resumed optimizer's state may be memory-mapped from the old file,
-        # and overwriting that file in place would pull its pages away (SIGBUS).
-        optim_tmp = out_dir / "optim.pt.tmp"
-        torch.save({"optimizer": optimizer.state_dict(), "step": step}, optim_tmp)
-        os.replace(optim_tmp, out_dir / "optim.pt")
-    (out_dir / "info.json").write_text(json.dumps({
-        "step": step, "stage": stage, "val_loss": val_loss, "params": model.num_params(),
-        "config": model.cfg.to_dict(), "sha256": file_sha256(path),
-    }, indent=2))
+        # and overwriting that file in place would pull its pages away (SIGBUS). Its step is checked on resume.
+        _save_durable({"optimizer": optimizer.state_dict(), "step": step}, out_dir / "optim.pt")
+    info = out_dir / "info.json"
+    tmp = info.with_name("info.json.tmp")
+    with tmp.open("w") as f:
+        f.write(json.dumps({"step": step, "stage": stage, "val_loss": val_loss, "params": model.num_params(),
+                            "config": model.cfg.to_dict(), "sha256": file_sha256(path)}, indent=2))
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp, info)
     return path
 
 
@@ -767,6 +783,13 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
 
     start_step = 0
     has_checkpoint = (out_dir / CHECKPOINT_NAME).is_file()
+    if has_checkpoint and not cfg.resume and not cfg.overwrite:
+        try:
+            step = f" (step {json.loads((out_dir / 'info.json').read_text())['step']})"
+        except (OSError, ValueError, KeyError):
+            step = ""
+        raise FileExistsError(f"{out_dir} already holds a checkpoint{step}: pass --resume to continue it, or "
+                              "--overwrite to replace it with a new run")
     if cfg.resume and not has_checkpoint and not cfg.init_from:
         log(f"No checkpoint in {out_dir} yet; starting a new run.")
     if cfg.init_from or (cfg.resume and has_checkpoint):
@@ -829,10 +852,15 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
         else:
             log(f"No optimizer state for {world} sharded ranks; starting it fresh.")
     elif cfg.resume and has_checkpoint and (out_dir / "optim.pt").is_file():
-        state = torch.load(out_dir / "optim.pt", map_location=device, weights_only=True,
-                           **({"mmap": True} if device == "cpu" else {}))["optimizer"]
-        optimizer = _load_optimizer(optimizer, state, model, cfg, dev_type, log)
-        del state  # the file is memory-mapped: keep no reference, so a later save can replace it
+        saved = torch.load(out_dir / "optim.pt", map_location=device, weights_only=True,
+                           **({"mmap": True} if device == "cpu" else {}))
+        if saved.get("step") is not None and saved["step"] != start_step:
+            # a save interrupted between the two files: the weights of one step, the momentum of another
+            log(f"The optimizer state in {out_dir} is from step {saved['step']}, the model from step {start_step} "
+                "(a save was interrupted between the two files): starting the optimizer state fresh.")
+        else:
+            optimizer = _load_optimizer(optimizer, saved["optimizer"], model, cfg, dev_type, log)
+        del saved  # the file is memory-mapped: keep no reference, so a later save can replace it
     elif (cfg.init_optim and cfg.init_from and not (cfg.resume and has_checkpoint)
           and (Path(cfg.init_from) / "optim.pt").is_file()):
         # Continue the momentum of the run we start from (Lion's state), instead of from zero.

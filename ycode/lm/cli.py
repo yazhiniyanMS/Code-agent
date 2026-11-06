@@ -30,6 +30,8 @@ def _require_torch() -> None:
 def _train_args(p: argparse.ArgumentParser, *, sft: bool) -> None:
     p.add_argument("--data", required=True, type=Path, help="Directory produced by `ycode-lm prepare`.")
     p.add_argument("--out", type=Path, default=None, help="Where to write the model.")
+    p.add_argument("--overwrite", action="store_true",
+                   help="Start a new run even if --out already holds a checkpoint, replacing it.")
     if sft:
         p.add_argument("--init-from", required=True, type=Path,
                        help="Pretrained model directory, or a .ypk pack of one (ycode.lm.packckpt).")
@@ -294,6 +296,7 @@ def main(argv: list[str] | None = None) -> int:
             seed=args.seed,
             init_from=str(args.init_from) if args.init_from else None,
             resume=getattr(args, "resume", False),
+            overwrite=args.overwrite,
             until_step=args.until_step,
             save_interval=args.save_interval,
             save_in_place=args.save_in_place,
