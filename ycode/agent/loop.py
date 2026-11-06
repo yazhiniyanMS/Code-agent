@@ -69,6 +69,21 @@ _INTERRUPTED_NOTE = "[Note: the user interrupted the previous request before it 
 # task stops at the REPEAT_STOP-th instead of spending the remaining steps on it.
 REPEAT_WARN = 2
 REPEAT_STOP = 3
+# The conversation sent to the model is kept under this many characters (~4 per token: 100k tokens, half
+# of a 200k-token context, leaving room for the system prompt, tool specs and the answer). Past it, the
+# oldest tool outputs are replaced by a note; the most recent KEEP_RECENT_RESULTS stay whole.
+MAX_CONTEXT_CHARS = 400_000
+KEEP_RECENT_RESULTS = 2
+_ELIDED = ("[Output removed to keep the conversation within the model's context ({n:,} characters). "
+           "Run the tool again if you need it.]")
+
+
+def _size(message: Message) -> int:
+    if isinstance(message, ToolResultsMessage):
+        return sum(len(r.content) for r in message.results)
+    if isinstance(message, AssistantMessage):
+        return len(message.text or "") + sum(len(json.dumps(c.arguments, default=str)) for c in message.tool_calls)
+    return len(getattr(message, "text", "") or "")
 
 
 def _call_key(call: ToolCall) -> tuple[str, str]:
@@ -89,8 +104,10 @@ class Agent:
         system_prompt: str,
         max_steps: int = 50,
         events: AgentEvents | None = None,
+        max_context_chars: int = MAX_CONTEXT_CHARS,
     ) -> None:
         self.provider = provider
+        self.max_context_chars = max_context_chars
         self.registry = registry
         self.ctx = tool_context
         self.system_prompt = system_prompt
@@ -163,6 +180,7 @@ class Agent:
             steps += 1
             self.events.on_step_start(steps, self.max_steps)
 
+            self._fit_context()
             try:
                 response = self.provider.complete(
                     system=self.system_prompt, messages=self.messages, tools=tools, callbacks=callbacks
@@ -206,6 +224,27 @@ class Agent:
             if self._stuck:
                 self.events.on_notice(self._stuck, "error")
                 return TaskResult(TaskStatus.STUCK, final_text, steps)
+
+    def _fit_context(self) -> None:
+        """Keep the conversation under max_context_chars: replace the oldest tool outputs (never the
+        KEEP_RECENT_RESULTS newest, never a user or assistant message) by a note. Without this a long
+        session outgrows the model's context, and every request fails from then on."""
+        total = sum(_size(m) for m in self.messages)
+        if total <= self.max_context_chars:
+            return
+        results = [i for i, m in enumerate(self.messages) if isinstance(m, ToolResultsMessage)]
+        freed = 0
+        for i in results[:-KEEP_RECENT_RESULTS] if KEEP_RECENT_RESULTS else results:
+            if total - freed <= self.max_context_chars:
+                break
+            old = self.messages[i]
+            new = [ToolResultBlock(r.tool_call_id, _ELIDED.format(n=len(r.content)), r.is_error)
+                   if len(r.content) > len(_ELIDED) + 20 else r for r in old.results]
+            freed += _size(old) - sum(len(r.content) for r in new)
+            self.messages[i] = ToolResultsMessage(new)  # a new message: what was already sent stays as sent
+        if freed:
+            self.events.on_notice(f"Shortened older tool outputs by {freed:,} characters to stay within the "
+                                  "model's context.", "info")
 
     def _execute(self, calls: list[ToolCall], *, truncated: bool) -> list[ToolResultBlock]:
         results: list[ToolResultBlock] = []
