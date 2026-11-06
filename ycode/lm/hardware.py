@@ -28,9 +28,9 @@ import sys
 import time
 from pathlib import Path
 
-# The trainer uses mixed precision (autocast) on CPU and CUDA only: on MPS it trains in fp32 whatever
-# --precision asks for (ycode/lm/train.py), so that is what is benchmarked for training there.
-TRAIN_PRECISIONS = {"cpu": ("fp32", "bf16"), "cuda": ("fp32", "bf16"), "mps": ("fp32",)}
+# Each precision is resolved as the trainer and the local provider resolve it (ycode.lm.precision): one that
+# cannot run on a device gets a row with the error instead of a measurement in another precision.
+TRAIN_PRECISIONS = {"cpu": ("fp32", "bf16"), "cuda": ("fp32", "bf16"), "mps": ("fp32", "bf16", "fp16")}
 INFER_PRECISIONS = {"cpu": ("fp32", "bf16"), "cuda": ("fp32", "bf16"), "mps": ("fp32", "bf16", "fp16")}
 MEMORY_SHARE = 0.6  # a benchmark may use at most this share of the memory available when it starts
 
@@ -181,9 +181,9 @@ def benchmark(device: str, precision: str, *, preset: str = "small", model_dir: 
     """Throughput of one configuration: training tokens/s (forward, backward, AdamW step; the top
     ``train_layers`` blocks only, if given) or inference tokens/s (greedy decoding with the KV cache).
     The first step is a warm-up and is not timed."""
-    import contextlib
-
     import torch
+
+    from ycode.lm.precision import resolve
 
     row = {"device": device, "precision": precision, "task": "train" if train else "inference",
            "model": str(model_dir) if model_dir else preset}
@@ -208,13 +208,13 @@ def benchmark(device: str, precision: str, *, preset: str = "small", model_dir: 
     if available_gb is not None and need > MEMORY_SHARE * available_gb:
         return {**row, "skipped": f"needs ~{need:.1f} GB, more than {MEMORY_SHARE:.0%} of the "
                                   f"{available_gb:.1f} GB available"}
-    dtype = {"bf16": torch.bfloat16, "fp16": torch.float16}.get(precision)
     try:
+        plan = resolve(precision, device)
+        row["plan"] = plan.record()
         if train:
             model.to(device).train()
             optimizer = torch.optim.AdamW(trainable, lr=1e-4)
-            autocast = (torch.autocast(device_type=device.split(":")[0], dtype=dtype)
-                        if dtype is not None else contextlib.nullcontext())
+            autocast = plan.context()
             g = torch.Generator().manual_seed(0)
             batches = [(torch.randint(0, cfg.vocab_size, (batch, seq), generator=g).to(device),
                         torch.randint(0, cfg.vocab_size, (batch, seq), generator=g).to(device))
@@ -233,9 +233,8 @@ def benchmark(device: str, precision: str, *, preset: str = "small", model_dir: 
             row.update(tokens_per_s=round(batch * seq * steps / timed, 1), seconds_per_step=round(timed / steps, 3))
         else:
             # 16-bit weights compute under autocast on their own device; activations between layers stay fp32
-            model.to(device=device, dtype=dtype or torch.float32).eval()
-            autocast = (torch.autocast(device_type=device.split(":")[0], dtype=dtype)
-                        if dtype is not None else contextlib.nullcontext())
+            model.to(device=device, dtype=plan.dtype).eval()
+            autocast = plan.context()
             prompt = torch.randint(0, cfg.vocab_size, (1, 16), generator=torch.Generator().manual_seed(0)).to(device)
             with torch.no_grad(), autocast:
                 model.generate(prompt, 2, temperature=0)  # warm-up

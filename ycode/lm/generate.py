@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import contextlib
 import json
 import os
 from pathlib import Path
@@ -11,6 +10,7 @@ from typing import Callable
 import torch
 
 from ycode.lm.data import format_chat
+from ycode.lm.precision import resolve
 from ycode.lm.tokenizer import END, USER
 from ycode.lm.train import load_checkpoint, pick_device
 
@@ -35,30 +35,19 @@ class LocalLM:
         self.device = pick_device(device)
         if self.device == "cpu":
             torch.set_num_threads(max(1, os.cpu_count() or 1))
-        self.dtype = self._pick_dtype(Path(model_dir), dtype)
+        params = stored_params(Path(model_dir))
+        large = params is not None and params >= HALF_PRECISION_PARAMS
+        # what runs, decided once (ycode.lm.precision): an explicit dtype runs as asked or raises
+        self.plan = resolve(dtype, self.device, policy="memory" if large else "fp32")
+        self.dtype = self.plan.dtype if self.plan.autocast else None  # the weights' dtype; None keeps fp32
         self.model, self.tokenizer, self.payload = load_checkpoint(Path(model_dir), self.device,
                                                                    dtype=self.dtype)
         self.model.eval()
         self.path = Path(model_dir)
 
-    def _pick_dtype(self, model_dir: Path, requested: str) -> torch.dtype | None:
-        if requested == "fp32":
-            return None
-        if requested == "auto":
-            params = stored_params(model_dir)
-            if params is None or params < HALF_PRECISION_PARAMS:
-                return None
-        if self.device.startswith("cuda"):
-            from ycode.lm.optim import cuda_has_bf16
-
-            return torch.bfloat16 if cuda_has_bf16() else torch.float16
-        return torch.bfloat16
-
     def precision(self):
-        """16-bit weights compute under autocast; activations between layers stay fp32."""
-        if self.dtype is None:
-            return contextlib.nullcontext()
-        return torch.autocast(device_type="cuda" if self.device.startswith("cuda") else "cpu", dtype=self.dtype)
+        """16-bit weights compute under autocast on their own device; activations between layers stay fp32."""
+        return self.plan.context()
 
     @property
     def version(self) -> int:

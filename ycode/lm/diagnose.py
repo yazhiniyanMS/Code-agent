@@ -118,7 +118,7 @@ def split_losses(model_dir, data_dir, *, n: int = 64, seed: int = 0, device: str
 
     from ycode.lm.generate import LocalLM
 
-    from ycode.lm.train import cpu_supports_bf16
+    from ycode.lm.precision import cpu_supports_bf16
 
     # Full-sequence forwards are compute-bound: on a CPU without bf16 units, fp32 is ~3x faster than
     # emulated bf16 (the loss differs only by rounding; within one experiment every run uses the same host).

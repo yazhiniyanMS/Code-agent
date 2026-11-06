@@ -405,6 +405,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Layers:     {cfg.n_layer}, heads {cfg.n_head}, width {cfg.n_embd}, context {cfg.block_size}")
         print(f"Vocab:      {cfg.vocab_size}")
         print(f"Stage:      {lm.stage} (step {lm.payload.get('step')}, val loss {lm.payload.get('val_loss')})")
+        print(f"Precision:  {lm.plan.describe().removeprefix('precision: ')}")
         return 0
 
     def echo(chunk: str) -> None:

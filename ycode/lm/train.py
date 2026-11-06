@@ -16,7 +16,8 @@ import numpy as np
 import torch
 
 from ycode.lm.model import DEFAULT_PRESET, GPT, PRESETS, GPTConfig, rope_tables
-from ycode.lm.optim import build_optimizer, cuda_has_bf16
+from ycode.lm.optim import build_optimizer
+from ycode.lm.precision import resolve
 from ycode.lm.tokenizer import BPETokenizer
 
 Log = Callable[[str], None]
@@ -42,24 +43,9 @@ def pick_device(requested: str = "auto") -> str:
     return "cpu"
 
 
-def cpu_supports_bf16() -> bool:
-    """True on CPUs with native bfloat16 units (AMX / AVX512-BF16)."""
-    try:
-        flags = Path("/proc/cpuinfo").read_text()
-    except OSError:
-        return False
-    return "amx_bf16" in flags or "avx512_bf16" in flags
-
-
 def pick_precision(requested: str, device: str) -> str:
-    if requested != "auto":
-        return requested
-    if device.startswith("cuda"):
-        # bf16 needs Ampere or newer (A100, RTX 30xx+); older GPUs such as the T4 use fp16.
-        return "bf16" if cuda_has_bf16() else "fp16"
-    if device == "cpu" and cpu_supports_bf16():
-        return "bf16"
-    return "fp32"
+    """The precision training runs in (ycode.lm.precision.resolve; raises if it cannot run as asked)."""
+    return resolve(requested, device).actual
 
 
 @dataclass
@@ -755,6 +741,8 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
         if dev_type == "cuda":
             device = f"cuda:{local_rank}"
             torch.cuda.set_device(local_rank)
+    # before anything is loaded: a device or precision that cannot run as asked stops here, not after a 6 GB load
+    plan = resolve(cfg.precision, device)
     main = rank == 0
     shard = cfg.shard and distributed
     # Sharded models are built on the CPU and moved to the GPUs shard by shard.
@@ -792,7 +780,7 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
     # (V10: a run from C2 can drop C2's RAM-disk copy while it trains)
     base_ref = (base_reference(plain_base(cfg.init_from, {n for n, p in model.named_parameters() if p.requires_grad}))
                 if cfg.compact_checkpoints and cfg.train_layers and cfg.init_from else None)
-    precision = pick_precision(cfg.precision, dev_type)
+    precision = plan.actual
     amp_dtype = torch.float16 if precision == "fp16" else torch.bfloat16
     if shard:
         _shard_model(model, dev_type, world, amp_dtype if precision in ("fp16", "bf16") else None)
@@ -844,8 +832,8 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
 
     if in_backward:
         optimizer.optimizers[0].attach()
-    autocast = torch.autocast(device_type=dev_type if dev_type in ("cuda", "cpu") else "cpu", dtype=amp_dtype,
-                              enabled=(precision in ("bf16", "fp16") and dev_type in ("cuda", "cpu")),
+    # autocast on the device the tensors are on: a CPU context does nothing for MPS or CUDA tensors
+    autocast = torch.autocast(device_type=plan.device_type, dtype=amp_dtype, enabled=plan.autocast,
                               # The cast-weight cache is a second (16-bit) copy of the model: 3 GB at 1.5B.
                               cache_enabled=not in_backward)
     scaler = LossScaler() if precision == "fp16" else None
@@ -869,6 +857,7 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
         f"context {block}, device {device}{f' x{world}' if distributed else ''}, precision {precision}, "
         f"optimizer {cfg.optimizer}, stage {cfg.stage}{', compiled' if compiled else ''}"
         f"{', grad checkpointing' if cfg.grad_checkpoint else ''}{', sharded (FSDP)' if shard else ''}")
+    log(plan.describe())
 
     def all_ranks_finite(finite: bool) -> bool:
         flag = torch.tensor([1.0 if finite else 0.0], device=device)
@@ -1052,7 +1041,7 @@ def train(data_dir: Path, out_dir: Path, cfg: TrainConfig, *, log: Log = print) 
         summary = {"steps": step, "minutes": (time.time() - t0) / 60, "tokens": tokens_seen,
                    "answer_tokens": answer_tokens, "empty_batches": empty_batches,
                    "final": history[-1], "params": model.num_params(), "out_dir": str(out_dir),
-                   "world_size": world, "precision": precision,
+                   "world_size": world, "precision": precision, "precision_plan": plan.record(),
                    "fp16_skipped_steps": scaler.skipped if scaler else 0,
                    # what this run was: config, starting weights, data, result, cost
                    "config": asdict(cfg),
