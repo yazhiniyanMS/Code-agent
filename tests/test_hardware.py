@@ -101,3 +101,34 @@ def test_the_hardware_command_writes_its_report(tmp_path, capsys):
     assert set(report) == {"machine", "devices", "checks", "benchmarks", "recommendation"}
     assert report["recommendation"]["train"]["device"] == "cpu"
     assert "recommended for train: cpu" in capsys.readouterr().out
+
+
+def test_inference_reports_load_first_token_decoding_and_memory():
+    row = hardware.benchmark("cpu", "fp32", preset="tiny", train=False, gen_tokens=4, prompt_tokens=8)
+    assert row["synthetic"] and row["ttft_s"] > 0 and row["tokens_per_s"] > 0 and row["load_s"] >= 0
+    assert row["prompt_tokens"] == 8 and row["peak_rss_gb"] > 0
+    if sys.platform.startswith("linux"):
+        assert 0 < row["rss_gb"] <= row["peak_rss_gb"] + 0.01
+
+
+def test_a_checkpoint_too_big_for_memory_is_never_loaded(base_model, monkeypatch):  # noqa: F811
+    from ycode.lm import train
+
+    def never(*a, **k):
+        raise AssertionError("loaded a checkpoint the memory check had refused")
+
+    monkeypatch.setattr(train, "load_checkpoint", never)
+    row = hardware.benchmark("cpu", "fp32", model_dir=base_model, train=False, available_gb=1e-6)
+    assert row["skipped"].startswith("needs ~") and not row["synthetic"] and row["params"] > 0
+
+
+def test_a_real_checkpoint_loads_for_inference_in_16_bit(base_model):  # noqa: F811
+    row = hardware.benchmark("cpu", "bf16", model_dir=base_model, train=False, gen_tokens=3, prompt_tokens=4)
+    assert row["plan"]["actual"] == "bf16" and row["load_s"] > 0 and row["tokens_per_s"] > 0
+
+
+def test_the_save_benchmark_times_a_save_and_keeps_the_disk_buffer(tmp_path):
+    row = hardware.save_benchmark(tmp_path, preset="tiny", min_free_gb=0)
+    assert row["seconds"] > 0 and row["bytes"] > 0 and list(tmp_path.iterdir()) == []  # its folder is removed
+    full = hardware.save_benchmark(tmp_path, preset="tiny", min_free_gb=1e9)
+    assert "seconds" not in full and "GB kept free" in full["skipped"] and list(tmp_path.iterdir()) == []

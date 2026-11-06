@@ -212,6 +212,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--train-layers", type=int, help="Train only the top N blocks, as fine-tuning runs do.")
     p.add_argument("--steps", type=int, default=3, help="Timed training steps per configuration (default 3).")
     p.add_argument("--path", type=Path, default=Path("."), help="Where free disk is measured (default here).")
+    p.add_argument("--prompt-tokens", type=int, default=64, help="Prompt length for time to first token.")
+    p.add_argument("--save-bench", action="store_true",
+                   help="Also time a full checkpoint save under --path (skipped if it would leave < 5 GB free).")
     p.add_argument("--json", type=Path, help="Write the full report as JSON.")
 
     for name, help_text in (("chat", "Interactive Q&A with your model."),
