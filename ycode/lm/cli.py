@@ -204,6 +204,16 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--model", type=Path, help="Checkpoint the answers came from (recorded with its SHA-256).")
     p.add_argument("--run", help="A label for this evaluation run in the failure store (e.g. round54-bench).")
 
+    p = sub.add_parser("hardware", help="What this machine can train and run on, measured: chip, memory, disk, "
+                                         "CPU/MPS/CUDA checks and (with --bench) throughput and a recommendation.")
+    p.add_argument("--bench", action="store_true", help="Benchmark training and inference per device and precision.")
+    p.add_argument("--preset", default="small", help="Model size to benchmark with random weights (default small).")
+    p.add_argument("--model", type=Path, help="Benchmark this checkpoint instead of a preset.")
+    p.add_argument("--train-layers", type=int, help="Train only the top N blocks, as fine-tuning runs do.")
+    p.add_argument("--steps", type=int, default=3, help="Timed training steps per configuration (default 3).")
+    p.add_argument("--path", type=Path, default=Path("."), help="Where free disk is measured (default here).")
+    p.add_argument("--json", type=Path, help="Write the full report as JSON.")
+
     for name, help_text in (("chat", "Interactive Q&A with your model."),
                             ("sample", "Continue a code prompt."), ("info", "Show model details.")):
         p = sub.add_parser(name, help=help_text)
@@ -306,6 +316,10 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Saved model to {out}" + (f" (val loss {val:.3f})" if val is not None else ""))
         return 0
 
+    if args.command == "hardware":
+        from ycode.lm import hardware
+
+        return hardware.main(args)
     if args.command == "autotrain":
         return _autotrain(args)
 

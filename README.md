@@ -276,6 +276,10 @@ ycode --local v4                          # or: ycode-lm chat --model models/yco
 ```bash
 pip install -e .                   # PyTorch + NumPy are included
 
+# 0. Check the machine first: chip, memory, disk, whether CPU / MPS (Apple Silicon) / CUDA compute correctly,
+#    and measured training and inference speed per device and precision, with a recommendation.
+ycode-lm hardware --bench --json hardware.json      # add --model models/ycode-lm-v5 to measure a real model
+
 # 1. Build the dataset: collect code, train the tokenizer, create instruction pairs.
 #    --exclude keeps code out of training so you can evaluate on it later.
 ycode-lm prepare --out data/ --source ~/my-projects --source /usr/lib/python3.11 --exclude '*/holdout/*'
