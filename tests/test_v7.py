@@ -13,12 +13,22 @@ ROOT = Path(__file__).resolve().parents[1]
 
 @pytest.fixture(scope="module")
 def tok():
+    """The production tokenizer: the one embedded in the shipped v5 model, which round 54 and every later model
+    use (its recorded hash, experiments/v5_finetune/expA/manifest_round54.json). It used to be read from
+    /home/user/lmwork/data/tokenizer.json, which exists on one machine only, so this test silently skipped."""
+    import hashlib
+
+    import torch
+
     from ycode.lm.tokenizer import BPETokenizer
 
-    path = Path("/home/user/lmwork/data/tokenizer.json")
+    path = ROOT / "models" / "ycode-lm-v5" / "model.pt"
     if not path.exists():
-        pytest.skip("production tokenizer not available")
-    return BPETokenizer.load(path)
+        pytest.skip("models/ycode-lm-v5 is not in this checkout")
+    tokenizer = torch.load(path, map_location="cpu", weights_only=True)["tokenizer"]
+    digest = hashlib.sha256(json.dumps(tokenizer, sort_keys=True).encode()).hexdigest()
+    assert digest == "b766ca56df3f25bda5df83cee7f69ef8505ad8dbf4ea3e8700ca2238c212d33d"
+    return BPETokenizer.from_dict(tokenizer)
 
 
 def test_contrast_weights_mark_only_the_deciding_tokens(tok):
