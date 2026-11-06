@@ -65,13 +65,13 @@ _CONTINUE_AFTER_MAX_TOKENS = (
     "Your previous response was cut off by the output token limit. Continue exactly where you left off."
 )
 _INTERRUPTED_NOTE = "[Note: the user interrupted the previous request before it finished.]"
+# The same call returning the same result again, i.e. making no progress (e.g. re-reading an unchanged file):
+# the model is told from the REPEAT_WARN-th time, and the task stops at the SAME_RESULT_STOP-th.
+SAME_RESULT_STOP = 4
 # The same call (tool and input) failing again: the model is told from the REPEAT_WARN-th failure, and the
 # task stops at the REPEAT_STOP-th instead of spending the remaining steps on it.
 REPEAT_WARN = 2
 REPEAT_STOP = 3
-# The same call returning the same result again, i.e. making no progress (e.g. re-reading an unchanged file):
-# the model is told from the REPEAT_WARN-th time, and the task stops at the SAME_RESULT_STOP-th.
-SAME_RESULT_STOP = 4
 
 
 def _call_key(call: ToolCall) -> tuple[str, str]:
