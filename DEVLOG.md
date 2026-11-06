@@ -163,11 +163,38 @@ with its container on 2026-11-03; this file replaces it.)
 
   The 6.1 GB v5 save was skipped by the 5 GB disk buffer. Synthetic numbers do not describe the 1.5B model.
 
+### F. Shipped v5 evaluated on this host: PR #42 (`5ae89d6`)
+- **Why:** v5 is the only intact model. This checks that evaluation reproduces here, and measures it for a
+  baseline decision. Evaluation only: unseen-v2 stays sealed, and no definitions changed.
+- **Reproduced exactly:** the published v5 standard benchmark, 0/30 writes and 4/15 bug fixes (`total`,
+  `filter_even`, `celsius_to_fahrenheit`, `is_palindrome`). The 15 bug-fix answers were byte-identical across
+  two runs.
+- **Baseline:** bench 4/65 (clean 3/61); dev 3/62 (clean 3/44); unseen-v1 0/53.
+  - Primary score (dev clean + unseen, /97): v5 3, round 54 (recorded) 29.
+  - Round 54's fine-tune lifted dev from 3 to 39 but unseen-v1 only from 0 to 2: weak transfer to new task
+    families.
+- **Failures:** on unseen-v1, points are lost mostly to reasoning (22) and coding (11).
+- **Record:** answers, per-item analysis and `summary.json` (model hashes, environment, timings) in
+  `experiments/baselines/v5_2026-11-06/`.
+
+### G. Repeated calls that make no progress: PR #43 (`2afc75b`, `c86abd8`; stacked on #35)
+- **Broken:** #35 stopped repeated failing calls, but a call that succeeds without progress (re-reading an
+  unchanged file) could repeat until the step limit.
+- **Fix:** an identical call with an identical result is flagged from the 2nd time and stopped as STUCK at
+  the 4th. A changed result resets the count.
+- **Tests:** 2 new. Full suite 469 passed, 2 skipped. Merges cleanly with #39.
+
+### End-to-end check
+`ycode --local v5 -p "Write a Python function add(a, b) ..."` on the combined build answered in 13 s and exited
+0, with the local-model warning shown. As v5's scores predict, the code was wrong.
+
 ### Integration
-- All nine open PRs (#17, #26, #34-#40) merge into main without conflicts, in the order #34, #35, #36, #37, #38,
-  #39, #40, #26, #17.
-- Every pair of their branches also merges cleanly.
-- Full suite on the combined result: **509 passed, 3 skipped, 0 failed** (local branch, not pushed). The skips: real CUDA (no GPU); `huggingface_hub` not installed; and #17's memory-guard test, which needs round 54 on the machine.
+- All twelve open PRs (#17, #26, #34-#43) merge into main without conflicts, in the order #34, #35, #36, #37,
+  #38, #39, #40, #43, #42, #41, #26, #17.
+- Full suite on the combined result (local branch, not pushed): **511 passed, 3 skipped, 0 failed**. The skips:
+  - real CUDA (no GPU);
+  - `huggingface_hub` not installed;
+  - #17's memory-guard test, which needs round 54 on the machine.
 
 ### Status at the end of the cycle
 - **Model/checkpoints:** unchanged. Round 54, C2, R1 and S1 are missing; V13 stays paused; no training run.
@@ -177,9 +204,9 @@ with its container on 2026-11-03; this file replaces it.)
   - MPS verification on Apple hardware.
   - Durable checkpoint storage (network, token, approval).
   - A V13 baseline decision.
-  - #17, #26 and #34-#40 await review.
+  - #17, #26 and #34-#43 await review.
 - **Next recommended tasks:**
-  1. Review and merge #34-#40 in the order above.
+  1. Review and merge #34-#43 in the order above. #38 needs #34 first; #39 and #43 need #35 first.
   2. Run `ycode-lm hardware --bench --model models/ycode-lm-v5` on the MacBook to confirm the precision
      behaviour on MPS.
   3. Decide the V13 baseline and durable storage.
