@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import contextlib
 import difflib
+import hashlib
 import os
+import stat
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -22,6 +26,11 @@ def _is_binary(data: bytes) -> bool:
 def _read_text(path: Path, strict: bool = False) -> str:
     """The file's text. strict (for editing): refuse bytes that are not UTF-8 instead of replacing them,
     because writing the text back would replace them in the file too."""
+    return _load(path, strict)[0]
+
+
+def _load(path: Path, strict: bool = False) -> tuple[str, bytes]:
+    """The file's text (as ``_read_text``) and the bytes it was decoded from."""
     if not path.exists():
         raise ToolError(f"File not found: {path}")
     if path.is_dir():
@@ -36,12 +45,61 @@ def _read_text(path: Path, strict: bool = False) -> str:
     if _is_binary(data):
         raise ToolError(f"{path} looks like a binary file")
     try:
-        return data.decode("utf-8", errors="strict" if strict else "replace")
+        return data.decode("utf-8", errors="strict" if strict else "replace"), data
     except UnicodeDecodeError as exc:
         raise ToolError(
             f"{path} is not valid UTF-8 (byte {exc.start}); editing it would rewrite every such byte. "
             "Convert the file to UTF-8 first, or change it with run_command."
         ) from None
+
+
+def _remember(ctx: ToolContext, path: Path, data: bytes) -> None:
+    """Record the content the agent has now seen (read or written) of ``path``."""
+    ctx.seen_files[str(path)] = hashlib.sha256(data).hexdigest()
+
+
+def _check_not_stale(ctx: ToolContext, path: Path, rel: str, action: str) -> None:
+    """Refuse to change a file whose content is no longer what the agent last read or wrote: the user or a
+    command changed it since, and the change would be lost or edited blind."""
+    seen = ctx.seen_files.get(str(path))
+    if seen is not None and path.is_file() and hashlib.sha256(path.read_bytes()).hexdigest() != seen:
+        raise ToolError(f"{rel} changed since you last read it (edited by the user or by a command). "
+                        f"Read it again before {action} it.")
+
+
+def _new_file_mode() -> int:
+    umask = os.umask(0)
+    os.umask(umask)
+    return 0o666 & ~umask
+
+
+def _write_atomic(path: Path, data: bytes, rel: str) -> None:
+    """Write ``data`` to ``path`` all or nothing: into a temporary file next to it, flushed to disk, then
+    renamed over it (keeping its mode). A failure part-way (a full disk, say) leaves the file as it was.
+    The result is read back and compared."""
+    mode = stat.S_IMODE(path.stat().st_mode) if path.exists() else _new_file_mode()
+    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".ycode-tmp")
+    try:
+        with os.fdopen(fd, "wb") as f:
+            f.write(data)
+            f.flush()
+            os.fsync(f.fileno())
+        os.chmod(tmp, mode)
+        os.replace(tmp, path)
+    except OSError as exc:
+        with contextlib.suppress(OSError):
+            os.unlink(tmp)
+        raise ToolError(f"could not write {rel}: {exc.strerror or exc}. The file is unchanged.") from None
+    if path.read_bytes() != data:
+        raise ToolError(f"{rel} does not contain what was written; read it to see its current state")
+
+
+def _encode(text: str, rel: str) -> bytes:
+    try:
+        return text.encode("utf-8")
+    except UnicodeEncodeError as exc:  # e.g. a lone surrogate from a JSON "\ud800" escape
+        raise ToolError(f"cannot write {rel}: character {exc.object[exc.start]!r} at position {exc.start} "
+                        "cannot be encoded as UTF-8. The file is unchanged.") from None
 
 
 def _crlf_only(text: str) -> bool:
@@ -90,7 +148,8 @@ class ReadFileTool(Tool):
         path = ctx.permissions.paths.resolve(args["path"])
         if not ctx.permissions.check_read(path):
             raise PermissionDenied(f"user declined reading {args['path']}")
-        text = _read_text(path)
+        text, data = _load(path)
+        _remember(ctx, path, data)
         lines = text.splitlines()
         offset = max(1, int(args.get("offset") or 1))
         limit = max(1, int(args.get("limit") or DEFAULT_READ_LINES))
@@ -117,7 +176,8 @@ class WriteFileTool(Tool):
     name = "write_file"
     description = (
         "Create a new file or completely overwrite an existing one. Prefer edit_file for "
-        "changing part of an existing file. Parent directories are created as needed."
+        "changing part of an existing file. Parent directories are created as needed. An existing file "
+        "must have been read first, and must not have changed since."
     )
     parameters = {
         "type": "object",
@@ -137,12 +197,20 @@ class WriteFileTool(Tool):
         if path.is_dir():
             raise ToolError(f"{rel} is a directory")
         existed = path.exists()
+        if existed and str(path) not in ctx.seen_files:
+            raise ToolError(f"{rel} already exists and you have not read it: writing would replace content you "
+                            "have not seen. Read it first, use edit_file, or choose a new file name.")
+        if existed:
+            _check_not_stale(ctx, path, rel, "overwriting")
         before = _read_text(path) if existed else ""
         if not ctx.permissions.check_write(path):
             raise PermissionDenied(f"user declined writing {rel}")
         content: str = args["content"]
+        # as write_text did: newlines as the platform's (CRLF on Windows)
+        data = _encode(content.replace("\n", os.linesep) if os.linesep != "\n" else content, rel)
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(content, encoding="utf-8")
+        _write_atomic(path, data, rel)
+        _remember(ctx, path, data)
         ctx.changed_files.add(rel)
         diff = make_diff(before, content, rel)
         added, removed = _diff_stats(diff)
@@ -159,7 +227,8 @@ class EditFileTool(Tool):
     description = (
         "Replace an exact string in a file. old_string must match the file exactly "
         "(including whitespace/indentation) and be unique unless replace_all is true. "
-        "Include enough surrounding context to make it unique. Read the file first."
+        "Include enough surrounding context to make it unique. Read the file first; if it changed "
+        "since you read it, read it again."
     )
     parameters = {
         "type": "object",
@@ -183,6 +252,7 @@ class EditFileTool(Tool):
             raise ToolError("old_string and new_string are identical; nothing to change")
         if old == "":
             raise ToolError("old_string must not be empty; use write_file to create files")
+        _check_not_stale(ctx, path, rel, "editing")
         before = _read_text(path, strict=True)
         if _crlf_only(before) and "\r" not in old + new:
             # read_file shows lines without their CR, so the model writes LF: match and write CRLF instead
@@ -204,7 +274,9 @@ class EditFileTool(Tool):
         if not ctx.permissions.check_write(path):
             raise PermissionDenied(f"user declined editing {rel}")
         after = before.replace(old, new) if args.get("replace_all") else before.replace(old, new, 1)
-        path.write_bytes(after.encode("utf-8"))  # as is: write_text would turn each \n into \r\n on Windows
+        data = _encode(after, rel)  # as is: write_text would turn each \n into \r\n on Windows
+        _write_atomic(path, data, rel)
+        _remember(ctx, path, data)
         ctx.changed_files.add(rel)
         diff = make_diff(before, after, rel)
         added, removed = _diff_stats(diff)
