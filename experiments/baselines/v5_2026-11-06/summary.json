@@ -1,0 +1,124 @@
+{
+ "what": "The shipped YCode-LM v5, evaluated with the existing definitions (eval-v5.1-1) on bench, dev and unseen-v1; unseen-v2 stays sealed. Evaluation only: no training, no model selection.",
+ "model": {
+  "model": "models/ycode-lm-v5",
+  "files": 104,
+  "files_sha256": "386660d44cecc4e10adafbc26fc02aca45607052fa0e75511b9ab0126b5daf3a",
+  "model_pt_sha256": "68fe1ce80b6d029976746600a6f8c5594941aa5cda35e67d8c60a24e52230272"
+ },
+ "code": {
+  "commit": "936ac99 (main)",
+  "command": "ycode-lm eval --model models/ycode-lm-v5 --problems {standard,fresh,dev,unseen} --device cpu --answers-out ...; bench.jsonl = standard's 45 answers + fresh's 20 writes; ycode-lm analyze <answers> --set {bench,dev,unseen} --json ..."
+ },
+ "decoding": "greedy; bf16 weights under CPU autocast (LocalLM auto for >500M parameters)",
+ "environment": {
+  "host": "cloud container",
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz, 4 cores, AMX bf16",
+  "gpu": null,
+  "python": "3.11.18",
+  "torch": "2.14.1+cu130",
+  "os": "Linux-6.18.44-fc-v242-x86_64-with-glibc2.39"
+ },
+ "eval_version": "eval-v5.1-1",
+ "scores": {
+  "bench": {
+   "items": 65,
+   "official": 4,
+   "clean_items": 61,
+   "clean": 3,
+   "robust": 4
+  },
+  "dev": {
+   "items": 62,
+   "official": 3,
+   "clean_items": 44,
+   "clean": 3,
+   "robust": 2
+  },
+  "unseen": {
+   "items": 53,
+   "official": 0,
+   "clean_items": 53,
+   "clean": 0,
+   "robust": 0
+  }
+ },
+ "counts": {
+  "bench": {
+   "write": "0/30 standard + 0/20 fresh",
+   "fix": "4/15",
+   "fixed": [
+    "total",
+    "filter_even",
+    "celsius_to_fahrenheit",
+    "is_palindrome"
+   ]
+  },
+  "dev": {
+   "write": "2/47",
+   "solved": [
+    "all_odd",
+    "has_x"
+   ],
+   "fix": "1/15",
+   "fixed": [
+    "product"
+   ]
+  },
+  "unseen": {
+   "write": "0/53"
+  }
+ },
+ "points_lost_by_category": {
+  "bench": {
+   "formatting": 5,
+   "instruction_following": 13,
+   "hallucination": 18,
+   "coding": 6,
+   "factual": 2,
+   "reasoning": 17
+  },
+  "dev": {
+   "formatting": 7,
+   "instruction_following": 17,
+   "hallucination": 9,
+   "coding": 9,
+   "factual": 0,
+   "reasoning": 17
+  },
+  "unseen": {
+   "formatting": 8,
+   "instruction_following": 3,
+   "hallucination": 9,
+   "coding": 11,
+   "factual": 0,
+   "reasoning": 22
+  }
+ },
+ "seconds": {
+  "standard (30 writes + 15 bug fixes)": 616,
+  "fresh (20 writes + the same 15 bug fixes)": 249,
+  "dev (47 + 15)": 526,
+  "unseen (53)": 539
+ },
+ "published_v5_model_card": {
+  "write_standard": "0/30",
+  "fix": "4/15",
+  "fixed": [
+   "total",
+   "filter_even",
+   "celsius_to_fahrenheit",
+   "is_palindrome"
+  ],
+  "reproduced": true
+ },
+ "round54_recorded": {
+  "source": "experiments/v51/MISSION_REPORT.md",
+  "dev_clean_of_44": 27,
+  "unseen_of_53": 2,
+  "primary_of_97": 29,
+  "bench_of_65": 22,
+  "dev_of_62": 39
+ },
+ "determinism": "the 15 bug-fix answers were byte-identical in the standard and fresh runs (two separate processes)"
+}

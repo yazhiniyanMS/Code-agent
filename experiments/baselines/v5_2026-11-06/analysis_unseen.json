@@ -1,0 +1,1807 @@
+{
+ "set": "unseen",
+ "points": 0,
+ "of": 53,
+ "lost_by_category": {
+  "formatting": 8,
+  "instruction_following": 3,
+  "hallucination": 9,
+  "coding": 11,
+  "factual": 0,
+  "reasoning": 22
+ },
+ "groups": {
+  "unseen": {
+   "passed": 0,
+   "total": 53,
+   "lost": {
+    "reasoning": 22,
+    "hallucination": 9,
+    "coding": 11,
+    "formatting": 8,
+    "instruction_following": 3
+   }
+  }
+ },
+ "items": [
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "tens_digit",
+   "pass": false,
+   "prompt": "Write a Python function `tens_digit(n)` that returns the tens digit of the non-negative integer n.",
+   "answer": "```python\ndef tens_digit(n):\n    \"\"\"Return the tens digit of the non-negative integer n.\"\"\"\n    if n < 0:\n        return -1\n    if n < 0:\n        return -1\n    return -1\n```",
+   "code": "def tens_digit(n):\n    \"\"\"Return the tens digit of the non-negative integer n.\"\"\"\n    if n < 0:\n        return -1\n    if n < 0:\n        return -1\n    return -1",
+   "expected": "def tens_digit(n):\n    return (n // 10) % 10",
+   "category": "reasoning",
+   "reason": "tens_digit(47) gave -1 (expected 4)",
+   "failed_asserts": [
+    {
+     "assert": "assert tens_digit(47) == 4",
+     "call": "tens_digit(47)",
+     "actual": "-1",
+     "expected": "4",
+     "ok": false
+    },
+    {
+     "assert": "assert tens_digit(5) == 0",
+     "call": "tens_digit(5)",
+     "actual": "-1",
+     "expected": "0",
+     "ok": false
+    },
+    {
+     "assert": "assert tens_digit(1234) == 3",
+     "call": "tens_digit(1234)",
+     "actual": "-1",
+     "expected": "3",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "last_two_digits",
+   "pass": false,
+   "prompt": "Write a Python function `last_two_digits(n)` that returns the number formed by the last two digits of the non-negative integer n.",
+   "answer": "```python\ndef last_two_digits(n):\n    \"\"\"Return the number formed by the last two digits of the non-negative integer n.\"\"\"\n    n = as_int(n)\n    if n < 0:\n        raise ValueError('n must be a positive integer')\n    if n < 0:\n        raise ValueError('n should be a positive integer')\n    if n < 0: return 1\n    if n < 0: return 2\n    if n > 0: return -1\n    if n > 0: return -1\n    if not n: return -1\n    if n > 0: return 1\n    if n > 0: return -1\n    if is_nonnegative: return -1\n    if n > 0: return 0\n    if n > 0: return -1\n    if avx: return -1\n    if avx: return avx\n    if avx: return -1\n    if n > 0: return avx",
+   "code": "def last_two_digits(n):\n    \"\"\"Return the number formed by the last two digits of the non-negative integer n.\"\"\"\n    n = as_int(n)\n    if n < 0:\n        raise ValueError('n must be a positive integer')\n    if n < 0:\n        raise ValueError('n should be a positive integer')\n    if n < 0: return 1\n    if n < 0: return 2\n    if n > 0: return -1\n    if n > 0: return -1\n    if not n: return -1\n    if n > 0: return 1\n    if n > 0: return -1\n    if is_nonnegative: return -1\n    if n > 0: return 0\n    if n > 0: return -1\n    if avx: return -1\n    if avx: return avx\n    if avx: return -1\n    if n > 0: return avx",
+   "expected": "def last_two_digits(n):\n    return n % 100",
+   "category": "hallucination",
+   "reason": "NameError: name 'as_int' is not defined",
+   "failed_asserts": [
+    {
+     "assert": "assert last_two_digits(1234) == 34",
+     "call": "last_two_digits(1234)",
+     "error": [
+      "NameError",
+      "name 'as_int' is not defined"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert last_two_digits(7) == 7",
+     "call": "last_two_digits(7)",
+     "error": [
+      "NameError",
+      "name 'as_int' is not defined"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert last_two_digits(500) == 0",
+     "call": "last_two_digits(500)",
+     "error": [
+      "NameError",
+      "name 'as_int' is not defined"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "round_down_to_ten",
+   "pass": false,
+   "prompt": "Write a Python function `round_down_to_ten(n)` that returns the non-negative integer n rounded down to a multiple of ten.",
+   "answer": "```python\ndef round_down_to_ten(n):\n    \"\"\"Return the non-negative integer n rounded down to a multiple of ten.\"\"\"\n    return n * (n - 1) // 2\n```",
+   "code": "def round_down_to_ten(n):\n    \"\"\"Return the non-negative integer n rounded down to a multiple of ten.\"\"\"\n    return n * (n - 1) // 2",
+   "expected": "def round_down_to_ten(n):\n    return n // 10 * 10",
+   "category": "reasoning",
+   "reason": "round_down_to_ten(47) gave 1081 (expected 40)",
+   "failed_asserts": [
+    {
+     "assert": "assert round_down_to_ten(47) == 40",
+     "call": "round_down_to_ten(47)",
+     "actual": "1081",
+     "expected": "40",
+     "ok": false
+    },
+    {
+     "assert": "assert round_down_to_ten(40) == 40",
+     "call": "round_down_to_ten(40)",
+     "actual": "780",
+     "expected": "40",
+     "ok": false
+    },
+    {
+     "assert": "assert round_down_to_ten(9) == 0",
+     "call": "round_down_to_ten(9)",
+     "actual": "36",
+     "expected": "0",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "double_plus_one",
+   "pass": false,
+   "prompt": "Write a Python function `double_plus_one(x)` that returns twice x plus one.",
+   "answer": "```python\ndef double_plus_one(x):\n    \"\"\"Return twice x plus one.\"\"\"\n    return x\n```",
+   "code": "def double_plus_one(x):\n    \"\"\"Return twice x plus one.\"\"\"\n    return x",
+   "expected": "def double_plus_one(x):\n    return 2 * x + 1",
+   "category": "reasoning",
+   "reason": "double_plus_one(3) gave 3 (expected 7)",
+   "failed_asserts": [
+    {
+     "assert": "assert double_plus_one(3) == 7",
+     "call": "double_plus_one(3)",
+     "actual": "3",
+     "expected": "7",
+     "ok": false
+    },
+    {
+     "assert": "assert double_plus_one(0) == 1",
+     "call": "double_plus_one(0)",
+     "actual": "0",
+     "expected": "1",
+     "ok": false
+    },
+    {
+     "assert": "assert double_plus_one(-2) == -3",
+     "call": "double_plus_one(-2)",
+     "actual": "-2",
+     "expected": "-3",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "is_teenager",
+   "pass": false,
+   "prompt": "Write a Python function `is_teenager(age)` that returns True if age is from 13 to 19 inclusive.",
+   "answer": "```python\ndef is_teenager(age):\n    \"\"\"Return True if age is from 13 to 19 inclusive.\"\"\"\n    return True\n```",
+   "code": "def is_teenager(age):\n    \"\"\"Return True if age is from 13 to 19 inclusive.\"\"\"\n    return True",
+   "expected": "def is_teenager(age):\n    return 13 <= age <= 19",
+   "category": "reasoning",
+   "reason": "is_teenager(12) gave True (expected False)",
+   "failed_asserts": [
+    {
+     "assert": "assert not is_teenager(12)",
+     "call": "is_teenager(12)",
+     "actual": "True",
+     "expected": "False",
+     "ok": false
+    },
+    {
+     "assert": "assert not is_teenager(20)",
+     "call": "is_teenager(20)",
+     "actual": "True",
+     "expected": "False",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "same_sign",
+   "pass": false,
+   "prompt": "Write a Python function `same_sign(a, b)` that returns True if a and b are both positive or both negative.",
+   "answer": "```python\ndef same_sign(a, b):\n    \"\"\"Return True if a and b are both positive or both positive. \"\"\"\n    a = as_int(a)\n    if b is not None:\n        return a < b\n    if a < b:\n        return a < b\n    if a < b and b < a:\n        return a < b\n    if a < b or b < a:\n        return a < b\n    if b < a:\n        return a < b\n    if c < b:\n        return a < c\n    if c < b:\n        return a < b\n    if c < b and c < a:\n        return a < b\n    if c > b:\n        return a < b\n    if c < a:\n        return a < a\n    if c < b:\n        return a < b\n```",
+   "code": "def same_sign(a, b):\n    \"\"\"Return True if a and b are both positive or both positive. \"\"\"\n    a = as_int(a)\n    if b is not None:\n        return a < b\n    if a < b:\n        return a < b\n    if a < b and b < a:\n        return a < b\n    if a < b or b < a:\n        return a < b\n    if b < a:\n        return a < b\n    if c < b:\n        return a < c\n    if c < b:\n        return a < b\n    if c < b and c < a:\n        return a < b\n    if c > b:\n        return a < b\n    if c < a:\n        return a < a\n    if c < b:\n        return a < b",
+   "expected": "def same_sign(a, b):\n    return (a > 0 and b > 0) or (a < 0 and b < 0)",
+   "category": "hallucination",
+   "reason": "NameError: name 'as_int' is not defined",
+   "failed_asserts": [
+    {
+     "assert": "assert same_sign(2, 5)",
+     "call": "same_sign(2, 5)",
+     "error": [
+      "NameError",
+      "name 'as_int' is not defined"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert same_sign(-1, -7)",
+     "call": "same_sign(-1, -7)",
+     "error": [
+      "NameError",
+      "name 'as_int' is not defined"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert not same_sign(-1, 3)",
+     "call": "same_sign(-1, 3)",
+     "error": [
+      "NameError",
+      "name 'as_int' is not defined"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "last_three",
+   "pass": false,
+   "prompt": "Write a Python function `last_three(items)` that returns a list of the last three items of the list (all of them if there are fewer).",
+   "answer": "```python\ndef last_three(items):\n    \"\"\"Return a list of the last three items of the list (all of them if there are fewer).\n\n    This function returns a list of the last three items of the list (any of them if there are fewer).\n    \"\"\"\n    return [items[i] for i in items]\n```",
+   "code": "def last_three(items):\n    \"\"\"Return a list of the last three items of the list (all of them if there are fewer).\n\n    This function returns a list of the last three items of the list (any of them if there are fewer).\n    \"\"\"\n    return [items[i] for i in items]",
+   "expected": "def last_three(items):\n    return items[-3:]",
+   "category": "coding",
+   "reason": "IndexError on last_three([1, 2, 3, 4, 5]): list index out of range",
+   "failed_asserts": [
+    {
+     "assert": "assert last_three([1, 2, 3, 4, 5]) == [3, 4, 5]",
+     "call": "last_three([1, 2, 3, 4, 5])",
+     "error": [
+      "IndexError",
+      "list index out of range"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert last_three([1, 2]) == [1, 2]",
+     "call": "last_three([1, 2])",
+     "error": [
+      "IndexError",
+      "list index out of range"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "drop_first",
+   "pass": false,
+   "prompt": "Write a Python function `drop_first(items)` that returns a new list with every item except the first.",
+   "answer": "```python\ndef drop_first(items):\n    \"\"\"Return a new list with every item except the first.\"\"\"\n    return list(items)\n```",
+   "code": "def drop_first(items):\n    \"\"\"Return a new list with every item except the first.\"\"\"\n    return list(items)",
+   "expected": "def drop_first(items):\n    return items[1:]",
+   "category": "reasoning",
+   "reason": "drop_first([1, 2, 3]) gave [1, 2, 3] (expected [2, 3])",
+   "failed_asserts": [
+    {
+     "assert": "assert drop_first([1, 2, 3]) == [2, 3]",
+     "call": "drop_first([1, 2, 3])",
+     "actual": "[1, 2, 3]",
+     "expected": "[2, 3]",
+     "ok": false
+    },
+    {
+     "assert": "assert drop_first([9]) == []",
+     "call": "drop_first([9])",
+     "actual": "[9]",
+     "expected": "[]",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "swap_ends",
+   "pass": false,
+   "prompt": "Write a Python function `swap_ends(items)` that returns a new list with the first and last items swapped.",
+   "answer": "```python\ndef swap_ends(items):\n    \"\"\"Return a new list with the first and last items swapped.\"\"\"\n    return [item for item in items if not item.startswith('=')]\n```",
+   "code": "def swap_ends(items):\n    \"\"\"Return a new list with the first and last items swapped.\"\"\"\n    return [item for item in items if not item.startswith('=')]",
+   "expected": "def swap_ends(items):\n    if len(items) < 2:\n        return list(items)\n    return [items[-1]] + items[1:-1] + [items[0]]",
+   "category": "hallucination",
+   "reason": "AttributeError: 'int' object has no attribute 'startswith'",
+   "failed_asserts": [
+    {
+     "assert": "assert swap_ends([1, 2, 3, 4]) == [4, 2, 3, 1]",
+     "call": "swap_ends([1, 2, 3, 4])",
+     "error": [
+      "AttributeError",
+      "'int' object has no attribute 'startswith'"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert swap_ends([1, 2]) == [2, 1]",
+     "call": "swap_ends([1, 2])",
+     "error": [
+      "AttributeError",
+      "'int' object has no attribute 'startswith'"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert swap_ends([5]) == [5]",
+     "call": "swap_ends([5])",
+     "error": [
+      "AttributeError",
+      "'int' object has no attribute 'startswith'"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "first_plus_last",
+   "pass": false,
+   "prompt": "Write a Python function `first_plus_last(numbers)` that returns the first number of the list plus the last one.",
+   "answer": "```python\ndef first_plus_last(numbers):\n    \"\"\"Return the first number of the list plus the last one.\"\"\"\n    return len(numbers) - 1\n```",
+   "code": "def first_plus_last(numbers):\n    \"\"\"Return the first number of the list plus the last one.\"\"\"\n    return len(numbers) - 1",
+   "expected": "def first_plus_last(numbers):\n    return numbers[0] + numbers[-1]",
+   "category": "reasoning",
+   "reason": "first_plus_last([1, 2, 3]) gave 2 (expected 4)",
+   "failed_asserts": [
+    {
+     "assert": "assert first_plus_last([1, 2, 3]) == 4",
+     "call": "first_plus_last([1, 2, 3])",
+     "actual": "2",
+     "expected": "4",
+     "ok": false
+    },
+    {
+     "assert": "assert first_plus_last([5]) == 10",
+     "call": "first_plus_last([5])",
+     "actual": "0",
+     "expected": "10",
+     "ok": false
+    },
+    {
+     "assert": "assert first_plus_last([-1, 0, 4]) == 3",
+     "call": "first_plus_last([-1, 0, 4])",
+     "actual": "2",
+     "expected": "3",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "count_above_mean",
+   "pass": false,
+   "prompt": "Write a Python function `count_above_mean(numbers)` that returns how many numbers in the non-empty list are greater than the list's mean.",
+   "answer": "```python\ndef count_above_mean(numbers):\n    \"\"\"Returns how many numbers in the non-empty list are greater than the list's mean.\"\"\"\n    return sum((abs(sum(abs(sum(abs(sum(abs(sum((abs(sum(abs(sum(abs(abs(sum(abs(sum(abs(abs((sum(abs(sum(abs(sum(abs((sum(abs(sum(abs(abs(sum((abs(sum(abs(abs(sum(abs((sum(abs(abs(sum(abs(sum((abs(abs(sum(abs(sum(abs((abs(sum(abs(sum(abs(v(abs(sum(abs(sum(abs(v(-abs(sum(abs(sum(abs(abs(-abs(sum(abs(sum(abs(sum(-abs(sum(abs(sum(abs(v([abs(sum(abs(",
+   "code": "def count_above_mean(numbers):\n    \"\"\"Returns how many numbers in the non-empty list are greater than the list's mean.\"\"\"\n    return sum((abs(sum(abs(sum(abs(sum(abs(sum((abs(sum(abs(sum(abs(abs(sum(abs(sum(abs(abs((sum(abs(sum(abs(sum(abs((sum(abs(sum(abs(abs(sum((abs(sum(abs(abs(sum(abs((sum(abs(abs(sum(abs(sum((abs(abs(sum(abs(sum(abs((abs(sum(abs(sum(abs(v(abs(sum(abs(sum(abs(v(-abs(sum(abs(sum(abs(abs(-abs(sum(abs(sum(abs(sum(-abs(sum(abs(sum(abs(v([abs(sum(abs(",
+   "expected": "def count_above_mean(numbers):\n    mean = sum(numbers) / len(numbers)\n    return sum(1 for x in numbers if x > mean)",
+   "category": "formatting",
+   "reason": "syntax error: '(' was never closed (<answer>, line 3)",
+   "failed_asserts": [],
+   "error": [
+    "SyntaxError",
+    "'(' was never closed (<answer>, line 3)"
+   ]
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "count_changes",
+   "pass": false,
+   "prompt": "Write a Python function `count_changes(items)` that returns how many times an item differs from the item just before it.",
+   "answer": "```python\ndef count_changes(items):\n    \"\"\"Return how many times an item differs from the item just before it.\"\"\"\n    return sum(map(item.items, items))\n```",
+   "code": "def count_changes(items):\n    \"\"\"Return how many times an item differs from the item just before it.\"\"\"\n    return sum(map(item.items, items))",
+   "expected": "def count_changes(items):\n    return sum(1 for a, b in zip(items, items[1:]) if a != b)",
+   "category": "hallucination",
+   "reason": "NameError: name 'item' is not defined",
+   "failed_asserts": [
+    {
+     "assert": "assert count_changes([1, 1, 2, 2, 3]) == 2",
+     "call": "count_changes([1, 1, 2, 2, 3])",
+     "error": [
+      "NameError",
+      "name 'item' is not defined"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert count_changes([4, 4, 4]) == 0",
+     "call": "count_changes([4, 4, 4])",
+     "error": [
+      "NameError",
+      "name 'item' is not defined"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert count_changes([1, 2, 1]) == 2",
+     "call": "count_changes([1, 2, 1])",
+     "error": [
+      "NameError",
+      "name 'item' is not defined"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "chunk_pairs",
+   "pass": false,
+   "prompt": "Write a Python function `chunk_pairs(items)` that returns a list of consecutive pairs [items[0], items[1]], [items[2], items[3]], ... (a last single item forms its own list).",
+   "answer": "```python\ndef chunk_pairs(items):\n    \"\"\"Return a list of consecutive pairs [items[0], items[1]], [items[2], items[3]], ... (a last single item forms its own list).\n\n    Returns a list of consecutive pairs [items[1], items[2], items[3], ...].\n    \"\"\"\n    return [list(c) for c in items]\n```",
+   "code": "def chunk_pairs(items):\n    \"\"\"Return a list of consecutive pairs [items[0], items[1]], [items[2], items[3]], ... (a last single item forms its own list).\n\n    Returns a list of consecutive pairs [items[1], items[2], items[3], ...].\n    \"\"\"\n    return [list(c) for c in items]",
+   "expected": "def chunk_pairs(items):\n    return [items[i:i + 2] for i in range(0, len(items), 2)]",
+   "category": "coding",
+   "reason": "TypeError on chunk_pairs([1, 2, 3, 4]): 'int' object is not iterable",
+   "failed_asserts": [
+    {
+     "assert": "assert chunk_pairs([1, 2, 3, 4]) == [[1, 2], [3, 4]]",
+     "call": "chunk_pairs([1, 2, 3, 4])",
+     "error": [
+      "TypeError",
+      "'int' object is not iterable"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert chunk_pairs([1, 2, 3]) == [[1, 2], [3]]",
+     "call": "chunk_pairs([1, 2, 3])",
+     "error": [
+      "TypeError",
+      "'int' object is not iterable"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "count_true_values",
+   "pass": false,
+   "prompt": "Write a Python function `count_true_values(d)` that returns how many values in the dictionary d are True.",
+   "answer": "```python\ndef count_true_values(d):\n    \"\"\"Return how many values in the dictionary d are True.\"\"\"\n    return d.values()\n```",
+   "code": "def count_true_values(d):\n    \"\"\"Return how many values in the dictionary d are True.\"\"\"\n    return d.values()",
+   "expected": "def count_true_values(d):\n    return sum(1 for v in d.values() if v is True)",
+   "category": "reasoning",
+   "reason": "count_true_values({'a': True, 'b': False, 'c': True}) gave dict_values([True, False, True]) (expected 2)",
+   "failed_asserts": [
+    {
+     "assert": "assert count_true_values({'a': True, 'b': False, 'c': True}) == 2",
+     "call": "count_true_values({'a': True, 'b': False, 'c': True})",
+     "actual": "dict_values([True, False, True])",
+     "expected": "2",
+     "ok": false
+    },
+    {
+     "assert": "assert count_true_values({}) == 0",
+     "call": "count_true_values({})",
+     "actual": "dict_values([])",
+     "expected": "0",
+     "ok": false
+    },
+    {
+     "assert": "assert count_true_values({'a': False}) == 0",
+     "call": "count_true_values({'a': False})",
+     "actual": "dict_values([False])",
+     "expected": "0",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "repeat_word",
+   "pass": false,
+   "prompt": "Write a Python function `repeat_word(word, n)` that returns word repeated n times, separated by single spaces.",
+   "answer": "```python\ndef repeat_word(word, n):\n    \"\"\"Return word repeated n times, separated by single spaces.\"\"\"\n    if n < 0:\n        raise ValueError('n must be non-negative')\n    if n < 0:\n        raise ValueError('n is not positive')\n    if n < 0:\n        raise ValueError('no word repeated n times')\n    if n > 0:\n        raise ValueError('n is not positive')\n```",
+   "code": "def repeat_word(word, n):\n    \"\"\"Return word repeated n times, separated by single spaces.\"\"\"\n    if n < 0:\n        raise ValueError('n must be non-negative')\n    if n < 0:\n        raise ValueError('n is not positive')\n    if n < 0:\n        raise ValueError('no word repeated n times')\n    if n > 0:\n        raise ValueError('n is not positive')",
+   "expected": "def repeat_word(word, n):\n    return ' '.join([word] * n)",
+   "category": "coding",
+   "reason": "ValueError on repeat_word('hi', 3): n is not positive",
+   "failed_asserts": [
+    {
+     "assert": "assert repeat_word('hi', 3) == 'hi hi hi'",
+     "call": "repeat_word('hi', 3)",
+     "error": [
+      "ValueError",
+      "n is not positive"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert repeat_word('a', 1) == 'a'",
+     "call": "repeat_word('a', 1)",
+     "error": [
+      "ValueError",
+      "n is not positive"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert repeat_word('x', 0) == ''",
+     "call": "repeat_word('x', 0)",
+     "actual": "None",
+     "expected": "''",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "count_doubled_letters",
+   "pass": false,
+   "prompt": "Write a Python function `count_doubled_letters(s)` that returns how many positions in s hold the same character as the position right after it.",
+   "answer": "```python\ndef count_doubled_letters(s):\n    \"\"\"Return how many positions in s hold the same character as the position right after it.\"\"\"\n    return s.strip()\n```",
+   "code": "def count_doubled_letters(s):\n    \"\"\"Return how many positions in s hold the same character as the position right after it.\"\"\"\n    return s.strip()",
+   "expected": "def count_doubled_letters(s):\n    return sum(1 for a, b in zip(s, s[1:]) if a == b)",
+   "category": "instruction_following",
+   "reason": "wrote the body of training function 'trim'",
+   "failed_asserts": [
+    {
+     "assert": "assert count_doubled_letters('balloon') == 2",
+     "call": "count_doubled_letters('balloon')",
+     "actual": "'balloon'",
+     "expected": "2",
+     "ok": false
+    },
+    {
+     "assert": "assert count_doubled_letters('abc') == 0",
+     "call": "count_doubled_letters('abc')",
+     "actual": "'abc'",
+     "expected": "0",
+     "ok": false
+    },
+    {
+     "assert": "assert count_doubled_letters('aaa') == 2",
+     "call": "count_doubled_letters('aaa')",
+     "actual": "'aaa'",
+     "expected": "2",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "dashes_for_spaces",
+   "pass": false,
+   "prompt": "Write a Python function `dashes_for_spaces(s)` that returns s with every space replaced by a dash.",
+   "answer": "```python\ndef dashes_for_spaces(s):\n    \"\"\"Return s with every space replaced by a dash.\"\"\"\n    return s[:s.index('.')]\n```",
+   "code": "def dashes_for_spaces(s):\n    \"\"\"Return s with every space replaced by a dash.\"\"\"\n    return s[:s.index('.')]",
+   "expected": "def dashes_for_spaces(s):\n    return s.replace(' ', '-')",
+   "category": "coding",
+   "reason": "ValueError on dashes_for_spaces('a b c'): substring not found",
+   "failed_asserts": [
+    {
+     "assert": "assert dashes_for_spaces('a b c') == 'a-b-c'",
+     "call": "dashes_for_spaces('a b c')",
+     "error": [
+      "ValueError",
+      "substring not found"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert dashes_for_spaces('abc') == 'abc'",
+     "call": "dashes_for_spaces('abc')",
+     "error": [
+      "ValueError",
+      "substring not found"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert dashes_for_spaces('  ') == '--'",
+     "call": "dashes_for_spaces('  ')",
+     "error": [
+      "ValueError",
+      "substring not found"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "longest_word_length",
+   "pass": false,
+   "prompt": "Write a Python function `longest_word_length(text)` that returns the length of the longest word in text (0 if there are no words).",
+   "answer": "```python\ndef ls(text):\n    \"\"\"Return the length of the longest word in text (0 if there are no words).\n\n    Returns the length of the longest word in text (0 otherwise).\n    \"\"\"\n    return len(text) - 1\n```",
+   "code": "def ls(text):\n    \"\"\"Return the length of the longest word in text (0 if there are no words).\n\n    Returns the length of the longest word in text (0 otherwise).\n    \"\"\"\n    return len(text) - 1",
+   "expected": "def longest_word_length(text):\n    return max((len(w) for w in text.split()), default=0)",
+   "category": "instruction_following",
+   "reason": "named the function 'ls' instead of 'longest_word_length'",
+   "failed_asserts": [
+    {
+     "assert": "assert longest_word_length('a bb ccc') == 3",
+     "call": "longest_word_length('a bb ccc')",
+     "error": [
+      "NameError",
+      "name 'longest_word_length' is not defined"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert longest_word_length('') == 0",
+     "call": "longest_word_length('')",
+     "error": [
+      "NameError",
+      "name 'longest_word_length' is not defined"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert longest_word_length('hello') == 5",
+     "call": "longest_word_length('hello')",
+     "error": [
+      "NameError",
+      "name 'longest_word_length' is not defined"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "words_starting_with_vowel",
+   "pass": false,
+   "prompt": "Write a Python function `words_starting_with_vowel(text)` that returns how many words in text start with a vowel (a, e, i, o or u, in either case).",
+   "answer": "```python\ndefwords_starting_with_vowel(text):\n    \"\"\"Return how many words in text start with a vowel (a, e, i, o or u, in either case).\n\n    Optional keyword arguments:\n        text (str, optional): A string or None to use for the word. Defaults to None.\n        text (str, optional): A string or None for no word. Defaults to None.\n        text (str, default): A string or None for no word. Defaults to \"\\\\\\\\n\".\n        text (str, optional): A string or None if no word is found. Defaults to None.\n        text (str, optional, optional): A string or None if no word is defined. Defaults to None.\n        text (str, optional or None, optional): A string or None if no word is specified. Defaults to None.\n        text (str, optional) or None if no word is found. Defaults to None if",
+   "code": "defwords_starting_with_vowel(text):\n    \"\"\"Return how many words in text start with a vowel (a, e, i, o or u, in either case).\n\n    Optional keyword arguments:\n        text (str, optional): A string or None to use for the word. Defaults to None.\n        text (str, optional): A string or None for no word. Defaults to None.\n        text (str, default): A string or None for no word. Defaults to \"\\\\\\\\n\".\n        text (str, optional): A string or None if no word is found. Defaults to None.\n        text (str, optional, optional): A string or None if no word is defined. Defaults to None.\n        text (str, optional or None, optional): A string or None if no word is specified. Defaults to None.\n        text (str, optional) or None if no word is found. Defaults to None if",
+   "expected": "def words_starting_with_vowel(text):\n    return sum(1 for w in text.split() if w[0].lower() in 'aeiou')",
+   "category": "formatting",
+   "reason": "def line glued to the name ('def' + name with no space)",
+   "failed_asserts": [],
+   "error": [
+    "SyntaxError",
+    "unterminated triple-quoted string literal (detected at line 11) (<answer>, line 2)"
+   ]
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "is_all_lowercase_letters",
+   "pass": false,
+   "prompt": "Write a Python function `is_all_lowercase_letters(s)` that returns True if s is non-empty and every character is a lower-case letter.",
+   "answer": "```python\ndef is_all_lowercase_letters(s):\n    \"\"\"Return True if s is non-empty and every character is a lower-case letter.\"\"\"\n    return s.lower().startswith('_')\n```",
+   "code": "def is_all_lowercase_letters(s):\n    \"\"\"Return True if s is non-empty and every character is a lower-case letter.\"\"\"\n    return s.lower().startswith('_')",
+   "expected": "def is_all_lowercase_letters(s):\n    return s.isalpha() and s.islower()",
+   "category": "reasoning",
+   "reason": "is_all_lowercase_letters('abc') gave False (expected True)",
+   "failed_asserts": [
+    {
+     "assert": "assert is_all_lowercase_letters('abc')",
+     "call": "is_all_lowercase_letters('abc')",
+     "actual": "False",
+     "expected": "True",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "count_letter_case_insensitive",
+   "pass": false,
+   "prompt": "Write a Python function `count_letter_case_insensitive(text, letter)` that returns how many times letter appears in text, ignoring upper and lower case.",
+   "answer": "```python\ndef count_letter_case_insensitive(text, letter):\n    \"\"\"Returns how many times letter appears in text, ignoring upper and lower case.\"\"\"\n    if not text:\n        return 0\n    if not text[0:1] == ' ':\n        return 0\n    if not text[1:2] == ' ':\n        return 0\n    if not (text[0:1] == ' '):\n        return 0\n    if not text[1:2:3] == ' ':\n        return 0\n    if not isinstance(text[0:3], str):\n        return 0\n    if not text[0:3] == ' ':\n        return 0\n    return 0\n```",
+   "code": "def count_letter_case_insensitive(text, letter):\n    \"\"\"Returns how many times letter appears in text, ignoring upper and lower case.\"\"\"\n    if not text:\n        return 0\n    if not text[0:1] == ' ':\n        return 0\n    if not text[1:2] == ' ':\n        return 0\n    if not (text[0:1] == ' '):\n        return 0\n    if not text[1:2:3] == ' ':\n        return 0\n    if not isinstance(text[0:3], str):\n        return 0\n    if not text[0:3] == ' ':\n        return 0\n    return 0",
+   "expected": "def count_letter_case_insensitive(text, letter):\n    return text.lower().count(letter.lower())",
+   "category": "reasoning",
+   "reason": "count_letter_case_insensitive('Banana', 'b') gave 0 (expected 1)",
+   "failed_asserts": [
+    {
+     "assert": "assert count_letter_case_insensitive('Banana', 'b') == 1",
+     "call": "count_letter_case_insensitive('Banana', 'b')",
+     "actual": "0",
+     "expected": "1",
+     "ok": false
+    },
+    {
+     "assert": "assert count_letter_case_insensitive('AaA', 'a') == 3",
+     "call": "count_letter_case_insensitive('AaA', 'a')",
+     "actual": "0",
+     "expected": "3",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "alternate_case",
+   "pass": false,
+   "prompt": "Write a Python function `alternate_case(s)` that returns s with the characters at even positions in upper case and the others in lower case.",
+   "answer": "```python\ndef alternate_case(s):\n    \"\"\"Return s with the characters at even positions in upper case and the others in lower case.\"\"\"\n    if s.startswith('\\\\'):\n        return s\n    return s.replace('\\\\', '\\\\\\\\').replace('\\\\', '\\\\\\\\').replace('\\\\', '>')\n```",
+   "code": "def alternate_case(s):\n    \"\"\"Return s with the characters at even positions in upper case and the others in lower case.\"\"\"\n    if s.startswith('\\\\'):\n        return s\n    return s.replace('\\\\', '\\\\\\\\').replace('\\\\', '\\\\\\\\').replace('\\\\', '>')",
+   "expected": "def alternate_case(s):\n    return ''.join(c.upper() if i % 2 == 0 else c.lower() for i, c in enumerate(s))",
+   "category": "reasoning",
+   "reason": "alternate_case('hello') gave 'hello' (expected 'HeLlO')",
+   "failed_asserts": [
+    {
+     "assert": "assert alternate_case('hello') == 'HeLlO'",
+     "call": "alternate_case('hello')",
+     "actual": "'hello'",
+     "expected": "'HeLlO'",
+     "ok": false
+    },
+    {
+     "assert": "assert alternate_case('AB') == 'Ab'",
+     "call": "alternate_case('AB')",
+     "actual": "'AB'",
+     "expected": "'Ab'",
+     "ok": false
+    },
+    {
+     "assert": "assert alternate_case('a b') == 'A B'",
+     "call": "alternate_case('a b')",
+     "actual": "'a b'",
+     "expected": "'A B'",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "sum_at_odd_positions",
+   "pass": false,
+   "prompt": "Write a Python function `sum_at_odd_positions(numbers)` that returns the sum of the numbers at odd positions (the second, fourth, sixth, ...).",
+   "answer": "```python\ndef sum_at_odd_positions(numbers):\n    \"\"\"Returns the sum of the numbers at odd positions (the second, fourth, sixth, ...). \"\"\"\n    return sum(1 for _ in range(numbers))\n```",
+   "code": "def sum_at_odd_positions(numbers):\n    \"\"\"Returns the sum of the numbers at odd positions (the second, fourth, sixth, ...). \"\"\"\n    return sum(1 for _ in range(numbers))",
+   "expected": "def sum_at_odd_positions(numbers):\n    return sum(numbers[1::2])",
+   "category": "coding",
+   "reason": "TypeError on sum_at_odd_positions([1, 2, 3, 4, 5]): 'list' object cannot be interpreted as an integer",
+   "failed_asserts": [
+    {
+     "assert": "assert sum_at_odd_positions([1, 2, 3, 4, 5]) == 6",
+     "call": "sum_at_odd_positions([1, 2, 3, 4, 5])",
+     "error": [
+      "TypeError",
+      "'list' object cannot be interpreted as an integer"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert sum_at_odd_positions([7]) == 0",
+     "call": "sum_at_odd_positions([7])",
+     "error": [
+      "TypeError",
+      "'list' object cannot be interpreted as an integer"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert sum_at_odd_positions([]) == 0",
+     "call": "sum_at_odd_positions([])",
+     "error": [
+      "TypeError",
+      "'list' object cannot be interpreted as an integer"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "second_smallest",
+   "pass": false,
+   "prompt": "Write a Python function `second_smallest(numbers)` that returns the second smallest distinct number in a list that has at least two distinct numbers.",
+   "answer": "```python\ndef second_smallest(numbers):\n    \"\"\"Returns the second smallest distinct number in a list that has at least two distinct numbers.\"\"\"\n    return [int(x) for x in range(1, len(numbers))]\n```",
+   "code": "def second_smallest(numbers):\n    \"\"\"Returns the second smallest distinct number in a list that has at least two distinct numbers.\"\"\"\n    return [int(x) for x in range(1, len(numbers))]",
+   "expected": "def second_smallest(numbers):\n    return sorted(set(numbers))[1]",
+   "category": "reasoning",
+   "reason": "second_smallest([4, 1, 9, 1, 7]) gave [1, 2, 3, 4] (expected 4)",
+   "failed_asserts": [
+    {
+     "assert": "assert second_smallest([4, 1, 9, 1, 7]) == 4",
+     "call": "second_smallest([4, 1, 9, 1, 7])",
+     "actual": "[1, 2, 3, 4]",
+     "expected": "4",
+     "ok": false
+    },
+    {
+     "assert": "assert second_smallest([2, 1]) == 2",
+     "call": "second_smallest([2, 1])",
+     "actual": "[1]",
+     "expected": "2",
+     "ok": false
+    },
+    {
+     "assert": "assert second_smallest([5, 5, 3]) == 5",
+     "call": "second_smallest([5, 5, 3])",
+     "actual": "[1, 2]",
+     "expected": "5",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "last_index_of",
+   "pass": false,
+   "prompt": "Write a Python function `last_index_of(items, x)` that returns the index of the last occurrence of x in the list, or -1 if x is not in it.",
+   "answer": "```python\ndef last_index_of(items, x):\n    \"\"\"Return the index of the last occurrence of x in the list, or -1 if x is in it.\"\"\"\n    return len(items) - 1\n```",
+   "code": "def last_index_of(items, x):\n    \"\"\"Return the index of the last occurrence of x in the list, or -1 if x is in it.\"\"\"\n    return len(items) - 1",
+   "expected": "def last_index_of(items, x):\n    for i in range(len(items) - 1, -1, -1):\n        if items[i] == x:\n            return i\n    return -1",
+   "category": "reasoning",
+   "reason": "last_index_of([3], 4) gave 0 (expected -1)",
+   "failed_asserts": [
+    {
+     "assert": "assert last_index_of([3], 4) == -1",
+     "call": "last_index_of([3], 4)",
+     "actual": "0",
+     "expected": "-1",
+     "ok": false
+    },
+    {
+     "assert": "assert last_index_of([5, 6, 7], 5) == 0",
+     "call": "last_index_of([5, 6, 7], 5)",
+     "actual": "2",
+     "expected": "0",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "insert_at_front",
+   "pass": false,
+   "prompt": "Write a Python function `insert_at_front(items, x)` that returns a new list with x placed before the first item.",
+   "answer": "```python\ndef insert_at_front(items, x):\n    \"\"\"Return a new list with x placed before the first item.\"\"\"\n    return [x[0] for x in items]\n```",
+   "code": "def insert_at_front(items, x):\n    \"\"\"Return a new list with x placed before the first item.\"\"\"\n    return [x[0] for x in items]",
+   "expected": "def insert_at_front(items, x):\n    return [x] + items",
+   "category": "coding",
+   "reason": "TypeError on insert_at_front([2, 3], 1): 'int' object is not subscriptable",
+   "failed_asserts": [
+    {
+     "assert": "assert insert_at_front([2, 3], 1) == [1, 2, 3]",
+     "call": "insert_at_front([2, 3], 1)",
+     "error": [
+      "TypeError",
+      "'int' object is not subscriptable"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert insert_at_front([], 'a') == ['a']",
+     "call": "insert_at_front([], 'a')",
+     "actual": "[]",
+     "expected": "['a']",
+     "ok": false
+    },
+    {
+     "assert": "assert insert_at_front([5], 5) == [5, 5]",
+     "call": "insert_at_front([5], 5)",
+     "error": [
+      "TypeError",
+      "'int' object is not subscriptable"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "count_strictly_between",
+   "pass": false,
+   "prompt": "Write a Python function `count_strictly_between(numbers, low, high)` that returns how many numbers are greater than low and less than high.",
+   "answer": "```python\ndef count_strictly_between(numbers, low, high):\n    \"\"\"Returns how many numbers are greater than low and less than high.\"\"\"\n    if low < 0:\n        return 1\n    if low < 0:\n        return 1\n    if high < 0:\n        return 1\n    if low < 0 or high < 0:\n        return 1\n    if high < 0 or high < 0:\n        return 1\n    return 1\n```",
+   "code": "def count_strictly_between(numbers, low, high):\n    \"\"\"Returns how many numbers are greater than low and less than high.\"\"\"\n    if low < 0:\n        return 1\n    if low < 0:\n        return 1\n    if high < 0:\n        return 1\n    if low < 0 or high < 0:\n        return 1\n    if high < 0 or high < 0:\n        return 1\n    return 1",
+   "expected": "def count_strictly_between(numbers, low, high):\n    return sum(1 for x in numbers if low < x < high)",
+   "category": "reasoning",
+   "reason": "count_strictly_between([1, 5, 10, 3], 2, 8) gave 1 (expected 2)",
+   "failed_asserts": [
+    {
+     "assert": "assert count_strictly_between([1, 5, 10, 3], 2, 8) == 2",
+     "call": "count_strictly_between([1, 5, 10, 3], 2, 8)",
+     "actual": "1",
+     "expected": "2",
+     "ok": false
+    },
+    {
+     "assert": "assert count_strictly_between([2, 8], 2, 8) == 0",
+     "call": "count_strictly_between([2, 8], 2, 8)",
+     "actual": "1",
+     "expected": "0",
+     "ok": false
+    },
+    {
+     "assert": "assert count_strictly_between([], 0, 9) == 0",
+     "call": "count_strictly_between([], 0, 9)",
+     "actual": "1",
+     "expected": "0",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "is_non_increasing",
+   "pass": false,
+   "prompt": "Write a Python function `is_non_increasing(items)` that returns True if every item is greater than or equal to the item after it.",
+   "answer": "```python\ndef is_non_increasing(items):\n    \"\"\"Return True if every item is greater than or equal to the item after it.\"\"\"\n    return not is_increasing(items)\n```",
+   "code": "def is_non_increasing(items):\n    \"\"\"Return True if every item is greater than or equal to the item after it.\"\"\"\n    return not is_increasing(items)",
+   "expected": "def is_non_increasing(items):\n    return all(a >= b for a, b in zip(items, items[1:]))",
+   "category": "hallucination",
+   "reason": "NameError: name 'is_increasing' is not defined",
+   "failed_asserts": [
+    {
+     "assert": "assert is_non_increasing([3, 2, 2, 1])",
+     "call": "is_non_increasing([3, 2, 2, 1])",
+     "error": [
+      "NameError",
+      "name 'is_increasing' is not defined"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert not is_non_increasing([1, 2])",
+     "call": "is_non_increasing([1, 2])",
+     "error": [
+      "NameError",
+      "name 'is_increasing' is not defined"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert is_non_increasing([])",
+     "call": "is_non_increasing([])",
+     "error": [
+      "NameError",
+      "name 'is_increasing' is not defined"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "without_last",
+   "pass": false,
+   "prompt": "Write a Python function `without_last(items)` that returns a new list with every item except the last.",
+   "answer": "```python\ndef without_last(items):\n    \"\"\"Return a new list with every item except the last.\"\"\"\n    return list(items)\n```",
+   "code": "def without_last(items):\n    \"\"\"Return a new list with every item except the last.\"\"\"\n    return list(items)",
+   "expected": "def without_last(items):\n    return items[:-1]",
+   "category": "reasoning",
+   "reason": "without_last([1, 2, 3]) gave [1, 2, 3] (expected [1, 2])",
+   "failed_asserts": [
+    {
+     "assert": "assert without_last([1, 2, 3]) == [1, 2]",
+     "call": "without_last([1, 2, 3])",
+     "actual": "[1, 2, 3]",
+     "expected": "[1, 2]",
+     "ok": false
+    },
+    {
+     "assert": "assert without_last([4]) == []",
+     "call": "without_last([4])",
+     "actual": "[4]",
+     "expected": "[]",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "hours_to_seconds",
+   "pass": false,
+   "prompt": "Write a Python function `hours_to_seconds(hours)` that converts a number of hours to seconds.",
+   "answer": "```python\ndef hours_to_seconds(hours):\n    \"\"\"Convert a number of hours to seconds.\"\"\"\n    if not isinstance(hours, int):\n        raise TypeError('hours must be a integer')\n    if not isinstance(hours, int):  # pragma: no cover\n        raise TypeError('hours must be a integer, got %s' % type(hours))\n    return int(hours)\n```",
+   "code": "def hours_to_seconds(hours):\n    \"\"\"Convert a number of hours to seconds.\"\"\"\n    if not isinstance(hours, int):\n        raise TypeError('hours must be a integer')\n    if not isinstance(hours, int):  # pragma: no cover\n        raise TypeError('hours must be a integer, got %s' % type(hours))\n    return int(hours)",
+   "expected": "def hours_to_seconds(hours):\n    return hours * 3600",
+   "category": "coding",
+   "reason": "TypeError on hours_to_seconds(0.5): hours must be a integer",
+   "failed_asserts": [
+    {
+     "assert": "assert hours_to_seconds(1) == 3600",
+     "call": "hours_to_seconds(1)",
+     "actual": "1",
+     "expected": "3600",
+     "ok": false
+    },
+    {
+     "assert": "assert hours_to_seconds(2) == 7200",
+     "call": "hours_to_seconds(2)",
+     "actual": "2",
+     "expected": "7200",
+     "ok": false
+    },
+    {
+     "assert": "assert hours_to_seconds(0.5) == 1800",
+     "call": "hours_to_seconds(0.5)",
+     "error": [
+      "TypeError",
+      "hours must be a integer"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "next_even",
+   "pass": false,
+   "prompt": "Write a Python function `next_even(n)` that returns the smallest even integer greater than the integer n.",
+   "answer": "```python\ndef next_even(n):\n    \"\"\"Return the smallest even integer greater than the integer n.\"\"\"\n    if n < 0:\n        return 0\n    if n % 2 == 0:\n        return -1\n    if n % 2 == 1:\n        return -1\n    if n % 2 == 2:\n        return -1\n    if n % 2 == 3:\n        return -1\n    if n % 2 == 4:\n        return -1\n    if n % 2 == 5:\n        return -1\n    if n % 2 == 6:\n        return -1\n    if n % 2 == 7:\n        return -1\n    if n % 2 == 8:\n        return -1\n    if n % 2 == 9:\n        return -1\n    if n % 2 == 10:\n        return -1\n    if n % 2 == 11:\n        return -1\n    if n % 2 == 12:\n        return -1\n    if n % 2 == 13:",
+   "code": "def next_even(n):\n    \"\"\"Return the smallest even integer greater than the integer n.\"\"\"\n    if n < 0:\n        return 0\n    if n % 2 == 0:\n        return -1\n    if n % 2 == 1:\n        return -1\n    if n % 2 == 2:\n        return -1\n    if n % 2 == 3:\n        return -1\n    if n % 2 == 4:\n        return -1\n    if n % 2 == 5:\n        return -1\n    if n % 2 == 6:\n        return -1\n    if n % 2 == 7:\n        return -1\n    if n % 2 == 8:\n        return -1\n    if n % 2 == 9:\n        return -1\n    if n % 2 == 10:\n        return -1\n    if n % 2 == 11:\n        return -1\n    if n % 2 == 12:\n        return -1\n    if n % 2 == 13:",
+   "expected": "def next_even(n):\n    return n + 2 if n % 2 == 0 else n + 1",
+   "category": "formatting",
+   "reason": "syntax error: expected an indented block after 'if' statement on line 31 (<answer>, line 31)",
+   "failed_asserts": [],
+   "error": [
+    "IndentationError",
+    "expected an indented block after 'if' statement on line 31 (<answer>, line 31)"
+   ]
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "digits_of",
+   "pass": false,
+   "prompt": "Write a Python function `digits_of(n)` that returns a list of the digits of the non-negative integer n, most significant first.",
+   "answer": "```python\ndef digits_of(n):\n    \"\"\"Return a list of the digits of the non-negative integer n, most significant first.\"\"\"\n    return [digits(n) for n in range(n)]\n```",
+   "code": "def digits_of(n):\n    \"\"\"Return a list of the digits of the non-negative integer n, most significant first.\"\"\"\n    return [digits(n) for n in range(n)]",
+   "expected": "def digits_of(n):\n    return [int(d) for d in str(n)]",
+   "category": "hallucination",
+   "reason": "NameError: name 'digits' is not defined",
+   "failed_asserts": [
+    {
+     "assert": "assert digits_of(123) == [1, 2, 3]",
+     "call": "digits_of(123)",
+     "error": [
+      "NameError",
+      "name 'digits' is not defined"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert digits_of(0) == [0]",
+     "call": "digits_of(0)",
+     "actual": "[]",
+     "expected": "[0]",
+     "ok": false
+    },
+    {
+     "assert": "assert digits_of(905) == [9, 0, 5]",
+     "call": "digits_of(905)",
+     "error": [
+      "NameError",
+      "name 'digits' is not defined"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "count_capitalized",
+   "pass": false,
+   "prompt": "Write a Python function `count_capitalized(text)` that returns how many words in text start with an upper-case letter.",
+   "answer": "```python\ndef count_capitalized(text):\n    \"\"\"Return how many words in text start with an upper-case letter.\"\"\"\n    return len(text) - 1\n```",
+   "code": "def count_capitalized(text):\n    \"\"\"Return how many words in text start with an upper-case letter.\"\"\"\n    return len(text) - 1",
+   "expected": "def count_capitalized(text):\n    return sum(1 for w in text.split() if w[0].isupper())",
+   "category": "reasoning",
+   "reason": "count_capitalized('Ada met Alan in Paris') gave 20 (expected 3)",
+   "failed_asserts": [
+    {
+     "assert": "assert count_capitalized('Ada met Alan in Paris') == 3",
+     "call": "count_capitalized('Ada met Alan in Paris')",
+     "actual": "20",
+     "expected": "3",
+     "ok": false
+    },
+    {
+     "assert": "assert count_capitalized('no caps here') == 0",
+     "call": "count_capitalized('no caps here')",
+     "actual": "11",
+     "expected": "0",
+     "ok": false
+    },
+    {
+     "assert": "assert count_capitalized('') == 0",
+     "call": "count_capitalized('')",
+     "actual": "-1",
+     "expected": "0",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "average_word_length",
+   "pass": false,
+   "prompt": "Write a Python function `average_word_length(text)` that returns the average length of the words in text, or 0 if there are no words.",
+   "answer": "```python\ndefaverage_word_length(text):\n    \"\"\"Return the average length of the words in text, or 0 if there are no words.\"\"\"\n    return 0 if text[0] == 'Word' else text[1]\n```",
+   "code": "defaverage_word_length(text):\n    \"\"\"Return the average length of the words in text, or 0 if there are no words.\"\"\"\n    return 0 if text[0] == 'Word' else text[1]",
+   "expected": "def average_word_length(text):\n    words = text.split()\n    return sum(len(w) for w in words) / len(words) if words else 0",
+   "category": "formatting",
+   "reason": "def line glued to the name ('def' + name with no space)",
+   "failed_asserts": [],
+   "error": [
+    "SyntaxError",
+    "invalid syntax (<answer>, line 1)"
+   ]
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "is_vowel",
+   "pass": false,
+   "prompt": "Write a Python function `is_vowel(c)` that returns True if the single character c is a vowel (a, e, i, o or u, in either case).",
+   "answer": "```python\ndef is_vowel(c):\n    \"\"\"Returns True if the single character c is a vowel (a, e, i, o or u, in either case). \"\"\"\n    return c.is_vowel\n```",
+   "code": "def is_vowel(c):\n    \"\"\"Returns True if the single character c is a vowel (a, e, i, o or u, in either case). \"\"\"\n    return c.is_vowel",
+   "expected": "def is_vowel(c):\n    return c.lower() in 'aeiou'",
+   "category": "hallucination",
+   "reason": "AttributeError: 'str' object has no attribute 'is_vowel'",
+   "failed_asserts": [
+    {
+     "assert": "assert is_vowel('a')",
+     "call": "is_vowel('a')",
+     "error": [
+      "AttributeError",
+      "'str' object has no attribute 'is_vowel'"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert is_vowel('E')",
+     "call": "is_vowel('E')",
+     "error": [
+      "AttributeError",
+      "'str' object has no attribute 'is_vowel'"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert not is_vowel('b')",
+     "call": "is_vowel('b')",
+     "error": [
+      "AttributeError",
+      "'str' object has no attribute 'is_vowel'"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "swap_halves",
+   "pass": false,
+   "prompt": "Write a Python function `swap_halves(s)` that returns the second half of s followed by the first half (the middle character of an odd-length s goes with the second half).",
+   "answer": "```python\ndef swap_halves(s):\n    \"\"\"Return the second half of s followed by the first half (the middle character of an odd-length s goes with the second half).\n\n    Parameters\n    ==========\n\n    s : str\n        The string to swap halves.\n    \"\"\"\n    return ' '.join(s)\n```",
+   "code": "def swap_halves(s):\n    \"\"\"Return the second half of s followed by the first half (the middle character of an odd-length s goes with the second half).\n\n    Parameters\n    ==========\n\n    s : str\n        The string to swap halves.\n    \"\"\"\n    return ' '.join(s)",
+   "expected": "def swap_halves(s):\n    half = len(s) // 2\n    return s[half:] + s[:half]",
+   "category": "reasoning",
+   "reason": "swap_halves('abcd') gave 'a b c d' (expected 'cdab')",
+   "failed_asserts": [
+    {
+     "assert": "assert swap_halves('abcd') == 'cdab'",
+     "call": "swap_halves('abcd')",
+     "actual": "'a b c d'",
+     "expected": "'cdab'",
+     "ok": false
+    },
+    {
+     "assert": "assert swap_halves('abc') == 'bca'",
+     "call": "swap_halves('abc')",
+     "actual": "'a b c'",
+     "expected": "'bca'",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "step_up_to",
+   "pass": false,
+   "prompt": "Write a Python function `step_up_to(x, limit)` that returns x plus one, but never more than limit.",
+   "answer": "```python\ndef step_up_to(x, limit):\n    \"\"\"Return x plus one, but never more than limit.\"\"\"\n    if not x:\n        return x\n    if not x:\n        return x\n    if not isinstance(x, int):\n        return x\n    if not x:\n        return x\n```",
+   "code": "def step_up_to(x, limit):\n    \"\"\"Return x plus one, but never more than limit.\"\"\"\n    if not x:\n        return x\n    if not x:\n        return x\n    if not isinstance(x, int):\n        return x\n    if not x:\n        return x",
+   "expected": "def step_up_to(x, limit):\n    return min(x + 1, limit)",
+   "category": "reasoning",
+   "reason": "step_up_to(3, 5) gave None (expected 4)",
+   "failed_asserts": [
+    {
+     "assert": "assert step_up_to(3, 5) == 4",
+     "call": "step_up_to(3, 5)",
+     "actual": "None",
+     "expected": "4",
+     "ok": false
+    },
+    {
+     "assert": "assert step_up_to(5, 5) == 5",
+     "call": "step_up_to(5, 5)",
+     "actual": "None",
+     "expected": "5",
+     "ok": false
+    },
+    {
+     "assert": "assert step_up_to(9, 5) == 5",
+     "call": "step_up_to(9, 5)",
+     "actual": "None",
+     "expected": "5",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "repeat_each",
+   "pass": false,
+   "prompt": "Write a Python function `repeat_each(items, n)` that returns a list with every item of the list repeated n times in a row.",
+   "answer": "```python\ndef repeat_each(items, n):\n    \"\"\"Return a list with every item of the list repeated n times in a row.\"\"\"\n    return [item for item in items if not isinstance(item, list) and item in n]\n```",
+   "code": "def repeat_each(items, n):\n    \"\"\"Return a list with every item of the list repeated n times in a row.\"\"\"\n    return [item for item in items if not isinstance(item, list) and item in n]",
+   "expected": "def repeat_each(items, n):\n    return [x for x in items for _ in range(n)]",
+   "category": "coding",
+   "reason": "TypeError on repeat_each([1, 2], 2): argument of type 'int' is not iterable",
+   "failed_asserts": [
+    {
+     "assert": "assert repeat_each([1, 2], 2) == [1, 1, 2, 2]",
+     "call": "repeat_each([1, 2], 2)",
+     "error": [
+      "TypeError",
+      "argument of type 'int' is not iterable"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert repeat_each([5], 1) == [5]",
+     "call": "repeat_each([5], 1)",
+     "error": [
+      "TypeError",
+      "argument of type 'int' is not iterable"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert repeat_each(['a'], 0) == []",
+     "call": "repeat_each(['a'], 0)",
+     "error": [
+      "TypeError",
+      "argument of type 'int' is not iterable"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "ends_with_vowel",
+   "pass": false,
+   "prompt": "Write a Python function `ends_with_vowel(s)` that returns True if the non-empty string s ends with a vowel (a, e, i, o or u, in either case).",
+   "answer": "```python\ndefends_with_vowel(s):\n    \"\"\"Return True if the non-empty string s ends with a vowel (a, e, i, o or u, in either case).\n\n    Returns True if the non-empty string s ends with an vowel (a, e, i, o and u, in either case).\n    \"\"\"\n    if s.startswith('_'):\n        return True\n    if s.startswith('_'):\n        return True\n```",
+   "code": "defends_with_vowel(s):\n    \"\"\"Return True if the non-empty string s ends with a vowel (a, e, i, o or u, in either case).\n\n    Returns True if the non-empty string s ends with an vowel (a, e, i, o and u, in either case).\n    \"\"\"\n    if s.startswith('_'):\n        return True\n    if s.startswith('_'):\n        return True",
+   "expected": "def ends_with_vowel(s):\n    return s[-1].lower() in 'aeiou'",
+   "category": "formatting",
+   "reason": "def line glued to the name ('def' + name with no space)",
+   "failed_asserts": [],
+   "error": [
+    "SyntaxError",
+    "invalid syntax (<answer>, line 1)"
+   ]
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "sum_of_last_two",
+   "pass": false,
+   "prompt": "Write a Python function `sum_of_last_two(numbers)` that returns the sum of the last two numbers of a list with at least two numbers.",
+   "answer": "```python\ndef sum_of_last_two(numbers):\n    \"\"\"Returns the sum of the last two numbers of a list with at least two numbers.\"\"\"\n    return sum(1 for a in numbers)\n```",
+   "code": "def sum_of_last_two(numbers):\n    \"\"\"Returns the sum of the last two numbers of a list with at least two numbers.\"\"\"\n    return sum(1 for a in numbers)",
+   "expected": "def sum_of_last_two(numbers):\n    return numbers[-1] + numbers[-2]",
+   "category": "reasoning",
+   "reason": "sum_of_last_two([1, 2, 3]) gave 3 (expected 5)",
+   "failed_asserts": [
+    {
+     "assert": "assert sum_of_last_two([1, 2, 3]) == 5",
+     "call": "sum_of_last_two([1, 2, 3])",
+     "actual": "3",
+     "expected": "5",
+     "ok": false
+    },
+    {
+     "assert": "assert sum_of_last_two([4, 6]) == 10",
+     "call": "sum_of_last_two([4, 6])",
+     "actual": "2",
+     "expected": "10",
+     "ok": false
+    },
+    {
+     "assert": "assert sum_of_last_two([0, -1, -2]) == -3",
+     "call": "sum_of_last_two([0, -1, -2])",
+     "actual": "3",
+     "expected": "-3",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "first_index_above",
+   "pass": false,
+   "prompt": "Write a Python function `first_index_above(numbers, limit)` that returns the index of the first number greater than limit, or -1 if there is none.",
+   "answer": "```python\ndef first_index_above(numbers, limit):\n    \"\"\"Return the index of the first number greater than limit, or -1 if there is none\"\"\"\n    if not isinstance(numbers, int):\n        raise TypeError('number of numbers must be a integer')\n    if not isinstance(limit, int):\n        raise TypeError('number of limit must be a integer')\n    if not isinstance(limit[0], int):\n        raise TypeError('number of limit must be an integer')\n    if not isinstance(limit[1], int):\n        raise TypeError('number of limit must not be a integer')\n    if not isinstance(limit[2], int):\n        raise TypeError('number of limit must have a integer')\n    if not isinstance(limit[3], int):\n        raise TypeError('number of limit must either be a integer')\n    if not isinstance(limit[4], int):\n        raise TypeError('number of limit must both be a integer')\n    if not isinstance(limit",
+   "code": "def first_index_above(numbers, limit):\n    \"\"\"Return the index of the first number greater than limit, or -1 if there is none\"\"\"\n    if not isinstance(numbers, int):\n        raise TypeError('number of numbers must be a integer')\n    if not isinstance(limit, int):\n        raise TypeError('number of limit must be a integer')\n    if not isinstance(limit[0], int):\n        raise TypeError('number of limit must be an integer')\n    if not isinstance(limit[1], int):\n        raise TypeError('number of limit must not be a integer')\n    if not isinstance(limit[2], int):\n        raise TypeError('number of limit must have a integer')\n    if not isinstance(limit[3], int):\n        raise TypeError('number of limit must either be a integer')\n    if not isinstance(limit[4], int):\n        raise TypeError('number of limit must both be a integer')\n    if not isinstance(limit",
+   "expected": "def first_index_above(numbers, limit):\n    for i, x in enumerate(numbers):\n        if x > limit:\n            return i\n    return -1",
+   "category": "formatting",
+   "reason": "syntax error: '(' was never closed (<answer>, line 17)",
+   "failed_asserts": [],
+   "error": [
+    "SyntaxError",
+    "'(' was never closed (<answer>, line 17)"
+   ]
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "middle_of_three",
+   "pass": false,
+   "prompt": "Write a Python function `middle_of_three(a, b, c)` that returns the middle value of a, b and c (the one that is neither the largest nor the smallest when sorted).",
+   "answer": "```python\ndef middle_of_three(a, b, c):\n    \"\"\"Return the middle value of a, b and c (the one that is neither the largest nor the smallest when sorted).\"\"\"\n    a = a.copy()\n    b = b.copy()\n    c = c.copy()\n    c[0] = a\n    return c\n```",
+   "code": "def middle_of_three(a, b, c):\n    \"\"\"Return the middle value of a, b and c (the one that is neither the largest nor the smallest when sorted).\"\"\"\n    a = a.copy()\n    b = b.copy()\n    c = c.copy()\n    c[0] = a\n    return c",
+   "expected": "def middle_of_three(a, b, c):\n    return sorted([a, b, c])[1]",
+   "category": "hallucination",
+   "reason": "AttributeError: 'int' object has no attribute 'copy'",
+   "failed_asserts": [
+    {
+     "assert": "assert middle_of_three(3, 1, 2) == 2",
+     "call": "middle_of_three(3, 1, 2)",
+     "error": [
+      "AttributeError",
+      "'int' object has no attribute 'copy'"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert middle_of_three(5, 5, 1) == 5",
+     "call": "middle_of_three(5, 5, 1)",
+     "error": [
+      "AttributeError",
+      "'int' object has no attribute 'copy'"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert middle_of_three(-1, 0, 1) == 0",
+     "call": "middle_of_three(-1, 0, 1)",
+     "error": [
+      "AttributeError",
+      "'int' object has no attribute 'copy'"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "count_words_longer_than",
+   "pass": false,
+   "prompt": "Write a Python function `count_words_longer_than(text, n)` that returns how many words in text have more than n characters.",
+   "answer": "```python\ndef count_words_longer_than(text, n):\n    \"\"\"Return how many words in text have more than n characters.\"\"\"\n    return _uniq(text, n)\n```",
+   "code": "def count_words_longer_than(text, n):\n    \"\"\"Return how many words in text have more than n characters.\"\"\"\n    return _uniq(text, n)",
+   "expected": "def count_words_longer_than(text, n):\n    return sum(1 for w in text.split() if len(w) > n)",
+   "category": "hallucination",
+   "reason": "NameError: name '_uniq' is not defined",
+   "failed_asserts": [
+    {
+     "assert": "assert count_words_longer_than('a bb ccc dddd', 2) == 2",
+     "call": "count_words_longer_than('a bb ccc dddd', 2)",
+     "error": [
+      "NameError",
+      "name '_uniq' is not defined"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert count_words_longer_than('', 1) == 0",
+     "call": "count_words_longer_than('', 1)",
+     "error": [
+      "NameError",
+      "name '_uniq' is not defined"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert count_words_longer_than('hi', 2) == 0",
+     "call": "count_words_longer_than('hi', 2)",
+     "error": [
+      "NameError",
+      "name '_uniq' is not defined"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "sum_of_last_n",
+   "pass": false,
+   "prompt": "Write a Python function `sum_of_last_n(numbers, n)` that returns the sum of the last n numbers of the list (all of them if there are fewer; 0 when n is 0).",
+   "answer": "```python\ndef sum_of_last_n(numbers, n):\n    \"\"\"Returns the sum of the last n numbers of the list (all of them if there are fewer; 0 when n is 0).\n\n    Examples\n    ========\n\n    >>> from sympy.ntheory import sum_of_last_n\n    >>> sum_of_last_n(1)\n    1\n    >>> sum_of_last_n(1)\n    1\n\n    \"\"\"\n    if n < 1:\n        return sum(1 for n in range(n))\n    else:\n        return sum(1 for n in range(1, n))\n```",
+   "code": "def sum_of_last_n(numbers, n):\n    \"\"\"Returns the sum of the last n numbers of the list (all of them if there are fewer; 0 when n is 0).\n\n    Examples\n    ========\n\n    >>> from sympy.ntheory import sum_of_last_n\n    >>> sum_of_last_n(1)\n    1\n    >>> sum_of_last_n(1)\n    1\n\n    \"\"\"\n    if n < 1:\n        return sum(1 for n in range(n))\n    else:\n        return sum(1 for n in range(1, n))",
+   "expected": "def sum_of_last_n(numbers, n):\n    return sum(numbers[-n:]) if n > 0 else 0",
+   "category": "reasoning",
+   "reason": "sum_of_last_n([1, 2, 3, 4], 2) gave 1 (expected 7)",
+   "failed_asserts": [
+    {
+     "assert": "assert sum_of_last_n([1, 2, 3, 4], 2) == 7",
+     "call": "sum_of_last_n([1, 2, 3, 4], 2)",
+     "actual": "1",
+     "expected": "7",
+     "ok": false
+    },
+    {
+     "assert": "assert sum_of_last_n([5], 3) == 5",
+     "call": "sum_of_last_n([5], 3)",
+     "actual": "2",
+     "expected": "5",
+     "ok": false
+    },
+    {
+     "assert": "assert sum_of_last_n([], 2) == 0",
+     "call": "sum_of_last_n([], 2)",
+     "actual": "1",
+     "expected": "0",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "contains_digit",
+   "pass": false,
+   "prompt": "Write a Python function `contains_digit(s)` that returns True if the string s contains at least one digit.",
+   "answer": "```python\ndefcontains_digit(s):\n    \"\"\"Return True if the string s contains at least one digit.\"\"\"\n    return s.startswith('_')\n```",
+   "code": "defcontains_digit(s):\n    \"\"\"Return True if the string s contains at least one digit.\"\"\"\n    return s.startswith('_')",
+   "expected": "def contains_digit(s):\n    return any(c.isdigit() for c in s)",
+   "category": "formatting",
+   "reason": "def line glued to the name ('def' + name with no space)",
+   "failed_asserts": [],
+   "error": [
+    "SyntaxError",
+    "invalid syntax (<answer>, line 1)"
+   ]
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "pad_right",
+   "pass": false,
+   "prompt": "Write a Python function `pad_right(s, width)` that returns s followed by enough spaces to make it width characters long (s unchanged if it is already that long).",
+   "answer": "```python\ndef pad_right(s, width):\n    \"\"\"Return s followed by enough spaces to make it width characters long (s unchanged if it is already that long).\"\"\"\n    if s > width:\n        return s\n    if s > width:\n        return s\n    if width < width:\n        return s\n    if s > width: return s\n    if s > width:\n        return s\n    return s\n```",
+   "code": "def pad_right(s, width):\n    \"\"\"Return s followed by enough spaces to make it width characters long (s unchanged if it is already that long).\"\"\"\n    if s > width:\n        return s\n    if s > width:\n        return s\n    if width < width:\n        return s\n    if s > width: return s\n    if s > width:\n        return s\n    return s",
+   "expected": "def pad_right(s, width):\n    return s + ' ' * (width - len(s))",
+   "category": "coding",
+   "reason": "TypeError on pad_right('ab', 4): '>' not supported between instances of 'str' and 'int'",
+   "failed_asserts": [
+    {
+     "assert": "assert pad_right('ab', 4) == 'ab  '",
+     "call": "pad_right('ab', 4)",
+     "error": [
+      "TypeError",
+      "'>' not supported between instances of 'str' and 'int'"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert pad_right('abc', 2) == 'abc'",
+     "call": "pad_right('abc', 2)",
+     "error": [
+      "TypeError",
+      "'>' not supported between instances of 'str' and 'int'"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert pad_right('', 3) == '   '",
+     "call": "pad_right('', 3)",
+     "error": [
+      "TypeError",
+      "'>' not supported between instances of 'str' and 'int'"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "abbreviate",
+   "pass": false,
+   "prompt": "Write a Python function `abbreviate(word, n)` that returns the first n letters of word followed by a period, or word unchanged if it has n letters or fewer.",
+   "answer": "```python\ndef abbreviate(word, n):\n    \"\"\"Return the first n letters of word followed by a period, or word unchanged if it has n letters or fewer.\"\"\"\n    if n < 0:\n        raise ValueError('n must be non-negative')\n    if n < 0:\n        raise ValueError('n is not a positive')\n    if n < 0:\n        raise ValueError('no word found')\n    if n < 0:\n        raise ValueError('not a negative word found')\n    if n < 0:\n        raise TypeError('not a negative word found')\n    if n < 1:\n        raise ValueError('not a negative word found')\n```",
+   "code": "def abbreviate(word, n):\n    \"\"\"Return the first n letters of word followed by a period, or word unchanged if it has n letters or fewer.\"\"\"\n    if n < 0:\n        raise ValueError('n must be non-negative')\n    if n < 0:\n        raise ValueError('n is not a positive')\n    if n < 0:\n        raise ValueError('no word found')\n    if n < 0:\n        raise ValueError('not a negative word found')\n    if n < 0:\n        raise TypeError('not a negative word found')\n    if n < 1:\n        raise ValueError('not a negative word found')",
+   "expected": "def abbreviate(word, n):\n    return word[:n] + '.' if len(word) > n else word",
+   "category": "reasoning",
+   "reason": "abbreviate('international', 5) gave None (expected 'inter.')",
+   "failed_asserts": [
+    {
+     "assert": "assert abbreviate('international', 5) == 'inter.'",
+     "call": "abbreviate('international', 5)",
+     "actual": "None",
+     "expected": "'inter.'",
+     "ok": false
+    },
+    {
+     "assert": "assert abbreviate('cat', 3) == 'cat'",
+     "call": "abbreviate('cat', 3)",
+     "actual": "None",
+     "expected": "'cat'",
+     "ok": false
+    },
+    {
+     "assert": "assert abbreviate('dog', 5) == 'dog'",
+     "call": "abbreviate('dog', 5)",
+     "actual": "None",
+     "expected": "'dog'",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "count_increases",
+   "pass": false,
+   "prompt": "Write a Python function `count_increases(numbers)` that returns how many numbers are larger than the number just before them.",
+   "answer": "```python\ndef count_increases(numbers):\n    \"\"\"Returns how many numbers are larger than the number just before them.\"\"\"\n    return sum(1 for i in range(numbers))\n```",
+   "code": "def count_increases(numbers):\n    \"\"\"Returns how many numbers are larger than the number just before them.\"\"\"\n    return sum(1 for i in range(numbers))",
+   "expected": "def count_increases(numbers):\n    return sum(1 for a, b in zip(numbers, numbers[1:]) if b > a)",
+   "category": "coding",
+   "reason": "TypeError on count_increases([1, 3, 2, 5]): 'list' object cannot be interpreted as an integer",
+   "failed_asserts": [
+    {
+     "assert": "assert count_increases([1, 3, 2, 5]) == 2",
+     "call": "count_increases([1, 3, 2, 5])",
+     "error": [
+      "TypeError",
+      "'list' object cannot be interpreted as an integer"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert count_increases([5, 4, 3]) == 0",
+     "call": "count_increases([5, 4, 3])",
+     "error": [
+      "TypeError",
+      "'list' object cannot be interpreted as an integer"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert count_increases([]) == 0",
+     "call": "count_increases([])",
+     "error": [
+      "TypeError",
+      "'list' object cannot be interpreted as an integer"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "same_length",
+   "pass": false,
+   "prompt": "Write a Python function `same_length(a, b)` that returns True if the strings a and b have the same number of characters.",
+   "answer": "```python\ndef same_length(a, b):\n    \"\"\"Return True if the strings a and b have the same number of characters.\"\"\"\n    return a.startswith(b)\n```",
+   "code": "def same_length(a, b):\n    \"\"\"Return True if the strings a and b have the same number of characters.\"\"\"\n    return a.startswith(b)",
+   "expected": "def same_length(a, b):\n    return len(a) == len(b)",
+   "category": "reasoning",
+   "reason": "same_length('abc', 'xyz') gave False (expected True)",
+   "failed_asserts": [
+    {
+     "assert": "assert same_length('abc', 'xyz')",
+     "call": "same_length('abc', 'xyz')",
+     "actual": "False",
+     "expected": "True",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "longer_of_two",
+   "pass": false,
+   "prompt": "Write a Python function `longer_of_two(a, b)` that returns the longer of the strings a and b (a if they are equally long).",
+   "answer": "```python\ndef linalg_eig(a, b):\n    \"\"\"Return the longer of the strings a and b (a if they are equally long).\"\"\"\n    a = a.normalize()\n    b = b.normalize()\n    a = a.normalize()\n    b = a.normalize()\n    a = a.normalize(b)\n    return a\n```",
+   "code": "def linalg_eig(a, b):\n    \"\"\"Return the longer of the strings a and b (a if they are equally long).\"\"\"\n    a = a.normalize()\n    b = b.normalize()\n    a = a.normalize()\n    b = a.normalize()\n    a = a.normalize(b)\n    return a",
+   "expected": "def longer_of_two(a, b):\n    return b if len(b) > len(a) else a",
+   "category": "instruction_following",
+   "reason": "named the function 'linalg_eig' instead of 'longer_of_two'",
+   "failed_asserts": [
+    {
+     "assert": "assert longer_of_two('hi', 'hello') == 'hello'",
+     "call": "longer_of_two('hi', 'hello')",
+     "error": [
+      "NameError",
+      "name 'longer_of_two' is not defined"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert longer_of_two('abc', 'xy') == 'abc'",
+     "call": "longer_of_two('abc', 'xy')",
+     "error": [
+      "NameError",
+      "name 'longer_of_two' is not defined"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert longer_of_two('ab', 'cd') == 'ab'",
+     "call": "longer_of_two('ab', 'cd')",
+     "error": [
+      "NameError",
+      "name 'longer_of_two' is not defined"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "keys_above",
+   "pass": false,
+   "prompt": "Write a Python function `keys_above(d, limit)` that returns a list of the keys of d whose values are greater than limit.",
+   "answer": "```python\ndef keys_above(d, limit):\n    \"\"\"Return a list of the keys of d whose values are greater than limit.\"\"\"\n    if limit < 0:\n        raise ValueError('limit must be nonnegative')\n    if limit < 0:\n        raise ValueError('limit is out of range')\n    if limit < 0:\n        raise ValueError(' limit must be nonnegative')\n    return [d[0] for d in d]\n```",
+   "code": "def keys_above(d, limit):\n    \"\"\"Return a list of the keys of d whose values are greater than limit.\"\"\"\n    if limit < 0:\n        raise ValueError('limit must be nonnegative')\n    if limit < 0:\n        raise ValueError('limit is out of range')\n    if limit < 0:\n        raise ValueError(' limit must be nonnegative')\n    return [d[0] for d in d]",
+   "expected": "def keys_above(d, limit):\n    return [k for k, v in d.items() if v > limit]",
+   "category": "reasoning",
+   "reason": "keys_above({'a': 1, 'b': 5, 'c': 9}, 4) gave ['a', 'b', 'c'] (expected ['b', 'c'])",
+   "failed_asserts": [
+    {
+     "assert": "assert keys_above({'a': 1, 'b': 5, 'c': 9}, 4) == ['b', 'c']",
+     "call": "keys_above({'a': 1, 'b': 5, 'c': 9}, 4)",
+     "actual": "['a', 'b', 'c']",
+     "expected": "['b', 'c']",
+     "ok": false
+    },
+    {
+     "assert": "assert keys_above({'x': 1}, 1) == []",
+     "call": "keys_above({'x': 1}, 1)",
+     "actual": "['x']",
+     "expected": "[]",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "first_repeated",
+   "pass": false,
+   "prompt": "Write a Python function `first_repeated(items)` that returns the first item that appears for the second time when reading the list from the start, or None if no item repeats.",
+   "answer": "```python\ndef first_repeated(items):\n    \"\"\"Return the first item that appears for the first time when reading the list from the start, or None if no item repeats.\"\"\"\n    return [item for item in items if not isinstance(item, str) and item.startswith('__'))\n```",
+   "code": "def first_repeated(items):\n    \"\"\"Return the first item that appears for the first time when reading the list from the start, or None if no item repeats.\"\"\"\n    return [item for item in items if not isinstance(item, str) and item.startswith('__'))",
+   "expected": "def first_repeated(items):\n    seen = set()\n    for x in items:\n        if x in seen:\n            return x\n        seen.add(x)\n    return None",
+   "category": "formatting",
+   "reason": "syntax error: closing parenthesis ')' does not match opening parenthesis '[' (<answer>, line 3",
+   "failed_asserts": [],
+   "error": [
+    "SyntaxError",
+    "closing parenthesis ')' does not match opening parenthesis '[' (<answer>, line 3)"
+   ]
+  },
+  {
+   "suite": "write",
+   "group": "unseen",
+   "name": "count_distinct",
+   "pass": false,
+   "prompt": "Write a Python function `count_distinct(items)` that returns how many different values the list contains.",
+   "answer": "```python\ndef count_distinct(items):\n    \"\"\"Return how many different values the list contains.\"\"\"\n    return list(map(int, items))\n```",
+   "code": "def count_distinct(items):\n    \"\"\"Return how many different values the list contains.\"\"\"\n    return list(map(int, items))",
+   "expected": "def count_distinct(items):\n    return len(set(items))",
+   "category": "coding",
+   "reason": "ValueError on count_distinct(['a', 'a']): invalid literal for int() with base 10: 'a'",
+   "failed_asserts": [
+    {
+     "assert": "assert count_distinct([1, 2, 2, 3]) == 3",
+     "call": "count_distinct([1, 2, 2, 3])",
+     "actual": "[1, 2, 2, 3]",
+     "expected": "3",
+     "ok": false
+    },
+    {
+     "assert": "assert count_distinct([]) == 0",
+     "call": "count_distinct([])",
+     "actual": "[]",
+     "expected": "0",
+     "ok": false
+    },
+    {
+     "assert": "assert count_distinct(['a', 'a']) == 1",
+     "call": "count_distinct(['a', 'a'])",
+     "error": [
+      "ValueError",
+      "invalid literal for int() with base 10: 'a'"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  }
+ ]
+}

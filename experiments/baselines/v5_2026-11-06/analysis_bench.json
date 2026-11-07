@@ -1,0 +1,1764 @@
+{
+ "set": "bench",
+ "points": 4,
+ "of": 65,
+ "lost_by_category": {
+  "formatting": 5,
+  "instruction_following": 13,
+  "hallucination": 18,
+  "coding": 6,
+  "factual": 2,
+  "reasoning": 17
+ },
+ "groups": {
+  "fixed": {
+   "passed": 4,
+   "total": 15,
+   "lost": {
+    "instruction_following": 9,
+    "reasoning": 2
+   }
+  },
+  "fresh": {
+   "passed": 0,
+   "total": 20,
+   "lost": {
+    "reasoning": 7,
+    "formatting": 3,
+    "instruction_following": 3,
+    "hallucination": 6,
+    "coding": 1
+   }
+  },
+  "standard": {
+   "passed": 0,
+   "total": 30,
+   "lost": {
+    "hallucination": 12,
+    "reasoning": 8,
+    "coding": 5,
+    "factual": 2,
+    "instruction_following": 1,
+    "formatting": 2
+   }
+  }
+ },
+ "items": [
+  {
+   "suite": "write",
+   "group": "standard",
+   "name": "add",
+   "pass": false,
+   "prompt": "Write a Python function `add(a, b)` that returns the sum of a and b.",
+   "answer": "```python\ndef add(a, b):\n    \"\"\"Return the sum of a and b.\"\"\"\n    a = a.copy()\n    b = b.copy()\n    return sum(a)\n```",
+   "code": "def add(a, b):\n    \"\"\"Return the sum of a and b.\"\"\"\n    a = a.copy()\n    b = b.copy()\n    return sum(a)",
+   "expected": "def add(a, b):\n    return a + b",
+   "category": "hallucination",
+   "reason": "AttributeError: 'int' object has no attribute 'copy'",
+   "failed_asserts": [
+    {
+     "assert": "assert add(2, 3) == 5",
+     "call": "add(2, 3)",
+     "error": [
+      "AttributeError",
+      "'int' object has no attribute 'copy'"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert add(-1, 1) == 0",
+     "call": "add(-1, 1)",
+     "error": [
+      "AttributeError",
+      "'int' object has no attribute 'copy'"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "standard",
+   "name": "subtract",
+   "pass": false,
+   "prompt": "Write a Python function `subtract(a, b)` that returns a minus b.",
+   "answer": "```python\ndef subtract(a, b):\n    \"\"\"Return a minus b.\"\"\"\n    a = a.subtract(b)\n    b = b.subtract(a)\n    return a.subtract(b)\n```",
+   "code": "def subtract(a, b):\n    \"\"\"Return a minus b.\"\"\"\n    a = a.subtract(b)\n    b = b.subtract(a)\n    return a.subtract(b)",
+   "expected": "def subtract(a, b):\n    return a - b",
+   "category": "hallucination",
+   "reason": "AttributeError: 'int' object has no attribute 'subtract'",
+   "failed_asserts": [
+    {
+     "assert": "assert subtract(5, 3) == 2",
+     "call": "subtract(5, 3)",
+     "error": [
+      "AttributeError",
+      "'int' object has no attribute 'subtract'"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert subtract(0, 4) == -4",
+     "call": "subtract(0, 4)",
+     "error": [
+      "AttributeError",
+      "'int' object has no attribute 'subtract'"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "standard",
+   "name": "is_even",
+   "pass": false,
+   "prompt": "Write a Python function `is_even(n)` that returns True if n is even, otherwise False.",
+   "answer": "```python\ndef is_even(n):\n    \"\"\"Returns True if n is even, otherwise False.\"\"\"\n    return n.is_integer\n```",
+   "code": "def is_even(n):\n    \"\"\"Returns True if n is even, otherwise False.\"\"\"\n    return n.is_integer",
+   "expected": "def is_even(n):\n    return n % 2 == 0",
+   "category": "hallucination",
+   "reason": "AttributeError: 'int' object has no attribute 'is_integer'",
+   "failed_asserts": [
+    {
+     "assert": "assert is_even(4) is True",
+     "call": "is_even(4)",
+     "error": [
+      "AttributeError",
+      "'int' object has no attribute 'is_integer'"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert is_even(7) is False",
+     "call": "is_even(7)",
+     "error": [
+      "AttributeError",
+      "'int' object has no attribute 'is_integer'"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "standard",
+   "name": "square",
+   "pass": false,
+   "prompt": "Write a Python function `square(x)` that returns x squared.",
+   "answer": "```python\ndef square(x):\n    \"\"\"Return x squared.\n\n    Returns\n    =======\n\n    square : Square matrix\n        Square matrix.\n\n    See Also\n    ========\n\n    square : Square matrix\n        Square matrices.\n\n    Examples\n    ========\n\n    >>> from sympy import Matrix\n    >>> from sympy.physics.optics import square\n    >>> A = Matrix([[1, 2], [3, 4]])\n    >>> square(A)\n    Matrix([\n    [1, 2],\n    [3, 4]])\n    \"\"\"\n    return MatrixSquare(*(S.Zero, x))\n```",
+   "code": "def square(x):\n    \"\"\"Return x squared.\n\n    Returns\n    =======\n\n    square : Square matrix\n        Square matrix.\n\n    See Also\n    ========\n\n    square : Square matrix\n        Square matrices.\n\n    Examples\n    ========\n\n    >>> from sympy import Matrix\n    >>> from sympy.physics.optics import square\n    >>> A = Matrix([[1, 2], [3, 4]])\n    >>> square(A)\n    Matrix([\n    [1, 2],\n    [3, 4]])\n    \"\"\"\n    return MatrixSquare(*(S.Zero, x))",
+   "expected": "def square(x):\n    return x * x",
+   "category": "hallucination",
+   "reason": "NameError: name 'MatrixSquare' is not defined",
+   "failed_asserts": [
+    {
+     "assert": "assert square(3) == 9",
+     "call": "square(3)",
+     "error": [
+      "NameError",
+      "name 'MatrixSquare' is not defined"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert square(-2) == 4",
+     "call": "square(-2)",
+     "error": [
+      "NameError",
+      "name 'MatrixSquare' is not defined"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "standard",
+   "name": "maximum",
+   "pass": false,
+   "prompt": "Write a Python function `maximum(items)` that returns the largest item in a list.",
+   "answer": "```python\ndef maximum(items):\n    \"\"\"Returns the largest item in a list.\"\"\"\n    return list(map(int, items))\n```",
+   "code": "def maximum(items):\n    \"\"\"Returns the largest item in a list.\"\"\"\n    return list(map(int, items))",
+   "expected": "def maximum(items):\n    return max(items)",
+   "category": "reasoning",
+   "reason": "maximum([3, 9, 2]) gave [3, 9, 2] (expected 9)",
+   "failed_asserts": [
+    {
+     "assert": "assert maximum([3, 9, 2]) == 9",
+     "call": "maximum([3, 9, 2])",
+     "actual": "[3, 9, 2]",
+     "expected": "9",
+     "ok": false
+    },
+    {
+     "assert": "assert maximum([-5, -1]) == -1",
+     "call": "maximum([-5, -1])",
+     "actual": "[-5, -1]",
+     "expected": "-1",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "standard",
+   "name": "minimum",
+   "pass": false,
+   "prompt": "Write a Python function `minimum(items)` that returns the smallest item in a list.",
+   "answer": "```python\ndef minimum(items):\n    \"\"\"Returns the smallest item in a list.\"\"\"\n    return [item for item in items if not isinstance(item, list) and item.item() for item in items]\n```",
+   "code": "def minimum(items):\n    \"\"\"Returns the smallest item in a list.\"\"\"\n    return [item for item in items if not isinstance(item, list) and item.item() for item in items]",
+   "expected": "def minimum(items):\n    return min(items)",
+   "category": "hallucination",
+   "reason": "AttributeError: 'int' object has no attribute 'item'",
+   "failed_asserts": [
+    {
+     "assert": "assert minimum([3, 9, 2]) == 2",
+     "call": "minimum([3, 9, 2])",
+     "error": [
+      "AttributeError",
+      "'int' object has no attribute 'item'"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert minimum([-5, -1]) == -5",
+     "call": "minimum([-5, -1])",
+     "error": [
+      "AttributeError",
+      "'int' object has no attribute 'item'"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "standard",
+   "name": "total",
+   "pass": false,
+   "prompt": "Write a Python function `total(numbers)` that returns the sum of a list of numbers.",
+   "answer": "```python\ndef total(numbers):\n    \"\"\"Returns the sum of a list of numbers.\"\"\"\n    return sum(1 for a in numbers)\n```",
+   "code": "def total(numbers):\n    \"\"\"Returns the sum of a list of numbers.\"\"\"\n    return sum(1 for a in numbers)",
+   "expected": "def total(numbers):\n    return sum(numbers)",
+   "category": "reasoning",
+   "reason": "total([1, 2, 3]) gave 3 (expected 6)",
+   "failed_asserts": [
+    {
+     "assert": "assert total([1, 2, 3]) == 6",
+     "call": "total([1, 2, 3])",
+     "actual": "3",
+     "expected": "6",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "standard",
+   "name": "average",
+   "pass": false,
+   "prompt": "Write a Python function `average(numbers)` that returns the average of a non-empty list of numbers.",
+   "answer": "```python\ndef average(numbers):\n    \"\"\"Returns the average of a non-empty list of numbers.\"\"\"\n    return average(numbers)\n```",
+   "code": "def average(numbers):\n    \"\"\"Returns the average of a non-empty list of numbers.\"\"\"\n    return average(numbers)",
+   "expected": "def average(numbers):\n    return sum(numbers) / len(numbers)",
+   "category": "coding",
+   "reason": "RecursionError on average([1, 2, 3]): maximum recursion depth exceeded",
+   "failed_asserts": [
+    {
+     "assert": "assert average([1, 2, 3]) == 2",
+     "call": "average([1, 2, 3])",
+     "error": [
+      "RecursionError",
+      "maximum recursion depth exceeded"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert average([4]) == 4",
+     "call": "average([4])",
+     "error": [
+      "RecursionError",
+      "maximum recursion depth exceeded"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "standard",
+   "name": "reverse_string",
+   "pass": false,
+   "prompt": "Write a Python function `reverse_string(s)` that returns the string s reversed.",
+   "answer": "```python\ndef reverse_string(s):\n    \"\"\"Return the string s reversed.\"\"\"\n    return s\n```",
+   "code": "def reverse_string(s):\n    \"\"\"Return the string s reversed.\"\"\"\n    return s",
+   "expected": "def reverse_string(s):\n    return s[::-1]",
+   "category": "reasoning",
+   "reason": "reverse_string('abc') gave 'abc' (expected 'cba')",
+   "failed_asserts": [
+    {
+     "assert": "assert reverse_string('abc') == 'cba'",
+     "call": "reverse_string('abc')",
+     "actual": "'abc'",
+     "expected": "'cba'",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "standard",
+   "name": "is_palindrome",
+   "pass": false,
+   "prompt": "Write a Python function `is_palindrome(s)` that returns True if the string s reads the same forwards and backwards.",
+   "answer": "```python\ndef is_palindrome(s):\n    \"\"\"Return True if the string s reads the same forwards and backwards.\"\"\"\n    return s.startswith('.') and (not s.startswith('.') or '.')\n```",
+   "code": "def is_palindrome(s):\n    \"\"\"Return True if the string s reads the same forwards and backwards.\"\"\"\n    return s.startswith('.') and (not s.startswith('.') or '.')",
+   "expected": "def is_palindrome(s):\n    return s == s[::-1]",
+   "category": "reasoning",
+   "reason": "is_palindrome('racecar') gave False (expected True)",
+   "failed_asserts": [
+    {
+     "assert": "assert is_palindrome('racecar')",
+     "call": "is_palindrome('racecar')",
+     "actual": "False",
+     "expected": "True",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "standard",
+   "name": "factorial",
+   "pass": false,
+   "prompt": "Write a Python function `factorial(n)` that returns the factorial of n.",
+   "answer": "```python\ndef factorial(n):\n    \"\"\"Returns the factorial of n.\"\"\"\n    return rv(n, n)\n```",
+   "code": "def factorial(n):\n    \"\"\"Returns the factorial of n.\"\"\"\n    return rv(n, n)",
+   "expected": "def factorial(n):\n    return 1 if n < 2 else n * factorial(n - 1)",
+   "category": "hallucination",
+   "reason": "NameError: name 'rv' is not defined",
+   "failed_asserts": [
+    {
+     "assert": "assert factorial(0) == 1",
+     "call": "factorial(0)",
+     "error": [
+      "NameError",
+      "name 'rv' is not defined"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert factorial(5) == 120",
+     "call": "factorial(5)",
+     "error": [
+      "NameError",
+      "name 'rv' is not defined"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "standard",
+   "name": "fibonacci",
+   "pass": false,
+   "prompt": "Write a Python function `fibonacci(n)` that returns the n-th Fibonacci number, with fibonacci(0) == 0 and fibonacci(1) == 1.",
+   "answer": "```python\ndef fibonacci(n):\n    \"\"\"Returns the n-th Fibonacci number, with fibonacci(0) == 0 and fibonacci(1) == 1.\"\"\"\n    n = int(n)\n    if n < 0:\n        raise ValueError('n must be a positive integer')\n    return fibonacci(n)\n```",
+   "code": "def fibonacci(n):\n    \"\"\"Returns the n-th Fibonacci number, with fibonacci(0) == 0 and fibonacci(1) == 1.\"\"\"\n    n = int(n)\n    if n < 0:\n        raise ValueError('n must be a positive integer')\n    return fibonacci(n)",
+   "expected": "def fibonacci(n):\n    a, b = 0, 1\n    for _ in range(n):\n        a, b = b, a + b\n    return a",
+   "category": "coding",
+   "reason": "RecursionError on fibonacci(0): maximum recursion depth exceeded while calling a Python obje",
+   "failed_asserts": [
+    {
+     "assert": "assert fibonacci(0) == 0",
+     "call": "fibonacci(0)",
+     "error": [
+      "RecursionError",
+      "maximum recursion depth exceeded while calling a Python object"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert fibonacci(1) == 1",
+     "call": "fibonacci(1)",
+     "error": [
+      "RecursionError",
+      "maximum recursion depth exceeded while calling a Python object"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert fibonacci(10) == 55",
+     "call": "fibonacci(10)",
+     "error": [
+      "RecursionError",
+      "maximum recursion depth exceeded while calling a Python object"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "standard",
+   "name": "count_vowels",
+   "pass": false,
+   "prompt": "Write a Python function `count_vowels(s)` that returns the number of vowels (a, e, i, o, u) in the string s.",
+   "answer": "```python\ndef count_vowels(s):\n    \"\"\"Return the number of vowels (a, e, i, o, u) in the string s.\"\"\"\n    return len(s) - 1\n```",
+   "code": "def count_vowels(s):\n    \"\"\"Return the number of vowels (a, e, i, o, u) in the string s.\"\"\"\n    return len(s) - 1",
+   "expected": "def count_vowels(s):\n    return sum(c in 'aeiou' for c in s)",
+   "category": "factual",
+   "reason": "wrong result; needs the vowels are a, e, i, o, u",
+   "failed_asserts": [
+    {
+     "assert": "assert count_vowels('hello') == 2",
+     "call": "count_vowels('hello')",
+     "actual": "4",
+     "expected": "2",
+     "ok": false
+    },
+    {
+     "assert": "assert count_vowels('xyz') == 0",
+     "call": "count_vowels('xyz')",
+     "actual": "2",
+     "expected": "0",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "standard",
+   "name": "is_prime",
+   "pass": false,
+   "prompt": "Write a Python function `is_prime(n)` that returns True if n is a prime number.",
+   "answer": "```python\ndef is_prime(n):\n    \"\"\"Returns True if n is a prime number.\"\"\"\n    if n < 0:\n        return True\n    if n % 2 == 0:\n        return True\n    if n % 2 == 1:\n        return True\n    if n % 2 == 1 and n % 2 == 1:\n        return False\n    if n % 2 == 1:\n        return True\n```",
+   "code": "def is_prime(n):\n    \"\"\"Returns True if n is a prime number.\"\"\"\n    if n < 0:\n        return True\n    if n % 2 == 0:\n        return True\n    if n % 2 == 1:\n        return True\n    if n % 2 == 1 and n % 2 == 1:\n        return False\n    if n % 2 == 1:\n        return True",
+   "expected": "def is_prime(n):\n    return n > 1 and all(n % d for d in range(2, int(n ** 0.5) + 1))",
+   "category": "factual",
+   "reason": "wrong result; needs what a prime number is",
+   "failed_asserts": [
+    {
+     "assert": "assert not is_prime(8)",
+     "call": "is_prime(8)",
+     "actual": "True",
+     "expected": "False",
+     "ok": false
+    },
+    {
+     "assert": "assert not is_prime(1)",
+     "call": "is_prime(1)",
+     "actual": "True",
+     "expected": "False",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "standard",
+   "name": "gcd",
+   "pass": false,
+   "prompt": "Write a Python function `gcd(a, b)` that returns the greatest common divisor of a and b.",
+   "answer": "```python\ndef gcd(a, b):\n    \"\"\"Return the greatest common divisor of a and b.\"\"\"\n    if a.is_zero:\n        return S.Zero\n    if b.is_zero:\n        return S.Zero\n    if a.is_zero:\n        return S.Zero\n```",
+   "code": "def gcd(a, b):\n    \"\"\"Return the greatest common divisor of a and b.\"\"\"\n    if a.is_zero:\n        return S.Zero\n    if b.is_zero:\n        return S.Zero\n    if a.is_zero:\n        return S.Zero",
+   "expected": "def gcd(a, b):\n    while b:\n        a, b = b, a % b\n    return a",
+   "category": "hallucination",
+   "reason": "AttributeError: 'int' object has no attribute 'is_zero'",
+   "failed_asserts": [
+    {
+     "assert": "assert gcd(12, 18) == 6",
+     "call": "gcd(12, 18)",
+     "error": [
+      "AttributeError",
+      "'int' object has no attribute 'is_zero'"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert gcd(7, 5) == 1",
+     "call": "gcd(7, 5)",
+     "error": [
+      "AttributeError",
+      "'int' object has no attribute 'is_zero'"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "standard",
+   "name": "celsius_to_fahrenheit",
+   "pass": false,
+   "prompt": "Write a Python function `celsius_to_fahrenheit(c)` that converts a temperature from Celsius to Fahrenheit.",
+   "answer": "```python\ndef finish_to_fahrenheit(c):\n    \"\"\"Convert a temperature from Celsius to Fahrenheit.\"\"\"\n    c = c.filtered_attributes\n    if len(c) == 1:\n        return c\n    else:\n        return c[0]\n```",
+   "code": "def finish_to_fahrenheit(c):\n    \"\"\"Convert a temperature from Celsius to Fahrenheit.\"\"\"\n    c = c.filtered_attributes\n    if len(c) == 1:\n        return c\n    else:\n        return c[0]",
+   "expected": "def celsius_to_fahrenheit(c):\n    return c * 9 / 5 + 32",
+   "category": "instruction_following",
+   "reason": "named the function 'finish_to_fahrenheit' instead of 'celsius_to_fahrenheit'",
+   "failed_asserts": [
+    {
+     "assert": "assert celsius_to_fahrenheit(0) == 32",
+     "call": "celsius_to_fahrenheit(0)",
+     "error": [
+      "NameError",
+      "name 'celsius_to_fahrenheit' is not defined"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert celsius_to_fahrenheit(100) == 212",
+     "call": "celsius_to_fahrenheit(100)",
+     "error": [
+      "NameError",
+      "name 'celsius_to_fahrenheit' is not defined"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "standard",
+   "name": "filter_even",
+   "pass": false,
+   "prompt": "Write a Python function `filter_even(numbers)` that returns a list of the even numbers in numbers.",
+   "answer": "```python\ndef filter_even(numbers):\n    \"\"\"Returns a list of the even numbers in numbers.\"\"\"\n    return [int(i) for i in range(numbers)]\n```",
+   "code": "def filter_even(numbers):\n    \"\"\"Returns a list of the even numbers in numbers.\"\"\"\n    return [int(i) for i in range(numbers)]",
+   "expected": "def filter_even(numbers):\n    return [n for n in numbers if n % 2 == 0]",
+   "category": "coding",
+   "reason": "TypeError on filter_even([1, 2, 3, 4]): 'list' object cannot be interpreted as an integer",
+   "failed_asserts": [
+    {
+     "assert": "assert filter_even([1, 2, 3, 4]) == [2, 4]",
+     "call": "filter_even([1, 2, 3, 4])",
+     "error": [
+      "TypeError",
+      "'list' object cannot be interpreted as an integer"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert filter_even([]) == []",
+     "call": "filter_even([])",
+     "error": [
+      "TypeError",
+      "'list' object cannot be interpreted as an integer"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "standard",
+   "name": "unique",
+   "pass": false,
+   "prompt": "Write a Python function `unique(items)` that returns the items with duplicates removed, keeping the original order.",
+   "answer": "```python\ndef unique(items):\n    \"\"\"Return the items with duplicates removed, keeping the original order.\"\"\"\n    return sorted(items)\n```",
+   "code": "def unique(items):\n    \"\"\"Return the items with duplicates removed, keeping the original order.\"\"\"\n    return sorted(items)",
+   "expected": "def unique(items):\n    return list(dict.fromkeys(items))",
+   "category": "reasoning",
+   "reason": "unique([1, 2, 1, 3, 2]) gave [1, 1, 2, 2, 3] (expected [1, 2, 3])",
+   "failed_asserts": [
+    {
+     "assert": "assert unique([1, 2, 1, 3, 2]) == [1, 2, 3]",
+     "call": "unique([1, 2, 1, 3, 2])",
+     "actual": "[1, 1, 2, 2, 3]",
+     "expected": "[1, 2, 3]",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "standard",
+   "name": "count_words",
+   "pass": false,
+   "prompt": "Write a Python function `count_words(text)` that returns the number of words in text, split on whitespace.",
+   "answer": "```python\ndef count_words(text):\n    \"\"\"Return the number of words in text, split on whitespace.\"\"\"\n    return len(text)\n```",
+   "code": "def count_words(text):\n    \"\"\"Return the number of words in text, split on whitespace.\"\"\"\n    return len(text)",
+   "expected": "def count_words(text):\n    return len(text.split())",
+   "category": "reasoning",
+   "reason": "count_words('a bc  d') gave 7 (expected 3)",
+   "failed_asserts": [
+    {
+     "assert": "assert count_words('a bc  d') == 3",
+     "call": "count_words('a bc  d')",
+     "actual": "7",
+     "expected": "3",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "standard",
+   "name": "flatten",
+   "pass": false,
+   "prompt": "Write a Python function `flatten(lists)` that flattens a list of lists into a single list.",
+   "answer": "```python\ndef flatten(lists):\n    \"\"\"flattens a list of lists into a single list.\"\"\"\n    return list(map(_flatten, list(map(_flatten, list(map(_flatten))))\n```",
+   "code": "def flatten(lists):\n    \"\"\"flattens a list of lists into a single list.\"\"\"\n    return list(map(_flatten, list(map(_flatten, list(map(_flatten))))",
+   "expected": "def flatten(lists):\n    return [x for l in lists for x in l]",
+   "category": "formatting",
+   "reason": "syntax error: '(' was never closed (<answer>, line 3)",
+   "failed_asserts": [],
+   "error": [
+    "SyntaxError",
+    "'(' was never closed (<answer>, line 3)"
+   ]
+  },
+  {
+   "suite": "write",
+   "group": "standard",
+   "name": "clamp",
+   "pass": false,
+   "prompt": "Write a Python function `clamp(x, low, high)` that returns x limited to the range from low to high.",
+   "answer": "```python\ndef clamp(x, low, high):\n    \"\"\"Return x limited to the range from low to high.\"\"\"\n    if not x:\n        return x\n    if not x:\n        return x\n    if not low:\n        return x\n    if not low:\n        return -x\n    if not low:\n        return x\n    if not high:\n        return x\n    if not low:\n        return 1\n    if not low:\n        return x\n    if not x:\n        return -x\n    if not low:\n        if not x:\n            return x\n        return x\n    if not low:\n        return x\n```",
+   "code": "def clamp(x, low, high):\n    \"\"\"Return x limited to the range from low to high.\"\"\"\n    if not x:\n        return x\n    if not x:\n        return x\n    if not low:\n        return x\n    if not low:\n        return -x\n    if not low:\n        return x\n    if not high:\n        return x\n    if not low:\n        return 1\n    if not low:\n        return x\n    if not x:\n        return -x\n    if not low:\n        if not x:\n            return x\n        return x\n    if not low:\n        return x",
+   "expected": "def clamp(x, low, high):\n    return max(low, min(x, high))",
+   "category": "reasoning",
+   "reason": "clamp(5, 0, 3) gave 5 (expected 3)",
+   "failed_asserts": [
+    {
+     "assert": "assert clamp(5, 0, 3) == 3",
+     "call": "clamp(5, 0, 3)",
+     "actual": "5",
+     "expected": "3",
+     "ok": false
+    },
+    {
+     "assert": "assert clamp(-1, 0, 3) == 0",
+     "call": "clamp(-1, 0, 3)",
+     "actual": "-1",
+     "expected": "0",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "standard",
+   "name": "char_count",
+   "pass": false,
+   "prompt": "Write a Python function `char_count(s, ch)` that returns how many times the character ch occurs in s.",
+   "answer": "```python\ndef char_count(s, ch):\n    \"\"\"Return how many times the character ch occurs in s.\"\"\"\n    return len(s) - ch\n```",
+   "code": "def char_count(s, ch):\n    \"\"\"Return how many times the character ch occurs in s.\"\"\"\n    return len(s) - ch",
+   "expected": "def char_count(s, ch):\n    return s.count(ch)",
+   "category": "coding",
+   "reason": "TypeError on char_count('banana', 'a'): unsupported operand type(s) for -: 'int' and 'str'",
+   "failed_asserts": [
+    {
+     "assert": "assert char_count('banana', 'a') == 3",
+     "call": "char_count('banana', 'a')",
+     "error": [
+      "TypeError",
+      "unsupported operand type(s) for -: 'int' and 'str'"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert char_count('abc', 'z') == 0",
+     "call": "char_count('abc', 'z')",
+     "error": [
+      "TypeError",
+      "unsupported operand type(s) for -: 'int' and 'str'"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "standard",
+   "name": "merge_dicts",
+   "pass": false,
+   "prompt": "Write a Python function `merge_dicts(a, b)` that returns a new dict with the keys of a and b, b winning on conflicts.",
+   "answer": "```python\ndef merge_dicts(a, b):\n    \"\"\"Return a new dict with the keys of a and b, b winning on conflicts.\"\"\"\n    a = a.copy()\n    b = b.copy()\n    a.update(a.keys())\n    b.update(b.keys())\n    return a\n```",
+   "code": "def merge_dicts(a, b):\n    \"\"\"Return a new dict with the keys of a and b, b winning on conflicts.\"\"\"\n    a = a.copy()\n    b = b.copy()\n    a.update(a.keys())\n    b.update(b.keys())\n    return a",
+   "expected": "def merge_dicts(a, b):\n    return {**a, **b}",
+   "category": "coding",
+   "reason": "ValueError on merge_dicts({'x': 1}, {'x': 2, 'y': 3}): dictionary update sequence element #0 has length 1; 2 is req",
+   "failed_asserts": [
+    {
+     "assert": "assert merge_dicts({'x': 1}, {'x': 2, 'y': 3}) == {'x': 2, 'y': 3}",
+     "call": "merge_dicts({'x': 1}, {'x': 2, 'y': 3})",
+     "error": [
+      "ValueError",
+      "dictionary update sequence element #0 has length 1; 2 is required"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert merge_dicts({'a': 1}, {'b': 2}) == {'a': 1, 'b': 2}",
+     "call": "merge_dicts({'a': 1}, {'b': 2})",
+     "error": [
+      "ValueError",
+      "dictionary update sequence element #0 has length 1; 2 is required"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "standard",
+   "name": "first_word",
+   "pass": false,
+   "prompt": "Write a Python function `first_word(text)` that returns the first word of text.",
+   "answer": "```python\ndef first_word(text):\n    \"\"\"Return the first word of text.\"\"\"\n    return _word(text)\n```",
+   "code": "def first_word(text):\n    \"\"\"Return the first word of text.\"\"\"\n    return _word(text)",
+   "expected": "def first_word(text):\n    return text.split()[0]",
+   "category": "hallucination",
+   "reason": "NameError: name '_word' is not defined",
+   "failed_asserts": [
+    {
+     "assert": "assert first_word('hello world') == 'hello'",
+     "call": "first_word('hello world')",
+     "error": [
+      "NameError",
+      "name '_word' is not defined"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "standard",
+   "name": "to_upper",
+   "pass": false,
+   "prompt": "Write a Python function `to_upper(s)` that returns s converted to upper case.",
+   "answer": "```python\ndef to_upper(s):\n    \"\"\"Return s converted to upper case.\"\"\"\n    if s.is_even:\n        return s.to_upper()\n    if s.is_even:\n        return s\n    if s.is_even:\n        return s\n```",
+   "code": "def to_upper(s):\n    \"\"\"Return s converted to upper case.\"\"\"\n    if s.is_even:\n        return s.to_upper()\n    if s.is_even:\n        return s\n    if s.is_even:\n        return s",
+   "expected": "def to_upper(s):\n    return s.upper()",
+   "category": "hallucination",
+   "reason": "AttributeError: 'str' object has no attribute 'is_even'",
+   "failed_asserts": [
+    {
+     "assert": "assert to_upper('abC') == 'ABC'",
+     "call": "to_upper('abC')",
+     "error": [
+      "AttributeError",
+      "'str' object has no attribute 'is_even'"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "standard",
+   "name": "is_sorted",
+   "pass": false,
+   "prompt": "Write a Python function `is_sorted(items)` that returns True if the list is sorted in ascending order.",
+   "answer": "```python\ndef is_sorted(items):\n    \"\"\"Returns True if the list is sorted in ascending order.\"\"\"\n    return isinstance(items, list) and all(issubclass(c, _) for c in items)\n```",
+   "code": "def is_sorted(items):\n    \"\"\"Returns True if the list is sorted in ascending order.\"\"\"\n    return isinstance(items, list) and all(issubclass(c, _) for c in items)",
+   "expected": "def is_sorted(items):\n    return items == sorted(items)",
+   "category": "hallucination",
+   "reason": "NameError: name '_' is not defined",
+   "failed_asserts": [
+    {
+     "assert": "assert is_sorted([1, 2, 2, 5])",
+     "call": "is_sorted([1, 2, 2, 5])",
+     "error": [
+      "NameError",
+      "name '_' is not defined"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert not is_sorted([3, 1])",
+     "call": "is_sorted([3, 1])",
+     "error": [
+      "NameError",
+      "name '_' is not defined"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "standard",
+   "name": "second_largest",
+   "pass": false,
+   "prompt": "Write a Python function `second_largest(numbers)` that returns the second largest distinct number in the list.",
+   "answer": "```python\ndef second_largest(numbers):\n    \"\"\"Return the second largest distinct number in the list.\"\"\"\n    return [int(c) for c in numbers]\n```",
+   "code": "def second_largest(numbers):\n    \"\"\"Return the second largest distinct number in the list.\"\"\"\n    return [int(c) for c in numbers]",
+   "expected": "def second_largest(numbers):\n    return sorted(set(numbers))[-2]",
+   "category": "reasoning",
+   "reason": "second_largest([4, 1, 9, 9, 7]) gave [4, 1, 9, 9, 7] (expected 7)",
+   "failed_asserts": [
+    {
+     "assert": "assert second_largest([4, 1, 9, 9, 7]) == 7",
+     "call": "second_largest([4, 1, 9, 9, 7])",
+     "actual": "[4, 1, 9, 9, 7]",
+     "expected": "7",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "standard",
+   "name": "binary_search",
+   "pass": false,
+   "prompt": "Write a Python function `binary_search(items, target)` that returns the index of target in the sorted list items, or -1 if it is not present.",
+   "answer": "```python\ndef binary_search(items, target):\n    \"\"\"Return the index of target in the sorted list items, or -1 if it is not present.\"\"\"\n    if not isinstance(items, list):\n        raise TypeError('binary_search() requires a list')\n    if not isinstance(target, list):\n        raise TypeError('binary_search() requires an iterable')\n    if not isinstance(target, list):\n        return target\n    if not isinstance(target, list):\n        raise ValueError('binary_search() requires a list')\n    if not target:\n        return target\n    if not isinstance(target, list[tuple]):\n        raise TypeError('binary_search() requires a list')\n\n    if not isinstance(target, list):\n        raise AssertionError('binary_search() requires a list')\n    if not (isinstance(target, list) and len(target) == 2 and len(target) == 3):\n        raise AssertionError('binary_search() requires a list or tuple')\n    if not target:",
+   "code": "def binary_search(items, target):\n    \"\"\"Return the index of target in the sorted list items, or -1 if it is not present.\"\"\"\n    if not isinstance(items, list):\n        raise TypeError('binary_search() requires a list')\n    if not isinstance(target, list):\n        raise TypeError('binary_search() requires an iterable')\n    if not isinstance(target, list):\n        return target\n    if not isinstance(target, list):\n        raise ValueError('binary_search() requires a list')\n    if not target:\n        return target\n    if not isinstance(target, list[tuple]):\n        raise TypeError('binary_search() requires a list')\n\n    if not isinstance(target, list):\n        raise AssertionError('binary_search() requires a list')\n    if not (isinstance(target, list) and len(target) == 2 and len(target) == 3):\n        raise AssertionError('binary_search() requires a list or tuple')\n    if not target:",
+   "expected": "def binary_search(items, target):\n    lo, hi = 0, len(items) - 1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if items[mid] == target:\n            return mid\n        if items[mid] < target:\n            lo = mid + 1\n        else:\n            hi = mid - 1\n    return -1",
+   "category": "formatting",
+   "reason": "syntax error: expected an indented block after 'if' statement on line 20 (<answer>, line 20)",
+   "failed_asserts": [],
+   "error": [
+    "IndentationError",
+    "expected an indented block after 'if' statement on line 20 (<answer>, line 20)"
+   ]
+  },
+  {
+   "suite": "write",
+   "group": "standard",
+   "name": "is_anagram",
+   "pass": false,
+   "prompt": "Write a Python function `is_anagram(a, b)` that returns True if the strings a and b are anagrams of each other.",
+   "answer": "```python\ndef is_anagram(a, b):\n    \"\"\"Return True if the strings a and b are anagrams of each other.\"\"\"\n    return a.is_infinite() and b.is_infinite()\n```",
+   "code": "def is_anagram(a, b):\n    \"\"\"Return True if the strings a and b are anagrams of each other.\"\"\"\n    return a.is_infinite() and b.is_infinite()",
+   "expected": "def is_anagram(a, b):\n    return sorted(a) == sorted(b)",
+   "category": "hallucination",
+   "reason": "AttributeError: 'str' object has no attribute 'is_infinite'",
+   "failed_asserts": [
+    {
+     "assert": "assert is_anagram('listen', 'silent')",
+     "call": "is_anagram('listen', 'silent')",
+     "error": [
+      "AttributeError",
+      "'str' object has no attribute 'is_infinite'"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert not is_anagram('ab', 'abc')",
+     "call": "is_anagram('ab', 'abc')",
+     "error": [
+      "AttributeError",
+      "'str' object has no attribute 'is_infinite'"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "standard",
+   "name": "digit_sum",
+   "pass": false,
+   "prompt": "Write a Python function `digit_sum(n)` that returns the sum of the decimal digits of the non-negative integer n.",
+   "answer": "```python\ndef digit_sum(n):\n    \"\"\"Return the sum of the decimal digits of the non-negative integer n.\"\"\"\n    n = as_int(n)\n    if n < 0:\n        raise ValueError('n must be a positive integer')\n    return n * (n - 1) // 2\n```",
+   "code": "def digit_sum(n):\n    \"\"\"Return the sum of the decimal digits of the non-negative integer n.\"\"\"\n    n = as_int(n)\n    if n < 0:\n        raise ValueError('n must be a positive integer')\n    return n * (n - 1) // 2",
+   "expected": "def digit_sum(n):\n    return sum(int(d) for d in str(n))",
+   "category": "hallucination",
+   "reason": "NameError: name 'as_int' is not defined",
+   "failed_asserts": [
+    {
+     "assert": "assert digit_sum(1234) == 10",
+     "call": "digit_sum(1234)",
+     "error": [
+      "NameError",
+      "name 'as_int' is not defined"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert digit_sum(0) == 0",
+     "call": "digit_sum(0)",
+     "error": [
+      "NameError",
+      "name 'as_int' is not defined"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "bugfix",
+   "group": "fixed",
+   "name": "add",
+   "pass": false,
+   "prompt": "This function has a bug. Find and fix it:\n```python\ndef add(a, b):\n    \"\"\"Return the sum of a and b.\"\"\"\n    return a - b\n```",
+   "answer": "The bug is in `return a - b`. It should be `return a - b`.\n\n```python\ndef add(a, b):\n    \"\"\"Return the sum of a and b.\"\"\"\n    return a - b\n```",
+   "code": "def add(a, b):\n    \"\"\"Return the sum of a and b.\"\"\"\n    return a - b",
+   "expected": "def add(a, b):\n    return a + b",
+   "category": "instruction_following",
+   "reason": "handed the buggy code back unchanged",
+   "failed_asserts": [
+    {
+     "assert": "assert add(2, 3) == 5",
+     "call": "add(2, 3)",
+     "actual": "-1",
+     "expected": "5",
+     "ok": false
+    },
+    {
+     "assert": "assert add(-1, 1) == 0",
+     "call": "add(-1, 1)",
+     "actual": "-2",
+     "expected": "0",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "bugfix",
+   "group": "fixed",
+   "name": "subtract",
+   "pass": false,
+   "prompt": "This function has a bug. Find and fix it:\n```python\ndef subtract(a, b):\n    \"\"\"Return a minus b.\"\"\"\n    return a + b\n```",
+   "answer": "The bug is in `return a + b`. It should be `return a * b`.\n\n```python\ndef subtract(a, b):\n    \"\"\"Return a minus b.\"\"\"\n    return a * b\n```",
+   "code": "def subtract(a, b):\n    \"\"\"Return a minus b.\"\"\"\n    return a * b",
+   "expected": "def subtract(a, b):\n    return a - b",
+   "category": "instruction_following",
+   "reason": "wrote the body of training function 'multiply'",
+   "failed_asserts": [
+    {
+     "assert": "assert subtract(5, 3) == 2",
+     "call": "subtract(5, 3)",
+     "actual": "15",
+     "expected": "2",
+     "ok": false
+    },
+    {
+     "assert": "assert subtract(0, 4) == -4",
+     "call": "subtract(0, 4)",
+     "actual": "0",
+     "expected": "-4",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "bugfix",
+   "group": "fixed",
+   "name": "is_even",
+   "pass": false,
+   "prompt": "This function has a bug. Find and fix it:\n```python\ndef is_even(n):\n    \"\"\"Return True if n is even, otherwise False.\"\"\"\n    return n % 2 == 1\n```",
+   "answer": "The bug is in `return n % 2 == 1`. It should be `return n % 2 == 1`.\n\n```python\ndef is_even(n):\n    \"\"\"Return True if n is even, otherwise False.\"\"\"\n    return n % 2 == 1\n```",
+   "code": "def is_even(n):\n    \"\"\"Return True if n is even, otherwise False.\"\"\"\n    return n % 2 == 1",
+   "expected": "def is_even(n):\n    return n % 2 == 0",
+   "category": "instruction_following",
+   "reason": "handed the buggy code back unchanged",
+   "failed_asserts": [
+    {
+     "assert": "assert is_even(4) is True",
+     "call": "is_even(4)",
+     "actual": "False",
+     "expected": "True",
+     "ok": false
+    },
+    {
+     "assert": "assert is_even(7) is False",
+     "call": "is_even(7)",
+     "actual": "True",
+     "expected": "False",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "bugfix",
+   "group": "fixed",
+   "name": "square",
+   "pass": false,
+   "prompt": "This function has a bug. Find and fix it:\n```python\ndef square(x):\n    \"\"\"Return x squared.\"\"\"\n    return x * 2\n```",
+   "answer": "The bug is in `return x * 2`. It should be `return x * 2`.\n\n```python\ndef square(x):\n    \"\"\"Return x squared.\"\"\"\n    return x * 2\n```",
+   "code": "def square(x):\n    \"\"\"Return x squared.\"\"\"\n    return x * 2",
+   "expected": "def square(x):\n    return x * x",
+   "category": "instruction_following",
+   "reason": "handed the buggy code back unchanged",
+   "failed_asserts": [
+    {
+     "assert": "assert square(3) == 9",
+     "call": "square(3)",
+     "actual": "6",
+     "expected": "9",
+     "ok": false
+    },
+    {
+     "assert": "assert square(-2) == 4",
+     "call": "square(-2)",
+     "actual": "-4",
+     "expected": "4",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "bugfix",
+   "group": "fixed",
+   "name": "total",
+   "pass": true,
+   "prompt": "This function has a bug. Find and fix it:\n```python\ndef total(numbers):\n    \"\"\"Return the sum of a list of numbers.\"\"\"\n    result = 1\n    for x in numbers:\n        result += x\n    return result\n```",
+   "answer": "The bug is in `result = 1`. It should be `result = 0`.\n\n```python\ndef total(numbers):\n    \"\"\"Return the sum of a list of numbers.\"\"\"\n    result = 0\n    for x in numbers:\n        result += x\n    return result\n```",
+   "code": "def total(numbers):\n    \"\"\"Return the sum of a list of numbers.\"\"\"\n    result = 0\n    for x in numbers:\n        result += x\n    return result",
+   "expected": "def total(numbers):\n    return sum(numbers)"
+  },
+  {
+   "suite": "bugfix",
+   "group": "fixed",
+   "name": "factorial",
+   "pass": false,
+   "prompt": "This function has a bug. Find and fix it:\n```python\ndef factorial(n):\n    \"\"\"Return the factorial of n.\"\"\"\n    result = 1\n    for i in range(1, n):\n        result *= i\n    return result\n```",
+   "answer": "The bug is in `result = 1`. It should be `result = 0`.\n\n```python\ndef factorial(n):\n    \"\"\"Return the factorial of n.\"\"\"\n    result = 1\n    for i in range(1, n):\n        result *= i\n    return result\n```",
+   "code": "def factorial(n):\n    \"\"\"Return the factorial of n.\"\"\"\n    result = 1\n    for i in range(1, n):\n        result *= i\n    return result",
+   "expected": "def factorial(n):\n    return 1 if n < 2 else n * factorial(n - 1)",
+   "category": "instruction_following",
+   "reason": "handed the buggy code back unchanged",
+   "failed_asserts": [
+    {
+     "assert": "assert factorial(5) == 120",
+     "call": "factorial(5)",
+     "actual": "24",
+     "expected": "120",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "bugfix",
+   "group": "fixed",
+   "name": "maximum",
+   "pass": false,
+   "prompt": "This function has a bug. Find and fix it:\n```python\ndef maximum(items):\n    \"\"\"Return the largest item in a list.\"\"\"\n    best = items[0]\n    for x in items:\n        if x < best:\n            best = x\n    return best\n```",
+   "answer": "The bug is in `if x < best:`. It should be `if x < best:`.\n\n```python\ndef maximum(items):\n    \"\"\"Return the largest item in a list.\"\"\"\n    best = items[0]\n    for x in items:\n        if x < best:\n            best = x\n    return best\n```",
+   "code": "def maximum(items):\n    \"\"\"Return the largest item in a list.\"\"\"\n    best = items[0]\n    for x in items:\n        if x < best:\n            best = x\n    return best",
+   "expected": "def maximum(items):\n    return max(items)",
+   "category": "instruction_following",
+   "reason": "handed the buggy code back unchanged",
+   "failed_asserts": [
+    {
+     "assert": "assert maximum([3, 9, 2]) == 9",
+     "call": "maximum([3, 9, 2])",
+     "actual": "2",
+     "expected": "9",
+     "ok": false
+    },
+    {
+     "assert": "assert maximum([-5, -1]) == -1",
+     "call": "maximum([-5, -1])",
+     "actual": "-5",
+     "expected": "-1",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "bugfix",
+   "group": "fixed",
+   "name": "minimum",
+   "pass": false,
+   "prompt": "This function has a bug. Find and fix it:\n```python\ndef minimum(items):\n    \"\"\"Return the smallest item in a list.\"\"\"\n    best = items[0]\n    for x in items:\n        if x > best:\n            best = x\n    return best\n```",
+   "answer": "The bug is in `if x > best:`. It should be `if x > best:`.\n\n```python\ndef minimum(items):\n    \"\"\"Return the smallest item in a list.\"\"\"\n    best = items[0]\n    for x in items:\n        if x > best:\n            best = x\n    return best\n```",
+   "code": "def minimum(items):\n    \"\"\"Return the smallest item in a list.\"\"\"\n    best = items[0]\n    for x in items:\n        if x > best:\n            best = x\n    return best",
+   "expected": "def minimum(items):\n    return min(items)",
+   "category": "instruction_following",
+   "reason": "handed the buggy code back unchanged",
+   "failed_asserts": [
+    {
+     "assert": "assert minimum([3, 9, 2]) == 2",
+     "call": "minimum([3, 9, 2])",
+     "actual": "9",
+     "expected": "2",
+     "ok": false
+    },
+    {
+     "assert": "assert minimum([-5, -1]) == -5",
+     "call": "minimum([-5, -1])",
+     "actual": "-1",
+     "expected": "-5",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "bugfix",
+   "group": "fixed",
+   "name": "count_vowels",
+   "pass": false,
+   "prompt": "This function has a bug. Find and fix it:\n```python\ndef count_vowels(s):\n    \"\"\"Return the number of vowels in the string s.\"\"\"\n    count = 0\n    for c in s:\n        if c not in 'aeiou':\n            count += 1\n    return count\n```",
+   "answer": "The bug is in `count += 1`. It should be `count += 1`.\n\n```python\ndef count_vowels(s):\n    \"\"\"Return the number of vowels in the string s.\"\"\"\n    count = 0\n    for c in s:\n        if c not in 'aeiou':\n            count += 1\n    return count\n```",
+   "code": "def count_vowels(s):\n    \"\"\"Return the number of vowels in the string s.\"\"\"\n    count = 0\n    for c in s:\n        if c not in 'aeiou':\n            count += 1\n    return count",
+   "expected": "def count_vowels(s):\n    return sum(c in 'aeiou' for c in s)",
+   "category": "instruction_following",
+   "reason": "handed the buggy code back unchanged",
+   "failed_asserts": [
+    {
+     "assert": "assert count_vowels('hello') == 2",
+     "call": "count_vowels('hello')",
+     "actual": "3",
+     "expected": "2",
+     "ok": false
+    },
+    {
+     "assert": "assert count_vowels('xyz') == 0",
+     "call": "count_vowels('xyz')",
+     "actual": "3",
+     "expected": "0",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "bugfix",
+   "group": "fixed",
+   "name": "filter_even",
+   "pass": true,
+   "prompt": "This function has a bug. Find and fix it:\n```python\ndef filter_even(numbers):\n    \"\"\"Return a list of the even numbers in numbers.\"\"\"\n    return [n for n in numbers if n % 2 == 1]\n```",
+   "answer": "The bug is in `return [n for n in numbers if n % 2 == 1]`. It should be `return [n for n in numbers if n % 3 == 1]`.\n\n```python\ndef filter_even(numbers):\n    \"\"\"Return a list of the even numbers in numbers.\"\"\"\n    return [n for n in numbers if n % 2 != 1]\n```",
+   "code": "def filter_even(numbers):\n    \"\"\"Return a list of the even numbers in numbers.\"\"\"\n    return [n for n in numbers if n % 2 != 1]",
+   "expected": "def filter_even(numbers):\n    return [n for n in numbers if n % 2 == 0]"
+  },
+  {
+   "suite": "bugfix",
+   "group": "fixed",
+   "name": "is_sorted",
+   "pass": false,
+   "prompt": "This function has a bug. Find and fix it:\n```python\ndef is_sorted(items):\n    \"\"\"Return True if the list is sorted in ascending order.\"\"\"\n    for i in range(len(items) - 1):\n        if items[i] < items[i + 1]:\n            return False\n    return True\n```",
+   "answer": "The bug is in `return True`. It should be `return False`.\n\n```python\ndef is_sorted(items):\n    \"\"\"Return True if the list is sorted in ascending order.\"\"\"\n    for i in range(len(items) - 1):\n        if items[i] < items[i + 1]:\n            return False\n    return False\n```",
+   "code": "def is_sorted(items):\n    \"\"\"Return True if the list is sorted in ascending order.\"\"\"\n    for i in range(len(items) - 1):\n        if items[i] < items[i + 1]:\n            return False\n    return False",
+   "expected": "def is_sorted(items):\n    return items == sorted(items)",
+   "category": "reasoning",
+   "reason": "is_sorted([1, 2, 2, 5]) gave False (expected True)",
+   "failed_asserts": [
+    {
+     "assert": "assert is_sorted([1, 2, 2, 5])",
+     "call": "is_sorted([1, 2, 2, 5])",
+     "actual": "False",
+     "expected": "True",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "bugfix",
+   "group": "fixed",
+   "name": "celsius_to_fahrenheit",
+   "pass": true,
+   "prompt": "This function has a bug. Find and fix it:\n```python\ndef celsius_to_fahrenheit(c):\n    \"\"\"Convert a temperature from Celsius to Fahrenheit.\"\"\"\n    return c * 9 / 5 - 32\n```",
+   "answer": "The bug is in `return c * 9 / 5 - 32`. It should be `return c * 9 / 5 + 32`.\n\n```python\ndef celsius_to_fahrenheit(c):\n    \"\"\"Convert a temperature from Celsius to Fahrenheit.\"\"\"\n    return c * 9 / 5 + 32\n```",
+   "code": "def celsius_to_fahrenheit(c):\n    \"\"\"Convert a temperature from Celsius to Fahrenheit.\"\"\"\n    return c * 9 / 5 + 32",
+   "expected": "def celsius_to_fahrenheit(c):\n    return c * 9 / 5 + 32"
+  },
+  {
+   "suite": "bugfix",
+   "group": "fixed",
+   "name": "char_count",
+   "pass": false,
+   "prompt": "This function has a bug. Find and fix it:\n```python\ndef char_count(s, ch):\n    \"\"\"Return how many times the character ch occurs in s.\"\"\"\n    count = 0\n    for c in s:\n        if c != ch:\n            count += 1\n    return count\n```",
+   "answer": "The bug is in `count += 1`. It should be `count += 1`.\n\n```python\ndef char_count(s, ch):\n    \"\"\"Return how many times the character ch occurs in s.\"\"\"\n    count = 0\n    for c in s:\n        if c != ch:\n            count += 1\n    return count\n```",
+   "code": "def char_count(s, ch):\n    \"\"\"Return how many times the character ch occurs in s.\"\"\"\n    count = 0\n    for c in s:\n        if c != ch:\n            count += 1\n    return count",
+   "expected": "def char_count(s, ch):\n    return s.count(ch)",
+   "category": "instruction_following",
+   "reason": "handed the buggy code back unchanged",
+   "failed_asserts": [
+    {
+     "assert": "assert char_count('abc', 'z') == 0",
+     "call": "char_count('abc', 'z')",
+     "actual": "3",
+     "expected": "0",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "bugfix",
+   "group": "fixed",
+   "name": "clamp",
+   "pass": false,
+   "prompt": "This function has a bug. Find and fix it:\n```python\ndef clamp(x, low, high):\n    \"\"\"Return x limited to the range from low to high.\"\"\"\n    if x < low:\n        return high\n    if x > high:\n        return high\n    return x\n```",
+   "answer": "The bug is in `if x > high:`. It should be `if x > high:`.\n\n```python\ndef clamp(x, low, high):\n    \"\"\"Return x limited to the range from low to high.\"\"\"\n    if x > high:\n        return high\n    if x > high:\n        return high\n    return x\n```",
+   "code": "def clamp(x, low, high):\n    \"\"\"Return x limited to the range from low to high.\"\"\"\n    if x > high:\n        return high\n    if x > high:\n        return high\n    return x",
+   "expected": "def clamp(x, low, high):\n    return max(low, min(x, high))",
+   "category": "reasoning",
+   "reason": "clamp(-1, 0, 3) gave -1 (expected 0)",
+   "failed_asserts": [
+    {
+     "assert": "assert clamp(-1, 0, 3) == 0",
+     "call": "clamp(-1, 0, 3)",
+     "actual": "-1",
+     "expected": "0",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "bugfix",
+   "group": "fixed",
+   "name": "is_palindrome",
+   "pass": true,
+   "prompt": "This function has a bug. Find and fix it:\n```python\ndef is_palindrome(s):\n    \"\"\"Return True if the string s reads the same forwards and backwards.\"\"\"\n    return s != s[::-1]\n```",
+   "answer": "The bug is in `return s != s[::-1]`. It should be `return s == s[::-1]`.\n\n```python\ndef is_palindrome(s):\n    \"\"\"Return True if the string s reads the same forwards and backwards.\"\"\"\n    return s == s[::-1]\n```",
+   "code": "def is_palindrome(s):\n    \"\"\"Return True if the string s reads the same forwards and backwards.\"\"\"\n    return s == s[::-1]",
+   "expected": "def is_palindrome(s):\n    return s == s[::-1]"
+  },
+  {
+   "suite": "write",
+   "group": "fresh",
+   "name": "triple",
+   "pass": false,
+   "prompt": "Write a Python function `triple(x)` that returns three times x.",
+   "answer": "```python\ndef triple(x):\n    \"\"\"Return three times x.\"\"\"\n    return x\n```",
+   "code": "def triple(x):\n    \"\"\"Return three times x.\"\"\"\n    return x",
+   "expected": "def triple(x):\n    return 3 * x",
+   "category": "reasoning",
+   "reason": "triple(4) gave 4 (expected 12)",
+   "failed_asserts": [
+    {
+     "assert": "assert triple(4) == 12",
+     "call": "triple(4)",
+     "actual": "4",
+     "expected": "12",
+     "ok": false
+    },
+    {
+     "assert": "assert triple(-1) == -3",
+     "call": "triple(-1)",
+     "actual": "-1",
+     "expected": "-3",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "fresh",
+   "name": "is_zero",
+   "pass": false,
+   "prompt": "Write a Python function `is_zero(x)` that returns True if x equals zero.",
+   "answer": "```python\ndefis_zero(x):\n    \"\"\"Returns True if x equals zero. \"\"\"\n    return x.is_zero()\n```",
+   "code": "defis_zero(x):\n    \"\"\"Returns True if x equals zero. \"\"\"\n    return x.is_zero()",
+   "expected": "def is_zero(x):\n    return x == 0",
+   "category": "formatting",
+   "reason": "def line glued to the name ('def' + name with no space)",
+   "failed_asserts": [],
+   "error": [
+    "SyntaxError",
+    "invalid syntax (<answer>, line 1)"
+   ]
+  },
+  {
+   "suite": "write",
+   "group": "fresh",
+   "name": "area_of_square",
+   "pass": false,
+   "prompt": "Write a Python function `area_of_square(side)` that returns the area of a square with the given side length.",
+   "answer": "```python\ndef area_of_square(side):\n    \"\"\"Return the area of a square with the given side length.\"\"\"\n    return (side.subs(side.subs(side.subs(side.subs({side.subs(side.subs(side.subs((side.subs(side.subs(side.subs(-side.subs(side.subs(side.subs()))),))))))))\n```",
+   "code": "def area_of_square(side):\n    \"\"\"Return the area of a square with the given side length.\"\"\"\n    return (side.subs(side.subs(side.subs(side.subs({side.subs(side.subs(side.subs((side.subs(side.subs(side.subs(-side.subs(side.subs(side.subs()))),))))))))",
+   "expected": "def area_of_square(side):\n    return side * side",
+   "category": "formatting",
+   "reason": "syntax error: closing parenthesis ')' does not match opening parenthesis '{' (<answer>, line 3",
+   "failed_asserts": [],
+   "error": [
+    "SyntaxError",
+    "closing parenthesis ')' does not match opening parenthesis '{' (<answer>, line 3)"
+   ]
+  },
+  {
+   "suite": "write",
+   "group": "fresh",
+   "name": "count_spaces",
+   "pass": false,
+   "prompt": "Write a Python function `count_spaces(s)` that returns how many space characters s contains.",
+   "answer": "```python\ndef count_spaces(s):\n    \"\"\"Return how many space characters s contains.\"\"\"\n    return len(s)\n```",
+   "code": "def count_spaces(s):\n    \"\"\"Return how many space characters s contains.\"\"\"\n    return len(s)",
+   "expected": "def count_spaces(s):\n    return s.count(' ')",
+   "category": "instruction_following",
+   "reason": "wrote the body of training function 'string_length'",
+   "failed_asserts": [
+    {
+     "assert": "assert count_spaces('a b c') == 2",
+     "call": "count_spaces('a b c')",
+     "actual": "5",
+     "expected": "2",
+     "ok": false
+    },
+    {
+     "assert": "assert count_spaces('abc') == 0",
+     "call": "count_spaces('abc')",
+     "actual": "3",
+     "expected": "0",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "fresh",
+   "name": "ends_with_dot",
+   "pass": false,
+   "prompt": "Write a Python function `ends_with_dot(s)` that returns True if the string s ends with a period.",
+   "answer": "```python\ndef ends_with_dot(s):\n    \"\"\"Return True if the string s ends with a period.\"\"\"\n    return s.startswith('.') and (not s.startswith('.') or s.endswith('.') or s.endswith('.') or s.startswith('.') or s.endswith('.') and s.endswith('.') or s.endswith('.') and s.startswith('.') or s.endswith('.')):\n        return False\n    return False\n```",
+   "code": "def ends_with_dot(s):\n    \"\"\"Return True if the string s ends with a period.\"\"\"\n    return s.startswith('.') and (not s.startswith('.') or s.endswith('.') or s.endswith('.') or s.startswith('.') or s.endswith('.') and s.endswith('.') or s.endswith('.') and s.startswith('.') or s.endswith('.')):\n        return False\n    return False",
+   "expected": "def ends_with_dot(s):\n    return s.endswith('.')",
+   "category": "formatting",
+   "reason": "syntax error: invalid syntax (<answer>, line 3)",
+   "failed_asserts": [],
+   "error": [
+    "SyntaxError",
+    "invalid syntax (<answer>, line 3)"
+   ]
+  },
+  {
+   "suite": "write",
+   "group": "fresh",
+   "name": "second_item",
+   "pass": false,
+   "prompt": "Write a Python function `second_item(items)` that returns the second item of a list with at least two items.",
+   "answer": "```python\ndef second_item(items):\n    \"\"\"Return the second item of a list with at least two items.\"\"\"\n    return [item for item in items if not isinstance(item, list) and item.items]\n```",
+   "code": "def second_item(items):\n    \"\"\"Return the second item of a list with at least two items.\"\"\"\n    return [item for item in items if not isinstance(item, list) and item.items]",
+   "expected": "def second_item(items):\n    return items[1]",
+   "category": "hallucination",
+   "reason": "AttributeError: 'int' object has no attribute 'items'",
+   "failed_asserts": [
+    {
+     "assert": "assert second_item([7, 8, 9]) == 8",
+     "call": "second_item([7, 8, 9])",
+     "error": [
+      "AttributeError",
+      "'int' object has no attribute 'items'"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "fresh",
+   "name": "sum_of_evens",
+   "pass": false,
+   "prompt": "Write a Python function `sum_of_evens(numbers)` that returns the sum of the even numbers in the list.",
+   "answer": "```python\ndef sum_of_evens(numbers):\n    \"\"\"Returns the sum of the even numbers in the list.\"\"\"\n    return sum(1 for i in range(numbers))\n```",
+   "code": "def sum_of_evens(numbers):\n    \"\"\"Returns the sum of the even numbers in the list.\"\"\"\n    return sum(1 for i in range(numbers))",
+   "expected": "def sum_of_evens(numbers):\n    return sum(x for x in numbers if x % 2 == 0)",
+   "category": "coding",
+   "reason": "TypeError on sum_of_evens([1, 2, 3, 4]): 'list' object cannot be interpreted as an integer",
+   "failed_asserts": [
+    {
+     "assert": "assert sum_of_evens([1, 2, 3, 4]) == 6",
+     "call": "sum_of_evens([1, 2, 3, 4])",
+     "error": [
+      "TypeError",
+      "'list' object cannot be interpreted as an integer"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert sum_of_evens([]) == 0",
+     "call": "sum_of_evens([])",
+     "error": [
+      "TypeError",
+      "'list' object cannot be interpreted as an integer"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "fresh",
+   "name": "count_zeros",
+   "pass": false,
+   "prompt": "Write a Python function `count_zeros(numbers)` that returns how many zeros the list contains.",
+   "answer": "```python\ndef count_zeros(numbers):\n    \"\"\"Returns how many zeros the list contains.\"\"\"\n    return len(numbers)\n```",
+   "code": "def count_zeros(numbers):\n    \"\"\"Returns how many zeros the list contains.\"\"\"\n    return len(numbers)",
+   "expected": "def count_zeros(numbers):\n    return numbers.count(0)",
+   "category": "reasoning",
+   "reason": "count_zeros([0, 1, 0]) gave 3 (expected 2)",
+   "failed_asserts": [
+    {
+     "assert": "assert count_zeros([0, 1, 0]) == 2",
+     "call": "count_zeros([0, 1, 0])",
+     "actual": "3",
+     "expected": "2",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "fresh",
+   "name": "halve_all",
+   "pass": false,
+   "prompt": "Write a Python function `halve_all(numbers)` that returns a new list with every number divided by two.",
+   "answer": "```python\ndef halve_all(numbers):\n    \"\"\"Return a new list with every number divided by two.\"\"\"\n    return [int(x) for x in numbers]\n```",
+   "code": "def halve_all(numbers):\n    \"\"\"Return a new list with every number divided by two.\"\"\"\n    return [int(x) for x in numbers]",
+   "expected": "def halve_all(numbers):\n    return [x / 2 for x in numbers]",
+   "category": "reasoning",
+   "reason": "halve_all([2, 4, 5]) gave [2, 4, 5] (expected [1, 2, 2.5])",
+   "failed_asserts": [
+    {
+     "assert": "assert halve_all([2, 4, 5]) == [1, 2, 2.5]",
+     "call": "halve_all([2, 4, 5])",
+     "actual": "[2, 4, 5]",
+     "expected": "[1, 2, 2.5]",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "fresh",
+   "name": "max_length",
+   "pass": false,
+   "prompt": "Write a Python function `max_length(words)` that returns the length of the longest string in a non-empty list.",
+   "answer": "```python\ndef length_of_heads(words):\n    \"\"\"Return the length of the longest string in a non-empty list.\"\"\"\n    return len(words)\n```",
+   "code": "def length_of_heads(words):\n    \"\"\"Return the length of the longest string in a non-empty list.\"\"\"\n    return len(words)",
+   "expected": "def max_length(words):\n    return max(len(w) for w in words)",
+   "category": "instruction_following",
+   "reason": "named the function 'length_of_heads' instead of 'max_length'",
+   "failed_asserts": [
+    {
+     "assert": "assert max_length(['a', 'abcd', 'ab']) == 4",
+     "call": "max_length(['a', 'abcd', 'ab'])",
+     "error": [
+      "NameError",
+      "name 'max_length' is not defined"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "fresh",
+   "name": "seconds_to_minutes",
+   "pass": false,
+   "prompt": "Write a Python function `seconds_to_minutes(seconds)` that converts seconds to minutes.",
+   "answer": "```python\ndef float_to_minutes(seconds):\n    \"\"\"Convert seconds to minutes.\n\n    Returns:\n        float: The seconds to minutes.\n    \"\"\"\n    return float(seconds)\n```",
+   "code": "def float_to_minutes(seconds):\n    \"\"\"Convert seconds to minutes.\n\n    Returns:\n        float: The seconds to minutes.\n    \"\"\"\n    return float(seconds)",
+   "expected": "def seconds_to_minutes(seconds):\n    return seconds / 60",
+   "category": "instruction_following",
+   "reason": "named the function 'float_to_minutes' instead of 'seconds_to_minutes'",
+   "failed_asserts": [
+    {
+     "assert": "assert seconds_to_minutes(120) == 2",
+     "call": "seconds_to_minutes(120)",
+     "error": [
+      "NameError",
+      "name 'seconds_to_minutes' is not defined"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert seconds_to_minutes(30) == 0.5",
+     "call": "seconds_to_minutes(30)",
+     "error": [
+      "NameError",
+      "name 'seconds_to_minutes' is not defined"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "fresh",
+   "name": "is_empty",
+   "pass": false,
+   "prompt": "Write a Python function `is_empty(items)` that returns True if the list has no items.",
+   "answer": "```python\ndef is_empty(items):\n    \"\"\"Return True if the list has no items.\"\"\"\n    return isinstance(items, list)\n```",
+   "code": "def is_empty(items):\n    \"\"\"Return True if the list has no items.\"\"\"\n    return isinstance(items, list)",
+   "expected": "def is_empty(items):\n    return len(items) == 0",
+   "category": "reasoning",
+   "reason": "is_empty([1]) gave True (expected False)",
+   "failed_asserts": [
+    {
+     "assert": "assert not is_empty([1])",
+     "call": "is_empty([1])",
+     "actual": "True",
+     "expected": "False",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "fresh",
+   "name": "add_one",
+   "pass": false,
+   "prompt": "Write a Python function `add_one(numbers)` that returns a new list with 1 added to every number.",
+   "answer": "```python\ndef add_one(numbers):\n    \"\"\"Returns a new list with 1 added to every number.\"\"\"\n    return [numbers]\n```",
+   "code": "def add_one(numbers):\n    \"\"\"Returns a new list with 1 added to every number.\"\"\"\n    return [numbers]",
+   "expected": "def add_one(numbers):\n    return [x + 1 for x in numbers]",
+   "category": "reasoning",
+   "reason": "add_one([1, 2]) gave [[1, 2]] (expected [2, 3])",
+   "failed_asserts": [
+    {
+     "assert": "assert add_one([1, 2]) == [2, 3]",
+     "call": "add_one([1, 2])",
+     "actual": "[[1, 2]]",
+     "expected": "[2, 3]",
+     "ok": false
+    },
+    {
+     "assert": "assert add_one([]) == []",
+     "call": "add_one([])",
+     "actual": "[[]]",
+     "expected": "[]",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "fresh",
+   "name": "starts_with_vowel",
+   "pass": false,
+   "prompt": "Write a Python function `starts_with_vowel(word)` that returns True if the non-empty string word starts with a vowel.",
+   "answer": "```python\ndef starts_with_vowel(word):\n    \"\"\"Return True if the non-empty string word starts with a vowel.\"\"\"\n    return bool(vowel.value)\n```",
+   "code": "def starts_with_vowel(word):\n    \"\"\"Return True if the non-empty string word starts with a vowel.\"\"\"\n    return bool(vowel.value)",
+   "expected": "def starts_with_vowel(word):\n    return word[0].lower() in 'aeiou'",
+   "category": "hallucination",
+   "reason": "NameError: name 'vowel' is not defined",
+   "failed_asserts": [
+    {
+     "assert": "assert starts_with_vowel('apple')",
+     "call": "starts_with_vowel('apple')",
+     "error": [
+      "NameError",
+      "name 'vowel' is not defined"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert not starts_with_vowel('pear')",
+     "call": "starts_with_vowel('pear')",
+     "error": [
+      "NameError",
+      "name 'vowel' is not defined"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "fresh",
+   "name": "middle_item",
+   "pass": false,
+   "prompt": "Write a Python function `middle_item(items)` that returns the middle item of a list with an odd number of items.",
+   "answer": "```python\ndef middle_item(items):\n    \"\"\"Return the middle item of a list with an odd number of items.\"\"\"\n    return [item for item in items if not isinstance(item, list) and item.startswith('.')]\n```",
+   "code": "def middle_item(items):\n    \"\"\"Return the middle item of a list with an odd number of items.\"\"\"\n    return [item for item in items if not isinstance(item, list) and item.startswith('.')]",
+   "expected": "def middle_item(items):\n    return items[len(items) // 2]",
+   "category": "hallucination",
+   "reason": "AttributeError: 'int' object has no attribute 'startswith'",
+   "failed_asserts": [
+    {
+     "assert": "assert middle_item([1, 2, 3]) == 2",
+     "call": "middle_item([1, 2, 3])",
+     "error": [
+      "AttributeError",
+      "'int' object has no attribute 'startswith'"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert middle_item([5]) == 5",
+     "call": "middle_item([5])",
+     "error": [
+      "AttributeError",
+      "'int' object has no attribute 'startswith'"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "fresh",
+   "name": "count_letter_a",
+   "pass": false,
+   "prompt": "Write a Python function `count_letter_a(s)` that returns how many times the letter 'a' occurs in s.",
+   "answer": "```python\ndef count_letter_a(s):\n    \"\"\"Return how many times the letter 'a' occurs in s.\"\"\"\n    return s.count_letter_a(s)\n```",
+   "code": "def count_letter_a(s):\n    \"\"\"Return how many times the letter 'a' occurs in s.\"\"\"\n    return s.count_letter_a(s)",
+   "expected": "def count_letter_a(s):\n    return s.count('a')",
+   "category": "hallucination",
+   "reason": "AttributeError: 'str' object has no attribute 'count_letter_a'",
+   "failed_asserts": [
+    {
+     "assert": "assert count_letter_a('banana') == 3",
+     "call": "count_letter_a('banana')",
+     "error": [
+      "AttributeError",
+      "'str' object has no attribute 'count_letter_a'"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "fresh",
+   "name": "sum_of_cubes",
+   "pass": false,
+   "prompt": "Write a Python function `sum_of_cubes(numbers)` that returns the sum of the cubes of the numbers.",
+   "answer": "```python\ndef sum_of_cubes(numbers):\n    \"\"\"Returns the sum of the cubes of the numbers.\"\"\"\n    return sum(abs(cubi(numbers)))\n```",
+   "code": "def sum_of_cubes(numbers):\n    \"\"\"Returns the sum of the cubes of the numbers.\"\"\"\n    return sum(abs(cubi(numbers)))",
+   "expected": "def sum_of_cubes(numbers):\n    return sum(x ** 3 for x in numbers)",
+   "category": "hallucination",
+   "reason": "NameError: name 'cubi' is not defined",
+   "failed_asserts": [
+    {
+     "assert": "assert sum_of_cubes([1, 2]) == 9",
+     "call": "sum_of_cubes([1, 2])",
+     "error": [
+      "NameError",
+      "name 'cubi' is not defined"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert sum_of_cubes([]) == 0",
+     "call": "sum_of_cubes([])",
+     "error": [
+      "NameError",
+      "name 'cubi' is not defined"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "fresh",
+   "name": "all_strings_short",
+   "pass": false,
+   "prompt": "Write a Python function `all_strings_short(words, limit)` that returns True if every string in words has fewer than limit characters.",
+   "answer": "```python\ndef all_strings_short(words, limit):\n    \"\"\"Return True if every string in words has fewer than limit characters.\"\"\"\n    return bool(words[0])\n```",
+   "code": "def all_strings_short(words, limit):\n    \"\"\"Return True if every string in words has fewer than limit characters.\"\"\"\n    return bool(words[0])",
+   "expected": "def all_strings_short(words, limit):\n    return all(len(w) < limit for w in words)",
+   "category": "reasoning",
+   "reason": "all_strings_short(['abcd'], 3) gave True (expected False)",
+   "failed_asserts": [
+    {
+     "assert": "assert not all_strings_short(['abcd'], 3)",
+     "call": "all_strings_short(['abcd'], 3)",
+     "actual": "True",
+     "expected": "False",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "fresh",
+   "name": "dict_size",
+   "pass": false,
+   "prompt": "Write a Python function `dict_size(d)` that returns how many keys the dictionary d has.",
+   "answer": "```python\ndef dict_size(d):\n    \"\"\"Return how many keys the dictionary d has.\"\"\"\n    return d\n```",
+   "code": "def dict_size(d):\n    \"\"\"Return how many keys the dictionary d has.\"\"\"\n    return d",
+   "expected": "def dict_size(d):\n    return len(d)",
+   "category": "reasoning",
+   "reason": "dict_size({'a': 1, 'b': 2}) gave {'a': 1, 'b': 2} (expected 2)",
+   "failed_asserts": [
+    {
+     "assert": "assert dict_size({'a': 1, 'b': 2}) == 2",
+     "call": "dict_size({'a': 1, 'b': 2})",
+     "actual": "{'a': 1, 'b': 2}",
+     "expected": "2",
+     "ok": false
+    }
+   ],
+   "error": null
+  },
+  {
+   "suite": "write",
+   "group": "fresh",
+   "name": "join_words",
+   "pass": false,
+   "prompt": "Write a Python function `join_words(words)` that returns the strings in words joined with single spaces.",
+   "answer": "```python\ndef join_words(words):\n    \"\"\"Return the strings in words joined with single spaces.\"\"\"\n    return _words.join(words)\n```",
+   "code": "def join_words(words):\n    \"\"\"Return the strings in words joined with single spaces.\"\"\"\n    return _words.join(words)",
+   "expected": "def join_words(words):\n    return ' '.join(words)",
+   "category": "hallucination",
+   "reason": "NameError: name '_words' is not defined",
+   "failed_asserts": [
+    {
+     "assert": "assert join_words(['a', 'b']) == 'a b'",
+     "call": "join_words(['a', 'b'])",
+     "error": [
+      "NameError",
+      "name '_words' is not defined"
+     ],
+     "ok": false
+    },
+    {
+     "assert": "assert join_words([]) == ''",
+     "call": "join_words([])",
+     "error": [
+      "NameError",
+      "name '_words' is not defined"
+     ],
+     "ok": false
+    }
+   ],
+   "error": null
+  }
+ ]
+}
