@@ -175,42 +175,76 @@ def _sync(device: str) -> None:
         torch.mps.synchronize()
 
 
+def _model_shape(model_dir: Path) -> tuple[int, dict]:
+    """A checkpoint's parameter count and config, from its info.json (no weights loaded)."""
+    from ycode.lm.train import info_path
+
+    info = json.loads(info_path(Path(model_dir)).read_text())
+    return int(info["params"]), info["config"]
+
+
+def rss_gb() -> tuple[float | None, float]:
+    """This process's resident memory now (Linux; None elsewhere) and its peak so far, in GB."""
+    import resource
+
+    peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    peak_gb = peak / 1e9 if sys.platform == "darwin" else peak * 1024 / 1e9  # bytes on macOS, KiB on Linux
+    try:
+        now = int(Path("/proc/self/statm").read_text().split()[1]) * os.sysconf("SC_PAGE_SIZE") / 1e9
+    except (OSError, ValueError, IndexError):
+        now = None
+    return now, peak_gb
+
+
 def benchmark(device: str, precision: str, *, preset: str = "small", model_dir: str | Path | None = None,
               train: bool = True, train_layers: int | None = None, batch: int = 2, seq: int = 256,
-              steps: int = 3, gen_tokens: int = 32, available_gb: float | None = None) -> dict:
-    """Throughput of one configuration: training tokens/s (forward, backward, AdamW step; the top
-    ``train_layers`` blocks only, if given) or inference tokens/s (greedy decoding with the KV cache).
-    The first step is a warm-up and is not timed."""
+              steps: int = 3, gen_tokens: int = 32, prompt_tokens: int = 64,
+              available_gb: float | None = None) -> dict:
+    """One configuration: training tokens/s (forward, backward, AdamW step; the top ``train_layers`` blocks
+    only, if given), or inference: load time (a checkpoint, loaded as the local provider loads it), time to
+    the first token after a ``prompt_tokens`` prompt, and decoding tokens/s with the KV cache. Memory is
+    estimated before anything is loaded. The first step or generation is a warm-up and is not timed."""
     import torch
 
     from ycode.lm.precision import resolve
 
     row = {"device": device, "precision": precision, "task": "train" if train else "inference",
-           "model": str(model_dir) if model_dir else preset}
+           "model": str(model_dir) if model_dir else preset, "synthetic": model_dir is None}
     if model_dir:
-        from ycode.lm.train import load_checkpoint
-
-        model = load_checkpoint(Path(model_dir), "cpu")[0]
+        params, shape = _model_shape(Path(model_dir))
     else:
-        model = _small_model(preset)
-    cfg = model.cfg
-    seq = min(seq, cfg.block_size)
-    trainable = list(model.parameters())
-    if train and train_layers:
-        for p in model.parameters():
-            p.requires_grad_(False)
-        trainable = [p for b in model.blocks[-train_layers:] for p in b.parameters()]
-        for p in trainable:
-            p.requires_grad_(True)
-    need = estimate_gb(model.num_params(), sum(p.numel() for p in trainable), train=train, precision=precision,
-                       batch=batch, seq=seq, d_model=cfg.n_embd, n_layer=cfg.n_layer)
-    row.update(params=model.num_params(), estimated_gb=round(need, 4))
+        from ycode.lm.model import PRESETS
+
+        shape = PRESETS[preset]
+        params = _small_model(preset).num_params()
+    layers = train_layers if train and train_layers else shape["n_layer"]
+    seq = min(seq, shape["block_size"])
+    need = estimate_gb(params, params * layers // shape["n_layer"], train=train, precision=precision,
+                       batch=batch, seq=seq, d_model=shape["n_embd"], n_layer=shape["n_layer"])
+    row.update(params=params, estimated_gb=round(need, 4))
     if available_gb is not None and need > MEMORY_SHARE * available_gb:
         return {**row, "skipped": f"needs ~{need:.1f} GB, more than {MEMORY_SHARE:.0%} of the "
                                   f"{available_gb:.1f} GB available"}
     try:
         plan = resolve(precision, device)
         row["plan"] = plan.record()
+        t = time.perf_counter()
+        if model_dir:
+            from ycode.lm.train import load_checkpoint
+
+            sixteen = plan.dtype if plan.autocast and not train else None  # inference: 16-bit weights, as LocalLM
+            model = load_checkpoint(Path(model_dir), "cpu", dtype=sixteen)[0]
+        else:
+            model = _small_model(preset)
+        row["load_s"] = round(time.perf_counter() - t, 3)
+        cfg = model.cfg
+        trainable = list(model.parameters())
+        if train and train_layers:
+            for p in model.parameters():
+                p.requires_grad_(False)
+            trainable = [p for b in model.blocks[-train_layers:] for p in b.parameters()]
+            for p in trainable:
+                p.requires_grad_(True)
         if train:
             model.to(device).train()
             optimizer = torch.optim.AdamW(trainable, lr=1e-4)
@@ -235,17 +269,56 @@ def benchmark(device: str, precision: str, *, preset: str = "small", model_dir: 
             # 16-bit weights compute under autocast on their own device; activations between layers stay fp32
             model.to(device=device, dtype=plan.dtype).eval()
             autocast = plan.context()
-            prompt = torch.randint(0, cfg.vocab_size, (1, 16), generator=torch.Generator().manual_seed(0)).to(device)
+            n = min(prompt_tokens, cfg.block_size - gen_tokens - 1)
+            prompt = torch.randint(0, cfg.vocab_size, (1, n), generator=torch.Generator().manual_seed(0)).to(device)
             with torch.no_grad(), autocast:
                 model.generate(prompt, 2, temperature=0)  # warm-up
                 _sync(device)
                 t = time.perf_counter()
+                model.generate(prompt, 1, temperature=0)  # the prompt's forward pass and one token
+                _sync(device)
+                ttft = time.perf_counter() - t
+                t = time.perf_counter()
                 model.generate(prompt, gen_tokens, temperature=0)
                 _sync(device)
-            row.update(tokens_per_s=round(gen_tokens / (time.perf_counter() - t), 1))
+                total = time.perf_counter() - t
+            row.update(prompt_tokens=n, ttft_s=round(ttft, 3),
+                       tokens_per_s=round((gen_tokens - 1) / max(total - ttft, 1e-9), 1))
     except Exception as exc:
         row["error"] = f"{type(exc).__name__}: {exc}"[:300]
+    now, peak = rss_gb()
+    row.update(rss_gb=round(now, 2) if now is not None else None, peak_rss_gb=round(peak, 2))
     return row
+
+
+def save_benchmark(path: str | Path, *, preset: str = "small", model_dir: str | Path | None = None,
+                   min_free_gb: float = 5.0) -> dict:
+    """Time a full checkpoint save (train.save_checkpoint: weights in fp32, written and renamed into place)
+    into a temporary folder under ``path``, removed afterwards. Skipped if the save would leave less than
+    ``min_free_gb`` free there."""
+    import tempfile
+
+    from ycode.lm.tokenizer import BPETokenizer
+    from ycode.lm.train import load_checkpoint, save_checkpoint
+
+    params = _model_shape(Path(model_dir))[0] if model_dir else _small_model(preset).num_params()
+    size_gb = params * 4 / 1e9
+    free_gb = shutil.disk_usage(path).free / 1e9
+    row = {"task": "save", "model": str(model_dir) if model_dir else preset, "synthetic": model_dir is None,
+           "path": str(path), "estimated_gb": round(size_gb, 3), "free_gb_before": round(free_gb, 2)}
+    if free_gb - size_gb < min_free_gb:
+        return {**row, "skipped": f"would leave {free_gb - size_gb:.1f} GB free under {path}, less than "
+                                  f"the {min_free_gb:.0f} GB kept free"}
+    if model_dir:
+        model, tok, _ = load_checkpoint(Path(model_dir), "cpu")
+    else:
+        model, tok = _small_model(preset), BPETokenizer.train(["def f(x):\n    return x + 1\n"] * 20, vocab_size=300)
+    with tempfile.TemporaryDirectory(dir=path, prefix="ycode-save-bench-") as tmp:
+        t = time.perf_counter()
+        written = save_checkpoint(Path(tmp), model, tok, step=0, stage="bench", val_loss=None)
+        seconds = time.perf_counter() - t
+        size = written.stat().st_size
+    return {**row, "seconds": round(seconds, 3), "bytes": size, "gb_per_s": round(size / 1e9 / seconds, 3)}
 
 
 def recommend(checks: dict, rows: list[dict]) -> dict:
@@ -262,7 +335,8 @@ def recommend(checks: dict, rows: list[dict]) -> dict:
 
 
 def report(*, bench: bool = False, preset: str = "small", model_dir: str | None = None,
-           train_layers: int | None = None, steps: int = 3, path: str | Path = ".", log=print) -> dict:
+           train_layers: int | None = None, steps: int = 3, path: str | Path = ".", save_bench: bool = False,
+           prompt_tokens: int = 64, log=print) -> dict:
     """Machine, devices, checks and (with ``bench``) benchmarks and the recommendation, as one dict."""
     result = {"machine": machine(path), "devices": devices()}
     usable = [d for d, info in result["devices"].items() if info.get("available")]
@@ -276,18 +350,25 @@ def report(*, bench: bool = False, preset: str = "small", model_dir: str | None 
                 for precision in precisions.get(d.split(":")[0], ("fp32",)):
                     available = machine(path)["memory_available_gb"]
                     row = benchmark(d, precision, preset=preset, model_dir=model_dir, train=task == "train",
-                                    train_layers=train_layers, steps=steps, available_gb=available)
+                                    train_layers=train_layers, steps=steps, prompt_tokens=prompt_tokens,
+                                    available_gb=available)
                     rows.append(row)
-                    log(f"{task:<9} {d:<4} {precision:<4} " + (f"{row['tokens_per_s']} tokens/s" if "tokens_per_s" in row
+                    extra = "".join(f", {label} {row[k]} s" for k, label in (("ttft_s", "first token"), ("load_s", "load"))
+                                    if row.get(k) is not None)
+                    log(f"{task:<9} {d:<4} {precision:<4} " + (f"{row['tokens_per_s']} tokens/s{extra}" if "tokens_per_s" in row
                                                          else row.get("skipped") or row.get("error", "")))
         result["benchmarks"] = rows
         result["recommendation"] = recommend(result["checks"], rows)
+    if save_bench:
+        result["save"] = save_benchmark(path, preset=preset, model_dir=model_dir)
+        log("save      " + (f"{result['save']['seconds']} s for {result['save']['bytes'] / 1e9:.2f} GB"
+                            if "seconds" in result["save"] else result["save"]["skipped"]))
     return result
 
 
 def main(args) -> int:
     result = report(bench=args.bench, preset=args.preset, model_dir=args.model, train_layers=args.train_layers,
-                    steps=args.steps, path=args.path)
+                    steps=args.steps, path=args.path, save_bench=args.save_bench, prompt_tokens=args.prompt_tokens)
     m = result["machine"]
     print(f"{m['system']} {m['machine']}{' (Apple Silicon)' if m['apple_silicon'] else ''}: {m.get('cpu')}, "
           f"{m['cores']} cores, {m['memory_total_gb'] or 0:.1f} GB memory "
