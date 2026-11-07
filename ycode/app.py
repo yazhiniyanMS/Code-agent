@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 
 from ycode import __version__
@@ -13,6 +14,8 @@ from ycode.llm.base import LLMProvider
 from ycode.security.permissions import PermissionManager
 from ycode.tools import ToolContext, ToolRegistry, default_tools
 from ycode.tools import git
+
+MAX_HASHED_BYTES = 10_000_000  # larger changed files are compared by size and mtime
 from ycode.ui.banner import BannerInfo
 from ycode.ui.console import ConsoleUI
 
@@ -70,19 +73,39 @@ class YCodeApp:
             instructions_loaded=bool(self.context.instructions),
         )
 
-    def changes_for(self, files: list[str]) -> list[git.FileChange]:
-        """Git status entries for files the task touched (or a plain list without git)."""
-        if not files:
-            return []
+    def worktree_state(self) -> dict[str, tuple[str, str]] | None:
+        """Every file git lists as changed or untracked, with its status and content hash (None without
+        git). Taken before and after a task, it shows what the task changed, by any tool or command."""
+        if not self.context.is_git_repo:
+            return None
+        state = {}
+        for entry in git.status_entries(self.workspace):
+            path = self.workspace / entry.path
+            try:
+                stat = path.stat()
+                digest = (hashlib.sha256(path.read_bytes()).hexdigest() if stat.st_size <= MAX_HASHED_BYTES
+                          else f"{stat.st_size}:{stat.st_mtime_ns}")
+            except OSError:  # deleted, or a directory
+                digest = "-"
+            state[entry.path] = (entry.status, digest)
+        return state
+
+    def changes_for(self, files: list[str], before: dict | None = None) -> list[git.FileChange]:
+        """Git status entries for the files the task changed: those written with the file tools, and, given
+        the worktree_state from before the task, every file whose status or content changed during it
+        (e.g. through run_command). Files the user had already changed, and the task did not touch, are
+        not listed. Without git, the files written with the file tools."""
         if not self.context.is_git_repo:
             return [git.FileChange(" M", f) for f in files]
-        wanted = set(files)
-        entries = [e for e in git.status_entries(self.workspace) if e.path in wanted]
-        return entries
+        after = self.worktree_state() or {}
+        changed = set(files) | ({p for p, state in after.items() if before.get(p) != state} if before is not None
+                                else set())
+        return [e for e in git.status_entries(self.workspace) if e.path in changed]
 
     def run_task(self, task: str) -> TaskResult:
+        before = self.worktree_state()
         result = self.agent.run(task)
-        self.ui.print_task_summary(result, self.changes_for(result.changed_files))
+        self.ui.print_task_summary(result, self.changes_for(result.changed_files, before))
         return result
 
     def handle_line(self, line: str) -> None:
