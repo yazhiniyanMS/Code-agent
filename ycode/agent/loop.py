@@ -65,6 +65,9 @@ _CONTINUE_AFTER_MAX_TOKENS = (
     "Your previous response was cut off by the output token limit. Continue exactly where you left off."
 )
 _INTERRUPTED_NOTE = "[Note: the user interrupted the previous request before it finished.]"
+# The same call returning the same result again, i.e. making no progress (e.g. re-reading an unchanged file):
+# the model is told from the REPEAT_WARN-th time, and the task stops at the SAME_RESULT_STOP-th.
+SAME_RESULT_STOP = 4
 # The same call (tool and input) failing again: the model is told from the REPEAT_WARN-th failure, and the
 # task stops at the REPEAT_STOP-th instead of spending the remaining steps on it.
 REPEAT_WARN = 2
@@ -119,6 +122,7 @@ class Agent:
         self.total_steps = 0
         self._pending_note: str | None = None
         self._failures: dict[tuple[str, str], int] = {}  # failed calls this task, by tool and input
+        self._same: dict[tuple[str, str], tuple[str, int]] = {}  # last result of each call, and how often in a row
         self._stuck: str | None = None
 
         self.plan_tool = UpdatePlanTool(on_update=self.events.on_plan)
@@ -157,7 +161,7 @@ class Agent:
         self.ctx.commands_run = []
         changed_before = set(self.ctx.changed_files)
         self.plan_tool.plan = Plan()
-        self._failures, self._stuck = {}, None
+        self._failures, self._same, self._stuck = {}, {}, None
 
         result = self._loop()
         result.changed_files = sorted(self.ctx.changed_files - changed_before)
@@ -285,6 +289,15 @@ class Agent:
                                    f"({first_line[:200]}).")
             else:
                 self._failures.pop(key, None)
+                last, times = self._same.get(key, ("", 0))
+                times = times + 1 if last == outcome.content else 1
+                self._same[key] = (outcome.content, times)
+                if times >= REPEAT_WARN:
+                    content += (f"\n\nThis exact call has now returned the same result {times} times. Use the result "
+                                "above instead of repeating the call, or change your approach.")
+                if times >= SAME_RESULT_STOP and not self._stuck:
+                    self._stuck = (f"Stopped: {call.name} returned the same result {times} times for the same input, "
+                                   "without progress.")
             results.append(ToolResultBlock(call.id, content, outcome.is_error))
         return results
 
@@ -302,6 +315,6 @@ def describe_status(result: TaskResult) -> str:
         TaskStatus.INTERRUPTED: "Interrupted.",
         TaskStatus.REFUSED: "The model declined the request.",
         TaskStatus.ERROR: "Stopped because of an error.",
-        TaskStatus.STUCK: "Stopped: the same tool call kept failing.",
+        TaskStatus.STUCK: "Stopped: the same tool call kept failing or repeating without progress.",
     }[result.status]
 
