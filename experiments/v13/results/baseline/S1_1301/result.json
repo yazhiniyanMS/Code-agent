@@ -1,0 +1,92 @@
+{
+ "arm": "S1-base",
+ "seed": 1301,
+ "smoke": false,
+ "note": "V13 baseline: S1 1301 on the string sets",
+ "eval": {
+  "dev": false,
+  "unseen": false,
+  "unseen2": false,
+  "bench": false,
+  "limit": null,
+  "diagnose": 0,
+  "sets": [
+   {
+    "name": "strings_heldout",
+    "set": "experiments/v13/sets/strings_heldout.json"
+   },
+   {
+    "name": "strings_trained",
+    "set": "experiments/v13/sets/strings_trained.json"
+   }
+  ]
+ },
+ "anchor": "/home/user/lmwork/loop/anchor",
+ "anchor_sha256": null,
+ "init_from": "/home/user/lmwork/v10/ckpt/R1_1301.ypk",
+ "training": {
+  "steps": 0,
+  "tokens": 0,
+  "minutes": 0.0,
+  "peak_rss_mb": 0,
+  "checkpoint_sha256": "cfa40dc9746391ac02105f1b59dfa3592b98cbc973ec31d9ef11c6f012b223a3",
+  "build": {}
+ },
+ "kept_model": {
+  "path": "/dev/shm/ycode-keep/S1/1301/model_bf16/model.pt",
+  "sha256": "cfa40dc9746391ac02105f1b59dfa3592b98cbc973ec31d9ef11c6f012b223a3"
+ },
+ "sets": {
+  "strings_heldout": {
+   "run": {
+    "exit": 0,
+    "minutes": 9.34,
+    "peak_rss_mb": 3606
+   },
+   "scores": {
+    "original": {
+     "tasks": 32,
+     "strict": 0,
+     "tests": 0,
+     "wrong": 0,
+     "strict_names": []
+    },
+    "original:strings_heldout": {
+     "tasks": 32,
+     "strict": 0,
+     "tests": 0,
+     "wrong": 0,
+     "strict_names": []
+    }
+   }
+  },
+  "strings_trained": {
+   "run": {
+    "exit": 0,
+    "minutes": 10.47,
+    "peak_rss_mb": 3603
+   },
+   "scores": {
+    "original": {
+     "tasks": 47,
+     "strict": 1,
+     "tests": 5,
+     "wrong": 0,
+     "strict_names": [
+      "reversed_words_uppercase"
+     ]
+    },
+    "original:strings_trained": {
+     "tasks": 47,
+     "strict": 1,
+     "tests": 5,
+     "wrong": 0,
+     "strict_names": [
+      "reversed_words_uppercase"
+     ]
+    }
+   }
+  }
+ },
+ "minutes_total": 19.8
+}

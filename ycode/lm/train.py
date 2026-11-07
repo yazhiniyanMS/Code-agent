@@ -15,6 +15,7 @@ from typing import Callable
 import numpy as np
 import torch
 
+from ycode.lm import ckptstore
 from ycode.lm.model import DEFAULT_PRESET, GPT, PRESETS, GPTConfig, rope_tables
 from ycode.lm.optim import build_optimizer
 from ycode.lm.precision import resolve
@@ -231,14 +232,14 @@ def plain_base(init_dir: Path | str, trained: set[str]) -> Path:
     if untrained:
         raise ValueError(f"{init_dir} stores tensors this run does not train ({', '.join(untrained[:3])}, ...): "
                          "a compact checkpoint cannot reference its base for them")
-    return Path(base["path"])
+    return ckptstore.base_dir(base)
 
 
 def base_state(payload: dict, device: str = "cpu", mmap: dict | None = None) -> dict:
     """The base checkpoint's tensors, for a payload that stores only what differs from it (the
     layers a fine-tuning run trained): its frozen layers are the base's, byte for byte."""
     base = payload["base"]
-    path = Path(base["path"]) / CHECKPOINT_NAME
+    path = ckptstore.base_dir(base) / CHECKPOINT_NAME  # by identity if a checkpoint directory is set
     if not path.is_file():
         raise FileNotFoundError(f"missing base checkpoint {path}")
     if base.get("size") is not None and path.stat().st_size != base["size"]:

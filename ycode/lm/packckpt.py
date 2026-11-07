@@ -32,6 +32,8 @@ from pathlib import Path
 import numpy as np
 import torch
 
+from ycode.lm import ckptstore
+
 MAGIC = b"YPK1"
 MAGIC_DELTA = b"YPK2"  # a pack with delta entries: a reader that predates them refuses it outright
 LEVEL = 6
@@ -47,7 +49,7 @@ def content_sha256(state: dict) -> str:
 
 
 def _base_state(payload: dict) -> dict:
-    path = Path(payload["base"]["path"]) / "model.pt"
+    path = ckptstore.base_dir(payload["base"]) / "model.pt"  # by identity if a checkpoint directory is set
     return torch.load(path, map_location="cpu", weights_only=True, mmap=True)["model"]
 
 
@@ -168,7 +170,7 @@ def tensors(dst: Path | str, parent: Path | str | None = None):
     base = _base_state(meta)
     parent_state = {}
     if "parent" in header:
-        parent_state, parent_hash = _parent_state(parent or header["parent"]["path"])
+        parent_state, parent_hash = _parent_state(parent or ckptstore.parent_path(header["parent"]))
         if parent_hash != header["parent"]["content_sha256"]:
             raise ValueError(f"{dst}: the parent checkpoint differs from the one it was packed against")
 

@@ -1,0 +1,8 @@
+{"step": 1, "loss": 0.031477, "lr": 3e-05, "grad_norm": 0.327341, "tokens": 4096, "answer_tokens": 1701, "elapsed_s": 425.0, "tok_per_s": 9.6}
+{"step": 2, "loss": 0.09655, "lr": 3e-05, "grad_norm": 0.076913, "tokens": 8192, "answer_tokens": 3550, "elapsed_s": 552.6, "tok_per_s": 14.8}
+{"step": 3, "loss": 0.00668, "lr": 3e-05, "grad_norm": 0.02583, "tokens": 12288, "answer_tokens": 5331, "elapsed_s": 680.1, "tok_per_s": 18.1}
+{"step": 4, "loss": 0.031001, "lr": 3e-05, "grad_norm": 0.082167, "tokens": 16384, "answer_tokens": 7048, "elapsed_s": 806.2, "tok_per_s": 20.3}
+{"step": 5, "loss": 0.005163, "lr": 3e-05, "grad_norm": 0.023674, "tokens": 20480, "answer_tokens": 8726, "elapsed_s": 930.8, "tok_per_s": 22.0}
+{"step": 6, "loss": 0.019591, "lr": 3e-05, "grad_norm": 0.028273, "tokens": 24576, "answer_tokens": 10451, "elapsed_s": 1052.5, "tok_per_s": 23.4}
+{"step": 7, "loss": 0.005627, "lr": 3e-05, "grad_norm": 0.021648, "tokens": 28672, "answer_tokens": 12176, "elapsed_s": 1177.4, "tok_per_s": 24.4}
+{"step": 8, "loss": 0.081289, "lr": 2.1666226336928724e-05, "grad_norm": 0.052338, "tokens": 32768, "answer_tokens": 13973, "elapsed_s": 1301.1, "tok_per_s": 25.2}

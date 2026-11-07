@@ -1,0 +1,199 @@
+{
+ "arm": "S1",
+ "seed": 1302,
+ "smoke": false,
+ "data_options": {
+  "idioms_bugfix": 0,
+  "idioms_families": "v3",
+  "basics_write": 0,
+  "basics_bugfix": 0,
+  "compose_write": 0,
+  "compose_bugfix": 0,
+  "contrast": 0,
+  "novel_write": 0,
+  "replay": 0,
+  "legacy_share": 0.5,
+  "idioms_select": "v9_grammar_train",
+  "idioms_write": 0,
+  "literal_bugfix": 3
+ },
+ "train": {
+  "steps": 8,
+  "lr": 3e-05,
+  "batch": 4,
+  "train_layers": 24,
+  "warmup": 1,
+  "precision": "fp32",
+  "init_optim": false,
+  "seq_len": null,
+  "average": null,
+  "save_every": 8,
+  "compact": true,
+  "final_bf16": true,
+  "schedule": null
+ },
+ "eval": {
+  "dev": false,
+  "unseen": false,
+  "unseen2": false,
+  "bench": false,
+  "limit": null,
+  "diagnose": 0,
+  "sets": [
+   {
+    "name": "strings_heldout",
+    "set": "experiments/v13/sets/strings_heldout.json"
+   },
+   {
+    "name": "strings_trained",
+    "set": "experiments/v13/sets/strings_trained.json"
+   }
+  ]
+ },
+ "anchor": "/home/user/lmwork/loop/anchor",
+ "anchor_sha256": "2538b55d5aee371899a988799168042af4da27c03cafff3417a3c9925b8e8e98",
+ "data": {
+  "seed": 1303,
+  "code_version": "ad8144b826fb8b32ac176132e6407e8b1b0fdc11",
+  "generated": 365,
+  "removed": {},
+  "kept": 365,
+  "basics": 365,
+  "replay": 9,
+  "tokens": 35232,
+  "replay_dropped": {
+   "benchmark name": 0,
+   "prose bug fix": 19,
+   "garbled prompt": 2,
+   "prose over cap": 19
+  },
+  "replay_kinds": {
+   "docstring": 1,
+   "complete": 3,
+   "class": 1,
+   "write": 4
+  },
+  "curriculum_validation": null,
+  "tokens_by_source": {
+   "legacy": {
+    "examples": 272,
+    "tokens": 22359,
+    "answer_tokens": 9737,
+    "token_share": 0.6346
+   },
+   "retention": {
+    "examples": 93,
+    "tokens": 11312,
+    "answer_tokens": 4822,
+    "token_share": 0.3211
+   },
+   "replay": {
+    "examples": 9,
+    "tokens": 1561,
+    "answer_tokens": 689,
+    "token_share": 0.0443
+   }
+  },
+  "files": {
+   "sft_tokens.bin": "91d267a83ee56d1c23a6b6ecbe6fe7b514456fef8ee3ef2a0523d78e12da0b1b",
+   "sft_mask.bin": "efd03bfa7ce6b66dad1ea5c8cefd275f53785363bca04f7ebb551227635c56d8",
+   "sft_index.npy": "abd0d7a43174c32fdc8d06e0c93ce86faacba6a803665ef17bce9e9374da24f0",
+   "tokenizer.json": "7079ff7b8546a23c5416f8ae08adcb636ec69da4c14cd964114f12cee9745341"
+  },
+  "minutes": 0.4
+ },
+ "init_from": "/dev/shm/ycode-keep/A/1302/model_bf16",
+ "training": {
+  "exit": 0,
+  "minutes": 23.64,
+  "peak_rss_mb": 10884,
+  "steps": 8,
+  "loss_last10_mean": 0.0347,
+  "loss_first": 0.031477,
+  "grad_norm_last10_mean": 0.0798,
+  "tok_per_s": 25.2,
+  "answer_tokens": 13973,
+  "empty_batches": 0,
+  "checkpoint_sha256": "3fdbf898bc3ea2b2b3748a767e43eb7a3c95843f767155557afa439a343abc73",
+  "init_sha256": null,
+  "tokens": 32768
+ },
+ "exposures": {
+  "trained_tokens": 32800,
+  "by_source": {
+   "legacy": {
+    "tokens": 21023,
+    "answer_tokens": 8948,
+    "examples_touched": 257,
+    "token_share": 0.6409
+   },
+   "retention": {
+    "tokens": 10495,
+    "answer_tokens": 4402,
+    "examples_touched": 90,
+    "token_share": 0.32
+   },
+   "replay": {
+    "tokens": 1282,
+    "answer_tokens": 623,
+    "examples_touched": 9,
+    "token_share": 0.0391
+   }
+  },
+  "curriculum_behaviours": 0,
+  "exposures_per_behaviour": null
+ },
+ "sets": {
+  "strings_heldout": {
+   "run": {
+    "exit": 0,
+    "minutes": 4.44,
+    "peak_rss_mb": 3775
+   },
+   "scores": {
+    "original": {
+     "tasks": 32,
+     "strict": 0,
+     "tests": 0,
+     "wrong": 0,
+     "strict_names": []
+    },
+    "original:strings_heldout": {
+     "tasks": 32,
+     "strict": 0,
+     "tests": 0,
+     "wrong": 0,
+     "strict_names": []
+    }
+   }
+  },
+  "strings_trained": {
+   "run": {
+    "exit": 0,
+    "minutes": 4.67,
+    "peak_rss_mb": 3764
+   },
+   "scores": {
+    "original": {
+     "tasks": 47,
+     "strict": 0,
+     "tests": 4,
+     "wrong": 0,
+     "strict_names": []
+    },
+    "original:strings_trained": {
+     "tasks": 47,
+     "strict": 0,
+     "tests": 4,
+     "wrong": 0,
+     "strict_names": []
+    }
+   }
+  }
+ },
+ "minutes_total": 33.1,
+ "kept_model": {
+  "path": "/dev/shm/ycode-keep/S1/1302/model_bf16/model.pt",
+  "sha256": "3fdbf898bc3ea2b2b3748a767e43eb7a3c95843f767155557afa439a343abc73"
+ }
+}
